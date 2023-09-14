@@ -7,7 +7,11 @@
 #include <godot_cpp/godot.hpp>
 
 #include "my_node.hpp"
+#include "card_to_mouse_spline.hpp"
 #include "my_singleton.hpp"
+
+#include "gsg_state.hpp"
+#include "gsg_state_machine.hpp"
 
 using namespace godot;
 
@@ -18,7 +22,11 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
 	{
 		ClassDB::register_class<MyNode>();
+		ClassDB::register_class<CardToMouseSpline>();
 		ClassDB::register_class<MySingleton>();
+
+		ClassDB::register_class<GSGState>();
+		ClassDB::register_class<GSGStateMachine>();
 
 		_my_singleton = memnew(MySingleton);
 		Engine::get_singleton()->register_singleton("MySingleton", MySingleton::get_singleton());
@@ -34,11 +42,10 @@ void gdextension_terminate(ModuleInitializationLevel p_level)
 	}
 }
 
-extern "C"
-{
-	GDExtensionBool GDE_EXPORT gdextension_init(const GDExtensionInterface *p_interface, GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization)
-	{
-		godot::GDExtensionBinding::InitObject init_obj(p_interface, p_library, r_initialization);
+extern "C" {
+	// Initialization.
+	GDExtensionBool GDE_EXPORT gdextension_init(GDExtensionInterfaceGetProcAddress p_get_proc_address, const GDExtensionClassLibraryPtr p_library, GDExtensionInitialization *r_initialization) {
+		godot::GDExtensionBinding::InitObject init_obj(p_get_proc_address, p_library, r_initialization);
 
 		init_obj.register_initializer(gdextension_initialize);
 		init_obj.register_terminator(gdextension_terminate);

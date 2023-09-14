@@ -30,5 +30,5 @@ void MyNode::_process(double delta)
 
 void MyNode::hello_node()
 {
-	UtilityFunctions::print("Hello GDExtension Node!");
+	UtilityFunctions::print("BREADDDDDD ! ! ! ! !");
 }

@@ -10,5 +10,8 @@
 # MacOS
 .DS_Store
 
-# Editors
-.vscode/
+src/*.obj
+
+local_bats/*.bat
+
+*.pdb

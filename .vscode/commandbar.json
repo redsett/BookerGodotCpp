@@ -1,0 +1,34 @@
+{
+	"skipTerminateQuickPick": true,
+	"skipSwitchToOutput": false,
+	"skipErrorMessage": true,
+	"commands": [
+		{
+			"text": "🍊 Play",
+			"color": "orange",
+			"commandType":"palette",
+			"command": "workbench.action.tasks.runTask|Play",
+			"alignment": "right",
+			"skipTerminateQuickPick": false,
+			"priority": -10
+		},
+		{
+			"text": "☕ Open Editor",
+			"color": "orange",
+			"commandType":"palette",
+			"command": "workbench.action.tasks.runTask|Open Editor",
+			"alignment": "right",
+			"skipTerminateQuickPick": false,
+			"priority": -11
+		},
+		{
+			"text": "📦 Compile",
+			"color": "yellow",
+			"commandType":"palette",
+			"command": "workbench.action.tasks.runTask|Compile",
+			"alignment": "right",
+			"skipTerminateQuickPick": false,
+			"priority": -20
+		}
+	]
+}

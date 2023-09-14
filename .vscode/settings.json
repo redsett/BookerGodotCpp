@@ -1,0 +1,10 @@
+{
+    "workbench.colorCustomizations": {
+        "titleBar.inactiveBackground": "#634b2c",
+        "titleBar.activeBackground": "#4e3310",
+        "titleBar.activeForeground": "#ffffff"
+    },
+    "files.associations": {
+        "cstdlib": "cpp"
+    }
+}
