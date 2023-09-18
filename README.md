@@ -18,8 +18,16 @@
     - OR you can click the icons at the bottom right of the Visual Studio Code editor.
 
 ### Advanced:
-To update gotdot-cpp:
+To update gotdot-cpp to latest:
 1. `git submodule update --remote --merge`
 2. `git add godot-cpp`
 3. `git commit -m 'https://github.com/redsett/BookerGodotCpp.git'`
+4. `git push`
+
+To update gotdot-cpp to a certain branch:
+1. `cd godot-cpp`
+2. `git checkout (branch-name)`
+3. `cd..`
+3. `git add godot-cpp`
+3. `git commit`
 4. `git push`

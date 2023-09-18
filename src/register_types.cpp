@@ -12,10 +12,11 @@
 
 #include "gsg_state.hpp"
 #include "gsg_state_machine.hpp"
+#include "bg_booker_data_base.hpp"
 
 using namespace godot;
 
-static MySingleton *_my_singleton;
+static BG_Booker_DB *_booker_db;
 
 void gdextension_initialize(ModuleInitializationLevel p_level)
 {
@@ -23,13 +24,18 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 	{
 		ClassDB::register_class<MyNode>();
 		ClassDB::register_class<CardToMouseSpline>();
-		ClassDB::register_class<MySingleton>();
 
 		ClassDB::register_class<GSGState>();
 		ClassDB::register_class<GSGStateMachine>();
 
-		_my_singleton = memnew(MySingleton);
-		Engine::get_singleton()->register_singleton("MySingleton", MySingleton::get_singleton());
+		ClassDB::register_class<BG_BandInfo>();
+		ClassDB::register_class<BG_LevelGuide>();
+		ClassDB::register_class<BG_ActStats>();
+		ClassDB::register_class<BG_Booker_Globals>();
+		ClassDB::register_class<BG_Booker_DB>();
+
+		_booker_db = memnew(BG_Booker_DB);
+		Engine::get_singleton()->register_singleton("Booker_DB", BG_Booker_DB::get_singleton());
 	}
 }
 
@@ -37,8 +43,8 @@ void gdextension_terminate(ModuleInitializationLevel p_level)
 {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
 	{
-		Engine::get_singleton()->unregister_singleton("MySingleton");
-		memdelete(_my_singleton);
+		Engine::get_singleton()->unregister_singleton("Booker_DB");
+		memdelete(_booker_db);
 	}
 }
 

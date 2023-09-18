@@ -5,6 +5,8 @@
         "titleBar.activeForeground": "#ffffff"
     },
     "files.associations": {
-        "cstdlib": "cpp"
+        "cstdlib": "cpp",
+        "xutility": "cpp",
+        "chrono": "cpp"
     }
 }

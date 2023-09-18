@@ -1,5 +1,5 @@
 setlocal
 cd /d %~dp0
-scons
+scons dev_build=yes
 REM dev_build=yes
 REM pause
