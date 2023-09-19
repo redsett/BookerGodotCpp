@@ -7,6 +7,60 @@
 using namespace godot;
 
 ////
+//// BG_UnitStat
+////
+class BG_UnitStat : public Object
+{
+	GDCLASS(BG_UnitStat, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	String name;
+	String get_name() { return name; }
+
+	int value;
+	int get_value() { return value; }
+};
+
+////
+//// BG_BandMemberClass
+////
+class BG_BandMemberClass : public Object
+{
+	GDCLASS(BG_BandMemberClass, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	String name;
+	String get_name() { return name; }
+
+	TypedArray<BG_UnitStat> stats;
+	TypedArray<BG_UnitStat> get_stats() { return stats; }
+};
+
+////
+//// BG_BandNameInfo
+////
+class BG_BandNameInfo : public Object
+{
+	GDCLASS(BG_BandNameInfo, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	String band_name;
+	String get_band_name() { return band_name; }
+
+	TypedArray<String> hiring_dialogue_choices;
+	TypedArray<String> get_hiring_dialogue_choices() { return hiring_dialogue_choices; }
+};
+
+////
 //// BG_BandInfo
 ////
 class BG_BandInfo : public Object
@@ -17,10 +71,9 @@ protected:
 	static void _bind_methods();
 
 public:
-	TypedArray<String> band_names;
-	TypedArray<String> get_band_names() { return band_names; }
+	TypedArray<BG_BandNameInfo> band_names;
+	TypedArray<BG_BandNameInfo> get_band_names() { return band_names; }
 
-	// TypedArray<FJournalEntries> bandJournalEntries;
 	TypedArray<String> first_names;
 	TypedArray<String> get_first_names() { return first_names; }
 
@@ -36,12 +89,14 @@ public:
 	TypedArray<float> monthly_cost_level_multiplier;
 	TypedArray<float> get_monthly_cost_level_multiplier() { return monthly_cost_level_multiplier; }
 
-	TypedArray<int> band_size;
-	TypedArray<int> get_band_size() { return band_size; }
+	Vector2 band_size_min_max;
+	Vector2 get_band_size_min_max() { return band_size_min_max; }
 
 	int num_bands_for_hire;
 	TypedArray<int> get_num_bands_for_hire() { return num_bands_for_hire; }
-	// TypedArray<FPersonalityDialgue> personalityDialgue;
+
+	TypedArray<BG_BandMemberClass> unit_classes;
+	TypedArray<BG_BandMemberClass> get_unit_classes() { return unit_classes; }
 };
 
 ////
