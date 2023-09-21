@@ -1,10 +1,95 @@
 #pragma once
 
 #include <godot_cpp/classes/object.hpp>
+#include <godot_cpp/classes/ref.hpp>
+#include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/templates/vector.hpp>
 
 using namespace godot;
+
+////
+//// BG_Item
+////
+class BG_Item : public Resource
+{
+	GDCLASS(BG_Item, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	String id;
+	String get_id() { return id; }
+
+	String name;
+	String get_name() { return name; }
+
+	String description;
+	String get_description() { return description; }
+
+	bool is_beast_part;
+	bool get_is_beast_part() { return is_beast_part; }
+
+	// bool is_permanent;
+	// bool get_is_permanent() { return is_permanent; }
+
+	// bool is_useable_item;
+	// bool get_is_useable_item() { return is_useable_item; }
+};
+
+////
+//// BG_BandMember
+////
+class BG_BandMember : public Resource
+{
+	GDCLASS(BG_BandMember, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	String name;
+	String get_name() { return name; }
+
+	Vector3 scale;
+	Vector3 get_scale() { return scale; }
+	// String personalityDialgueId;
+};
+
+////
+//// BG_Band
+////
+class BG_Band : public Resource
+{
+	GDCLASS(BG_Band, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	String name;
+	String get_name() { return name; }
+	
+	int level;
+	int get_level() { return level; }
+
+	float experience;
+	float get_experience() { return experience; }
+
+	float health;
+	float get_health() { return health; }
+
+	float max_health;
+	float get_max_health() { return max_health; }
+
+	bool resting;
+	bool get_resting() { return resting; }
+
+	TypedArray<BG_BandMember> band_members;
+	TypedArray<BG_BandMember> get_band_members() { return band_members; }
+	// FJob currentJob;
+};
 
 ////
 //// BG_UnitStat

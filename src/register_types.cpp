@@ -14,6 +14,8 @@
 #include "gsg_state_machine.hpp"
 #include "bg_booker_data_base.hpp"
 
+// #include "global_string.hpp"
+
 using namespace godot;
 
 static BG_Booker_DB *_booker_db;
@@ -28,6 +30,11 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		ClassDB::register_class<GSGState>();
 		ClassDB::register_class<GSGStateMachine>();
 
+		// ClassDB::register_class<Global_String>();
+
+		ClassDB::register_class<BG_Item>();
+		ClassDB::register_class<BG_BandMember>();
+		ClassDB::register_class<BG_Band>();
 		ClassDB::register_class<BG_UnitStat>();
 		ClassDB::register_class<BG_BandMemberClass>();
 		ClassDB::register_class<BG_BandNameInfo>();

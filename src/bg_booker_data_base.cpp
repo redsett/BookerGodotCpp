@@ -8,6 +8,40 @@
 using namespace godot;
 
 ////
+//// BG_Item
+////
+void BG_Item::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_Item::get_id);
+	ClassDB::bind_method(D_METHOD("get_name"), &BG_Item::get_name);
+	ClassDB::bind_method(D_METHOD("get_description"), &BG_Item::get_description);
+	ClassDB::bind_method(D_METHOD("get_is_beast_part"), &BG_Item::get_is_beast_part);
+}
+
+////
+//// BG_BandMember
+////
+void BG_BandMember::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_name"), &BG_BandMember::get_name);
+	ClassDB::bind_method(D_METHOD("get_scale"), &BG_BandMember::get_scale);
+}
+
+////
+//// BG_Band
+////
+void BG_Band::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_name"), &BG_Band::get_name);
+	ClassDB::bind_method(D_METHOD("get_level"), &BG_Band::get_level);
+	ClassDB::bind_method(D_METHOD("get_experience"), &BG_Band::get_experience);
+	ClassDB::bind_method(D_METHOD("get_health"), &BG_Band::get_health);
+	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_Band::get_max_health);
+	ClassDB::bind_method(D_METHOD("get_resting"), &BG_Band::get_resting);
+	ClassDB::bind_method(D_METHOD("get_band_members"), &BG_Band::get_band_members);
+}
+
+////
 //// BG_UnitStat
 ////
 void BG_UnitStat::_bind_methods()
