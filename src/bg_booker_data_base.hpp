@@ -19,23 +19,159 @@ protected:
 	static void _bind_methods();
 
 public:
-	String id;
-	String get_id() { return id; }
+	String id = "";
+	String get_id() const { return id; }
 
-	String name;
-	String get_name() { return name; }
+	String name = "";
+	String get_name() const { return name; }
 
-	String description;
-	String get_description() { return description; }
+	String description = "";
+	String get_description() const { return description; }
 
-	bool is_beast_part;
-	bool get_is_beast_part() { return is_beast_part; }
+	bool is_beast_part = false;
+	bool get_is_beast_part() const { return is_beast_part; }
 
 	// bool is_permanent;
 	// bool get_is_permanent() { return is_permanent; }
 
 	// bool is_useable_item;
 	// bool get_is_useable_item() { return is_useable_item; }
+};
+
+////
+//// BG_RewardItem
+////
+class BG_RewardItem : public Resource
+{
+	GDCLASS(BG_RewardItem, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	String id = "";
+	String get_id() const { return id; }
+
+	float drop_rate = 0.0;
+	float get_drop_rate() const { return drop_rate; }
+};
+
+////
+//// BG_Job
+////
+class BG_Job : public Resource
+{
+	GDCLASS(BG_Job, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	String id = "";
+	String get_id() const { return id; }
+
+	String name = "";
+	String get_name() const { return name; }
+
+	//FString clanmember;
+	//TArray<FSpecialization> specializations;
+	
+	int level = 0;
+	int get_level() const { return level; }
+
+	String description = "";
+	String get_description() const { return description; }
+
+	int weeks = 0;
+	int get_weeks() const { return weeks; }
+
+	int pay = 0;
+	int get_pay() const { return pay; }
+
+	TypedArray<BG_RewardItem> rewards;
+	TypedArray<BG_RewardItem> get_rewards() const { return rewards; }
+
+	bool is_unique = false;
+	bool get_is_unique() const { return is_unique; }
+
+	TypedArray<int> acts_allowed_in;
+	TypedArray<int> get_acts_allowed_in() const { return acts_allowed_in; }
+};
+
+////
+//// BG_JobBoardItem
+////
+class BG_JobBoardItem : public Object
+{
+	GDCLASS(BG_JobBoardItem, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	String title = "";
+	String get_title() const { return title; }
+
+	String description = "";
+	String get_description() const { return description; }
+
+	int opens_job = 0;
+	int get_opens_job() const { return opens_job; }
+};
+
+////
+//// BG_JobBoardItems
+////
+class BG_JobBoardItems : public Object
+{
+	GDCLASS(BG_JobBoardItems, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	TypedArray<BG_JobBoardItem> jobs;
+	TypedArray<BG_JobBoardItem> get_jobs() const { return jobs; }
+};
+
+////
+//// BG_UnitStat
+////
+class BG_UnitStat : public Resource
+{
+	GDCLASS(BG_UnitStat, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	String name = "";
+	String get_name() const { return name; }
+	void set_name(String value) { name = value; }
+
+	int value = 0;
+	int get_value() const { return value; }
+	void set_value(int v) { value = v; }
+};
+
+////
+//// BG_BandMemberClass
+////
+class BG_BandMemberClass : public Resource
+{
+	GDCLASS(BG_BandMemberClass, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	String name = "";
+	String get_name() const { return name; }
+	void set_name(String value) { name = value; }
+
+	TypedArray<BG_UnitStat> stats;
+	TypedArray<BG_UnitStat> get_stats() const { return stats; }
+	void set_stats(TypedArray<BG_UnitStat> value) { stats = value; }
 };
 
 ////
@@ -49,12 +185,25 @@ protected:
 	static void _bind_methods();
 
 public:
-	String name;
-	String get_name() { return name; }
+	String name = "";
+	String get_name() const { return name; }
+	void set_name(String value) { name = value; }
 
 	Vector3 scale;
-	Vector3 get_scale() { return scale; }
-	// String personalityDialgueId;
+	Vector3 get_scale() const { return scale; }
+	void set_scale(Vector3 value) { scale = value; }
+
+	String personality_dialgue_id = "";
+	String get_personality_dialgue_id() const { return personality_dialgue_id; }
+	void set_personality_dialgue_id(String value) { personality_dialgue_id = value; }
+
+	BG_BandMemberClass *specialization = nullptr;
+	BG_BandMemberClass *get_specialization() const { return specialization; }
+	void set_specialization(BG_BandMemberClass *value) { specialization = value; }
+
+	TypedArray<String> equipment;
+	TypedArray<String> get_equipment() const { return equipment; }
+	void set_equipment(TypedArray<String> value) { equipment = value; }
 };
 
 ////
@@ -68,63 +217,37 @@ protected:
 	static void _bind_methods();
 
 public:
-	String name;
-	String get_name() { return name; }
+	String name = "";
+	String get_name() const { return name; }
+	void set_name(String value) { name = value; }
 	
-	int level;
-	int get_level() { return level; }
+	int level = 1;
+	int get_level() const { return level; }
+	void set_level(int value) { level = value; }
 
-	float experience;
-	float get_experience() { return experience; }
+	float experience = 0.0;
+	float get_experience() const { return experience; }
+	void set_experience(float value) { experience = value; }
 
-	float health;
-	float get_health() { return health; }
+	float health = 0.0;
+	float get_health() const { return health; }
+	void set_health(float value) { health = value; }
 
-	float max_health;
-	float get_max_health() { return max_health; }
+	float max_health = 0.0;
+	float get_max_health() const { return max_health; }
+	void set_max_health(float value) { max_health = value; }
 
-	bool resting;
-	bool get_resting() { return resting; }
+	bool resting = false;
+	bool get_resting() const { return resting; }
+	void set_resting(bool value) { resting = value; }
 
 	TypedArray<BG_BandMember> band_members;
-	TypedArray<BG_BandMember> get_band_members() { return band_members; }
-	// FJob currentJob;
-};
+	TypedArray<BG_BandMember> get_band_members() const { return band_members; }
+	void set_band_members(TypedArray<BG_BandMember> value) { band_members = value; }
 
-////
-//// BG_UnitStat
-////
-class BG_UnitStat : public Object
-{
-	GDCLASS(BG_UnitStat, Object);
-
-protected:
-	static void _bind_methods();
-
-public:
-	String name;
-	String get_name() { return name; }
-
-	int value;
-	int get_value() { return value; }
-};
-
-////
-//// BG_BandMemberClass
-////
-class BG_BandMemberClass : public Object
-{
-	GDCLASS(BG_BandMemberClass, Object);
-
-protected:
-	static void _bind_methods();
-
-public:
-	String name;
-	String get_name() { return name; }
-
-	TypedArray<BG_UnitStat> stats;
-	TypedArray<BG_UnitStat> get_stats() { return stats; }
+	BG_Job *current_job = nullptr;
+	BG_Job *get_current_job() const { return current_job; }
+	void set_current_job(BG_Job *value) { current_job = value; }
 };
 
 ////
@@ -138,11 +261,32 @@ protected:
 	static void _bind_methods();
 
 public:
-	String band_name;
-	String get_band_name() { return band_name; }
+	String band_name = "";
+	String get_band_name() const { return band_name; }
 
 	TypedArray<String> hiring_dialogue_choices;
-	TypedArray<String> get_hiring_dialogue_choices() { return hiring_dialogue_choices; }
+	TypedArray<String> get_hiring_dialogue_choices() const { return hiring_dialogue_choices; }
+};
+
+////
+//// BG_PersonalityDialgue
+////
+class BG_PersonalityDialgue : public Object
+{
+	GDCLASS(BG_PersonalityDialgue, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	String id = "";
+	String get_id() const { return id; }
+	void set_id(String value) { id = value; }
+
+	// TArray<FString> willWin;
+	// TArray<FString> barelyWillWin;
+	// TArray<FString> bandTooWeak;
+	// TArray<FString> fatigued;
 };
 
 ////
@@ -157,31 +301,34 @@ protected:
 
 public:
 	TypedArray<BG_BandNameInfo> band_names;
-	TypedArray<BG_BandNameInfo> get_band_names() { return band_names; }
+	TypedArray<BG_BandNameInfo>  get_band_names() const { return band_names; }
 
 	TypedArray<String> first_names;
-	TypedArray<String> get_first_names() { return first_names; }
+	TypedArray<String> get_first_names() const { return first_names; }
 
 	TypedArray<String> last_names;
-	TypedArray<String> get_last_names() { return last_names; }
+	TypedArray<String> get_last_names() const { return last_names; }
+
+	TypedArray<BG_PersonalityDialgue> personality_dialgue;
+	TypedArray<BG_PersonalityDialgue> get_personality_dialgue() const { return personality_dialgue; }
 
 	TypedArray<int> level_min;
-	TypedArray<int> get_level_min() { return level_min; }
+	TypedArray<int> get_level_min() const { return level_min; }
 
 	TypedArray<int> level_max;
-	TypedArray<int> get_level_max() { return level_max; }
+	TypedArray<int> get_level_max() const { return level_max; }
 
 	TypedArray<float> monthly_cost_level_multiplier;
-	TypedArray<float> get_monthly_cost_level_multiplier() { return monthly_cost_level_multiplier; }
+	TypedArray<float> get_monthly_cost_level_multiplier() const { return monthly_cost_level_multiplier; }
 
 	Vector2 band_size_min_max;
-	Vector2 get_band_size_min_max() { return band_size_min_max; }
+	Vector2 get_band_size_min_max() const { return band_size_min_max; }
 
-	int num_bands_for_hire;
-	TypedArray<int> get_num_bands_for_hire() { return num_bands_for_hire; }
+	int num_bands_for_hire = 0;
+	int get_num_bands_for_hire() const { return num_bands_for_hire; }
 
 	TypedArray<BG_BandMemberClass> unit_classes;
-	TypedArray<BG_BandMemberClass> get_unit_classes() { return unit_classes; }
+	TypedArray<BG_BandMemberClass> get_unit_classes() const { return unit_classes; }
 };
 
 ////
@@ -196,13 +343,13 @@ protected:
 
 public:
 	int job_rep_reward = 0;
-	int get_job_rep_reward() { return job_rep_reward; }
+	int get_job_rep_reward() const { return job_rep_reward; }
 
 	int job_duralation = 0;
-	int get_job_duralation() { return job_duralation; }
+	int get_job_duralation() const { return job_duralation; }
 
 	float leveling_speed = 0.0f;
-	float get_leveling_speed() { return leveling_speed; }
+	float get_leveling_speed() const { return leveling_speed; }
 };
 
 ////
@@ -217,12 +364,12 @@ protected:
 
 public:
 	int reputation_needed = 0;
-	void set_reputation_needed(int p_value)  { reputation_needed = p_value; }
-	int get_reputation_needed() { return reputation_needed; }
+	int get_reputation_needed() const { return reputation_needed; }
+	void set_reputation_needed(int p_value) { reputation_needed = p_value; }
 
 	String description = "";
-	void set_description(String p_value)  { description = p_value; }
-	String get_description() { return description; }
+	String get_description() const { return description; }
+	void set_description(String p_value) { description = p_value; }
 };
 
 ////
@@ -240,29 +387,29 @@ public:
 	~BG_Booker_Globals() {};
 
 	int starting_reputation = 0;
-	void set_starting_reputation(int p_value)  { starting_reputation = p_value; }
-	int get_starting_reputation() { return starting_reputation; }
+	int get_starting_reputation() const { return starting_reputation; }
+	void set_starting_reputation(int p_value) { starting_reputation = p_value; }
 
 	int seconds_per_week = 0;
-	void set_seconds_per_week(int p_value)  { seconds_per_week = p_value; }
-	int get_seconds_per_week() { return seconds_per_week; }
+	int get_seconds_per_week() const { return seconds_per_week; }
+	void set_seconds_per_week(int p_value) { seconds_per_week = p_value; }
 
 	TypedArray<Vector2> jobs_per_month_min_max;
-	void set_jobs_per_month_min_max(TypedArray<Vector2> p_value)  { jobs_per_month_min_max = p_value; }
-	TypedArray<Vector2> get_jobs_per_month_min_max() { return jobs_per_month_min_max; }
+	TypedArray<Vector2> get_jobs_per_month_min_max() const { return jobs_per_month_min_max; }
+	void set_jobs_per_month_min_max(TypedArray<Vector2> p_value) { jobs_per_month_min_max = p_value; }
 	
 	TypedArray<int> job_rerolls_per_month;
-	void set_job_rerolls_per_month(TypedArray<int> p_value)  { job_rerolls_per_month = p_value; }
-	TypedArray<int> get_job_rerolls_per_month() { return job_rerolls_per_month; }
+	TypedArray<int> get_job_rerolls_per_month() const { return job_rerolls_per_month; }
+	void set_job_rerolls_per_month(TypedArray<int> p_value) { job_rerolls_per_month = p_value; }
 
-	TypedArray<BG_ActStats> act_stats;
-	void set_act_stats(TypedArray<BG_ActStats> p_value) { act_stats = p_value; }
 	//MyCustomClass* result = dynamic_cast<MyCustomClass*>(container.object());
-	TypedArray<BG_ActStats> get_act_stats() { return act_stats; }
+	TypedArray<BG_ActStats> act_stats;
+	TypedArray<BG_ActStats> get_act_stats() const { return act_stats; }
+	void set_act_stats(TypedArray<BG_ActStats> p_value) { act_stats = p_value; }
 	
 	TypedArray<BG_LevelGuide> level_guide;
-	void set_level_guide(TypedArray<BG_LevelGuide> p_value)  { level_guide = p_value; }
-	TypedArray<BG_LevelGuide> get_level_guide() { return level_guide; }
+	TypedArray<BG_LevelGuide> get_level_guide() const { return level_guide; }
+	void set_level_guide(TypedArray<BG_LevelGuide> p_value) { level_guide = p_value; }
 };
 
 ////
@@ -285,14 +432,19 @@ public:
 
 	void refresh_data();
 
-	BG_Booker_Globals *globals;
+	BG_Booker_Globals *globals = nullptr;
 	BG_Booker_Globals *get_globals() const { return globals; }
 
-	// TypedArray<FJob> jobs;
-	// TypedArray<FJobBoardItems> jobBoard;
-	// TypedArray<FItem> items;
+	TypedArray<BG_Job> jobs;
+	TypedArray<BG_Job> get_jobs() const { return jobs; }
 
-	BG_BandInfo *band_info;
+	TypedArray<BG_JobBoardItems> job_board;
+	TypedArray<BG_JobBoardItems> get_job_board() const { return job_board; }
+
+	TypedArray<BG_Item> items;
+	TypedArray<BG_Item> get_items() const { return items; }
+
+	BG_BandInfo *band_info = nullptr;
 	BG_BandInfo *get_band_info() const { return band_info; }
 
 private:

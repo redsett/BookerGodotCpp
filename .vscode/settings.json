@@ -16,7 +16,20 @@
         "vector": "cpp",
         "xhash": "cpp",
         "xstring": "cpp",
-        "xtree": "cpp"
+        "xtree": "cpp",
+        "algorithm": "cpp",
+        "memory": "cpp",
+        "system_error": "cpp",
+        "xlocale": "cpp",
+        "locale": "cpp",
+        "thread": "cpp",
+        "xlocmes": "cpp",
+        "xlocmon": "cpp",
+        "xlocnum": "cpp",
+        "xloctime": "cpp",
+        "optional": "cpp",
+        "type_traits": "cpp",
+        "xtr1common": "cpp"
     },
     "cmake.configureOnOpen": false
 }
