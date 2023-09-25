@@ -197,9 +197,9 @@ public:
 	String get_personality_dialgue_id() const { return personality_dialgue_id; }
 	void set_personality_dialgue_id(String value) { personality_dialgue_id = value; }
 
-	BG_BandMemberClass *specialization = nullptr;
-	BG_BandMemberClass *get_specialization() const { return specialization; }
-	void set_specialization(BG_BandMemberClass *value) { specialization = value; }
+	Ref<BG_BandMemberClass> specialization = nullptr;
+	Ref<BG_BandMemberClass> get_specialization() const { return specialization; }
+	void set_specialization(Ref<BG_BandMemberClass> value) { specialization = value; }
 
 	TypedArray<String> equipment;
 	TypedArray<String> get_equipment() const { return equipment; }
@@ -245,9 +245,9 @@ public:
 	TypedArray<BG_BandMember> get_band_members() const { return band_members; }
 	void set_band_members(TypedArray<BG_BandMember> value) { band_members = value; }
 
-	BG_Job *current_job = nullptr;
-	BG_Job *get_current_job() const { return current_job; }
-	void set_current_job(BG_Job *value) { current_job = value; }
+	Ref<BG_Job> current_job = nullptr;
+	Ref<BG_Job> get_current_job() const { return current_job; }
+	void set_current_job(Ref<BG_Job> value) { current_job = value; }
 };
 
 ////

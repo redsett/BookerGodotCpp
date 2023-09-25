@@ -37,7 +37,7 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "scale"), "set_scale", "get_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "personality_dialgue_id"), "set_personality_dialgue_id", "get_personality_dialgue_id");
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "specialization", PROPERTY_HINT_NODE_TYPE, "BG_BandMemberClass"), "set_specialization", "get_specialization");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "specialization", PROPERTY_HINT_RESOURCE_TYPE, "BG_BandMemberClass"), "set_specialization", "get_specialization");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipment"), "set_equipment", "get_equipment");
 }
 
@@ -98,7 +98,7 @@ void BG_BandMemberClass::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_stats"), &BG_BandMemberClass::set_stats);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_name", "get_name");
-	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "stats", PROPERTY_HINT_NODE_TYPE, "BG_UnitStat"), "set_stats", "get_stats");
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "stats", PROPERTY_HINT_RESOURCE_TYPE, "BG_UnitStat"), "set_stats", "get_stats");
 }
 
 ////
