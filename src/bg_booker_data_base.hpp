@@ -21,21 +21,26 @@ protected:
 public:
 	String id = "";
 	String get_id() const { return id; }
+	void set_id(String value) { id = value; }
 
 	String name = "";
 	String get_name() const { return name; }
+	void set_name(String value) { name = value; }
 
 	String description = "";
 	String get_description() const { return description; }
+	void set_description(String value) { description = value; }
 
 	bool is_beast_part = false;
 	bool get_is_beast_part() const { return is_beast_part; }
+	void set_is_beast_part(bool value) { is_beast_part = value; }
 
-	// bool is_permanent;
+	// bool is_permanent = false;
 	// bool get_is_permanent() { return is_permanent; }
 
-	// bool is_useable_item;
-	// bool get_is_useable_item() { return is_useable_item; }
+	bool is_useable_item = false;
+	bool get_is_useable_item() { return is_useable_item; }
+	void set_is_useable_item(bool value) { is_useable_item = value; }
 };
 
 ////
@@ -51,9 +56,11 @@ protected:
 public:
 	String id = "";
 	String get_id() const { return id; }
+	void set_id(String value) { id = value; }
 
 	float drop_rate = 0.0;
 	float get_drop_rate() const { return drop_rate; }
+	void set_drop_rate(float value) { drop_rate = value; }
 };
 
 ////
@@ -69,33 +76,42 @@ protected:
 public:
 	String id = "";
 	String get_id() const { return id; }
+	void set_id(String value) { id = value; }
 
 	String name = "";
 	String get_name() const { return name; }
+	void set_name(String value) { name = value; }
 
 	//FString clanmember;
 	//TArray<FSpecialization> specializations;
 	
 	int level = 0;
 	int get_level() const { return level; }
+	void set_level(int value) { level = value; }
 
 	String description = "";
 	String get_description() const { return description; }
+	void set_description(String value) { description = value; }
 
 	int weeks = 0;
 	int get_weeks() const { return weeks; }
+	void set_weeks(int value) { weeks = value; }
 
 	int pay = 0;
 	int get_pay() const { return pay; }
+	void set_pay(int value) { pay = value; }
 
 	TypedArray<BG_RewardItem> rewards;
 	TypedArray<BG_RewardItem> get_rewards() const { return rewards; }
+	void set_rewards(TypedArray<BG_RewardItem> value) { rewards = value; }
 
 	bool is_unique = false;
 	bool get_is_unique() const { return is_unique; }
+	void set_is_unique(bool value) { is_unique = value; }
 
 	TypedArray<int> acts_allowed_in;
 	TypedArray<int> get_acts_allowed_in() const { return acts_allowed_in; }
+	void set_acts_allowed_in(TypedArray<int> value) { acts_allowed_in = value; }
 };
 
 ////

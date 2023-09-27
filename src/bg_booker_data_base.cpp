@@ -13,9 +13,21 @@ using namespace godot;
 void BG_Item::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_Item::get_id);
+	ClassDB::bind_method(D_METHOD("set_id"), &BG_Item::set_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_Item::get_name);
+	ClassDB::bind_method(D_METHOD("set_name"), &BG_Item::set_name);
 	ClassDB::bind_method(D_METHOD("get_description"), &BG_Item::get_description);
+	ClassDB::bind_method(D_METHOD("set_description"), &BG_Item::set_description);
 	ClassDB::bind_method(D_METHOD("get_is_beast_part"), &BG_Item::get_is_beast_part);
+	ClassDB::bind_method(D_METHOD("set_is_beast_part"), &BG_Item::set_is_beast_part);
+	ClassDB::bind_method(D_METHOD("get_is_useable_item"), &BG_Item::get_is_useable_item);
+	ClassDB::bind_method(D_METHOD("set_is_useable_item"), &BG_Item::set_is_useable_item);
+
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "id"), "set_id", "get_id");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_name", "get_name");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "description"), "set_description", "get_description");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_beast_part"), "set_is_beast_part", "get_is_beast_part");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_useable_item"), "set_is_useable_item", "get_is_useable_item");
 }
 
 ////
@@ -142,7 +154,12 @@ void BG_BandInfo::_bind_methods()
 void BG_RewardItem::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_RewardItem::get_id);
+	ClassDB::bind_method(D_METHOD("set_id"), &BG_RewardItem::set_id);
 	ClassDB::bind_method(D_METHOD("get_drop_rate"), &BG_RewardItem::get_drop_rate);
+	ClassDB::bind_method(D_METHOD("set_drop_rate"), &BG_RewardItem::set_drop_rate);
+
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "id"), "set_id", "get_id");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "drop_rate"), "set_drop_rate", "get_drop_rate");
 }
 
 ////
@@ -151,14 +168,33 @@ void BG_RewardItem::_bind_methods()
 void BG_Job::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_Job::get_id);
+	ClassDB::bind_method(D_METHOD("set_id"), &BG_Job::set_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_Job::get_name);
+	ClassDB::bind_method(D_METHOD("set_name"), &BG_Job::set_name);
 	ClassDB::bind_method(D_METHOD("get_level"), &BG_Job::get_level);
+	ClassDB::bind_method(D_METHOD("set_level"), &BG_Job::set_level);
 	ClassDB::bind_method(D_METHOD("get_description"), &BG_Job::get_description);
+	ClassDB::bind_method(D_METHOD("set_description"), &BG_Job::set_description);
 	ClassDB::bind_method(D_METHOD("get_weeks"), &BG_Job::get_weeks);
+	ClassDB::bind_method(D_METHOD("set_weeks"), &BG_Job::set_weeks);
 	ClassDB::bind_method(D_METHOD("get_pay"), &BG_Job::get_pay);
+	ClassDB::bind_method(D_METHOD("set_pay"), &BG_Job::set_pay);
 	ClassDB::bind_method(D_METHOD("get_rewards"), &BG_Job::get_rewards);
+	ClassDB::bind_method(D_METHOD("set_rewards"), &BG_Job::set_rewards);
 	ClassDB::bind_method(D_METHOD("get_is_unique"), &BG_Job::get_is_unique);
+	ClassDB::bind_method(D_METHOD("set_is_unique"), &BG_Job::set_is_unique);
 	ClassDB::bind_method(D_METHOD("get_acts_allowed_in"), &BG_Job::get_acts_allowed_in);
+	ClassDB::bind_method(D_METHOD("set_acts_allowed_in"), &BG_Job::set_acts_allowed_in);
+
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "id"), "set_id", "get_id");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_name", "get_name");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "description"), "set_description", "get_description");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "weeks"), "set_weeks", "get_weeks");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "pay"), "set_pay", "get_pay");
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "rewards", PROPERTY_HINT_RESOURCE_TYPE, "BG_RewardItem"), "set_rewards", "get_rewards");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_unique"), "set_is_unique", "get_is_unique");
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "acts_allowed_in"), "set_acts_allowed_in", "get_acts_allowed_in");
 }
 
 ////
@@ -371,10 +407,95 @@ void BG_Booker_DB::refresh_data()
 	/////
 	///// Jobs
 	/////
+	{
+		const Dictionary jobs_sheet = BG_JsonUtils::GetCBDSheet(data, "jobs");
+		const Array lines = Array(jobs_sheet["lines"]);
+		for (int i = 0; i < lines.size(); i++)
+		{
+			const Dictionary entry = lines[i];
+			BG_Job *new_job_class = memnew(BG_Job);
+			new_job_class->id = entry["id"];
+			new_job_class->name = entry["name"];
+			new_job_class->level = int(entry["level"]);
+			new_job_class->description = entry["description"];
+			new_job_class->weeks = int(entry["weeks"]);
+			new_job_class->pay = int(entry["pay"]);
+			new_job_class->is_unique = bool(entry["is_unique"]);
+
+			TypedArray<String> item_types;
+			item_types.append("weapon_rewards");
+			item_types.append("beast_part_rewards");
+			item_types.append("item_rewards");
+			for (int x = 0; x < item_types.size(); x++)
+			{
+				const Array reward_lines = Array(entry[item_types[x]]);
+				for (int y = 0; y < reward_lines.size(); y++)
+				{
+					const Dictionary reward_entry = reward_lines[y];
+					BG_RewardItem *new_reward_class = memnew(BG_RewardItem);
+					new_reward_class->id = reward_entry["reward"];
+					new_reward_class->drop_rate = float(reward_entry["drop_rate"]);
+					new_job_class->rewards.append(new_reward_class);
+				}
+			}
+
+			const Array acts_lines = Array(entry["acts"]);
+			for (int i = 0; i < acts_lines.size(); i++)
+			{
+				const Dictionary acts_entry = acts_lines[i];
+				new_job_class->acts_allowed_in.append(int(acts_entry["act"]) + 1);
+			}
+
+			jobs.append(new_job_class);
+		}
+	}
 
 	/////
 	///// Items
 	/////
+	{
+		{
+			const Dictionary equipment_sheet = BG_JsonUtils::GetCBDSheet(data, "equipment");
+			const Array lines = Array(equipment_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
+			{
+				const Dictionary entry = lines[i];
+				BG_Item *new_item_class = memnew(BG_Item);
+				new_item_class->id = entry["id"];
+				new_item_class->name = entry["name"];
+				new_item_class->description = entry["description"];
+				items.append(new_item_class);
+			}
+		}
+		{
+			const Dictionary beast_parts_sheet = BG_JsonUtils::GetCBDSheet(data, "beast_parts");
+			const Array lines = Array(beast_parts_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
+			{
+				const Dictionary entry = lines[i];
+				BG_Item *new_item_class = memnew(BG_Item);
+				new_item_class->id = entry["id"];
+				new_item_class->name = entry["name"];
+				new_item_class->description = entry["description"];
+				new_item_class->is_beast_part = true;
+				items.append(new_item_class);
+			}
+		}
+		{
+			const Dictionary items_sheet = BG_JsonUtils::GetCBDSheet(data, "items");
+			const Array lines = Array(items_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
+			{
+				const Dictionary entry = lines[i];
+				BG_Item *new_item_class = memnew(BG_Item);
+				new_item_class->id = entry["id"];
+				new_item_class->name = entry["name"];
+				new_item_class->description = entry["description"];
+				new_item_class->is_useable_item = true;
+				items.append(new_item_class);
+			}
+		}
+	}
 }
 
 BG_Booker_DB::BG_Booker_DB()
