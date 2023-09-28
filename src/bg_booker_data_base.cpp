@@ -22,10 +22,11 @@ void BG_Item::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_is_beast_part"), &BG_Item::set_is_beast_part);
 	ClassDB::bind_method(D_METHOD("get_is_useable_item"), &BG_Item::get_is_useable_item);
 	ClassDB::bind_method(D_METHOD("set_is_useable_item"), &BG_Item::set_is_useable_item);
+	// ClassDB::bind_static_method("BG_Item", D_METHOD("get_slot_types"), &BG_Item::get_slot_types);
 
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "id"), "set_id", "get_id");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_name", "get_name");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "description"), "set_description", "get_description");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "description"), "set_description", "get_description");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_beast_part"), "set_is_beast_part", "get_is_beast_part");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_useable_item"), "set_is_useable_item", "get_is_useable_item");
 }
@@ -46,9 +47,9 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_equipment"), &BG_BandMember::get_equipment);
 	ClassDB::bind_method(D_METHOD("set_equipment"), &BG_BandMember::set_equipment);
 
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_name", "get_name");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "scale"), "set_scale", "get_scale");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "personality_dialgue_id"), "set_personality_dialgue_id", "get_personality_dialgue_id");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "personality_dialgue_id"), "set_personality_dialgue_id", "get_personality_dialgue_id");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "specialization", PROPERTY_HINT_RESOURCE_TYPE, "BG_BandMemberClass"), "set_specialization", "get_specialization");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipment"), "set_equipment", "get_equipment");
 }
@@ -75,7 +76,7 @@ void BG_Band::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_current_job"), &BG_Band::get_current_job);
 	ClassDB::bind_method(D_METHOD("set_current_job"), &BG_Band::set_current_job);
 
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_name", "get_name");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "experience"), "set_experience", "get_experience");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "health"), "set_health", "get_health");
@@ -95,7 +96,7 @@ void BG_UnitStat::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_value"), &BG_UnitStat::get_value);
 	ClassDB::bind_method(D_METHOD("set_value"), &BG_UnitStat::set_value);
 
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_name", "get_name");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "value"), "set_value", "get_value");
 }
 
@@ -109,7 +110,7 @@ void BG_BandMemberClass::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_BandMemberClass::get_stats);
 	ClassDB::bind_method(D_METHOD("set_stats"), &BG_BandMemberClass::set_stats);
 
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_name", "get_name");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "stats", PROPERTY_HINT_RESOURCE_TYPE, "BG_UnitStat"), "set_stats", "get_stats");
 }
 
@@ -158,7 +159,7 @@ void BG_RewardItem::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_drop_rate"), &BG_RewardItem::get_drop_rate);
 	ClassDB::bind_method(D_METHOD("set_drop_rate"), &BG_RewardItem::set_drop_rate);
 
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "id"), "set_id", "get_id");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "drop_rate"), "set_drop_rate", "get_drop_rate");
 }
 
@@ -186,10 +187,10 @@ void BG_Job::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_acts_allowed_in"), &BG_Job::get_acts_allowed_in);
 	ClassDB::bind_method(D_METHOD("set_acts_allowed_in"), &BG_Job::set_acts_allowed_in);
 
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "id"), "set_id", "get_id");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "name"), "set_name", "get_name");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "description"), "set_description", "get_description");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "description"), "set_description", "get_description");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "weeks"), "set_weeks", "get_weeks");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "pay"), "set_pay", "get_pay");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "rewards", PROPERTY_HINT_RESOURCE_TYPE, "BG_RewardItem"), "set_rewards", "get_rewards");
@@ -253,6 +254,7 @@ void BG_Booker_Globals::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_act_stats"), &BG_Booker_Globals::get_act_stats);
 	ClassDB::bind_method(D_METHOD("set_level_guide", "array[BG_LevelGuide]"), &BG_Booker_Globals::set_level_guide);
 	ClassDB::bind_method(D_METHOD("get_level_guide"), &BG_Booker_Globals::get_level_guide);
+	ClassDB::bind_method(D_METHOD("get_item_slot_types"), &BG_Booker_Globals::get_item_slot_types);
 }
 
 ////
@@ -464,7 +466,25 @@ void BG_Booker_DB::refresh_data()
 				new_item_class->id = entry["id"];
 				new_item_class->name = entry["name"];
 				new_item_class->description = entry["description"];
+				new_item_class->slot_type = int(entry["slot_type"]);
 				items.append(new_item_class);
+			}
+
+			const Array columns = Array(equipment_sheet["columns"]);
+			for (int i = 0; i < columns.size(); i++)
+			{
+				const Dictionary entry = columns[i];
+				if (entry["name"] == "slot_type")
+				{
+					String slot_types = entry["typeStr"];
+					PackedStringArray splt_count = slot_types.split(":");
+					PackedStringArray splt_types = splt_count[1].split(",");
+					for (int x = 0; x < splt_types.size(); x++)
+					{
+						globals->item_slot_types.append(splt_types[x]);
+					}
+					break;
+				}
 			}
 		}
 		{

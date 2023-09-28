@@ -19,17 +19,17 @@ protected:
 	static void _bind_methods();
 
 public:
-	String id = "";
-	String get_id() const { return id; }
-	void set_id(String value) { id = value; }
+	StringName id = "";
+	StringName get_id() const { return id; }
+	void set_id(StringName value) { id = value; }
 
-	String name = "";
-	String get_name() const { return name; }
-	void set_name(String value) { name = value; }
+	StringName name = "";
+	StringName get_name() const { return name; }
+	void set_name(StringName value) { name = value; }
 
-	String description = "";
-	String get_description() const { return description; }
-	void set_description(String value) { description = value; }
+	StringName description = "";
+	StringName get_description() const { return description; }
+	void set_description(StringName value) { description = value; }
 
 	bool is_beast_part = false;
 	bool get_is_beast_part() const { return is_beast_part; }
@@ -37,6 +37,10 @@ public:
 
 	// bool is_permanent = false;
 	// bool get_is_permanent() { return is_permanent; }
+
+	int slot_type = 0;
+	int get_slot_type() { return slot_type; }
+	void set_slot_type(int value) { slot_type = value; }
 
 	bool is_useable_item = false;
 	bool get_is_useable_item() { return is_useable_item; }
@@ -54,9 +58,9 @@ protected:
 	static void _bind_methods();
 
 public:
-	String id = "";
-	String get_id() const { return id; }
-	void set_id(String value) { id = value; }
+	StringName id = "";
+	StringName get_id() const { return id; }
+	void set_id(StringName value) { id = value; }
 
 	float drop_rate = 0.0;
 	float get_drop_rate() const { return drop_rate; }
@@ -74,13 +78,13 @@ protected:
 	static void _bind_methods();
 
 public:
-	String id = "";
-	String get_id() const { return id; }
-	void set_id(String value) { id = value; }
+	StringName id = "";
+	StringName get_id() const { return id; }
+	void set_id(StringName value) { id = value; }
 
-	String name = "";
-	String get_name() const { return name; }
-	void set_name(String value) { name = value; }
+	StringName name = "";
+	StringName get_name() const { return name; }
+	void set_name(StringName value) { name = value; }
 
 	//FString clanmember;
 	//TArray<FSpecialization> specializations;
@@ -89,9 +93,9 @@ public:
 	int get_level() const { return level; }
 	void set_level(int value) { level = value; }
 
-	String description = "";
-	String get_description() const { return description; }
-	void set_description(String value) { description = value; }
+	StringName description = "";
+	StringName get_description() const { return description; }
+	void set_description(StringName value) { description = value; }
 
 	int weeks = 0;
 	int get_weeks() const { return weeks; }
@@ -125,11 +129,11 @@ protected:
 	static void _bind_methods();
 
 public:
-	String title = "";
-	String get_title() const { return title; }
+	StringName title = "";
+	StringName get_title() const { return title; }
 
-	String description = "";
-	String get_description() const { return description; }
+	StringName description = "";
+	StringName get_description() const { return description; }
 
 	int opens_job = 0;
 	int get_opens_job() const { return opens_job; }
@@ -161,9 +165,9 @@ protected:
 	static void _bind_methods();
 
 public:
-	String name = "";
-	String get_name() const { return name; }
-	void set_name(String value) { name = value; }
+	StringName name = "";
+	StringName get_name() const { return name; }
+	void set_name(StringName value) { name = value; }
 
 	int value = 0;
 	int get_value() const { return value; }
@@ -181,9 +185,9 @@ protected:
 	static void _bind_methods();
 
 public:
-	String name = "";
-	String get_name() const { return name; }
-	void set_name(String value) { name = value; }
+	StringName name = "";
+	StringName get_name() const { return name; }
+	void set_name(StringName value) { name = value; }
 
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
@@ -201,17 +205,17 @@ protected:
 	static void _bind_methods();
 
 public:
-	String name = "";
-	String get_name() const { return name; }
-	void set_name(String value) { name = value; }
+	StringName name = "";
+	StringName get_name() const { return name; }
+	void set_name(StringName value) { name = value; }
 
 	Vector3 scale;
 	Vector3 get_scale() const { return scale; }
 	void set_scale(Vector3 value) { scale = value; }
 
-	String personality_dialgue_id = "";
-	String get_personality_dialgue_id() const { return personality_dialgue_id; }
-	void set_personality_dialgue_id(String value) { personality_dialgue_id = value; }
+	StringName personality_dialgue_id = "";
+	StringName get_personality_dialgue_id() const { return personality_dialgue_id; }
+	void set_personality_dialgue_id(StringName value) { personality_dialgue_id = value; }
 
 	Ref<BG_BandMemberClass> specialization = nullptr;
 	Ref<BG_BandMemberClass> get_specialization() const { return specialization; }
@@ -233,9 +237,9 @@ protected:
 	static void _bind_methods();
 
 public:
-	String name = "";
-	String get_name() const { return name; }
-	void set_name(String value) { name = value; }
+	StringName name = "";
+	StringName get_name() const { return name; }
+	void set_name(StringName value) { name = value; }
 	
 	int level = 1;
 	int get_level() const { return level; }
@@ -277,8 +281,8 @@ protected:
 	static void _bind_methods();
 
 public:
-	String band_name = "";
-	String get_band_name() const { return band_name; }
+	StringName band_name = "";
+	StringName get_band_name() const { return band_name; }
 
 	TypedArray<String> hiring_dialogue_choices;
 	TypedArray<String> get_hiring_dialogue_choices() const { return hiring_dialogue_choices; }
@@ -295,9 +299,9 @@ protected:
 	static void _bind_methods();
 
 public:
-	String id = "";
-	String get_id() const { return id; }
-	void set_id(String value) { id = value; }
+	StringName id = "";
+	StringName get_id() const { return id; }
+	void set_id(StringName value) { id = value; }
 
 	// TArray<FString> willWin;
 	// TArray<FString> barelyWillWin;
@@ -426,6 +430,9 @@ public:
 	TypedArray<BG_LevelGuide> level_guide;
 	TypedArray<BG_LevelGuide> get_level_guide() const { return level_guide; }
 	void set_level_guide(TypedArray<BG_LevelGuide> p_value) { level_guide = p_value; }
+
+	TypedArray<StringName> item_slot_types;
+	TypedArray<StringName> get_item_slot_types() const { return item_slot_types; }
 };
 
 ////
