@@ -19,15 +19,15 @@ protected:
 	static void _bind_methods();
 
 public:
-	StringName id = "";
+	StringName id;
 	StringName get_id() const { return id; }
 	void set_id(StringName value) { id = value; }
 
-	StringName name = "";
+	StringName name;
 	StringName get_name() const { return name; }
 	void set_name(StringName value) { name = value; }
 
-	StringName description = "";
+	StringName description;
 	StringName get_description() const { return description; }
 	void set_description(StringName value) { description = value; }
 
@@ -38,9 +38,9 @@ public:
 	// bool is_permanent = false;
 	// bool get_is_permanent() { return is_permanent; }
 
-	int slot_type = 0;
-	int get_slot_type() { return slot_type; }
-	void set_slot_type(int value) { slot_type = value; }
+	StringName slot_type_id;
+	StringName get_slot_type_id() { return slot_type_id; }
+	void set_slot_type_id(StringName value) { slot_type_id = value; }
 
 	bool is_useable_item = false;
 	bool get_is_useable_item() { return is_useable_item; }
@@ -58,7 +58,7 @@ protected:
 	static void _bind_methods();
 
 public:
-	StringName id = "";
+	StringName id;
 	StringName get_id() const { return id; }
 	void set_id(StringName value) { id = value; }
 
@@ -78,11 +78,11 @@ protected:
 	static void _bind_methods();
 
 public:
-	StringName id = "";
+	StringName id;
 	StringName get_id() const { return id; }
 	void set_id(StringName value) { id = value; }
 
-	StringName name = "";
+	StringName name;
 	StringName get_name() const { return name; }
 	void set_name(StringName value) { name = value; }
 
@@ -93,7 +93,7 @@ public:
 	int get_level() const { return level; }
 	void set_level(int value) { level = value; }
 
-	StringName description = "";
+	StringName description;
 	StringName get_description() const { return description; }
 	void set_description(StringName value) { description = value; }
 
@@ -129,10 +129,10 @@ protected:
 	static void _bind_methods();
 
 public:
-	StringName title = "";
+	StringName title;
 	StringName get_title() const { return title; }
 
-	StringName description = "";
+	StringName description;
 	StringName get_description() const { return description; }
 
 	int opens_job = 0;
@@ -165,7 +165,7 @@ protected:
 	static void _bind_methods();
 
 public:
-	StringName name = "";
+	StringName name;
 	StringName get_name() const { return name; }
 	void set_name(StringName value) { name = value; }
 
@@ -185,7 +185,7 @@ protected:
 	static void _bind_methods();
 
 public:
-	StringName name = "";
+	StringName name;
 	StringName get_name() const { return name; }
 	void set_name(StringName value) { name = value; }
 
@@ -205,7 +205,7 @@ protected:
 	static void _bind_methods();
 
 public:
-	StringName name = "";
+	StringName name;
 	StringName get_name() const { return name; }
 	void set_name(StringName value) { name = value; }
 
@@ -213,7 +213,7 @@ public:
 	Vector3 get_scale() const { return scale; }
 	void set_scale(Vector3 value) { scale = value; }
 
-	StringName personality_dialgue_id = "";
+	StringName personality_dialgue_id;
 	StringName get_personality_dialgue_id() const { return personality_dialgue_id; }
 	void set_personality_dialgue_id(StringName value) { personality_dialgue_id = value; }
 
@@ -237,7 +237,7 @@ protected:
 	static void _bind_methods();
 
 public:
-	StringName name = "";
+	StringName name;
 	StringName get_name() const { return name; }
 	void set_name(StringName value) { name = value; }
 	
@@ -281,7 +281,7 @@ protected:
 	static void _bind_methods();
 
 public:
-	StringName band_name = "";
+	StringName band_name;
 	StringName get_band_name() const { return band_name; }
 
 	TypedArray<String> hiring_dialogue_choices;
@@ -299,7 +299,7 @@ protected:
 	static void _bind_methods();
 
 public:
-	StringName id = "";
+	StringName id;
 	StringName get_id() const { return id; }
 	void set_id(StringName value) { id = value; }
 

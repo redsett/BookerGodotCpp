@@ -22,6 +22,8 @@ void BG_Item::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_is_beast_part"), &BG_Item::set_is_beast_part);
 	ClassDB::bind_method(D_METHOD("get_is_useable_item"), &BG_Item::get_is_useable_item);
 	ClassDB::bind_method(D_METHOD("set_is_useable_item"), &BG_Item::set_is_useable_item);
+	ClassDB::bind_method(D_METHOD("get_slot_type_id"), &BG_Item::get_slot_type_id);
+	ClassDB::bind_method(D_METHOD("set_slot_type_id"), &BG_Item::set_slot_type_id);
 	// ClassDB::bind_static_method("BG_Item", D_METHOD("get_slot_types"), &BG_Item::get_slot_types);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
@@ -453,6 +455,21 @@ void BG_Booker_DB::refresh_data()
 	}
 
 	/////
+	///// Item Slot Types
+	/////
+	{
+		{
+			const Dictionary item_slot_types_sheet = BG_JsonUtils::GetCBDSheet(data, "item_slot_types");
+			const Array lines = Array(item_slot_types_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
+			{
+				const Dictionary entry = lines[i];
+				globals->item_slot_types.append(entry["id"]);
+			}
+		}
+	}
+
+	/////
 	///// Items
 	/////
 	{
@@ -466,26 +483,26 @@ void BG_Booker_DB::refresh_data()
 				new_item_class->id = entry["id"];
 				new_item_class->name = entry["name"];
 				new_item_class->description = entry["description"];
-				new_item_class->slot_type = int(entry["slot_type"]);
+				new_item_class->slot_type_id = entry["slot_type"];
 				items.append(new_item_class);
 			}
 
-			const Array columns = Array(equipment_sheet["columns"]);
-			for (int i = 0; i < columns.size(); i++)
-			{
-				const Dictionary entry = columns[i];
-				if (entry["name"] == "slot_type")
-				{
-					String slot_types = entry["typeStr"];
-					PackedStringArray splt_count = slot_types.split(":");
-					PackedStringArray splt_types = splt_count[1].split(",");
-					for (int x = 0; x < splt_types.size(); x++)
-					{
-						globals->item_slot_types.append(splt_types[x]);
-					}
-					break;
-				}
-			}
+			// const Array columns = Array(equipment_sheet["columns"]);
+			// for (int i = 0; i < columns.size(); i++)
+			// {
+			// 	const Dictionary entry = columns[i];
+			// 	if (entry["name"] == "slot_type")
+			// 	{
+			// 		String slot_types = entry["typeStr"];
+			// 		PackedStringArray splt_count = slot_types.split(":");
+			// 		PackedStringArray splt_types = splt_count[1].split(",");
+			// 		for (int x = 0; x < splt_types.size(); x++)
+			// 		{
+			// 			globals->item_slot_types.append(splt_types[x]);
+			// 		}
+			// 		break;
+			// 	}
+			// }
 		}
 		{
 			const Dictionary beast_parts_sheet = BG_JsonUtils::GetCBDSheet(data, "beast_parts");

@@ -2,10 +2,13 @@
 1. `../Booker`
 2. `../BookerGodotCpp`
 
+### Before cloning this repository, get BookerGodot if you haven't already:
+`'https://github.com/redsett/BookerGodot.git'`
+
 ### Getting started:
-1. Download and install `Git`, `Scons`, and `Visual Studio Code`
+1. Download and install `Git`, `Scons`, `python`(any version is fine), and `Visual Studio Code`
 2. Clone this repository (or a new repository with this template) with submodules.
-    - Open command prompt and go to the directory ABOVE the Booker project. E.g - Assuming that the Booker project is in C:\Projects : `cd C:\Projects` 
+    - Open command prompt and go to the directory ABOVE the Booker project. E.g - Assuming that the Booker project is here `C:\Projects\Booker` : `cd C:\Projects` 
 	- `git clone --recurse-submodules https://github.com/redsett/BookerGodotCpp.git`
     - `cd BookerGodotCpp`
 3. Build a debug binary for the current platform.
