@@ -155,6 +155,26 @@ public:
 };
 
 ////
+//// BG_UnitStatDetails
+////
+class BG_UnitStatDetails : public Object
+{
+	GDCLASS(BG_UnitStatDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+	void set_id(StringName value) { id = value; }
+
+	String icon_path = "";
+	String get_icon_path() const { return icon_path; }
+	void set_icon_path(String v) { icon_path = v; }
+};
+
+////
 //// BG_UnitStat
 ////
 class BG_UnitStat : public Resource
@@ -165,9 +185,9 @@ protected:
 	static void _bind_methods();
 
 public:
-	StringName name;
-	StringName get_name() const { return name; }
-	void set_name(StringName value) { name = value; }
+	StringName id;
+	StringName get_id() const { return id; }
+	void set_id(StringName value) { id = value; }
 
 	int value = 0;
 	int get_value() const { return value; }
@@ -175,23 +195,23 @@ public:
 };
 
 ////
-//// BG_BandMemberClass
+//// BG_UnitCaste
 ////
-class BG_BandMemberClass : public Resource
+class BG_UnitCaste : public Resource
 {
-	GDCLASS(BG_BandMemberClass, Resource);
+	GDCLASS(BG_UnitCaste, Resource);
 
 protected:
 	static void _bind_methods();
 
 public:
-	StringName name;
-	StringName get_name() const { return name; }
-	void set_name(StringName value) { name = value; }
+	StringName id;
+	StringName get_id() const { return id; }
+	void set_id(StringName p_value) { id = p_value; }
 
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
-	void set_stats(TypedArray<BG_UnitStat> value) { stats = value; }
+	void set_stats(TypedArray<BG_UnitStat> p_value) { stats = p_value; }
 };
 
 ////
@@ -217,9 +237,9 @@ public:
 	StringName get_personality_dialgue_id() const { return personality_dialgue_id; }
 	void set_personality_dialgue_id(StringName value) { personality_dialgue_id = value; }
 
-	Ref<BG_BandMemberClass> specialization = nullptr;
-	Ref<BG_BandMemberClass> get_specialization() const { return specialization; }
-	void set_specialization(Ref<BG_BandMemberClass> value) { specialization = value; }
+	Ref<BG_UnitCaste> caste = nullptr;
+	Ref<BG_UnitCaste> get_caste() const { return caste; }
+	void set_caste(Ref<BG_UnitCaste> value) { caste = value; }
 
 	TypedArray<String> equipment;
 	TypedArray<String> get_equipment() const { return equipment; }
@@ -347,8 +367,8 @@ public:
 	int num_bands_for_hire = 0;
 	int get_num_bands_for_hire() const { return num_bands_for_hire; }
 
-	TypedArray<BG_BandMemberClass> unit_classes;
-	TypedArray<BG_BandMemberClass> get_unit_classes() const { return unit_classes; }
+	TypedArray<BG_UnitCaste> unit_castes;
+	TypedArray<BG_UnitCaste> get_unit_castes() const { return unit_castes; }
 };
 
 ////
@@ -430,9 +450,6 @@ public:
 	TypedArray<BG_LevelGuide> level_guide;
 	TypedArray<BG_LevelGuide> get_level_guide() const { return level_guide; }
 	void set_level_guide(TypedArray<BG_LevelGuide> p_value) { level_guide = p_value; }
-
-	TypedArray<StringName> item_slot_types;
-	TypedArray<StringName> get_item_slot_types() const { return item_slot_types; }
 };
 
 ////
@@ -455,6 +472,9 @@ public:
 
 	void refresh_data();
 
+	String modding_path = "";
+	String get_modding_path() const { return modding_path; }
+
 	BG_Booker_Globals *globals = nullptr;
 	BG_Booker_Globals *get_globals() const { return globals; }
 
@@ -470,6 +490,14 @@ public:
 	BG_BandInfo *band_info = nullptr;
 	BG_BandInfo *get_band_info() const { return band_info; }
 
+	TypedArray<StringName> item_slot_types;
+	TypedArray<StringName> get_item_slot_types() const { return item_slot_types; }
+
+	TypedArray<BG_UnitStatDetails> damage_types;
+	TypedArray<BG_UnitStatDetails> get_damage_types() const { return damage_types; }
+
 private:
 	Dictionary data;
+
+	void try_parse_data(const String &file_path);
 };

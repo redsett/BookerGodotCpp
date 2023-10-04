@@ -3,6 +3,8 @@
 #include "bg_json_utils.hpp"
 
 #include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/classes/file_access.hpp>
+#include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace godot;
@@ -44,15 +46,15 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_scale"), &BG_BandMember::set_scale);
 	ClassDB::bind_method(D_METHOD("get_personality_dialgue_id"), &BG_BandMember::get_personality_dialgue_id);
 	ClassDB::bind_method(D_METHOD("set_personality_dialgue_id"), &BG_BandMember::set_personality_dialgue_id);
-	ClassDB::bind_method(D_METHOD("get_specialization"), &BG_BandMember::get_specialization);
-	ClassDB::bind_method(D_METHOD("set_specialization"), &BG_BandMember::set_specialization);
+	ClassDB::bind_method(D_METHOD("get_caste"), &BG_BandMember::get_caste);
+	ClassDB::bind_method(D_METHOD("set_caste"), &BG_BandMember::set_caste);
 	ClassDB::bind_method(D_METHOD("get_equipment"), &BG_BandMember::get_equipment);
 	ClassDB::bind_method(D_METHOD("set_equipment"), &BG_BandMember::set_equipment);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "scale"), "set_scale", "get_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "personality_dialgue_id"), "set_personality_dialgue_id", "get_personality_dialgue_id");
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "specialization", PROPERTY_HINT_RESOURCE_TYPE, "BG_BandMemberClass"), "set_specialization", "get_specialization");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "caste", PROPERTY_HINT_RESOURCE_TYPE, "BG_UnitCaste"), "set_caste", "get_caste");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipment"), "set_equipment", "get_equipment");
 }
 
@@ -89,30 +91,44 @@ void BG_Band::_bind_methods()
 }
 
 ////
+//// BG_UnitStatDetails
+////
+void BG_UnitStatDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitStatDetails::get_id);
+	ClassDB::bind_method(D_METHOD("set_id"), &BG_UnitStatDetails::set_id);
+	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_UnitStatDetails::get_icon_path);
+	ClassDB::bind_method(D_METHOD("set_icon_path"), &BG_UnitStatDetails::set_icon_path);
+
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "icon_path"), "set_icon_path", "get_icon_path");
+}
+
+////
 //// BG_UnitStat
 ////
 void BG_UnitStat::_bind_methods()
 {
-	ClassDB::bind_method(D_METHOD("get_name"), &BG_UnitStat::get_name);
-	ClassDB::bind_method(D_METHOD("set_name"), &BG_UnitStat::set_name);
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitStat::get_id);
+	ClassDB::bind_method(D_METHOD("set_id"), &BG_UnitStat::set_id);
 	ClassDB::bind_method(D_METHOD("get_value"), &BG_UnitStat::get_value);
 	ClassDB::bind_method(D_METHOD("set_value"), &BG_UnitStat::set_value);
 
-	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "value"), "set_value", "get_value");
 }
 
 ////
-//// BG_BandMemberClass
+//// BG_UnitCaste
 ////
-void BG_BandMemberClass::_bind_methods()
+void BG_UnitCaste::_bind_methods()
 {
-	ClassDB::bind_method(D_METHOD("get_name"), &BG_BandMemberClass::get_name);
-	ClassDB::bind_method(D_METHOD("set_name"), &BG_BandMemberClass::set_name);
-	ClassDB::bind_method(D_METHOD("get_stats"), &BG_BandMemberClass::get_stats);
-	ClassDB::bind_method(D_METHOD("set_stats"), &BG_BandMemberClass::set_stats);
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitCaste::get_id);
+	ClassDB::bind_method(D_METHOD("set_id"), &BG_UnitCaste::set_id);
+	ClassDB::bind_method(D_METHOD("get_stats"), &BG_UnitCaste::get_stats);
+	ClassDB::bind_method(D_METHOD("set_stats"), &BG_UnitCaste::set_stats);
 
-	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "stats", PROPERTY_HINT_RESOURCE_TYPE, "BG_UnitStat"), "set_stats", "get_stats");
 }
 
@@ -148,7 +164,7 @@ void BG_BandInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_monthly_cost_level_multiplier"), &BG_BandInfo::get_monthly_cost_level_multiplier);
 	ClassDB::bind_method(D_METHOD("get_band_size_min_max"), &BG_BandInfo::get_band_size_min_max);
 	ClassDB::bind_method(D_METHOD("get_num_bands_for_hire"), &BG_BandInfo::get_num_bands_for_hire);
-	ClassDB::bind_method(D_METHOD("get_unit_classes"), &BG_BandInfo::get_unit_classes);
+	ClassDB::bind_method(D_METHOD("get_unit_castes"), &BG_BandInfo::get_unit_castes);
 }
 
 ////
@@ -256,7 +272,6 @@ void BG_Booker_Globals::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_act_stats"), &BG_Booker_Globals::get_act_stats);
 	ClassDB::bind_method(D_METHOD("set_level_guide", "array[BG_LevelGuide]"), &BG_Booker_Globals::set_level_guide);
 	ClassDB::bind_method(D_METHOD("get_level_guide"), &BG_Booker_Globals::get_level_guide);
-	ClassDB::bind_method(D_METHOD("get_item_slot_types"), &BG_Booker_Globals::get_item_slot_types);
 }
 
 ////
@@ -268,11 +283,14 @@ void BG_Booker_DB::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("refresh_data"), &BG_Booker_DB::refresh_data);
 
+	ClassDB::bind_method(D_METHOD("get_modding_path"), &BG_Booker_DB::get_modding_path);
 	ClassDB::bind_method(D_METHOD("get_globals"), &BG_Booker_DB::get_globals);
-	ClassDB::bind_method(D_METHOD("get_band_info"), &BG_Booker_DB::get_band_info);
 	ClassDB::bind_method(D_METHOD("get_jobs"), &BG_Booker_DB::get_jobs);
 	ClassDB::bind_method(D_METHOD("get_job_board"), &BG_Booker_DB::get_job_board);
 	ClassDB::bind_method(D_METHOD("get_items"), &BG_Booker_DB::get_items);
+	ClassDB::bind_method(D_METHOD("get_band_info"), &BG_Booker_DB::get_band_info);
+	ClassDB::bind_method(D_METHOD("get_item_slot_types"), &BG_Booker_DB::get_item_slot_types);
+	ClassDB::bind_method(D_METHOD("get_damage_types"), &BG_Booker_DB::get_damage_types);
 	
 	// ADD_GROUP("Bread", "");
 	// ADD_PROPERTY(PropertyInfo(Variant::COLOR, "spline_color"), "set_spline_color", "get_spline_color");
@@ -289,7 +307,24 @@ void BG_Booker_DB::refresh_data()
 	globals = memnew(BG_Booker_Globals);
 	band_info = memnew(BG_BandInfo);
 
-	data = BG_JsonUtils::ParseJsonCBDDataFile("bookerData");
+	const String booker_data_file_name = "bookerData.cdb";
+	const String exe_path = OS::get_singleton()->get_executable_path().get_base_dir() + "/";
+	modding_path = exe_path + String("mod/");
+	const String modding_data_path = modding_path + booker_data_file_name;
+
+	try_parse_data("res://" + booker_data_file_name);
+
+	// If the mod data exists, then let it override any data that it has.
+	if (FileAccess::file_exists(modding_data_path))
+	{
+		UtilityFunctions::print("Log - Using modding booker data.");
+		try_parse_data(modding_data_path);
+	}
+}
+
+void BG_Booker_DB::try_parse_data(const String &file_path)
+{
+	data = BG_JsonUtils::ParseJsonFile(file_path);
 
 	//UtilityFunctions::print(BG_JsonUtils::GetCBDSheet(data, "globals"));
 
@@ -298,37 +333,74 @@ void BG_Booker_DB::refresh_data()
 	/////
 	{
 		const Dictionary globals_sheet = BG_JsonUtils::GetCBDSheet(data, "globals");
-		const Dictionary lines = Array(globals_sheet["lines"])[0];
-		globals->seconds_per_week = lines["seconds_per_week"];
-		globals->starting_reputation = lines["starting_coin"];
-
+		if (globals_sheet.has("lines"))
 		{
-			const Array rep_needed_per_act_array = Array(lines["reputation_needed_per_act"]);
-			for (int i = 0; i < rep_needed_per_act_array.size(); i++)
+			const Dictionary lines = Array(globals_sheet["lines"])[0];
+			if (lines.has("seconds_per_week"))
+				globals->seconds_per_week = lines["seconds_per_week"];
+			if (lines.has("starting_coin"))
+				globals->starting_reputation = lines["starting_coin"];
+
+			if (lines.has("reputation_needed_per_act"))
 			{
-				const Dictionary act = rep_needed_per_act_array[i];
-				BG_ActStats *new_act_stats = memnew(BG_ActStats);
-				new_act_stats->reputation_needed = act["reputation"];
-				new_act_stats->description = act["description"];
-				globals->act_stats.append(new_act_stats);
+				globals->act_stats.clear();
+
+				const Array rep_needed_per_act_array = Array(lines["reputation_needed_per_act"]);
+				for (int i = 0; i < rep_needed_per_act_array.size(); i++)
+				{
+					const Dictionary act = rep_needed_per_act_array[i];
+					BG_ActStats *new_act_stats = memnew(BG_ActStats);
+					new_act_stats->reputation_needed = act["reputation"];
+					new_act_stats->description = act["description"];
+					globals->act_stats.append(new_act_stats);
+				}
+			}
+
+			if (lines.has("job_rerolls_per_month"))
+			{
+				globals->job_rerolls_per_month.clear();
+
+				const Array jobs_rerolls_per_month_array = Array(lines["job_rerolls_per_month"]);
+				for (int i = 0; i < jobs_rerolls_per_month_array.size(); i++)
+				{
+					const Dictionary month = jobs_rerolls_per_month_array[i];
+					globals->job_rerolls_per_month.append(int(month["rerolls"]));
+				}
+			}
+
+			if (lines.has("jobs_per_month"))
+			{
+				globals->jobs_per_month_min_max.clear();
+
+				const Array jobs_per_month_array = Array(lines["jobs_per_month"]);
+				for (int i = 0; i < jobs_per_month_array.size(); i++)
+				{
+					const Dictionary month = jobs_per_month_array[i];
+					globals->jobs_per_month_min_max.append(Vector2(month["min"], month["max"]));
+				}
 			}
 		}
+	}
 
+	/////
+	///// Damage Types
+	/////
+	{
+		const Dictionary damage_types_sheet = BG_JsonUtils::GetCBDSheet(data, "damage_types");
+		if (damage_types_sheet.has("lines"))
 		{
-			const Array jobs_rerolls_per_month_array = Array(lines["job_rerolls_per_month"]);
-			for (int i = 0; i < jobs_rerolls_per_month_array.size(); i++)
-			{
-				const Dictionary month = jobs_rerolls_per_month_array[i];
-				globals->job_rerolls_per_month.append(int(month["rerolls"]));
-			}
-		}
+			damage_types.clear();
 
-		{
-			const Array jobs_per_month_array = Array(lines["jobs_per_month"]);
-			for (int i = 0; i < jobs_per_month_array.size(); i++)
+			const Array lines = Array(damage_types_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
 			{
-				const Dictionary month = jobs_per_month_array[i];
-				globals->jobs_per_month_min_max.append(Vector2(month["min"], month["max"]));
+				const Dictionary entry = lines[i];
+
+				BG_UnitStatDetails *new_damage_types = memnew(BG_UnitStatDetails);
+				new_damage_types->id = entry["id"];
+				new_damage_types->icon_path = entry["icon_path"];
+
+				damage_types.append(new_damage_types);
 			}
 		}
 	}
@@ -338,72 +410,95 @@ void BG_Booker_DB::refresh_data()
 	/////
 	{
 		const Dictionary bands_sheet = BG_JsonUtils::GetCBDSheet(data, "bands");
-		const Dictionary lines = Array(bands_sheet["lines"])[0];
-		band_info->num_bands_for_hire = lines["num_bands_for_hire"];
-
+		if (bands_sheet.has("lines"))
 		{
-			const Array band_names_array = Array(lines["names"]);
-			for (int i = 0; i < band_names_array.size(); i++)
-			{
-				const Dictionary entry = band_names_array[i];
-				BG_BandNameInfo *new_band_name_info = memnew(BG_BandNameInfo);
-				new_band_name_info->band_name = entry["name"];
+			const Dictionary lines = Array(bands_sheet["lines"])[0];
+			if (lines.has("num_bands_for_hire"))
+				band_info->num_bands_for_hire = lines["num_bands_for_hire"];
 
-				const Array band_hiring_dialogue_choices_array = Array(entry["hiring_dialogue_choices"]);
-				for (int x = 0; x < band_hiring_dialogue_choices_array.size(); x++)
+			if (lines.has("names"))
+			{
+				band_info->band_names.clear();
+
+				const Array band_names_array = Array(lines["names"]);
+				for (int i = 0; i < band_names_array.size(); i++)
 				{
-					const Dictionary hiring_dialogue_choices_entry = band_hiring_dialogue_choices_array[x];
-					new_band_name_info->hiring_dialogue_choices.append(hiring_dialogue_choices_entry["entry"]);
-				}
-				band_info->band_names.append(new_band_name_info);
-			}
-		}
+					const Dictionary entry = band_names_array[i];
+					BG_BandNameInfo *new_band_name_info = memnew(BG_BandNameInfo);
+					new_band_name_info->band_name = entry["name"];
 
-		{
-			const Array first_names_array = Array(lines["first_names"]);
-			for (int i = 0; i < first_names_array.size(); i++)
-			{
-				const Dictionary entry = first_names_array[i];
-				band_info->first_names.append(entry["name"]);
-			}
-		}
-
-		{
-			const Array last_names_array = Array(lines["last_names"]);
-			for (int i = 0; i < last_names_array.size(); i++)
-			{
-				const Dictionary entry = last_names_array[i];
-				band_info->last_names.append(entry["name"]);
-			}
-		}
-
-		{
-			const Array band_sizes_array = Array(lines["band_sizes"]);
-			const Dictionary entry = band_sizes_array[0];
-			band_info->band_size_min_max = Vector2(entry["band_size_min"], entry["band_size_max"]);
-		}
-
-		{
-			const Array unit_classes_array = Array(lines["classes"]);
-			for (int i = 0; i < unit_classes_array.size(); i++)
-			{
-				const Dictionary entry = unit_classes_array[i];
-				BG_BandMemberClass *new_unit_class = memnew(BG_BandMemberClass);
-				new_unit_class->name = entry["name"];
-
-				const Array unit_class_keys_array = entry.keys();
-				for (int x = 0; x < unit_class_keys_array.size(); x++)
-				{
-					if (unit_class_keys_array[x] != "name")
+					const Array band_hiring_dialogue_choices_array = Array(entry["hiring_dialogue_choices"]);
+					for (int x = 0; x < band_hiring_dialogue_choices_array.size(); x++)
 					{
-						BG_UnitStat *new_stat = memnew(BG_UnitStat);
-						new_stat->name = unit_class_keys_array[x];
-						new_stat->value = int(entry[unit_class_keys_array[x]]);
-
-						new_unit_class->stats.append(new_stat);
+						const Dictionary hiring_dialogue_choices_entry = band_hiring_dialogue_choices_array[x];
+						new_band_name_info->hiring_dialogue_choices.append(hiring_dialogue_choices_entry["entry"]);
 					}
+					band_info->band_names.append(new_band_name_info);
 				}
-				band_info->unit_classes.append(new_unit_class);
+			}
+
+			if (lines.has("first_names"))
+			{
+				band_info->first_names.clear();
+
+				const Array first_names_array = Array(lines["first_names"]);
+				for (int i = 0; i < first_names_array.size(); i++)
+				{
+					const Dictionary entry = first_names_array[i];
+					band_info->first_names.append(entry["name"]);
+				}
+			}
+
+			if (lines.has("last_names"))
+			{
+				band_info->last_names.clear();
+
+				const Array last_names_array = Array(lines["last_names"]);
+				for (int i = 0; i < last_names_array.size(); i++)
+				{
+					const Dictionary entry = last_names_array[i];
+					band_info->last_names.append(entry["name"]);
+				}
+			}
+
+			if (lines.has("band_sizes"))
+			{
+				const Array band_sizes_array = Array(lines["band_sizes"]);
+				const Dictionary entry = band_sizes_array[0];
+				band_info->band_size_min_max = Vector2(entry["band_size_min"], entry["band_size_max"]);
+			}
+		}
+	}
+
+	/////
+	///// Caste Types
+	/////
+	{
+		const Dictionary caste_types_sheet = BG_JsonUtils::GetCBDSheet(data, "caste_types");
+		if (caste_types_sheet.has("lines"))
+		{
+			band_info->unit_castes.clear();
+
+			const Array lines = Array(caste_types_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
+			{
+				const Dictionary entry = lines[i];
+
+				BG_UnitCaste *new_unit_caste = memnew(BG_UnitCaste);
+				new_unit_caste->id = entry["id"];
+
+				const Array damage_type_lines = Array(entry["base_damage_type_stats"]);
+				for (int y = 0; y < damage_type_lines.size(); y++)
+				{
+					const Dictionary damage_type_entry = damage_type_lines[y];
+
+					BG_UnitStat *new_stat = memnew(BG_UnitStat);
+					new_stat->id = damage_type_entry["damage_type"];
+					new_stat->value = int(damage_type_entry["base_value"]);
+
+					new_unit_caste->stats.append(new_stat);
+				}
+				band_info->unit_castes.append(new_unit_caste);
 			}
 		}
 	}
@@ -413,44 +508,49 @@ void BG_Booker_DB::refresh_data()
 	/////
 	{
 		const Dictionary jobs_sheet = BG_JsonUtils::GetCBDSheet(data, "jobs");
-		const Array lines = Array(jobs_sheet["lines"]);
-		for (int i = 0; i < lines.size(); i++)
+		if (jobs_sheet.has("lines"))
 		{
-			const Dictionary entry = lines[i];
-			BG_Job *new_job_class = memnew(BG_Job);
-			new_job_class->id = entry["id"];
-			new_job_class->name = entry["name"];
-			new_job_class->level = int(entry["level"]);
-			new_job_class->description = entry["description"];
-			new_job_class->weeks = int(entry["weeks"]);
-			new_job_class->pay = int(entry["pay"]);
-			new_job_class->is_unique = bool(entry["is_unique"]);
+			jobs.clear();
 
-			TypedArray<String> item_types;
-			item_types.append("weapon_rewards");
-			item_types.append("beast_part_rewards");
-			item_types.append("item_rewards");
-			for (int x = 0; x < item_types.size(); x++)
+			const Array lines = Array(jobs_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
 			{
-				const Array reward_lines = Array(entry[item_types[x]]);
-				for (int y = 0; y < reward_lines.size(); y++)
+				const Dictionary entry = lines[i];
+				BG_Job *new_job_class = memnew(BG_Job);
+				new_job_class->id = entry["id"];
+				new_job_class->name = entry["name"];
+				new_job_class->level = int(entry["level"]);
+				new_job_class->description = entry["description"];
+				new_job_class->weeks = int(entry["weeks"]);
+				new_job_class->pay = int(entry["pay"]);
+				new_job_class->is_unique = bool(entry["is_unique"]);
+
+				TypedArray<String> item_types;
+				item_types.append("weapon_rewards");
+				item_types.append("beast_part_rewards");
+				item_types.append("item_rewards");
+				for (int x = 0; x < item_types.size(); x++)
 				{
-					const Dictionary reward_entry = reward_lines[y];
-					BG_RewardItem *new_reward_class = memnew(BG_RewardItem);
-					new_reward_class->id = reward_entry["reward"];
-					new_reward_class->drop_rate = float(reward_entry["drop_rate"]);
-					new_job_class->rewards.append(new_reward_class);
+					const Array reward_lines = Array(entry[item_types[x]]);
+					for (int y = 0; y < reward_lines.size(); y++)
+					{
+						const Dictionary reward_entry = reward_lines[y];
+						BG_RewardItem *new_reward_class = memnew(BG_RewardItem);
+						new_reward_class->id = reward_entry["reward"];
+						new_reward_class->drop_rate = float(reward_entry["drop_rate"]);
+						new_job_class->rewards.append(new_reward_class);
+					}
 				}
-			}
 
-			const Array acts_lines = Array(entry["acts"]);
-			for (int i = 0; i < acts_lines.size(); i++)
-			{
-				const Dictionary acts_entry = acts_lines[i];
-				new_job_class->acts_allowed_in.append(int(acts_entry["act"]) + 1);
-			}
+				const Array acts_lines = Array(entry["acts"]);
+				for (int i = 0; i < acts_lines.size(); i++)
+				{
+					const Dictionary acts_entry = acts_lines[i];
+					new_job_class->acts_allowed_in.append(int(acts_entry["act"]) + 1);
+				}
 
-			jobs.append(new_job_class);
+				jobs.append(new_job_class);
+			}
 		}
 	}
 
@@ -458,13 +558,14 @@ void BG_Booker_DB::refresh_data()
 	///// Item Slot Types
 	/////
 	{
+		const Dictionary item_slot_types_sheet = BG_JsonUtils::GetCBDSheet(data, "item_slot_types");
+		if (item_slot_types_sheet.has("lines"))
 		{
-			const Dictionary item_slot_types_sheet = BG_JsonUtils::GetCBDSheet(data, "item_slot_types");
 			const Array lines = Array(item_slot_types_sheet["lines"]);
 			for (int i = 0; i < lines.size(); i++)
 			{
 				const Dictionary entry = lines[i];
-				globals->item_slot_types.append(entry["id"]);
+				item_slot_types.append(entry["id"]);
 			}
 		}
 	}
@@ -475,16 +576,19 @@ void BG_Booker_DB::refresh_data()
 	{
 		{
 			const Dictionary equipment_sheet = BG_JsonUtils::GetCBDSheet(data, "equipment");
-			const Array lines = Array(equipment_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++)
+			if (equipment_sheet.has("lines"))
 			{
-				const Dictionary entry = lines[i];
-				BG_Item *new_item_class = memnew(BG_Item);
-				new_item_class->id = entry["id"];
-				new_item_class->name = entry["name"];
-				new_item_class->description = entry["description"];
-				new_item_class->slot_type_id = entry["slot_type"];
-				items.append(new_item_class);
+				const Array lines = Array(equipment_sheet["lines"]);
+				for (int i = 0; i < lines.size(); i++)
+				{
+					const Dictionary entry = lines[i];
+					BG_Item *new_item_class = memnew(BG_Item);
+					new_item_class->id = entry["id"];
+					new_item_class->name = entry["name"];
+					new_item_class->description = entry["description"];
+					new_item_class->slot_type_id = entry["slot_type"];
+					items.append(new_item_class);
+				}
 			}
 
 			// const Array columns = Array(equipment_sheet["columns"]);
@@ -506,30 +610,36 @@ void BG_Booker_DB::refresh_data()
 		}
 		{
 			const Dictionary beast_parts_sheet = BG_JsonUtils::GetCBDSheet(data, "beast_parts");
-			const Array lines = Array(beast_parts_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++)
+			if (beast_parts_sheet.has("lines"))
 			{
-				const Dictionary entry = lines[i];
-				BG_Item *new_item_class = memnew(BG_Item);
-				new_item_class->id = entry["id"];
-				new_item_class->name = entry["name"];
-				new_item_class->description = entry["description"];
-				new_item_class->is_beast_part = true;
-				items.append(new_item_class);
+				const Array lines = Array(beast_parts_sheet["lines"]);
+				for (int i = 0; i < lines.size(); i++)
+				{
+					const Dictionary entry = lines[i];
+					BG_Item *new_item_class = memnew(BG_Item);
+					new_item_class->id = entry["id"];
+					new_item_class->name = entry["name"];
+					new_item_class->description = entry["description"];
+					new_item_class->is_beast_part = true;
+					items.append(new_item_class);
+				}
 			}
 		}
 		{
 			const Dictionary items_sheet = BG_JsonUtils::GetCBDSheet(data, "items");
-			const Array lines = Array(items_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++)
+			if (items_sheet.has("lines"))
 			{
-				const Dictionary entry = lines[i];
-				BG_Item *new_item_class = memnew(BG_Item);
-				new_item_class->id = entry["id"];
-				new_item_class->name = entry["name"];
-				new_item_class->description = entry["description"];
-				new_item_class->is_useable_item = true;
-				items.append(new_item_class);
+				const Array lines = Array(items_sheet["lines"]);
+				for (int i = 0; i < lines.size(); i++)
+				{
+					const Dictionary entry = lines[i];
+					BG_Item *new_item_class = memnew(BG_Item);
+					new_item_class->id = entry["id"];
+					new_item_class->name = entry["name"];
+					new_item_class->description = entry["description"];
+					new_item_class->is_useable_item = true;
+					items.append(new_item_class);
+				}
 			}
 		}
 	}

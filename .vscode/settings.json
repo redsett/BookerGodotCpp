@@ -34,7 +34,10 @@
         "ratio": "cpp",
         "tuple": "cpp",
         "utility": "cpp",
-        "xmemory": "cpp"
+        "xmemory": "cpp",
+        "atomic": "cpp",
+        "ios": "cpp",
+        "xiosbase": "cpp"
     },
     "cmake.configureOnOpen": false
 }

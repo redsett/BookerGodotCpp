@@ -1,16 +1,11 @@
 #include "bg_json_utils.hpp"
 
-#include <godot_cpp/core/class_db.hpp>
-#include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/json.hpp>
+#include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace godot;
-
-/* static */ Dictionary BG_JsonUtils::ParseJsonCBDDataFile(const String &relative_file_path)
-{
-	return ParseJsonFile("res://Data/" + relative_file_path + ".cdb");
-}
 
 /* static */ Dictionary BG_JsonUtils::ParseJsonFile(const String &file_path)
 {
@@ -40,5 +35,6 @@ using namespace godot;
 			return sheet;
 		}
 	}
-	ERR_FAIL_COND_V_EDMSG(false, {}, vformat("Sheet '%s' does not exist in the cbd data : ", sheet_name));
+	return {};
+	//ERR_FAIL_COND_V_EDMSG(false, {}, vformat("Sheet '%s' does not exist in the cbd data : ", sheet_name));
 }
