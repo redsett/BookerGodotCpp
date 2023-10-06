@@ -167,11 +167,12 @@ protected:
 public:
 	StringName id;
 	StringName get_id() const { return id; }
-	void set_id(StringName value) { id = value; }
 
 	String icon_path = "";
 	String get_icon_path() const { return icon_path; }
-	void set_icon_path(String v) { icon_path = v; }
+
+	bool is_damage_type = false;
+	bool get_is_damage_type() const { return is_damage_type; }
 };
 
 ////
@@ -208,6 +209,8 @@ public:
 	StringName id;
 	StringName get_id() const { return id; }
 	void set_id(StringName p_value) { id = p_value; }
+
+
 
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
@@ -493,8 +496,8 @@ public:
 	TypedArray<StringName> item_slot_types;
 	TypedArray<StringName> get_item_slot_types() const { return item_slot_types; }
 
-	TypedArray<BG_UnitStatDetails> damage_types;
-	TypedArray<BG_UnitStatDetails> get_damage_types() const { return damage_types; }
+	TypedArray<BG_UnitStatDetails> stat_types;
+	TypedArray<BG_UnitStatDetails> get_stat_types() const { return stat_types; }
 
 private:
 	Dictionary data;

@@ -96,12 +96,8 @@ void BG_Band::_bind_methods()
 void BG_UnitStatDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitStatDetails::get_id);
-	ClassDB::bind_method(D_METHOD("set_id"), &BG_UnitStatDetails::set_id);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_UnitStatDetails::get_icon_path);
-	ClassDB::bind_method(D_METHOD("set_icon_path"), &BG_UnitStatDetails::set_icon_path);
-
-	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "icon_path"), "set_icon_path", "get_icon_path");
+	ClassDB::bind_method(D_METHOD("get_is_damage_type"), &BG_UnitStatDetails::get_is_damage_type);
 }
 
 ////
@@ -290,7 +286,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_items"), &BG_Booker_DB::get_items);
 	ClassDB::bind_method(D_METHOD("get_band_info"), &BG_Booker_DB::get_band_info);
 	ClassDB::bind_method(D_METHOD("get_item_slot_types"), &BG_Booker_DB::get_item_slot_types);
-	ClassDB::bind_method(D_METHOD("get_damage_types"), &BG_Booker_DB::get_damage_types);
+	ClassDB::bind_method(D_METHOD("get_stat_types"), &BG_Booker_DB::get_stat_types);
 	
 	// ADD_GROUP("Bread", "");
 	// ADD_PROPERTY(PropertyInfo(Variant::COLOR, "spline_color"), "set_spline_color", "get_spline_color");
@@ -383,24 +379,25 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 	}
 
 	/////
-	///// Damage Types
+	///// Stat Types
 	/////
 	{
-		const Dictionary damage_types_sheet = BG_JsonUtils::GetCBDSheet(data, "damage_types");
-		if (damage_types_sheet.has("lines"))
+		const Dictionary stat_types_sheet = BG_JsonUtils::GetCBDSheet(data, "stat_types");
+		if (stat_types_sheet.has("lines"))
 		{
-			damage_types.clear();
+			stat_types.clear();
 
-			const Array lines = Array(damage_types_sheet["lines"]);
+			const Array lines = Array(stat_types_sheet["lines"]);
 			for (int i = 0; i < lines.size(); i++)
 			{
 				const Dictionary entry = lines[i];
 
-				BG_UnitStatDetails *new_damage_types = memnew(BG_UnitStatDetails);
-				new_damage_types->id = entry["id"];
-				new_damage_types->icon_path = entry["icon_path"];
+				BG_UnitStatDetails *new_stat_types = memnew(BG_UnitStatDetails);
+				new_stat_types->id = entry["id"];
+				new_stat_types->icon_path = entry["icon_path"];
+				new_stat_types->is_damage_type = bool(entry["is_damage_type"]);
 
-				damage_types.append(new_damage_types);
+				stat_types.append(new_stat_types);
 			}
 		}
 	}
