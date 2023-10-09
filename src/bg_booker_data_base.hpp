@@ -86,9 +86,6 @@ public:
 	StringName get_name() const { return name; }
 	void set_name(StringName value) { name = value; }
 
-	//FString clanmember;
-	//TArray<FSpecialization> specializations;
-	
 	int level = 0;
 	int get_level() const { return level; }
 	void set_level(int value) { level = value; }
@@ -97,17 +94,23 @@ public:
 	StringName get_description() const { return description; }
 	void set_description(StringName value) { description = value; }
 
+	//FString clanmember;
+
 	int weeks = 0;
 	int get_weeks() const { return weeks; }
 	void set_weeks(int value) { weeks = value; }
 
-	int pay = 0;
-	int get_pay() const { return pay; }
-	void set_pay(int value) { pay = value; }
+	TypedArray<StringName> monsters_ids;
+	TypedArray<StringName> get_monsters_ids() const { return monsters_ids; }
+	void set_monsters_ids(TypedArray<StringName> value) { monsters_ids = value; }
 
-	TypedArray<BG_RewardItem> rewards;
-	TypedArray<BG_RewardItem> get_rewards() const { return rewards; }
-	void set_rewards(TypedArray<BG_RewardItem> value) { rewards = value; }
+	TypedArray<float> monsters_spawn_chances;
+	TypedArray<float> get_monsters_spawn_chances() const { return monsters_spawn_chances; }
+	void set_monsters_spawn_chances(TypedArray<float> value) { monsters_spawn_chances = value; }
+
+	Vector2i monster_count_range;
+	Vector2i get_monster_count_range() const { return monster_count_range; }
+	void set_monster_count_range(Vector2i value) { monster_count_range = value; }
 
 	bool is_unique = false;
 	bool get_is_unique() const { return is_unique; }
@@ -193,6 +196,12 @@ public:
 	int value = 0;
 	int get_value() const { return value; }
 	void set_value(int v) { value = v; }
+
+	int offensive_value = 0;
+	int get_offensive_value() const { return offensive_value; }
+
+	int defensive_value = 0;
+	int get_defensive_value() const { return defensive_value; }
 };
 
 ////
@@ -333,6 +342,36 @@ public:
 };
 
 ////
+//// BG_Monster
+////
+class BG_Monster : public Resource
+{
+	GDCLASS(BG_Monster, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+	void set_id(StringName value) { id = value; }
+
+	StringName name;
+	StringName get_name() const { return name; }
+	void set_name(StringName value) { name = value; }
+
+	TypedArray<BG_UnitStat> stats;
+	TypedArray<BG_UnitStat> get_stats() const { return stats; }
+	void set_stats(TypedArray<BG_UnitStat> value) { stats = value; }
+
+	StringName icon_path;
+	StringName get_icon_path() const { return icon_path; }
+
+	TypedArray<BG_RewardItem> beast_part_rewards;
+	TypedArray<BG_RewardItem> get_beast_part_rewards() const { return beast_part_rewards; }
+};
+
+////
 //// BG_BandInfo
 ////
 class BG_BandInfo : public Object
@@ -344,13 +383,16 @@ protected:
 
 public:
 	TypedArray<BG_BandNameInfo> band_names;
-	TypedArray<BG_BandNameInfo>  get_band_names() const { return band_names; }
+	TypedArray<BG_BandNameInfo> get_band_names() const { return band_names; }
 
-	TypedArray<String> first_names;
-	TypedArray<String> get_first_names() const { return first_names; }
+	TypedArray<StringName> icon_paths;
+	TypedArray<StringName> get_icon_paths() const { return icon_paths; }
 
-	TypedArray<String> last_names;
-	TypedArray<String> get_last_names() const { return last_names; }
+	TypedArray<StringName> first_names;
+	TypedArray<StringName> get_first_names() const { return first_names; }
+
+	TypedArray<StringName> last_names;
+	TypedArray<StringName> get_last_names() const { return last_names; }
 
 	TypedArray<BG_PersonalityDialgue> personality_dialgue;
 	TypedArray<BG_PersonalityDialgue> get_personality_dialgue() const { return personality_dialgue; }
@@ -498,6 +540,9 @@ public:
 
 	TypedArray<BG_UnitStatDetails> stat_types;
 	TypedArray<BG_UnitStatDetails> get_stat_types() const { return stat_types; }
+
+	TypedArray<BG_Monster> monster_types;
+	TypedArray<BG_Monster> get_monster_types() const { return monster_types; }
 
 private:
 	Dictionary data;
