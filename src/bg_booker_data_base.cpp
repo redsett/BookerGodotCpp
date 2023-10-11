@@ -107,14 +107,14 @@ void BG_UnitStat::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitStat::get_id);
 	ClassDB::bind_method(D_METHOD("set_id"), &BG_UnitStat::set_id);
-	ClassDB::bind_method(D_METHOD("get_value"), &BG_UnitStat::get_value);
-	ClassDB::bind_method(D_METHOD("set_value"), &BG_UnitStat::set_value);
+	ClassDB::bind_method(D_METHOD("get_bonus_percentage"), &BG_UnitStat::get_bonus_percentage);
+	ClassDB::bind_method(D_METHOD("set_bonus_percentage"), &BG_UnitStat::set_bonus_percentage);
 
 	ClassDB::bind_method(D_METHOD("get_offensive_value"), &BG_UnitStat::get_offensive_value);
 	ClassDB::bind_method(D_METHOD("get_defensive_value"), &BG_UnitStat::get_defensive_value);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "value"), "set_value", "get_value");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "bonus_percentage"), "set_bonus_percentage", "get_bonus_percentage");
 }
 
 ////
@@ -516,7 +516,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 
 					BG_UnitStat *new_stat = memnew(BG_UnitStat);
 					new_stat->id = damage_type_entry["damage_type"];
-					new_stat->value = int(damage_type_entry["base_value"]);
+					new_stat->bonus_percentage = float(damage_type_entry["base_damage_type_stats"]);
 
 					new_unit_caste->stats.append(new_stat);
 				}

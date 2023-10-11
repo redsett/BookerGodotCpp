@@ -193,9 +193,9 @@ public:
 	StringName get_id() const { return id; }
 	void set_id(StringName value) { id = value; }
 
-	int value = 0;
-	int get_value() const { return value; }
-	void set_value(int v) { value = v; }
+	float bonus_percentage = 0.0f;
+	float get_bonus_percentage() const { return bonus_percentage; }
+	void set_bonus_percentage(float v) { bonus_percentage = v; }
 
 	int offensive_value = 0;
 	int get_offensive_value() const { return offensive_value; }
