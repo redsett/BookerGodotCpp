@@ -77,8 +77,8 @@ void BG_Band::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_resting"), &BG_Band::set_resting);
 	ClassDB::bind_method(D_METHOD("get_band_members"), &BG_Band::get_band_members);
 	ClassDB::bind_method(D_METHOD("set_band_members"), &BG_Band::set_band_members);
-	ClassDB::bind_method(D_METHOD("get_current_job"), &BG_Band::get_current_job);
-	ClassDB::bind_method(D_METHOD("set_current_job"), &BG_Band::set_current_job);
+	ClassDB::bind_method(D_METHOD("get_current_job_id"), &BG_Band::get_current_job_id);
+	ClassDB::bind_method(D_METHOD("set_current_job_id"), &BG_Band::set_current_job_id);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
@@ -87,7 +87,7 @@ void BG_Band::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "max_health"), "set_max_health", "get_max_health");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "resting"), "set_resting", "get_resting");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "band_members"), "set_band_members", "get_band_members");
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "current_job", PROPERTY_HINT_NODE_TYPE, "BG_Job"), "set_current_job", "get_current_job");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "current_job_id"), "set_current_job_id", "get_current_job_id");
 }
 
 ////
@@ -202,41 +202,20 @@ void BG_RewardItem::_bind_methods()
 }
 
 ////
-//// BG_Job
+//// BG_JobDetails
 ////
-void BG_Job::_bind_methods()
+void BG_JobDetails::_bind_methods()
 {
-	ClassDB::bind_method(D_METHOD("get_id"), &BG_Job::get_id);
-	ClassDB::bind_method(D_METHOD("set_id"), &BG_Job::set_id);
-	ClassDB::bind_method(D_METHOD("get_name"), &BG_Job::get_name);
-	ClassDB::bind_method(D_METHOD("set_name"), &BG_Job::set_name);
-	ClassDB::bind_method(D_METHOD("get_level"), &BG_Job::get_level);
-	ClassDB::bind_method(D_METHOD("set_level"), &BG_Job::set_level);
-	ClassDB::bind_method(D_METHOD("get_description"), &BG_Job::get_description);
-	ClassDB::bind_method(D_METHOD("set_description"), &BG_Job::set_description);
-	ClassDB::bind_method(D_METHOD("get_weeks"), &BG_Job::get_weeks);
-	ClassDB::bind_method(D_METHOD("set_weeks"), &BG_Job::set_weeks);
-	ClassDB::bind_method(D_METHOD("get_monsters_ids"), &BG_Job::get_monsters_ids);
-	ClassDB::bind_method(D_METHOD("set_monsters_ids"), &BG_Job::set_monsters_ids);
-	ClassDB::bind_method(D_METHOD("get_monsters_spawn_chances"), &BG_Job::get_monsters_spawn_chances);
-	ClassDB::bind_method(D_METHOD("set_monsters_spawn_chances"), &BG_Job::set_monsters_spawn_chances);
-	ClassDB::bind_method(D_METHOD("get_monster_count_range"), &BG_Job::get_monster_count_range);
-	ClassDB::bind_method(D_METHOD("set_monster_count_range"), &BG_Job::set_monster_count_range);
-	ClassDB::bind_method(D_METHOD("get_is_unique"), &BG_Job::get_is_unique);
-	ClassDB::bind_method(D_METHOD("set_is_unique"), &BG_Job::set_is_unique);
-	ClassDB::bind_method(D_METHOD("get_acts_allowed_in"), &BG_Job::get_acts_allowed_in);
-	ClassDB::bind_method(D_METHOD("set_acts_allowed_in"), &BG_Job::set_acts_allowed_in);
-
-	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "description"), "set_description", "get_description");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "weeks"), "set_weeks", "get_weeks");
-	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "monsters_ids"), "set_monsters_ids", "get_monsters_ids");
-	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "monsters_spawn_chances"), "set_monsters_spawn_chances", "get_monsters_spawn_chances");
-	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "monster_count_range"), "set_monster_count_range", "get_monster_count_range");
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_unique"), "set_is_unique", "get_is_unique");
-	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "acts_allowed_in"), "set_acts_allowed_in", "get_acts_allowed_in");
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_JobDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_name"), &BG_JobDetails::get_name);
+	ClassDB::bind_method(D_METHOD("get_level"), &BG_JobDetails::get_level);
+	ClassDB::bind_method(D_METHOD("get_description"), &BG_JobDetails::get_description);
+	ClassDB::bind_method(D_METHOD("get_weeks"), &BG_JobDetails::get_weeks);
+	ClassDB::bind_method(D_METHOD("get_monsters_ids"), &BG_JobDetails::get_monsters_ids);
+	ClassDB::bind_method(D_METHOD("get_monsters_spawn_chances"), &BG_JobDetails::get_monsters_spawn_chances);
+	ClassDB::bind_method(D_METHOD("get_monster_count_range"), &BG_JobDetails::get_monster_count_range);
+	ClassDB::bind_method(D_METHOD("get_is_unique"), &BG_JobDetails::get_is_unique);
+	ClassDB::bind_method(D_METHOD("get_acts_allowed_in"), &BG_JobDetails::get_acts_allowed_in);
 }
 
 ////
@@ -588,7 +567,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			for (int i = 0; i < lines.size(); i++)
 			{
 				const Dictionary entry = lines[i];
-				BG_Job *new_job_class = memnew(BG_Job);
+				BG_JobDetails *new_job_class = memnew(BG_JobDetails);
 				new_job_class->id = entry["id"];
 				new_job_class->name = entry["name"];
 				new_job_class->level = int(entry["level"]);

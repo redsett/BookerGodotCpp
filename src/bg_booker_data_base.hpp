@@ -70,9 +70,9 @@ public:
 ////
 //// BG_Job
 ////
-class BG_Job : public Resource
+class BG_JobDetails : public Object
 {
-	GDCLASS(BG_Job, Resource);
+	GDCLASS(BG_JobDetails, Object);
 
 protected:
 	static void _bind_methods();
@@ -80,45 +80,35 @@ protected:
 public:
 	StringName id;
 	StringName get_id() const { return id; }
-	void set_id(StringName value) { id = value; }
 
 	StringName name;
 	StringName get_name() const { return name; }
-	void set_name(StringName value) { name = value; }
 
 	int level = 0;
 	int get_level() const { return level; }
-	void set_level(int value) { level = value; }
 
 	StringName description;
 	StringName get_description() const { return description; }
-	void set_description(StringName value) { description = value; }
 
 	//FString clanmember;
 
 	int weeks = 0;
 	int get_weeks() const { return weeks; }
-	void set_weeks(int value) { weeks = value; }
 
 	TypedArray<StringName> monsters_ids;
 	TypedArray<StringName> get_monsters_ids() const { return monsters_ids; }
-	void set_monsters_ids(TypedArray<StringName> value) { monsters_ids = value; }
 
 	TypedArray<float> monsters_spawn_chances;
 	TypedArray<float> get_monsters_spawn_chances() const { return monsters_spawn_chances; }
-	void set_monsters_spawn_chances(TypedArray<float> value) { monsters_spawn_chances = value; }
 
 	Vector2i monster_count_range;
 	Vector2i get_monster_count_range() const { return monster_count_range; }
-	void set_monster_count_range(Vector2i value) { monster_count_range = value; }
 
 	bool is_unique = false;
 	bool get_is_unique() const { return is_unique; }
-	void set_is_unique(bool value) { is_unique = value; }
 
 	TypedArray<int> acts_allowed_in;
 	TypedArray<int> get_acts_allowed_in() const { return acts_allowed_in; }
-	void set_acts_allowed_in(TypedArray<int> value) { acts_allowed_in = value; }
 };
 
 ////
@@ -297,9 +287,9 @@ public:
 	TypedArray<BG_BandMember> get_band_members() const { return band_members; }
 	void set_band_members(TypedArray<BG_BandMember> value) { band_members = value; }
 
-	Ref<BG_Job> current_job = nullptr;
-	Ref<BG_Job> get_current_job() const { return current_job; }
-	void set_current_job(Ref<BG_Job> value) { current_job = value; }
+	StringName current_job_id;
+	StringName get_current_job_id() const { return current_job_id; }
+	void set_current_job_id(StringName value) { current_job_id = value; }
 };
 
 ////
@@ -523,8 +513,8 @@ public:
 	BG_Booker_Globals *globals = nullptr;
 	BG_Booker_Globals *get_globals() const { return globals; }
 
-	TypedArray<BG_Job> jobs;
-	TypedArray<BG_Job> get_jobs() const { return jobs; }
+	TypedArray<BG_JobDetails> jobs;
+	TypedArray<BG_JobDetails> get_jobs() const { return jobs; }
 
 	TypedArray<BG_JobBoardItems> job_board;
 	TypedArray<BG_JobBoardItems> get_job_board() const { return job_board; }
