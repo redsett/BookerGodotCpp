@@ -9,6 +9,17 @@
 
 using namespace godot;
 
+#define TIME_FUNC(func) \
+    do { \
+        clock_t start, end; \
+        double elapsed; \
+        start = clock(); \
+        func.call(); \
+        end = clock(); \
+        elapsed = (double)(end - start) / CLOCKS_PER_SEC; \
+        UtilityFunctions::print("The function '", func.get_method(), "' took ", elapsed, " seconds to execute."); \
+    } while (0)
+
 ////
 //// BG_Item
 ////
@@ -284,6 +295,7 @@ BG_Booker_DB *BG_Booker_DB::singleton = nullptr;
 void BG_Booker_DB::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("refresh_data"), &BG_Booker_DB::refresh_data);
+	ClassDB::bind_static_method("BG_Booker_DB", D_METHOD("timer_test"), &BG_Booker_DB::timer_test);
 
 	ClassDB::bind_method(D_METHOD("get_modding_path"), &BG_Booker_DB::get_modding_path);
 	ClassDB::bind_method(D_METHOD("get_globals"), &BG_Booker_DB::get_globals);
@@ -319,6 +331,11 @@ void BG_Booker_DB::refresh_data()
 		UtilityFunctions::print("Log - Using modding booker data.");
 		try_parse_data(modding_data_path);
 	}
+}
+
+/* static */ void BG_Booker_DB::timer_test(Callable callable)
+{
+	TIME_FUNC(callable);
 }
 
 void BG_Booker_DB::try_parse_data(const String &file_path)

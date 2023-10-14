@@ -507,6 +507,8 @@ public:
 
 	void refresh_data();
 
+	static void timer_test(Callable callable);
+
 	String modding_path = "";
 	String get_modding_path() const { return modding_path; }
 
