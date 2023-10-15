@@ -68,7 +68,7 @@ public:
 };
 
 ////
-//// BG_Job
+//// BG_JobDetails
 ////
 class BG_JobDetails : public Object
 {
@@ -463,28 +463,22 @@ public:
 
 	int starting_reputation = 0;
 	int get_starting_reputation() const { return starting_reputation; }
-	void set_starting_reputation(int p_value) { starting_reputation = p_value; }
 
 	int seconds_per_week = 0;
 	int get_seconds_per_week() const { return seconds_per_week; }
-	void set_seconds_per_week(int p_value) { seconds_per_week = p_value; }
 
-	TypedArray<Vector2> jobs_per_month_min_max;
-	TypedArray<Vector2> get_jobs_per_month_min_max() const { return jobs_per_month_min_max; }
-	void set_jobs_per_month_min_max(TypedArray<Vector2> p_value) { jobs_per_month_min_max = p_value; }
+	TypedArray<Vector2i> jobs_per_month_min_max;
+	TypedArray<Vector2i> get_jobs_per_month_min_max() const { return jobs_per_month_min_max; }
 	
 	TypedArray<int> job_rerolls_per_month;
 	TypedArray<int> get_job_rerolls_per_month() const { return job_rerolls_per_month; }
-	void set_job_rerolls_per_month(TypedArray<int> p_value) { job_rerolls_per_month = p_value; }
 
 	//MyCustomClass* result = dynamic_cast<MyCustomClass*>(container.object());
 	TypedArray<BG_ActStats> act_stats;
 	TypedArray<BG_ActStats> get_act_stats() const { return act_stats; }
-	void set_act_stats(TypedArray<BG_ActStats> p_value) { act_stats = p_value; }
 	
 	TypedArray<BG_LevelGuide> level_guide;
 	TypedArray<BG_LevelGuide> get_level_guide() const { return level_guide; }
-	void set_level_guide(TypedArray<BG_LevelGuide> p_value) { level_guide = p_value; }
 };
 
 ////

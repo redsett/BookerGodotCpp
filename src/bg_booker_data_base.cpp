@@ -273,17 +273,11 @@ void BG_ActStats::_bind_methods()
 ////
 void BG_Booker_Globals::_bind_methods()
 {
-	ClassDB::bind_method(D_METHOD("set_starting_reputation", "int"), &BG_Booker_Globals::set_starting_reputation);
 	ClassDB::bind_method(D_METHOD("get_starting_reputation"), &BG_Booker_Globals::get_starting_reputation);
-	ClassDB::bind_method(D_METHOD("set_seconds_per_week", "int"), &BG_Booker_Globals::set_seconds_per_week);
 	ClassDB::bind_method(D_METHOD("get_seconds_per_week"), &BG_Booker_Globals::get_seconds_per_week);
-	ClassDB::bind_method(D_METHOD("set_jobs_per_month_min_max", "vector2[min, max]"), &BG_Booker_Globals::set_jobs_per_month_min_max);
 	ClassDB::bind_method(D_METHOD("get_jobs_per_month_min_max"), &BG_Booker_Globals::get_jobs_per_month_min_max);
-	ClassDB::bind_method(D_METHOD("set_job_rerolls_per_month", "array[int]"), &BG_Booker_Globals::set_job_rerolls_per_month);
 	ClassDB::bind_method(D_METHOD("get_job_rerolls_per_month"), &BG_Booker_Globals::get_job_rerolls_per_month);
-	ClassDB::bind_method(D_METHOD("set_act_stats", "array[BG_ActStats]"), &BG_Booker_Globals::set_act_stats);
 	ClassDB::bind_method(D_METHOD("get_act_stats"), &BG_Booker_Globals::get_act_stats);
-	ClassDB::bind_method(D_METHOD("set_level_guide", "array[BG_LevelGuide]"), &BG_Booker_Globals::set_level_guide);
 	ClassDB::bind_method(D_METHOD("get_level_guide"), &BG_Booker_Globals::get_level_guide);
 }
 
@@ -392,7 +386,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				for (int i = 0; i < jobs_per_month_array.size(); i++)
 				{
 					const Dictionary month = jobs_per_month_array[i];
-					globals->jobs_per_month_min_max.append(Vector2(month["min"], month["max"]));
+					globals->jobs_per_month_min_max.append(Vector2i(int(month["min"]), int(month["max"])));
 				}
 			}
 		}
@@ -629,7 +623,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				for (int i = 0; i < acts_lines.size(); i++)
 				{
 					const Dictionary acts_entry = acts_lines[i];
-					new_job_class->acts_allowed_in.append(int(acts_entry["act"]) + 1);
+					new_job_class->acts_allowed_in.append(int(acts_entry["act"]));
 				}
 
 				jobs.append(new_job_class);
