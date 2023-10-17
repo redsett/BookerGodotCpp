@@ -21,6 +21,37 @@ using namespace godot;
     } while (0)
 
 ////
+//// BG_UnitStatDetails
+////
+void BG_UnitStatDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitStatDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_UnitStatDetails::get_icon_path);
+	ClassDB::bind_method(D_METHOD("get_is_damage_type"), &BG_UnitStatDetails::get_is_damage_type);
+}
+
+////
+//// BG_UnitStat
+////
+void BG_UnitStat::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitStat::get_id);
+	ClassDB::bind_method(D_METHOD("set_id"), &BG_UnitStat::set_id);
+	ClassDB::bind_method(D_METHOD("get_bonus_percentage"), &BG_UnitStat::get_bonus_percentage);
+	ClassDB::bind_method(D_METHOD("set_bonus_percentage"), &BG_UnitStat::set_bonus_percentage);
+
+	ClassDB::bind_method(D_METHOD("get_offensive_value"), &BG_UnitStat::get_offensive_value);
+	ClassDB::bind_method(D_METHOD("set_offensive_value"), &BG_UnitStat::set_offensive_value);
+	ClassDB::bind_method(D_METHOD("get_defensive_value"), &BG_UnitStat::get_defensive_value);
+	ClassDB::bind_method(D_METHOD("set_defensive_value"), &BG_UnitStat::set_defensive_value);
+
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "bonus_percentage"), "set_bonus_percentage", "get_bonus_percentage");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "offensive_value"), "set_offensive_value", "get_offensive_value");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "defensive_value"), "set_defensive_value", "get_defensive_value");
+}
+
+////
 //// BG_Item
 ////
 void BG_Item::_bind_methods()
@@ -37,6 +68,10 @@ void BG_Item::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_is_useable_item"), &BG_Item::set_is_useable_item);
 	ClassDB::bind_method(D_METHOD("get_slot_type_id"), &BG_Item::get_slot_type_id);
 	ClassDB::bind_method(D_METHOD("set_slot_type_id"), &BG_Item::set_slot_type_id);
+	ClassDB::bind_method(D_METHOD("get_stats"), &BG_Item::get_stats);
+	ClassDB::bind_method(D_METHOD("set_stats"), &BG_Item::set_stats);
+	ClassDB::bind_method(D_METHOD("get_graft"), &BG_Item::get_graft);
+	ClassDB::bind_method(D_METHOD("set_graft"), &BG_Item::set_graft);
 	// ClassDB::bind_static_method("BG_Item", D_METHOD("get_slot_types"), &BG_Item::get_slot_types);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
@@ -44,6 +79,8 @@ void BG_Item::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "description"), "set_description", "get_description");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_beast_part"), "set_is_beast_part", "get_is_beast_part");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_useable_item"), "set_is_useable_item", "get_is_useable_item");
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "stats"), "set_stats", "get_stats");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "graft"), "set_graft", "get_graft");
 }
 
 ////
@@ -99,33 +136,6 @@ void BG_Band::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "resting"), "set_resting", "get_resting");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "band_members"), "set_band_members", "get_band_members");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "current_job_id"), "set_current_job_id", "get_current_job_id");
-}
-
-////
-//// BG_UnitStatDetails
-////
-void BG_UnitStatDetails::_bind_methods()
-{
-	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitStatDetails::get_id);
-	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_UnitStatDetails::get_icon_path);
-	ClassDB::bind_method(D_METHOD("get_is_damage_type"), &BG_UnitStatDetails::get_is_damage_type);
-}
-
-////
-//// BG_UnitStat
-////
-void BG_UnitStat::_bind_methods()
-{
-	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitStat::get_id);
-	ClassDB::bind_method(D_METHOD("set_id"), &BG_UnitStat::set_id);
-	ClassDB::bind_method(D_METHOD("get_bonus_percentage"), &BG_UnitStat::get_bonus_percentage);
-	ClassDB::bind_method(D_METHOD("set_bonus_percentage"), &BG_UnitStat::set_bonus_percentage);
-
-	ClassDB::bind_method(D_METHOD("get_offensive_value"), &BG_UnitStat::get_offensive_value);
-	ClassDB::bind_method(D_METHOD("get_defensive_value"), &BG_UnitStat::get_defensive_value);
-
-	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "bonus_percentage"), "set_bonus_percentage", "get_bonus_percentage");
 }
 
 ////
@@ -716,6 +726,20 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->description = entry["description"];
 					new_item_class->is_useable_item = true;
 					items.append(new_item_class);
+
+					// Stats
+					const Array stats_lines = Array(entry["stats"]);
+					for (int y = 0; y < stats_lines.size(); y++)
+					{
+						const Dictionary stat_entry = stats_lines[y];
+
+						BG_UnitStat *new_stat = memnew(BG_UnitStat);
+						new_stat->id = stat_entry["stat"];
+						new_stat->offensive_value = int(stat_entry["offensive_value"]);
+						new_stat->defensive_value = int(stat_entry["defensive_value"]);
+
+						new_item_class->stats.append(new_stat);
+					}
 				}
 			}
 		}

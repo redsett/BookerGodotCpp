@@ -9,6 +9,55 @@
 using namespace godot;
 
 ////
+//// BG_UnitStatDetails
+////
+class BG_UnitStatDetails : public Object
+{
+	GDCLASS(BG_UnitStatDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	String icon_path = "";
+	String get_icon_path() const { return icon_path; }
+
+	bool is_damage_type = false;
+	bool get_is_damage_type() const { return is_damage_type; }
+};
+
+////
+//// BG_UnitStat
+////
+class BG_UnitStat : public Resource
+{
+	GDCLASS(BG_UnitStat, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+	void set_id(StringName value) { id = value; }
+
+	float bonus_percentage = 0.0f;
+	float get_bonus_percentage() const { return bonus_percentage; }
+	void set_bonus_percentage(float v) { bonus_percentage = v; }
+
+	int offensive_value = 0;
+	int get_offensive_value() const { return offensive_value; }
+	void set_offensive_value(int v) { offensive_value = v; }
+
+	int defensive_value = 0;
+	int get_defensive_value() const { return defensive_value; }
+	void set_defensive_value(int v) { defensive_value = v; }
+};
+
+////
 //// BG_Item
 ////
 class BG_Item : public Resource
@@ -45,6 +94,14 @@ public:
 	bool is_useable_item = false;
 	bool get_is_useable_item() { return is_useable_item; }
 	void set_is_useable_item(bool value) { is_useable_item = value; }
+
+	TypedArray<BG_UnitStat> stats;
+	TypedArray<BG_UnitStat> get_stats() const { return stats; }
+	void set_stats(TypedArray<BG_UnitStat> value) { stats = value; }
+
+	Ref<BG_UnitStat> graft;
+	Ref<BG_UnitStat> get_graft() const { return graft; }
+	void set_graft(Ref<BG_UnitStat> value) { graft = value; }
 };
 
 ////
@@ -148,53 +205,6 @@ public:
 };
 
 ////
-//// BG_UnitStatDetails
-////
-class BG_UnitStatDetails : public Object
-{
-	GDCLASS(BG_UnitStatDetails, Object);
-
-protected:
-	static void _bind_methods();
-
-public:
-	StringName id;
-	StringName get_id() const { return id; }
-
-	String icon_path = "";
-	String get_icon_path() const { return icon_path; }
-
-	bool is_damage_type = false;
-	bool get_is_damage_type() const { return is_damage_type; }
-};
-
-////
-//// BG_UnitStat
-////
-class BG_UnitStat : public Resource
-{
-	GDCLASS(BG_UnitStat, Resource);
-
-protected:
-	static void _bind_methods();
-
-public:
-	StringName id;
-	StringName get_id() const { return id; }
-	void set_id(StringName value) { id = value; }
-
-	float bonus_percentage = 0.0f;
-	float get_bonus_percentage() const { return bonus_percentage; }
-	void set_bonus_percentage(float v) { bonus_percentage = v; }
-
-	int offensive_value = 0;
-	int get_offensive_value() const { return offensive_value; }
-
-	int defensive_value = 0;
-	int get_defensive_value() const { return defensive_value; }
-};
-
-////
 //// BG_UnitCaste
 ////
 class BG_UnitCaste : public Resource
@@ -243,9 +253,9 @@ public:
 	Ref<BG_UnitCaste> get_caste() const { return caste; }
 	void set_caste(Ref<BG_UnitCaste> value) { caste = value; }
 
-	TypedArray<String> equipment;
-	TypedArray<String> get_equipment() const { return equipment; }
-	void set_equipment(TypedArray<String> value) { equipment = value; }
+	TypedArray<BG_Item> equipment;
+	TypedArray<BG_Item> get_equipment() const { return equipment; }
+	void set_equipment(TypedArray<BG_Item> value) { equipment = value; }
 };
 
 ////
