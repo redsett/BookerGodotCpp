@@ -145,6 +145,7 @@ void BG_UnitCaste::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitCaste::get_id);
 	ClassDB::bind_method(D_METHOD("set_id"), &BG_UnitCaste::set_id);
+	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_UnitCaste::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_UnitCaste::get_stats);
 	ClassDB::bind_method(D_METHOD("set_stats"), &BG_UnitCaste::set_stats);
 
@@ -508,6 +509,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 
 				BG_UnitCaste *new_unit_caste = memnew(BG_UnitCaste);
 				new_unit_caste->id = entry["id"];
+				new_unit_caste->icon_path = entry["icon_path"];
 
 				const Array damage_type_lines = Array(entry["base_damage_type_stats"]);
 				for (int y = 0; y < damage_type_lines.size(); y++)

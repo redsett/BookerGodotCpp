@@ -219,6 +219,9 @@ public:
 	StringName get_id() const { return id; }
 	void set_id(StringName p_value) { id = p_value; }
 
+	StringName icon_path = "";
+	StringName get_icon_path() const { return icon_path; }
+
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
 	void set_stats(TypedArray<BG_UnitStat> p_value) { stats = p_value; }
