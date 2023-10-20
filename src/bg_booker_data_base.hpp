@@ -70,38 +70,69 @@ protected:
 public:
 	StringName id;
 	StringName get_id() const { return id; }
-	void set_id(StringName value) { id = value; }
+	void set_id(StringName v) { id = v; }
+	
+	bool on_shelf = false;
+	bool get_on_shelf() const { return on_shelf; }
+	void set_on_shelf(bool v) { on_shelf = v; }
+
+	int shelf_index = 0;
+	int get_shelf_index() const { return shelf_index; }
+	void set_shelf_index(int v) { shelf_index = v; }
+
+	bool has_bid = false;
+	bool get_has_bid() const { return has_bid; }
+	void set_has_bid(bool v) { has_bid = v; }
+
+	int bid_amount = 0;
+	int get_bid_amount() const { return bid_amount; }
+	void set_bid_amount(int v) { bid_amount = v; }
+
+	bool is_equipped = false;
+	bool get_is_equipped() const { return is_equipped; }
+	void set_is_equipped(bool v) { is_equipped = v; }
+
+	Ref<BG_Item> graft;
+	Ref<BG_Item> get_graft() const { return graft; }
+	void set_graft(Ref<BG_Item> value) { graft = value; }
+
+	// TODO: Add rarity.
+};
+
+////
+//// BG_ItemDetails
+////
+class BG_ItemDetails : public Object
+{
+	GDCLASS(BG_ItemDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
 
 	StringName name;
 	StringName get_name() const { return name; }
-	void set_name(StringName value) { name = value; }
 
 	StringName description;
 	StringName get_description() const { return description; }
-	void set_description(StringName value) { description = value; }
 
 	bool is_beast_part = false;
 	bool get_is_beast_part() const { return is_beast_part; }
-	void set_is_beast_part(bool value) { is_beast_part = value; }
 
 	// bool is_permanent = false;
 	// bool get_is_permanent() { return is_permanent; }
 
 	StringName slot_type_id;
 	StringName get_slot_type_id() { return slot_type_id; }
-	void set_slot_type_id(StringName value) { slot_type_id = value; }
 
 	bool is_useable_item = false;
 	bool get_is_useable_item() { return is_useable_item; }
-	void set_is_useable_item(bool value) { is_useable_item = value; }
 
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
-	void set_stats(TypedArray<BG_UnitStat> value) { stats = value; }
-
-	Ref<BG_UnitStat> graft;
-	Ref<BG_UnitStat> get_graft() const { return graft; }
-	void set_graft(Ref<BG_UnitStat> value) { graft = value; }
 };
 
 ////
@@ -526,8 +557,8 @@ public:
 	TypedArray<BG_JobBoardItems> job_board;
 	TypedArray<BG_JobBoardItems> get_job_board() const { return job_board; }
 
-	TypedArray<BG_Item> items;
-	TypedArray<BG_Item> get_items() const { return items; }
+	TypedArray<BG_ItemDetails> items;
+	TypedArray<BG_ItemDetails> get_items() const { return items; }
 
 	BG_BandInfo *band_info = nullptr;
 	BG_BandInfo *get_band_info() const { return band_info; }

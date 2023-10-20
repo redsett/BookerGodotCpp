@@ -58,29 +58,41 @@ void BG_Item::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_Item::get_id);
 	ClassDB::bind_method(D_METHOD("set_id"), &BG_Item::set_id);
-	ClassDB::bind_method(D_METHOD("get_name"), &BG_Item::get_name);
-	ClassDB::bind_method(D_METHOD("set_name"), &BG_Item::set_name);
-	ClassDB::bind_method(D_METHOD("get_description"), &BG_Item::get_description);
-	ClassDB::bind_method(D_METHOD("set_description"), &BG_Item::set_description);
-	ClassDB::bind_method(D_METHOD("get_is_beast_part"), &BG_Item::get_is_beast_part);
-	ClassDB::bind_method(D_METHOD("set_is_beast_part"), &BG_Item::set_is_beast_part);
-	ClassDB::bind_method(D_METHOD("get_is_useable_item"), &BG_Item::get_is_useable_item);
-	ClassDB::bind_method(D_METHOD("set_is_useable_item"), &BG_Item::set_is_useable_item);
-	ClassDB::bind_method(D_METHOD("get_slot_type_id"), &BG_Item::get_slot_type_id);
-	ClassDB::bind_method(D_METHOD("set_slot_type_id"), &BG_Item::set_slot_type_id);
-	ClassDB::bind_method(D_METHOD("get_stats"), &BG_Item::get_stats);
-	ClassDB::bind_method(D_METHOD("set_stats"), &BG_Item::set_stats);
+	ClassDB::bind_method(D_METHOD("get_on_shelf"), &BG_Item::get_on_shelf);
+	ClassDB::bind_method(D_METHOD("set_on_shelf"), &BG_Item::set_on_shelf);
+	ClassDB::bind_method(D_METHOD("get_shelf_index"), &BG_Item::get_shelf_index);
+	ClassDB::bind_method(D_METHOD("set_shelf_index"), &BG_Item::set_shelf_index);
+	ClassDB::bind_method(D_METHOD("get_has_bid"), &BG_Item::get_has_bid);
+	ClassDB::bind_method(D_METHOD("set_has_bid"), &BG_Item::set_has_bid);
+	ClassDB::bind_method(D_METHOD("get_bid_amount"), &BG_Item::get_bid_amount);
+	ClassDB::bind_method(D_METHOD("set_bid_amount"), &BG_Item::set_bid_amount);
+	ClassDB::bind_method(D_METHOD("get_is_equipped"), &BG_Item::get_is_equipped);
+	ClassDB::bind_method(D_METHOD("set_is_equipped"), &BG_Item::set_is_equipped);
 	ClassDB::bind_method(D_METHOD("get_graft"), &BG_Item::get_graft);
 	ClassDB::bind_method(D_METHOD("set_graft"), &BG_Item::set_graft);
-	// ClassDB::bind_static_method("BG_Item", D_METHOD("get_slot_types"), &BG_Item::get_slot_types);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "description"), "set_description", "get_description");
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_beast_part"), "set_is_beast_part", "get_is_beast_part");
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_useable_item"), "set_is_useable_item", "get_is_useable_item");
-	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "stats"), "set_stats", "get_stats");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "on_shelf"), "set_on_shelf", "get_on_shelf");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "shelf_index"), "set_shelf_index", "get_shelf_index");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "has_bid"), "set_has_bid", "get_has_bid");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "bid_amount"), "set_bid_amount", "get_bid_amount");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_equipped"), "set_is_equipped", "get_is_equipped");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "graft"), "set_graft", "get_graft");
+}
+
+////
+//// BG_ItemDetails
+////
+void BG_ItemDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_ItemDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_name"), &BG_ItemDetails::get_name);
+	ClassDB::bind_method(D_METHOD("get_description"), &BG_ItemDetails::get_description);
+	ClassDB::bind_method(D_METHOD("get_is_beast_part"), &BG_ItemDetails::get_is_beast_part);
+	ClassDB::bind_method(D_METHOD("get_is_useable_item"), &BG_ItemDetails::get_is_useable_item);
+	ClassDB::bind_method(D_METHOD("get_slot_type_id"), &BG_ItemDetails::get_slot_type_id);
+	ClassDB::bind_method(D_METHOD("get_stats"), &BG_ItemDetails::get_stats);
+	// ClassDB::bind_static_method("BG_ItemDetails", D_METHOD("get_slot_types"), &BG_ItemDetails::get_slot_types);
 }
 
 ////
@@ -671,7 +683,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				for (int i = 0; i < lines.size(); i++)
 				{
 					const Dictionary entry = lines[i];
-					BG_Item *new_item_class = memnew(BG_Item);
+					BG_ItemDetails *new_item_class = memnew(BG_ItemDetails);
 					new_item_class->id = entry["id"];
 					new_item_class->name = entry["name"];
 					new_item_class->description = entry["description"];
@@ -719,7 +731,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				for (int i = 0; i < lines.size(); i++)
 				{
 					const Dictionary entry = lines[i];
-					BG_Item *new_item_class = memnew(BG_Item);
+					BG_ItemDetails *new_item_class = memnew(BG_ItemDetails);
 					new_item_class->id = entry["id"];
 					new_item_class->name = entry["name"];
 					new_item_class->description = entry["description"];
@@ -736,7 +748,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				for (int i = 0; i < lines.size(); i++)
 				{
 					const Dictionary entry = lines[i];
-					BG_Item *new_item_class = memnew(BG_Item);
+					BG_ItemDetails *new_item_class = memnew(BG_ItemDetails);
 					new_item_class->id = entry["id"];
 					new_item_class->name = entry["name"];
 					new_item_class->description = entry["description"];
