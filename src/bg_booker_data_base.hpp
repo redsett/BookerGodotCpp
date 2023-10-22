@@ -200,42 +200,6 @@ public:
 };
 
 ////
-//// BG_JobBoardItem
-////
-class BG_JobBoardItem : public Object
-{
-	GDCLASS(BG_JobBoardItem, Object);
-
-protected:
-	static void _bind_methods();
-
-public:
-	StringName title;
-	StringName get_title() const { return title; }
-
-	StringName description;
-	StringName get_description() const { return description; }
-
-	int opens_job = 0;
-	int get_opens_job() const { return opens_job; }
-};
-
-////
-//// BG_JobBoardItems
-////
-class BG_JobBoardItems : public Object
-{
-	GDCLASS(BG_JobBoardItems, Object);
-
-protected:
-	static void _bind_methods();
-
-public:
-	TypedArray<BG_JobBoardItem> jobs;
-	TypedArray<BG_JobBoardItem> get_jobs() const { return jobs; }
-};
-
-////
 //// BG_UnitCaste
 ////
 class BG_UnitCaste : public Resource
@@ -553,9 +517,6 @@ public:
 
 	TypedArray<BG_JobDetails> jobs;
 	TypedArray<BG_JobDetails> get_jobs() const { return jobs; }
-
-	TypedArray<BG_JobBoardItems> job_board;
-	TypedArray<BG_JobBoardItems> get_job_board() const { return job_board; }
 
 	TypedArray<BG_ItemDetails> items;
 	TypedArray<BG_ItemDetails> get_items() const { return items; }

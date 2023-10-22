@@ -253,24 +253,6 @@ void BG_JobDetails::_bind_methods()
 }
 
 ////
-//// BG_JobBoardItem
-////
-void BG_JobBoardItem::_bind_methods()
-{
-	ClassDB::bind_method(D_METHOD("get_title"), &BG_JobBoardItem::get_title);
-	ClassDB::bind_method(D_METHOD("get_description"), &BG_JobBoardItem::get_description);
-	ClassDB::bind_method(D_METHOD("get_opens_job"), &BG_JobBoardItem::get_opens_job);
-}
-
-////
-//// BG_JobBoardItems
-////
-void BG_JobBoardItems::_bind_methods()
-{
-	ClassDB::bind_method(D_METHOD("get_jobs"), &BG_JobBoardItems::get_jobs);
-}
-
-////
 //// BG_LevelGuide
 ////
 void BG_LevelGuide::_bind_methods()
@@ -317,7 +299,6 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_modding_path"), &BG_Booker_DB::get_modding_path);
 	ClassDB::bind_method(D_METHOD("get_globals"), &BG_Booker_DB::get_globals);
 	ClassDB::bind_method(D_METHOD("get_jobs"), &BG_Booker_DB::get_jobs);
-	ClassDB::bind_method(D_METHOD("get_job_board"), &BG_Booker_DB::get_job_board);
 	ClassDB::bind_method(D_METHOD("get_items"), &BG_Booker_DB::get_items);
 	ClassDB::bind_method(D_METHOD("get_band_info"), &BG_Booker_DB::get_band_info);
 	ClassDB::bind_method(D_METHOD("get_item_slot_types"), &BG_Booker_DB::get_item_slot_types);
