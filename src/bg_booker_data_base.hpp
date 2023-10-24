@@ -293,9 +293,11 @@ public:
 	TypedArray<BG_BandMember> get_band_members() const { return band_members; }
 	void set_band_members(TypedArray<BG_BandMember> value) { band_members = value; }
 
-	StringName current_job_id;
-	StringName get_current_job_id() const { return current_job_id; }
-	void set_current_job_id(StringName value) { current_job_id = value; }
+	int current_unique_job_id = -1; // -1 means that they don't have a job.
+	int get_current_unique_job_id() const { return current_unique_job_id; }
+	void set_current_unique_job_id(int value) { current_unique_job_id = value; }
+
+	bool has_job() const { return current_unique_job_id != -1; };
 };
 
 ////

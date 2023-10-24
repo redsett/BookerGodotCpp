@@ -137,8 +137,9 @@ void BG_Band::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_resting"), &BG_Band::set_resting);
 	ClassDB::bind_method(D_METHOD("get_band_members"), &BG_Band::get_band_members);
 	ClassDB::bind_method(D_METHOD("set_band_members"), &BG_Band::set_band_members);
-	ClassDB::bind_method(D_METHOD("get_current_job_id"), &BG_Band::get_current_job_id);
-	ClassDB::bind_method(D_METHOD("set_current_job_id"), &BG_Band::set_current_job_id);
+	ClassDB::bind_method(D_METHOD("get_current_unique_job_id"), &BG_Band::get_current_unique_job_id);
+	ClassDB::bind_method(D_METHOD("set_current_unique_job_id"), &BG_Band::set_current_unique_job_id);
+	ClassDB::bind_method(D_METHOD("has_job"), &BG_Band::has_job);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
@@ -147,7 +148,7 @@ void BG_Band::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "max_health"), "set_max_health", "get_max_health");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "resting"), "set_resting", "get_resting");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "band_members"), "set_band_members", "get_band_members");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "current_job_id"), "set_current_job_id", "get_current_job_id");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_unique_job_id"), "set_current_unique_job_id", "get_current_unique_job_id");
 }
 
 ////
