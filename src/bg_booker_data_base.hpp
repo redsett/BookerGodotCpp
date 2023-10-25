@@ -44,6 +44,10 @@ public:
 	StringName get_id() const { return id; }
 	void set_id(StringName value) { id = value; }
 
+	int current_value = 0; // This variable is for stats that get altered. The rest of the variables are meant to be static.
+	int get_current_value() const { return current_value; }
+	void set_current_value(int v) { current_value = v; }
+
 	float bonus_percentage = 0.0f;
 	float get_bonus_percentage() const { return bonus_percentage; }
 	void set_bonus_percentage(float v) { bonus_percentage = v; }
@@ -298,6 +302,8 @@ public:
 	void set_current_unique_job_id(int value) { current_unique_job_id = value; }
 
 	bool has_job() const { return current_unique_job_id != -1; };
+
+	void clear_job() { current_unique_job_id = -1; };
 };
 
 ////

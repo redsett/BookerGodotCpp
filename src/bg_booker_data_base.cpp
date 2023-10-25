@@ -37,6 +37,8 @@ void BG_UnitStat::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitStat::get_id);
 	ClassDB::bind_method(D_METHOD("set_id"), &BG_UnitStat::set_id);
+	ClassDB::bind_method(D_METHOD("get_current_value"), &BG_UnitStat::get_current_value);
+	ClassDB::bind_method(D_METHOD("set_current_value"), &BG_UnitStat::set_current_value);
 	ClassDB::bind_method(D_METHOD("get_bonus_percentage"), &BG_UnitStat::get_bonus_percentage);
 	ClassDB::bind_method(D_METHOD("set_bonus_percentage"), &BG_UnitStat::set_bonus_percentage);
 
@@ -46,6 +48,7 @@ void BG_UnitStat::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_defensive_value"), &BG_UnitStat::set_defensive_value);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_value"), "set_current_value", "get_current_value");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "bonus_percentage"), "set_bonus_percentage", "get_bonus_percentage");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "offensive_value"), "set_offensive_value", "get_offensive_value");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "defensive_value"), "set_defensive_value", "get_defensive_value");
@@ -139,7 +142,9 @@ void BG_Band::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_band_members"), &BG_Band::set_band_members);
 	ClassDB::bind_method(D_METHOD("get_current_unique_job_id"), &BG_Band::get_current_unique_job_id);
 	ClassDB::bind_method(D_METHOD("set_current_unique_job_id"), &BG_Band::set_current_unique_job_id);
+
 	ClassDB::bind_method(D_METHOD("has_job"), &BG_Band::has_job);
+	ClassDB::bind_method(D_METHOD("clear_job"), &BG_Band::clear_job);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
