@@ -518,6 +518,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					BG_UnitStat *new_stat = memnew(BG_UnitStat);
 					new_stat->id = damage_type_entry["damage_type"];
 					new_stat->bonus_percentage = float(damage_type_entry["base_bonus_percentage"]);
+					new_stat->defensive_value = int(damage_type_entry["starting_value"]);
 
 					new_unit_caste->stats.append(new_stat);
 				}
