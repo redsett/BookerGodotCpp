@@ -37,8 +37,6 @@ void BG_UnitStat::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitStat::get_id);
 	ClassDB::bind_method(D_METHOD("set_id"), &BG_UnitStat::set_id);
-	ClassDB::bind_method(D_METHOD("get_current_value"), &BG_UnitStat::get_current_value);
-	ClassDB::bind_method(D_METHOD("set_current_value"), &BG_UnitStat::set_current_value);
 	ClassDB::bind_method(D_METHOD("get_bonus_percentage"), &BG_UnitStat::get_bonus_percentage);
 	ClassDB::bind_method(D_METHOD("set_bonus_percentage"), &BG_UnitStat::set_bonus_percentage);
 
@@ -48,7 +46,6 @@ void BG_UnitStat::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_defensive_value"), &BG_UnitStat::set_defensive_value);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_value"), "set_current_value", "get_current_value");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "bonus_percentage"), "set_bonus_percentage", "get_bonus_percentage");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "offensive_value"), "set_offensive_value", "get_offensive_value");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "defensive_value"), "set_defensive_value", "get_defensive_value");
@@ -105,6 +102,12 @@ void BG_BandMember::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_BandMember::get_name);
 	ClassDB::bind_method(D_METHOD("set_name"), &BG_BandMember::set_name);
+	ClassDB::bind_method(D_METHOD("get_current_health"), &BG_BandMember::get_current_health);
+	ClassDB::bind_method(D_METHOD("set_current_health"), &BG_BandMember::set_current_health);
+	ClassDB::bind_method(D_METHOD("get_level"), &BG_BandMember::get_level);
+	ClassDB::bind_method(D_METHOD("set_level"), &BG_BandMember::set_level);
+	ClassDB::bind_method(D_METHOD("get_experience"), &BG_BandMember::get_experience);
+	ClassDB::bind_method(D_METHOD("set_experience"), &BG_BandMember::set_experience);
 	ClassDB::bind_method(D_METHOD("get_scale"), &BG_BandMember::get_scale);
 	ClassDB::bind_method(D_METHOD("set_scale"), &BG_BandMember::set_scale);
 	ClassDB::bind_method(D_METHOD("get_personality_dialgue_id"), &BG_BandMember::get_personality_dialgue_id);
@@ -115,6 +118,9 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_equipment"), &BG_BandMember::set_equipment);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "experience"), "set_experience", "get_experience");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "scale"), "set_scale", "get_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "personality_dialgue_id"), "set_personality_dialgue_id", "get_personality_dialgue_id");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "caste", PROPERTY_HINT_RESOURCE_TYPE, "BG_UnitCaste"), "set_caste", "get_caste");
@@ -128,14 +134,6 @@ void BG_Band::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_Band::get_name);
 	ClassDB::bind_method(D_METHOD("set_name"), &BG_Band::set_name);
-	ClassDB::bind_method(D_METHOD("get_level"), &BG_Band::get_level);
-	ClassDB::bind_method(D_METHOD("set_level"), &BG_Band::set_level);
-	ClassDB::bind_method(D_METHOD("get_experience"), &BG_Band::get_experience);
-	ClassDB::bind_method(D_METHOD("set_experience"), &BG_Band::set_experience);
-	ClassDB::bind_method(D_METHOD("get_health"), &BG_Band::get_health);
-	ClassDB::bind_method(D_METHOD("set_health"), &BG_Band::set_health);
-	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_Band::get_max_health);
-	ClassDB::bind_method(D_METHOD("set_max_health"), &BG_Band::set_max_health);
 	ClassDB::bind_method(D_METHOD("get_resting"), &BG_Band::get_resting);
 	ClassDB::bind_method(D_METHOD("set_resting"), &BG_Band::set_resting);
 	ClassDB::bind_method(D_METHOD("get_band_members"), &BG_Band::get_band_members);
@@ -147,10 +145,6 @@ void BG_Band::_bind_methods()
 	ClassDB::bind_method(D_METHOD("clear_job"), &BG_Band::clear_job);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "experience"), "set_experience", "get_experience");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "health"), "set_health", "get_health");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "max_health"), "set_max_health", "get_max_health");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "resting"), "set_resting", "get_resting");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "band_members"), "set_band_members", "get_band_members");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_unique_job_id"), "set_current_unique_job_id", "get_current_unique_job_id");
@@ -198,6 +192,8 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_id"), &BG_Monster::set_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_Monster::get_name);
 	ClassDB::bind_method(D_METHOD("set_name"), &BG_Monster::set_name);
+	ClassDB::bind_method(D_METHOD("get_current_health"), &BG_Monster::get_current_health);
+	ClassDB::bind_method(D_METHOD("set_current_health"), &BG_Monster::set_current_health);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_Monster::get_stats);
 	ClassDB::bind_method(D_METHOD("set_stats"), &BG_Monster::set_stats);
 

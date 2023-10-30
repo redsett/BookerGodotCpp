@@ -44,10 +44,6 @@ public:
 	StringName get_id() const { return id; }
 	void set_id(StringName value) { id = value; }
 
-	int current_value = 0; // This variable is for stats that get altered. The rest of the variables are meant to be static.
-	int get_current_value() const { return current_value; }
-	void set_current_value(int v) { current_value = v; }
-
 	float bonus_percentage = 0.0f;
 	float get_bonus_percentage() const { return bonus_percentage; }
 	void set_bonus_percentage(float v) { bonus_percentage = v; }
@@ -241,6 +237,18 @@ public:
 	StringName get_name() const { return name; }
 	void set_name(StringName value) { name = value; }
 
+	int current_health = 0;
+	int get_current_health() const { return current_health; }
+	void set_current_health(int value) { current_health = value; }
+
+	int level = 1;
+	int get_level() const { return level; }
+	void set_level(int value) { level = value; }
+
+	float experience = 0.0;
+	float get_experience() const { return experience; }
+	void set_experience(float value) { experience = value; }
+
 	Vector3 scale;
 	Vector3 get_scale() const { return scale; }
 	void set_scale(Vector3 value) { scale = value; }
@@ -272,22 +280,6 @@ public:
 	StringName name;
 	StringName get_name() const { return name; }
 	void set_name(StringName value) { name = value; }
-	
-	int level = 1;
-	int get_level() const { return level; }
-	void set_level(int value) { level = value; }
-
-	float experience = 0.0;
-	float get_experience() const { return experience; }
-	void set_experience(float value) { experience = value; }
-
-	float health = 0.0;
-	float get_health() const { return health; }
-	void set_health(float value) { health = value; }
-
-	float max_health = 0.0;
-	float get_max_health() const { return max_health; }
-	void set_max_health(float value) { max_health = value; }
 
 	bool resting = false;
 	bool get_resting() const { return resting; }
@@ -363,6 +355,10 @@ public:
 	StringName name;
 	StringName get_name() const { return name; }
 	void set_name(StringName value) { name = value; }
+
+	int current_health = 0;
+	int get_current_health() const { return current_health; }
+	void set_current_health(int value) { current_health = value; }
 
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
