@@ -199,6 +199,7 @@ void BG_Monster::_bind_methods()
 
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_Monster::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_beast_part_rewards"), &BG_Monster::get_beast_part_rewards);
+	ClassDB::bind_method(D_METHOD("get_equipment_rewards"), &BG_Monster::get_equipment_rewards);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
@@ -229,12 +230,7 @@ void BG_BandInfo::_bind_methods()
 void BG_RewardItem::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_RewardItem::get_id);
-	ClassDB::bind_method(D_METHOD("set_id"), &BG_RewardItem::set_id);
 	ClassDB::bind_method(D_METHOD("get_drop_rate"), &BG_RewardItem::get_drop_rate);
-	ClassDB::bind_method(D_METHOD("set_drop_rate"), &BG_RewardItem::set_drop_rate);
-
-	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "drop_rate"), "set_drop_rate", "get_drop_rate");
 }
 
 ////
@@ -556,7 +552,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_monster_type->stats.append(new_stat);
 				}
 
-				// Rewards
+				// Beast Part Rewards
 				const Array beast_part_rewards_lines = Array(entry["beast_part_rewards"]);
 				for (int y = 0; y < beast_part_rewards_lines.size(); y++)
 				{
@@ -567,6 +563,19 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_beast_part_reward->drop_rate = float(beast_part_reward_entry["drop_rate"]);
 
 					new_monster_type->beast_part_rewards.append(new_beast_part_reward);
+				}
+
+				// Equipment Rewards
+				const Array equipment_rewards_lines = Array(entry["equipment_rewards"]);
+				for (int y = 0; y < equipment_rewards_lines.size(); y++)
+				{
+					const Dictionary equipment_reward_entry = equipment_rewards_lines[y];
+
+					BG_RewardItem *new_equipment_reward = memnew(BG_RewardItem);
+					new_equipment_reward->id = equipment_reward_entry["equipment"];
+					new_equipment_reward->drop_rate = float(equipment_reward_entry["drop_rate"]);
+
+					new_monster_type->equipment_rewards.append(new_equipment_reward);
 				}
 				monster_types.append(new_monster_type);
 			}

@@ -138,9 +138,9 @@ public:
 ////
 //// BG_RewardItem
 ////
-class BG_RewardItem : public Resource
+class BG_RewardItem : public Object
 {
-	GDCLASS(BG_RewardItem, Resource);
+	GDCLASS(BG_RewardItem, Object);
 
 protected:
 	static void _bind_methods();
@@ -148,11 +148,9 @@ protected:
 public:
 	StringName id;
 	StringName get_id() const { return id; }
-	void set_id(StringName value) { id = value; }
 
 	float drop_rate = 0.0;
 	float get_drop_rate() const { return drop_rate; }
-	void set_drop_rate(float value) { drop_rate = value; }
 };
 
 ////
@@ -369,6 +367,9 @@ public:
 
 	TypedArray<BG_RewardItem> beast_part_rewards;
 	TypedArray<BG_RewardItem> get_beast_part_rewards() const { return beast_part_rewards; }
+
+	TypedArray<BG_RewardItem> equipment_rewards;
+	TypedArray<BG_RewardItem> get_equipment_rewards() const { return equipment_rewards; }
 };
 
 ////
