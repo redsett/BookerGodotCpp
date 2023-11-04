@@ -203,6 +203,7 @@ void BG_Monster::_bind_methods()
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "stats", PROPERTY_HINT_RESOURCE_TYPE, "BG_UnitStat"), "set_stats", "get_stats");
 }
 
@@ -257,6 +258,7 @@ void BG_LevelGuide::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_job_rep_reward"), &BG_LevelGuide::get_job_rep_reward);
 	ClassDB::bind_method(D_METHOD("get_job_duralation"), &BG_LevelGuide::get_job_duralation);
+	ClassDB::bind_method(D_METHOD("get_rest_duralation"), &BG_LevelGuide::get_rest_duralation);
 	ClassDB::bind_method(D_METHOD("get_leveling_speed"), &BG_LevelGuide::get_leveling_speed);
 }
 
@@ -390,6 +392,29 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					const Dictionary month = jobs_per_month_array[i];
 					globals->jobs_per_month_min_max.append(Vector2i(int(month["min"]), int(month["max"])));
 				}
+			}
+		}
+	}
+
+	/////
+	///// Level Guide
+	/////
+	{
+		const Dictionary level_guide_sheet = BG_JsonUtils::GetCBDSheet(data, "level_guide");
+		if (level_guide_sheet.has("lines"))
+		{
+			globals->level_guide.clear();
+
+			const Array lines = Array(level_guide_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
+			{
+				const Dictionary entry = lines[i];
+				BG_LevelGuide *level_guide_class = memnew(BG_LevelGuide);
+				level_guide_class->job_rep_reward = int(entry["job_rep_reward"]);
+				level_guide_class->job_duralation = int(entry["job_duralation"]);
+				level_guide_class->rest_duralation = float(entry["rest_duralation"]);
+				level_guide_class->leveling_speed = float(entry["leveling_speed"]);
+				globals->level_guide.append(level_guide_class);
 			}
 		}
 	}

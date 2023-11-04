@@ -434,6 +434,9 @@ public:
 	int job_duralation = 0;
 	int get_job_duralation() const { return job_duralation; }
 
+	float rest_duralation = 0.0f;
+	float get_rest_duralation() const { return rest_duralation; }
+
 	float leveling_speed = 0.0f;
 	float get_leveling_speed() const { return leveling_speed; }
 };
