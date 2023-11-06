@@ -91,6 +91,7 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_is_beast_part"), &BG_ItemDetails::get_is_beast_part);
 	ClassDB::bind_method(D_METHOD("get_is_useable_item"), &BG_ItemDetails::get_is_useable_item);
 	ClassDB::bind_method(D_METHOD("get_slot_type_id"), &BG_ItemDetails::get_slot_type_id);
+	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_ItemDetails::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_ItemDetails::get_stats);
 	// ClassDB::bind_static_method("BG_ItemDetails", D_METHOD("get_slot_types"), &BG_ItemDetails::get_slot_types);
 }
@@ -704,6 +705,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					BG_ItemDetails *new_item_class = memnew(BG_ItemDetails);
 					new_item_class->id = entry["id"];
 					new_item_class->name = entry["name"];
+					new_item_class->icon_path = entry["icon_path"];
 					new_item_class->description = entry["description"];
 					new_item_class->slot_type_id = entry["slot_type"];
 					items.append(new_item_class);
@@ -752,6 +754,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					BG_ItemDetails *new_item_class = memnew(BG_ItemDetails);
 					new_item_class->id = entry["id"];
 					new_item_class->name = entry["name"];
+					new_item_class->icon_path = entry["icon_path"];
 					new_item_class->description = entry["description"];
 					new_item_class->is_beast_part = true;
 					items.append(new_item_class);
@@ -769,6 +772,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					BG_ItemDetails *new_item_class = memnew(BG_ItemDetails);
 					new_item_class->id = entry["id"];
 					new_item_class->name = entry["name"];
+					new_item_class->icon_path = entry["icon_path"];
 					new_item_class->description = entry["description"];
 					new_item_class->is_useable_item = true;
 					items.append(new_item_class);

@@ -131,6 +131,9 @@ public:
 	bool is_useable_item = false;
 	bool get_is_useable_item() { return is_useable_item; }
 
+	StringName icon_path;
+	StringName get_icon_path() const { return icon_path; }
+
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
 };
@@ -212,7 +215,7 @@ public:
 	StringName get_id() const { return id; }
 	void set_id(StringName p_value) { id = p_value; }
 
-	StringName icon_path = "";
+	StringName icon_path;
 	StringName get_icon_path() const { return icon_path; }
 
 	TypedArray<BG_UnitStat> stats;
