@@ -758,6 +758,20 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->description = entry["description"];
 					new_item_class->is_beast_part = true;
 					items.append(new_item_class);
+
+					// Stats
+					const Array stats_lines = Array(entry["stats"]);
+					for (int y = 0; y < stats_lines.size(); y++)
+					{
+						const Dictionary stat_entry = stats_lines[y];
+
+						BG_UnitStat *new_stat = memnew(BG_UnitStat);
+						new_stat->id = stat_entry["stat"];
+						new_stat->bonus_percentage = float(stat_entry["offensive_bonus"]);
+						new_stat->defensive_value = int(stat_entry["defensive_value"]);
+
+						new_item_class->stats.append(new_stat);
+					}
 				}
 			}
 		}
