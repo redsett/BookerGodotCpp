@@ -261,6 +261,7 @@ void BG_LevelGuide::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_job_duralation"), &BG_LevelGuide::get_job_duralation);
 	ClassDB::bind_method(D_METHOD("get_rest_duralation"), &BG_LevelGuide::get_rest_duralation);
 	ClassDB::bind_method(D_METHOD("get_leveling_speed"), &BG_LevelGuide::get_leveling_speed);
+	ClassDB::bind_method(D_METHOD("get_band_member_upkeep"), &BG_LevelGuide::get_band_member_upkeep);
 }
 
 ////
@@ -415,6 +416,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				level_guide_class->job_duralation = int(entry["job_duralation"]);
 				level_guide_class->rest_duralation = float(entry["rest_duralation"]);
 				level_guide_class->leveling_speed = float(entry["leveling_speed"]);
+				level_guide_class->band_member_upkeep = int(entry["band_member_upkeep"]);
 				globals->level_guide.append(level_guide_class);
 			}
 		}

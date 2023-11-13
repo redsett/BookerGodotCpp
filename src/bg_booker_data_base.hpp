@@ -442,6 +442,9 @@ public:
 
 	float leveling_speed = 0.0f;
 	float get_leveling_speed() const { return leveling_speed; }
+
+	int band_member_upkeep = 0;
+	int get_band_member_upkeep() const { return band_member_upkeep; }
 };
 
 ////
