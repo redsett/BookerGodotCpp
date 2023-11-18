@@ -198,6 +198,9 @@ public:
 
 	TypedArray<int> acts_allowed_in;
 	TypedArray<int> get_acts_allowed_in() const { return acts_allowed_in; }
+
+	float drop_rate_adder = 0.0f;
+	float get_drop_rate_adder() const { return drop_rate_adder; }
 };
 
 ////
@@ -418,6 +421,12 @@ public:
 
 	TypedArray<BG_UnitCaste> unit_castes;
 	TypedArray<BG_UnitCaste> get_unit_castes() const { return unit_castes; }
+
+	int max_band_member_level = 0;
+	int get_max_band_member_level() const { return max_band_member_level; }
+
+	int max_number_of_bands = 0;
+	int get_max_number_of_bands() const { return max_number_of_bands; }
 };
 
 ////

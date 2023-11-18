@@ -224,6 +224,8 @@ void BG_BandInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_band_size_min_max"), &BG_BandInfo::get_band_size_min_max);
 	ClassDB::bind_method(D_METHOD("get_num_bands_for_hire"), &BG_BandInfo::get_num_bands_for_hire);
 	ClassDB::bind_method(D_METHOD("get_unit_castes"), &BG_BandInfo::get_unit_castes);
+	ClassDB::bind_method(D_METHOD("get_max_band_member_level"), &BG_BandInfo::get_max_band_member_level);
+	ClassDB::bind_method(D_METHOD("get_max_number_of_bands"), &BG_BandInfo::get_max_number_of_bands);
 }
 
 ////
@@ -250,6 +252,7 @@ void BG_JobDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_monster_count_range"), &BG_JobDetails::get_monster_count_range);
 	ClassDB::bind_method(D_METHOD("get_is_unique"), &BG_JobDetails::get_is_unique);
 	ClassDB::bind_method(D_METHOD("get_acts_allowed_in"), &BG_JobDetails::get_acts_allowed_in);
+	ClassDB::bind_method(D_METHOD("get_drop_rate_adder"), &BG_JobDetails::get_drop_rate_adder);
 }
 
 ////
@@ -456,6 +459,10 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			const Dictionary lines = Array(bands_sheet["lines"])[0];
 			if (lines.has("num_bands_for_hire"))
 				band_info->num_bands_for_hire = lines["num_bands_for_hire"];
+			if (lines.has("max_band_member_level"))
+				band_info->max_band_member_level = lines["max_band_member_level"];
+			if (lines.has("max_number_of_bands"))
+				band_info->max_number_of_bands = lines["max_number_of_bands"];
 
 			if (lines.has("names"))
 			{
@@ -628,6 +635,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_job_class->name = entry["name"];
 				new_job_class->level = int(entry["level"]);
 				new_job_class->description = entry["description"];
+				new_job_class->drop_rate_adder = entry["drop_rate_adder"];
 				new_job_class->weeks = int(entry["weeks"]);
 				new_job_class->is_unique = bool(entry["is_unique"]);
 
