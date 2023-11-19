@@ -289,6 +289,7 @@ void BG_Booker_Globals::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_job_rerolls_per_month"), &BG_Booker_Globals::get_job_rerolls_per_month);
 	ClassDB::bind_method(D_METHOD("get_act_stats"), &BG_Booker_Globals::get_act_stats);
 	ClassDB::bind_method(D_METHOD("get_level_guide"), &BG_Booker_Globals::get_level_guide);
+	ClassDB::bind_method(D_METHOD("get_job_level_range_min_max"), &BG_Booker_Globals::get_job_level_range_min_max);
 }
 
 ////
@@ -396,6 +397,18 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				{
 					const Dictionary month = jobs_per_month_array[i];
 					globals->jobs_per_month_min_max.append(Vector2i(int(month["min"]), int(month["max"])));
+				}
+			}
+
+			if (lines.has("job_level_range"))
+			{
+				globals->job_level_range_min_max.clear();
+
+				const Array job_level_range_array = Array(lines["job_level_range"]);
+				for (int i = 0; i < job_level_range_array.size(); i++)
+				{
+					const Dictionary month = job_level_range_array[i];
+					globals->job_level_range_min_max.append(Vector2i(int(month["min"]), int(month["max"])));
 				}
 			}
 		}

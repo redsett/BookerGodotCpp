@@ -508,6 +508,9 @@ public:
 	
 	TypedArray<BG_LevelGuide> level_guide;
 	TypedArray<BG_LevelGuide> get_level_guide() const { return level_guide; }
+
+	TypedArray<Vector2i> job_level_range_min_max;
+	TypedArray<Vector2i> get_job_level_range_min_max() const { return job_level_range_min_max; }
 };
 
 ////
