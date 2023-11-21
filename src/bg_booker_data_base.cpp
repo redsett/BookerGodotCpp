@@ -195,6 +195,8 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_name"), &BG_Monster::set_name);
 	ClassDB::bind_method(D_METHOD("get_current_health"), &BG_Monster::get_current_health);
 	ClassDB::bind_method(D_METHOD("set_current_health"), &BG_Monster::set_current_health);
+	ClassDB::bind_method(D_METHOD("get_level"), &BG_Monster::get_level);
+	ClassDB::bind_method(D_METHOD("set_level"), &BG_Monster::set_level);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_Monster::get_stats);
 	ClassDB::bind_method(D_METHOD("set_stats"), &BG_Monster::set_stats);
 
@@ -205,6 +207,7 @@ void BG_Monster::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "stats", PROPERTY_HINT_RESOURCE_TYPE, "BG_UnitStat"), "set_stats", "get_stats");
 }
 
@@ -265,6 +268,9 @@ void BG_LevelGuide::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_rest_duralation"), &BG_LevelGuide::get_rest_duralation);
 	ClassDB::bind_method(D_METHOD("get_leveling_speed"), &BG_LevelGuide::get_leveling_speed);
 	ClassDB::bind_method(D_METHOD("get_band_member_upkeep"), &BG_LevelGuide::get_band_member_upkeep);
+	ClassDB::bind_method(D_METHOD("get_monster_health"), &BG_LevelGuide::get_monster_health);
+	ClassDB::bind_method(D_METHOD("get_monster_base_off_stat"), &BG_LevelGuide::get_monster_base_off_stat);
+	ClassDB::bind_method(D_METHOD("get_monster_base_def_stat"), &BG_LevelGuide::get_monster_base_def_stat);
 }
 
 ////
@@ -433,6 +439,9 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				level_guide_class->rest_duralation = float(entry["rest_duralation"]);
 				level_guide_class->leveling_speed = float(entry["leveling_speed"]);
 				level_guide_class->band_member_upkeep = int(entry["band_member_upkeep"]);
+				level_guide_class->monster_health = int(entry["monster_health"]);
+				level_guide_class->monster_base_off_stat = int(entry["monster_base_off_stat"]);
+				level_guide_class->monster_base_def_stat = int(entry["monster_base_def_stat"]);
 				globals->level_guide.append(level_guide_class);
 			}
 		}
@@ -584,9 +593,11 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				BG_Monster *new_monster_type = memnew(BG_Monster);
 				new_monster_type->id = entry["id"];
 				new_monster_type->name = entry["name"];
+				new_monster_type->level = entry["level"];
 				new_monster_type->icon_path = entry["icon_path"];
 
 				// Stats
+				int defensive_stat_count = 0;
 				const Array stats_lines = Array(entry["stats"]);
 				for (int y = 0; y < stats_lines.size(); y++)
 				{
@@ -594,9 +605,25 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 
 					BG_UnitStat *new_stat = memnew(BG_UnitStat);
 					new_stat->id = stat_entry["stat"];
-					new_stat->offensive_value = int(stat_entry["offensive_value"]);
-					new_stat->defensive_value = int(stat_entry["defensive_value"]);
 
+					bool is_defensive_stat = false;
+					for (int z = 0; z < stat_types.size(); z++) {
+						BG_UnitStatDetails *stat = cast_to<BG_UnitStatDetails>(stat_types[z]);
+						if (stat->id == new_stat->id && !stat->is_damage_type) {
+							is_defensive_stat = true;
+							defensive_stat_count += 1;
+						}
+					}
+
+					float offensive_percentage = float(stat_entry["offensive_percentage"]);
+					float defensive_percentage = float(stat_entry["defensive_percentage"]);
+					if (is_defensive_stat && defensive_stat_count == 1) {
+						new_stat->defensive_value = defensive_percentage * cast_to<BG_LevelGuide>(globals->level_guide[new_monster_type->level - 1])->monster_health;
+					} else {
+						new_stat->offensive_value = offensive_percentage * cast_to<BG_LevelGuide>(globals->level_guide[new_monster_type->level - 1])->monster_base_off_stat;
+						new_stat->defensive_value = defensive_percentage * cast_to<BG_LevelGuide>(globals->level_guide[new_monster_type->level - 1])->monster_base_def_stat;
+					}
+					
 					new_monster_type->stats.append(new_stat);
 				}
 

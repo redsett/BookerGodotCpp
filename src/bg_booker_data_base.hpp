@@ -364,6 +364,10 @@ public:
 	int get_current_health() const { return current_health; }
 	void set_current_health(int value) { current_health = value; }
 
+	int level = 0;
+	int get_level() const { return level; }
+	void set_level(int value) { level = value; }
+
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
 	void set_stats(TypedArray<BG_UnitStat> value) { stats = value; }
@@ -454,6 +458,15 @@ public:
 
 	int band_member_upkeep = 0;
 	int get_band_member_upkeep() const { return band_member_upkeep; }
+
+	int monster_health = 0;
+	int get_monster_health() const { return monster_health; }
+
+	int monster_base_off_stat = 0;
+	int get_monster_base_off_stat() const { return monster_base_off_stat; }
+
+	int monster_base_def_stat = 0;
+	int get_monster_base_def_stat() const { return monster_base_def_stat; }
 };
 
 ////
