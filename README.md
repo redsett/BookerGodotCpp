@@ -28,9 +28,10 @@ To update gotdot-cpp to latest:
 4. `git push`
 
 To update gotdot-cpp to a certain branch:
-1. `cd godot-cpp`
-2. `git checkout (branch-name)`
-3. `cd..`
-3. `git add godot-cpp`
-3. `git commit`
-4. `git push`
+1. `Do the steps before this first. As this seems to not work by itself.`
+2. `cd godot-cpp`
+3. `git checkout (branch-name)`
+4. `cd..`
+5. `git add godot-cpp`
+6. `git commit`
+7. `git push`
