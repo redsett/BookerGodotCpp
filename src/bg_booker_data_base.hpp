@@ -253,6 +253,10 @@ public:
 	float get_experience() const { return experience; }
 	void set_experience(float value) { experience = value; }
 
+	int slot_index = 0;
+	int get_slot_index() const { return slot_index; }
+	void set_slot_index(int value) { slot_index = value; }
+
 	Vector3 scale;
 	Vector3 get_scale() const { return scale; }
 	void set_scale(Vector3 value) { scale = value; }
