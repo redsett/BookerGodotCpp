@@ -20,6 +20,18 @@ using namespace godot;
         UtilityFunctions::print("The function '", func.get_method(), "' took ", elapsed, " seconds to execute."); \
     } while (0)
 
+Color convert_int_to_color(int color_int)
+{
+	const int r = (color_int >> 16) & 255;
+	const int g = (color_int >> 8) & 255;
+	const int b = color_int & 255;
+	return Color(
+		r > 0 ? r/255.0 : 0.0, 
+		g > 0 ? g/255.0 : 0.0, 
+		b > 0 ? b/255.0 : 0.0
+	);
+}
+
 ////
 //// BG_UnitStatDetails
 ////
@@ -28,6 +40,7 @@ void BG_UnitStatDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitStatDetails::get_id);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_UnitStatDetails::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_is_damage_type"), &BG_UnitStatDetails::get_is_damage_type);
+	ClassDB::bind_method(D_METHOD("get_color"), &BG_UnitStatDetails::get_color);
 }
 
 ////
@@ -468,6 +481,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_stat_types->id = entry["id"];
 				new_stat_types->icon_path = entry["icon_path"];
 				new_stat_types->is_damage_type = bool(entry["is_damage_type"]);
+				new_stat_types->color = convert_int_to_color(int(entry["color"]));
 
 				stat_types.append(new_stat_types);
 			}

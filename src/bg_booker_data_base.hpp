@@ -27,6 +27,9 @@ public:
 
 	bool is_damage_type = false;
 	bool get_is_damage_type() const { return is_damage_type; }
+
+	Color color = Color(1.0, 1.0, 1.0);
+	Color get_color() const { return color; }
 };
 
 ////
