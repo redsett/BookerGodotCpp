@@ -33,6 +33,18 @@ Color convert_int_to_color(int color_int)
 }
 
 ////
+//// BG_RarityDetails
+////
+void BG_RarityDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_RarityDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_name"), &BG_RarityDetails::get_name);
+	ClassDB::bind_method(D_METHOD("get_color"), &BG_RarityDetails::get_color);
+	ClassDB::bind_method(D_METHOD("get_damage_multiplier"), &BG_RarityDetails::get_damage_multiplier);
+	ClassDB::bind_method(D_METHOD("get_percentage_of_all_items_dropped"), &BG_RarityDetails::get_percentage_of_all_items_dropped);
+}
+
+////
 //// BG_UnitStatDetails
 ////
 void BG_UnitStatDetails::_bind_methods()
@@ -81,6 +93,8 @@ void BG_Item::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_bid_amount"), &BG_Item::set_bid_amount);
 	ClassDB::bind_method(D_METHOD("get_is_equipped"), &BG_Item::get_is_equipped);
 	ClassDB::bind_method(D_METHOD("set_is_equipped"), &BG_Item::set_is_equipped);
+	ClassDB::bind_method(D_METHOD("get_rarity_id"), &BG_Item::get_rarity_id);
+	ClassDB::bind_method(D_METHOD("set_rarity_id"), &BG_Item::set_rarity_id);
 	ClassDB::bind_method(D_METHOD("get_graft"), &BG_Item::get_graft);
 	ClassDB::bind_method(D_METHOD("set_graft"), &BG_Item::set_graft);
 
@@ -90,6 +104,7 @@ void BG_Item::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "has_bid"), "set_has_bid", "get_has_bid");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "bid_amount"), "set_bid_amount", "get_bid_amount");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_equipped"), "set_is_equipped", "get_is_equipped");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "rarity_id"), "set_rarity_id", "get_rarity_id");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "graft"), "set_graft", "get_graft");
 }
 
@@ -177,6 +192,7 @@ void BG_UnitCaste::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_UnitCaste::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_UnitCaste::get_stats);
 	ClassDB::bind_method(D_METHOD("set_stats"), &BG_UnitCaste::set_stats);
+	ClassDB::bind_method(D_METHOD("get_starting_item_ids"), &BG_UnitCaste::get_starting_item_ids);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "stats", PROPERTY_HINT_RESOURCE_TYPE, "BG_UnitStat"), "set_stats", "get_stats");
@@ -330,6 +346,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_items"), &BG_Booker_DB::get_items);
 	ClassDB::bind_method(D_METHOD("get_band_info"), &BG_Booker_DB::get_band_info);
 	ClassDB::bind_method(D_METHOD("get_item_slot_types"), &BG_Booker_DB::get_item_slot_types);
+	ClassDB::bind_method(D_METHOD("get_rarity_types"), &BG_Booker_DB::get_rarity_types);
 	ClassDB::bind_method(D_METHOD("get_stat_types"), &BG_Booker_DB::get_stat_types);
 	ClassDB::bind_method(D_METHOD("get_monster_types"), &BG_Booker_DB::get_monster_types);
 }
@@ -464,6 +481,36 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 	}
 
 	/////
+	///// Rarity Types
+	/////
+	{
+		const Dictionary rarity_types_sheet = BG_JsonUtils::GetCBDSheet(data, "rarity_types");
+		if (rarity_types_sheet.has("lines"))
+		{
+			rarity_types.clear();
+
+			const Array lines = Array(rarity_types_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
+			{
+				const Dictionary entry = lines[i];
+				
+				BG_RarityDetails *new_rarity_type = memnew(BG_RarityDetails);
+				new_rarity_type->id = entry["id"];
+				new_rarity_type->name = entry["name"];
+				new_rarity_type->color = convert_int_to_color(int(entry["color"]));
+				const float color_muitiplier = float(entry["color_muitiplier"]);
+				new_rarity_type->color.r *= color_muitiplier;
+				new_rarity_type->color.g *= color_muitiplier;
+				new_rarity_type->color.b *= color_muitiplier;
+				new_rarity_type->damage_multiplier = float(entry["damage_multiplier"]);
+				new_rarity_type->percentage_of_all_items_dropped = float(entry["percentage_of_all_items_dropped"]);
+
+				rarity_types.append(new_rarity_type);
+			}
+		}
+	}
+
+	/////
 	///// Stat Types
 	/////
 	{
@@ -587,6 +634,13 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_stat->defensive_value = int(damage_type_entry["starting_value"]);
 
 					new_unit_caste->stats.append(new_stat);
+				}
+
+				const Array starting_items_lines = Array(entry["starting_items"]);
+				for (int y = 0; y < starting_items_lines.size(); y++)
+				{
+					const Dictionary starting_item_entry = starting_items_lines[y];
+					new_unit_caste->starting_item_ids.append(starting_item_entry["item"]);
 				}
 				band_info->unit_castes.append(new_unit_caste);
 			}

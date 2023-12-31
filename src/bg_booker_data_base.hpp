@@ -9,6 +9,33 @@
 using namespace godot;
 
 ////
+//// BG_RarityDetails
+////
+class BG_RarityDetails : public Object
+{
+	GDCLASS(BG_RarityDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	StringName name;
+	StringName get_name() const { return name; }
+
+	Color color;
+	Color get_color() const { return color; }
+
+	float damage_multiplier = 0.0f;
+	float get_damage_multiplier() const { return damage_multiplier; }
+
+	float percentage_of_all_items_dropped = 0.0f;
+	float get_percentage_of_all_items_dropped() const { return percentage_of_all_items_dropped; }
+};
+
+////
 //// BG_UnitStatDetails
 ////
 class BG_UnitStatDetails : public Object
@@ -95,11 +122,13 @@ public:
 	bool get_is_equipped() const { return is_equipped; }
 	void set_is_equipped(bool v) { is_equipped = v; }
 
+	StringName rarity_id;
+	StringName get_rarity_id() const { return rarity_id; }
+	void set_rarity_id(StringName value) { rarity_id = value; }
+
 	Ref<BG_Item> graft;
 	Ref<BG_Item> get_graft() const { return graft; }
 	void set_graft(Ref<BG_Item> value) { graft = value; }
-
-	// TODO: Add rarity.
 };
 
 ////
@@ -227,6 +256,9 @@ public:
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
 	void set_stats(TypedArray<BG_UnitStat> p_value) { stats = p_value; }
+
+	TypedArray<StringName> starting_item_ids;
+	TypedArray<StringName> get_starting_item_ids() const { return starting_item_ids; }
 };
 
 ////
@@ -572,6 +604,9 @@ public:
 
 	TypedArray<StringName> item_slot_types;
 	TypedArray<StringName> get_item_slot_types() const { return item_slot_types; }
+
+	TypedArray<BG_RarityDetails> rarity_types;
+	TypedArray<BG_RarityDetails> get_rarity_types() const { return rarity_types; }
 
 	TypedArray<BG_UnitStatDetails> stat_types;
 	TypedArray<BG_UnitStatDetails> get_stat_types() const { return stat_types; }

@@ -28,6 +28,7 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		ClassDB::register_class<GSGState>();
 		ClassDB::register_class<GSGStateMachine>();
 
+		ClassDB::register_class<BG_RarityDetails>();
 		ClassDB::register_class<BG_Item>();
 		ClassDB::register_class<BG_ItemDetails>();
 		ClassDB::register_class<BG_BandMember>();
