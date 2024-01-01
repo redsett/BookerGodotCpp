@@ -22,8 +22,11 @@ public:
 	StringName id;
 	StringName get_id() const { return id; }
 
-	StringName name;
-	StringName get_name() const { return name; }
+	StringName equipment_prefix_name;
+	StringName get_equipment_prefix_name() const { return equipment_prefix_name; }
+
+	StringName beast_part_prefix_name;
+	StringName get_beast_part_prefix_name() const { return beast_part_prefix_name; }
 
 	Color color;
 	Color get_color() const { return color; }
@@ -31,8 +34,8 @@ public:
 	float damage_multiplier = 0.0f;
 	float get_damage_multiplier() const { return damage_multiplier; }
 
-	float percentage_of_all_items_dropped = 0.0f;
-	float get_percentage_of_all_items_dropped() const { return percentage_of_all_items_dropped; }
+	TypedArray<float> percentage_of_all_items_dropped_per_act;
+	TypedArray<float> get_percentage_of_all_items_dropped_per_act() const { return percentage_of_all_items_dropped_per_act; }
 };
 
 ////
@@ -227,6 +230,9 @@ public:
 
 	bool is_unique = false;
 	bool get_is_unique() const { return is_unique; }
+
+	bool is_boss = false;
+	bool get_is_boss() const { return is_boss; }
 
 	TypedArray<int> acts_allowed_in;
 	TypedArray<int> get_acts_allowed_in() const { return acts_allowed_in; }

@@ -38,10 +38,11 @@ Color convert_int_to_color(int color_int)
 void BG_RarityDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_RarityDetails::get_id);
-	ClassDB::bind_method(D_METHOD("get_name"), &BG_RarityDetails::get_name);
+	ClassDB::bind_method(D_METHOD("get_equipment_prefix_name"), &BG_RarityDetails::get_equipment_prefix_name);
+	ClassDB::bind_method(D_METHOD("get_beast_part_prefix_name"), &BG_RarityDetails::get_beast_part_prefix_name);
 	ClassDB::bind_method(D_METHOD("get_color"), &BG_RarityDetails::get_color);
 	ClassDB::bind_method(D_METHOD("get_damage_multiplier"), &BG_RarityDetails::get_damage_multiplier);
-	ClassDB::bind_method(D_METHOD("get_percentage_of_all_items_dropped"), &BG_RarityDetails::get_percentage_of_all_items_dropped);
+	ClassDB::bind_method(D_METHOD("get_percentage_of_all_items_dropped_per_act"), &BG_RarityDetails::get_percentage_of_all_items_dropped_per_act);
 }
 
 ////
@@ -286,6 +287,7 @@ void BG_JobDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_monsters_spawn_chances"), &BG_JobDetails::get_monsters_spawn_chances);
 	ClassDB::bind_method(D_METHOD("get_monster_count_range"), &BG_JobDetails::get_monster_count_range);
 	ClassDB::bind_method(D_METHOD("get_is_unique"), &BG_JobDetails::get_is_unique);
+	ClassDB::bind_method(D_METHOD("get_is_boss"), &BG_JobDetails::get_is_boss);
 	ClassDB::bind_method(D_METHOD("get_acts_allowed_in"), &BG_JobDetails::get_acts_allowed_in);
 	ClassDB::bind_method(D_METHOD("get_drop_rate_adder"), &BG_JobDetails::get_drop_rate_adder);
 }
@@ -496,14 +498,21 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				
 				BG_RarityDetails *new_rarity_type = memnew(BG_RarityDetails);
 				new_rarity_type->id = entry["id"];
-				new_rarity_type->name = entry["name"];
+				new_rarity_type->equipment_prefix_name = entry["equipment_prefix_name"];
+				new_rarity_type->beast_part_prefix_name = entry["beast_part_prefix_name"];
 				new_rarity_type->color = convert_int_to_color(int(entry["color"]));
 				const float color_muitiplier = float(entry["color_muitiplier"]);
 				new_rarity_type->color.r *= color_muitiplier;
 				new_rarity_type->color.g *= color_muitiplier;
 				new_rarity_type->color.b *= color_muitiplier;
 				new_rarity_type->damage_multiplier = float(entry["damage_multiplier"]);
-				new_rarity_type->percentage_of_all_items_dropped = float(entry["percentage_of_all_items_dropped"]);
+
+				const Array percentage_of_all_items_dropped_per_act_lines = Array(entry["percentage_of_all_items_dropped_per_act"]);
+				for (int y = 0; y < percentage_of_all_items_dropped_per_act_lines.size(); y++)
+				{
+					const Dictionary percentage_of_all_items_dropped_entry = percentage_of_all_items_dropped_per_act_lines[y];
+					new_rarity_type->percentage_of_all_items_dropped_per_act.append(float(percentage_of_all_items_dropped_entry["percent"]));
+				}
 
 				rarity_types.append(new_rarity_type);
 			}
@@ -749,6 +758,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_job_class->drop_rate_adder = entry["drop_rate_adder"];
 				new_job_class->weeks = int(entry["weeks"]);
 				new_job_class->is_unique = bool(entry["is_unique"]);
+				new_job_class->is_boss = bool(entry["is_boss"]);
 
 				const Array monsters_lines = Array(entry["monsters"]);
 				for (int i = 0; i < monsters_lines.size(); i++)
