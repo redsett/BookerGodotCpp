@@ -13,10 +13,12 @@
 #include "gsg_state.hpp"
 #include "gsg_state_machine.hpp"
 #include "bg_booker_data_base.hpp"
+#include "bg_focus_layers.hpp"
 
 using namespace godot;
 
 static BG_Booker_DB *_booker_db;
+static BG_Focus_Layers *_focus_layers;
 
 void gdextension_initialize(ModuleInitializationLevel p_level)
 {
@@ -47,8 +49,12 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		ClassDB::register_class<BG_Booker_Globals>();
 		ClassDB::register_class<BG_Booker_DB>();
 
+		ClassDB::register_class<BG_Focus_Layers>();
+
 		_booker_db = memnew(BG_Booker_DB);
+		_focus_layers = memnew(BG_Focus_Layers);
 		Engine::get_singleton()->register_singleton("Booker_DB", BG_Booker_DB::get_singleton());
+		Engine::get_singleton()->register_singleton("Focus_Layers", BG_Focus_Layers::get_singleton());
 	}
 }
 
@@ -58,6 +64,8 @@ void gdextension_terminate(ModuleInitializationLevel p_level)
 	{
 		Engine::get_singleton()->unregister_singleton("Booker_DB");
 		memdelete(_booker_db);
+		Engine::get_singleton()->unregister_singleton("Focus_Layers");
+		memdelete(_focus_layers);
 	}
 }
 

@@ -9,7 +9,14 @@
 
 using namespace godot;
 
-#define TIME_FUNC(func) \
+struct counter
+{
+	double total_time = 0.0f;
+	uint32_t total_times = 0;
+};
+
+
+#define TIME_FUNC(func, cont) \
     do { \
         clock_t start, end; \
         double elapsed; \
@@ -17,7 +24,9 @@ using namespace godot;
         func.call(); \
         end = clock(); \
         elapsed = (double)(end - start) / CLOCKS_PER_SEC; \
-        UtilityFunctions::print("The function '", func.get_method(), "' took ", elapsed, " seconds to execute."); \
+		cont.total_time += elapsed; \
+		cont.total_times++; \
+        UtilityFunctions::print("The function '", func.get_method(), "' took ", elapsed, " seconds to execute. Average Time : ", cont.total_time / cont.total_times); \
     } while (0)
 
 Color convert_int_to_color(int color_int)
@@ -380,7 +389,8 @@ void BG_Booker_DB::refresh_data()
 
 /* static */ void BG_Booker_DB::timer_test(Callable callable)
 {
-	TIME_FUNC(callable);
+	static counter cont = counter();
+	TIME_FUNC(callable, cont);
 }
 
 void BG_Booker_DB::try_parse_data(const String &file_path)
