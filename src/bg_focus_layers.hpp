@@ -16,12 +16,14 @@ class BG_Focus_Layers : public Object
 protected:
 	static void _bind_methods();
 
+    bool _is_using_gamepad = true;
     TypedArray<StringName> _focus_layer_stack;
     Dictionary _focus_layer_controls;
 
     void _focus_active_control();
     bool _is_control_top(const Control *ctrl);
     bool _is_control_bottom(const Control *ctrl);
+    Control *_get_active_control() const;
 
 public:
 	BG_Focus_Layers();
@@ -32,6 +34,7 @@ public:
     void remove_focus_layer(const StringName &p_layer_name, bool p_full_remove = false);
     void add_focus_layer(const StringName &p_layer_name, TypedArray<Control> p_controls, const Control *p_focused_control, bool p_should_loop_vertically, bool p_select_layer = true);
     void find_control_in_direction(Vector2 direction);
+    void input_type_updated(bool using_gamepad);
 
     static BG_Focus_Layers *get_singleton();
 };

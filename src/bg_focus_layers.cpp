@@ -3,6 +3,7 @@
 #include <godot_cpp/variant/variant.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/button.hpp>
+#include <godot_cpp/classes/input.hpp>
 
 ////
 //// BG_Focus_Layers
@@ -12,11 +13,12 @@ BG_Focus_Layers *BG_Focus_Layers::singleton = nullptr;
 void BG_Focus_Layers::_bind_methods()
 {
 	// ClassDB::bind_static_method("BG_Booker_DB", D_METHOD("timer_test"), &BG_Booker_DB::timer_test);
-	ClassDB::bind_method(D_METHOD("try_set_focused_control"), &BG_Focus_Layers::try_set_focused_control);
-	ClassDB::bind_method(D_METHOD("set_focus_layer"), &BG_Focus_Layers::set_focus_layer);
-	ClassDB::bind_method(D_METHOD("remove_focus_layer"), &BG_Focus_Layers::remove_focus_layer);
-	ClassDB::bind_method(D_METHOD("add_focus_layer"), &BG_Focus_Layers::add_focus_layer);
-	ClassDB::bind_method(D_METHOD("find_control_in_direction"), &BG_Focus_Layers::find_control_in_direction);
+	ClassDB::bind_method(D_METHOD("try_set_focused_control", "control_to_focus"), &BG_Focus_Layers::try_set_focused_control);
+	ClassDB::bind_method(D_METHOD("set_focus_layer", "layer_name"), &BG_Focus_Layers::set_focus_layer);
+	ClassDB::bind_method(D_METHOD("remove_focus_layer", "layer_name", "should_fully_remove_layer"), &BG_Focus_Layers::remove_focus_layer);
+	ClassDB::bind_method(D_METHOD("add_focus_layer", "layer_name", "controls_in_layer", "control_to_focus", "should_loop_vertically", "select_layer"), &BG_Focus_Layers::add_focus_layer);
+	ClassDB::bind_method(D_METHOD("find_control_in_direction", "direction"), &BG_Focus_Layers::find_control_in_direction);
+	ClassDB::bind_method(D_METHOD("input_type_updated", "is_using_gamepad"), &BG_Focus_Layers::input_type_updated);
 }
 
 BG_Focus_Layers *BG_Focus_Layers::get_singleton()
@@ -66,7 +68,7 @@ void BG_Focus_Layers::set_focus_layer(const StringName &p_layer_name)
 
 void BG_Focus_Layers::remove_focus_layer(const StringName &p_layer_name, bool p_full_remove)
 {
-    ERR_FAIL_COND(!_focus_layer_controls.has(p_layer_name));
+    //ERR_FAIL_COND(!_focus_layer_controls.has(p_layer_name));
 	if (_focus_layer_stack.has(p_layer_name))
     {
 		_focus_layer_stack.erase(p_layer_name);
@@ -81,11 +83,17 @@ void BG_Focus_Layers::remove_focus_layer(const StringName &p_layer_name, bool p_
     }
 }
 
-void BG_Focus_Layers::_focus_active_control()
+Control *BG_Focus_Layers::_get_active_control() const
 {
     const Array &layer_values = _focus_layer_controls[_focus_layer_stack[0]];
-    Control *ctrl = cast_to<Control>(layer_values[1]);
-    ctrl->grab_focus();
+    return cast_to<Control>(layer_values[1]);
+}
+
+void BG_Focus_Layers::_focus_active_control()
+{
+    _get_active_control()->grab_focus();
+    if (!_is_using_gamepad)
+        _get_active_control()->release_focus();
 }
 
 void BG_Focus_Layers::add_focus_layer(const StringName &p_layer_name, TypedArray<Control> p_controls, const Control *p_focused_control, bool p_should_loop_vertically, bool p_select_layer)
@@ -155,7 +163,7 @@ void BG_Focus_Layers::find_control_in_direction(Vector2 direction)
 
     Array layer_values = _focus_layer_controls[_focus_layer_stack[0]];
     const TypedArray<Control> &ctrls = layer_values[0];
-	Control *last_selected_control = cast_to<Control>(layer_values[1]);
+	Control *last_selected_control = _get_active_control();
 	if (last_selected_control != nullptr)
     {
 		const bool should_loop_vertically = bool(layer_values[2]);
@@ -217,5 +225,22 @@ void BG_Focus_Layers::find_control_in_direction(Vector2 direction)
     {
 		last_selected_control->release_focus();
 		_focus_active_control();
+    }
+}
+
+void BG_Focus_Layers::input_type_updated(bool using_gamepad)
+{
+    _is_using_gamepad = using_gamepad;
+    if (_is_using_gamepad)
+    {
+        Input::get_singleton()->set_mouse_mode(Input::MouseMode::MOUSE_MODE_HIDDEN);
+        if (!_focus_layer_stack.is_empty())
+            _focus_active_control();
+    }
+    else
+    {
+        Input::get_singleton()->set_mouse_mode(Input::MouseMode::MOUSE_MODE_VISIBLE);
+        if (!_focus_layer_stack.is_empty())
+            _get_active_control()->release_focus();
     }
 }

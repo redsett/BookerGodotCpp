@@ -3,24 +3,24 @@
   "configurations": [
     {
       "name": "Test in Editor",
-      "type": "cppvsdbg",
+      "type": "lldb",
       "request": "launch",
-      "program": "D:/Personal/Godot/Godot_v4.0.2-stable_win64.exe/Godot_v4.0.2-stable_win64.exe",
+      "program": "D:/Personal/Godot/Godot_v4.2-stable_win64.exe/Godot_v4.2-stable_win64_console.exe",
       "args": [
-        "-e"
+        "-e", "--path", "${workspaceFolder}/../Booker"
       ],
       "stopAtEntry": false,
-      "cwd": "${workspaceFolder}/../GodotBread",
+      //"cwd": "${workspaceFolder}/../Booker",
       "environment": [],
       "console": "integratedTerminal"
     },
     {
       "name": "Test runtime",
-      "type": "cppvsdbg",
+      "type": "lldb",
       "request": "launch",
-      "program": "D:/Personal/Godot/Godot_v4.0.2-stable_win64.exe/Godot_v4.0.2-stable_win64.exe",
+      "program": "D:/Personal/Godot/Godot_v4.2-stable_win64.exe/Godot_v4.2-stable_win64_console.exe",
       "stopAtEntry": false,
-      "cwd": "${workspaceFolder}/../GodotBread",
+      "cwd": "${workspaceFolder}/../Booker",
       "environment": [],
       "console": "integratedTerminal"
     },
