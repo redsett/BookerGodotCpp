@@ -24,6 +24,7 @@ protected:
     bool _is_control_top(const Control *ctrl);
     bool _is_control_bottom(const Control *ctrl);
     Control *_get_active_control() const;
+    bool _check_if_valid_control(const Control *c) const;
 
 public:
 	BG_Focus_Layers();

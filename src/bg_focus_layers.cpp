@@ -91,9 +91,17 @@ Control *BG_Focus_Layers::_get_active_control() const
 
 void BG_Focus_Layers::_focus_active_control()
 {
-    _get_active_control()->grab_focus();
-    if (!_is_using_gamepad)
-        _get_active_control()->release_focus();
+    Control *control_to_focus = _get_active_control();
+    if(!_check_if_valid_control(control_to_focus))
+    {
+        find_control_in_direction(Vector2(0, 1));
+    }
+    else
+    {
+        control_to_focus->grab_focus();
+        if (!_is_using_gamepad)
+            control_to_focus->release_focus();
+    }
 }
 
 void BG_Focus_Layers::add_focus_layer(const StringName &p_layer_name, TypedArray<Control> p_controls, const Control *p_focused_control, bool p_should_loop_vertically, bool p_select_layer)
@@ -114,6 +122,20 @@ void BG_Focus_Layers::add_focus_layer(const StringName &p_layer_name, TypedArray
     }
 }
 
+bool BG_Focus_Layers::_check_if_valid_control(const Control *c) const
+{
+    if (c->is_visible_in_tree() && c->get_mouse_filter() != Control::MouseFilter::MOUSE_FILTER_IGNORE)
+    {
+        const Button *btn = cast_to<Button>(c);
+        if (btn == nullptr || !btn->is_disabled())
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+
 bool BG_Focus_Layers::_is_control_top(const Control *ctrl)
 {
     const float c_top_y = ctrl->get_global_position().y;
@@ -122,13 +144,9 @@ bool BG_Focus_Layers::_is_control_top(const Control *ctrl)
     for (int i = 0; i < ctrls.size(); i++)
     {
         const Control *child = cast_to<Control>(ctrls[i]);
-        if (c_top_y > child->get_global_position().y && child->is_visible_in_tree())
+        if (c_top_y > child->get_global_position().y && _check_if_valid_control(child))
         {
-            const Button *btn = cast_to<Button>(child);
-            if (btn == nullptr || !btn->is_disabled())
-            {
-                return false;
-            }
+            return false;
         }
     }
     return true;
@@ -142,13 +160,9 @@ bool BG_Focus_Layers::_is_control_bottom(const Control *ctrl)
     for (int i = 0; i < ctrls.size(); i++)
     {
         const Control *child = cast_to<Control>(ctrls[i]);
-        if (c_bottom_y < (child->get_global_position().y + child->get_global_rect().size.y) && child->is_visible_in_tree())
+        if (c_bottom_y < (child->get_global_position().y + child->get_global_rect().size.y) && _check_if_valid_control(child))
         {
-            const Button *btn = cast_to<Button>(child);
-            if (btn == nullptr || !btn->is_disabled())
-            {
-                return false;
-            }
+            return false;
         }
     }
     return true;
@@ -192,25 +206,21 @@ void BG_Focus_Layers::find_control_in_direction(Vector2 direction)
         for (int i = 0; i < ctrls.size(); i++)
         {
             const Control *c = cast_to<Control>(ctrls[i]);
-            if (c != nullptr && c != last_selected_control && c->is_visible_in_tree())
+            if (c != nullptr && c != last_selected_control && _check_if_valid_control(c))
             {
-                const Button *btn = cast_to<Button>(c);
-                if (btn == nullptr || !btn->is_disabled())
+                const Vector2 c_center_location = c->get_global_position() + (c->get_global_rect().size * 0.5);
+                static const float PI = 3.14159f;
+                const float angle = abs(direction.angle_to(last_control_dir_location - c_center_location) / PI);
+                static const float MIN_ANGLE = 0.5f;
+                if ((should_get_farthest_control && angle < MIN_ANGLE) || (!should_get_farthest_control && angle > MIN_ANGLE))
                 {
-                    const Vector2 c_center_location = c->get_global_position() + (c->get_global_rect().size * 0.5);
-                    static const float PI = 3.14159f;
-                    const float angle = abs(direction.angle_to(last_control_dir_location - c_center_location) / PI);
-                    static const float MIN_ANGLE = 0.5f;
-                    if ((should_get_farthest_control && angle < MIN_ANGLE) || (!should_get_farthest_control && angle > MIN_ANGLE))
+                    float distance = last_control_dir_location.distance_to(c_center_location);
+                    if (!should_get_farthest_control)
+                        distance *= angle; // Favor controls in a better angle.
+                    if ((should_get_farthest_control && distance > best_distance) || (!should_get_farthest_control && distance < best_distance))
                     {
-                        float distance = last_control_dir_location.distance_to(c_center_location);
-                        if (!should_get_farthest_control)
-                            distance *= angle; // Favor controls in a better angle.
-                        if ((should_get_farthest_control && distance > best_distance) || (!should_get_farthest_control && distance < best_distance))
-                        {
-                            best_distance = distance;
-                            new_selected_control = c;
-                        }
+                        best_distance = distance;
+                        new_selected_control = c;
                     }
                 }
             }
