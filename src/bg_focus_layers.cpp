@@ -2,7 +2,6 @@
 
 #include <godot_cpp/variant/variant.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
-#include <godot_cpp/classes/button.hpp>
 #include <godot_cpp/classes/input.hpp>
 
 ////
@@ -16,9 +15,10 @@ void BG_Focus_Layers::_bind_methods()
 	ClassDB::bind_method(D_METHOD("try_set_focused_control", "control_to_focus"), &BG_Focus_Layers::try_set_focused_control);
 	ClassDB::bind_method(D_METHOD("set_focus_layer", "layer_name"), &BG_Focus_Layers::set_focus_layer);
 	ClassDB::bind_method(D_METHOD("remove_focus_layer", "layer_name", "should_fully_remove_layer"), &BG_Focus_Layers::remove_focus_layer);
-	ClassDB::bind_method(D_METHOD("add_focus_layer", "layer_name", "controls_in_layer", "control_to_focus", "should_loop_vertically", "select_layer"), &BG_Focus_Layers::add_focus_layer);
+	ClassDB::bind_method(D_METHOD("add_focus_layer", "layer_name", "controls_in_layer", "control_to_focus", "back_button", "should_loop_vertically", "select_layer"), &BG_Focus_Layers::add_focus_layer);
 	ClassDB::bind_method(D_METHOD("find_control_in_direction", "direction"), &BG_Focus_Layers::find_control_in_direction);
 	ClassDB::bind_method(D_METHOD("input_type_updated", "is_using_gamepad"), &BG_Focus_Layers::input_type_updated);
+	ClassDB::bind_method(D_METHOD("press_back_button"), &BG_Focus_Layers::press_back_button);
 }
 
 BG_Focus_Layers *BG_Focus_Layers::get_singleton()
@@ -51,6 +51,7 @@ void BG_Focus_Layers::try_set_focused_control(const Control *p_ctrl)
 		if (layer_controls.has(p_ctrl))
         {
 			layer_values[1] = p_ctrl;
+            _focus_active_control();
             break;
         }
     }
@@ -89,6 +90,12 @@ Control *BG_Focus_Layers::_get_active_control() const
     return cast_to<Control>(layer_values[1]);
 }
 
+Button *BG_Focus_Layers::_get_active_back_button() const
+{
+    const Array &layer_values = _focus_layer_controls[_focus_layer_stack[0]];
+    return cast_to<Button>(layer_values[2]);
+}
+
 void BG_Focus_Layers::_focus_active_control()
 {
     Control *control_to_focus = _get_active_control();
@@ -104,7 +111,14 @@ void BG_Focus_Layers::_focus_active_control()
     }
 }
 
-void BG_Focus_Layers::add_focus_layer(const StringName &p_layer_name, TypedArray<Control> p_controls, const Control *p_focused_control, bool p_should_loop_vertically, bool p_select_layer)
+void BG_Focus_Layers::add_focus_layer(
+    const StringName &p_layer_name, 
+    TypedArray<Control> p_controls, 
+    const Control *p_focused_control, 
+    Control *p_back_button, 
+    bool p_should_loop_vertically, 
+    bool p_select_layer
+)
 {
 	// Basically ignore the built in method of finding controls to focus. We will do this ourselves in find_control_in_direction().
     for (int i = 0; i < p_controls.size(); i++)
@@ -115,7 +129,14 @@ void BG_Focus_Layers::add_focus_layer(const StringName &p_layer_name, TypedArray
 		control->set_focus_neighbor(godot::Side::SIDE_RIGHT, control->get_path());
 		control->set_focus_neighbor(godot::Side::SIDE_TOP, control->get_path());
     }
-	_focus_layer_controls[p_layer_name] = Array::make(p_controls, p_focused_control, p_should_loop_vertically);
+
+    Button *btn = cast_to<Button>(p_back_button);
+    if (btn != nullptr)
+    {
+        btn->set_visible(!_is_using_gamepad);
+    }
+
+	_focus_layer_controls[p_layer_name] = Array::make(p_controls, p_focused_control, p_back_button, p_should_loop_vertically);
 	if (p_select_layer)
     {
 		set_focus_layer(p_layer_name);
@@ -180,7 +201,7 @@ void BG_Focus_Layers::find_control_in_direction(Vector2 direction)
 	Control *last_selected_control = _get_active_control();
 	if (last_selected_control != nullptr)
     {
-		const bool should_loop_vertically = bool(layer_values[2]);
+		const bool should_loop_vertically = bool(layer_values[3]);
 		bool should_get_farthest_control = false;
 		Vector2 last_control_dir_location = Vector2();
 		if (direction == Vector2(0, -1))
@@ -252,5 +273,20 @@ void BG_Focus_Layers::input_type_updated(bool using_gamepad)
         Input::get_singleton()->set_mouse_mode(Input::MouseMode::MOUSE_MODE_VISIBLE);
         if (!_focus_layer_stack.is_empty())
             _get_active_control()->release_focus();
+    }
+
+    Button *btn = _get_active_back_button();
+    if (btn != nullptr)
+    {
+        btn->set_visible(!_is_using_gamepad);
+    }
+}
+
+void BG_Focus_Layers::press_back_button() const
+{
+    Button *btn = _get_active_back_button();
+    if (btn != nullptr)
+    {
+        btn->emit_signal("pressed");
     }
 }
