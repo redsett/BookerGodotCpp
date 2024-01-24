@@ -26,7 +26,7 @@ protected:
     bool _is_control_bottom(const Control *ctrl);
     Control *_get_active_control() const;
     Button *_get_active_back_button() const;
-    bool _check_if_valid_control(const Control *c) const;
+    static bool _check_if_valid_control(const Control *c);
 
 public:
 	BG_Focus_Layers();
@@ -47,5 +47,6 @@ public:
     void input_type_updated(bool using_gamepad);
     void press_back_button() const;
 
+    static Control *find_valid_control(const TypedArray<Control> p_controls);
     static BG_Focus_Layers *get_singleton();
 };

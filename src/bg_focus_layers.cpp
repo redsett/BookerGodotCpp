@@ -11,7 +11,8 @@ BG_Focus_Layers *BG_Focus_Layers::singleton = nullptr;
 
 void BG_Focus_Layers::_bind_methods()
 {
-	// ClassDB::bind_static_method("BG_Booker_DB", D_METHOD("timer_test"), &BG_Booker_DB::timer_test);
+    ClassDB::bind_static_method("BG_Focus_Layers", D_METHOD("find_valid_control", "controls"), &BG_Focus_Layers::find_valid_control);
+
 	ClassDB::bind_method(D_METHOD("try_set_focused_control", "control_to_focus"), &BG_Focus_Layers::try_set_focused_control);
 	ClassDB::bind_method(D_METHOD("set_focus_layer", "layer_name"), &BG_Focus_Layers::set_focus_layer);
 	ClassDB::bind_method(D_METHOD("remove_focus_layer", "layer_name", "should_fully_remove_layer"), &BG_Focus_Layers::remove_focus_layer);
@@ -143,9 +144,9 @@ void BG_Focus_Layers::add_focus_layer(
     }
 }
 
-bool BG_Focus_Layers::_check_if_valid_control(const Control *c) const
+/* static */ bool BG_Focus_Layers::_check_if_valid_control(const Control *c)
 {
-    if (c->is_visible_in_tree() && c->get_mouse_filter() != Control::MouseFilter::MOUSE_FILTER_IGNORE)
+    if (c != nullptr && c->is_visible_in_tree() && c->get_mouse_filter() != Control::MouseFilter::MOUSE_FILTER_IGNORE)
     {
         const Button *btn = cast_to<Button>(c);
         if (btn == nullptr || !btn->is_disabled())
@@ -289,4 +290,17 @@ void BG_Focus_Layers::press_back_button() const
     {
         btn->emit_signal("pressed");
     }
+}
+
+/* static */ Control *BG_Focus_Layers::find_valid_control(const TypedArray<Control> p_controls)
+{
+    for (int i = 0; i < p_controls.size(); i++)
+    {
+        Control *ctrl = cast_to<Control>(p_controls[i]);
+        if (BG_Focus_Layers::_check_if_valid_control(ctrl))
+        {
+            return ctrl;
+        }
+    }
+    return nullptr;
 }
