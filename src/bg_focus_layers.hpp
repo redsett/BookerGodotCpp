@@ -21,11 +21,12 @@ protected:
 
     bool _is_using_gamepad = true;
     TypedArray<StringName> _focus_layer_stack;
-    Dictionary _focus_layer_controls; // {[StringName(focus layer name) : [Array[Control](controls in layer), Control(focused control), Control(back/close button), bool(should loop vertically)]]}
+    Dictionary _focus_layer_controls; // {[StringName(focus layer name) : [Control(parent control), Control(focused control), Control(back/close button), bool(should loop vertically)]]}
 
+    inline void _set_control_default_focus_static(Control *p_control);
     void _focus_active_control();
-    bool _is_control_top(const Control *ctrl);
-    bool _is_control_bottom(const Control *ctrl);
+    bool _is_control_top(const Control *ctrl, const TypedArray<Control> &all_ctrls);
+    bool _is_control_bottom(const Control *ctrl, const TypedArray<Control> &all_ctrls);
     Control *_get_active_control() const;
     Button *_get_active_back_button() const;
     static bool _check_if_valid_control(const Control *c);
@@ -39,7 +40,7 @@ public:
     void remove_focus_layer(const StringName &p_layer_name, bool p_full_remove = false);
     void add_focus_layer(
         const StringName &p_layer_name, 
-        TypedArray<Control> p_controls, 
+        const Control *p_parent_control, 
         const Control *p_focused_control, 
         Control *p_back_button, 
         bool p_should_loop_vertically, 
