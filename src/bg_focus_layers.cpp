@@ -12,6 +12,7 @@ BG_Focus_Layers *BG_Focus_Layers::singleton = nullptr;
 void BG_Focus_Layers::_bind_methods()
 {
     ClassDB::bind_static_method("BG_Focus_Layers", D_METHOD("find_valid_control", "controls"), &BG_Focus_Layers::find_valid_control);
+    ClassDB::bind_static_method("BG_Focus_Layers", D_METHOD("get_all_focusable_controls_under_control", "control"), &BG_Focus_Layers::get_all_focusable_controls_under_control);
 
 	ClassDB::bind_method(D_METHOD("try_set_focused_control", "control_to_focus"), &BG_Focus_Layers::try_set_focused_control);
 	ClassDB::bind_method(D_METHOD("set_focus_layer", "layer_name"), &BG_Focus_Layers::set_focus_layer);
@@ -20,6 +21,7 @@ void BG_Focus_Layers::_bind_methods()
 	ClassDB::bind_method(D_METHOD("find_control_in_direction", "direction"), &BG_Focus_Layers::find_control_in_direction);
 	ClassDB::bind_method(D_METHOD("input_type_updated", "is_using_gamepad"), &BG_Focus_Layers::input_type_updated);
 	ClassDB::bind_method(D_METHOD("press_back_button"), &BG_Focus_Layers::press_back_button);
+	ClassDB::bind_method(D_METHOD("set_minimum_angle", "angle"), &BG_Focus_Layers::set_minimum_angle);
 }
 
 BG_Focus_Layers *BG_Focus_Layers::get_singleton()
@@ -233,8 +235,7 @@ void BG_Focus_Layers::find_control_in_direction(Vector2 direction)
                 const Vector2 c_center_location = c->get_global_position() + (c->get_global_rect().size * 0.5);
                 static const float PI = 3.14159f;
                 const float angle = abs(direction.angle_to(last_control_dir_location - c_center_location) / PI);
-                static const float MIN_ANGLE = 0.5f;
-                if ((should_get_farthest_control && angle < MIN_ANGLE) || (!should_get_farthest_control && angle > MIN_ANGLE))
+                if ((should_get_farthest_control && angle < _minimum_angle) || (!should_get_farthest_control && angle > _minimum_angle))
                 {
                     float distance = last_control_dir_location.distance_to(c_center_location);
                     if (!should_get_farthest_control)
@@ -303,4 +304,23 @@ void BG_Focus_Layers::press_back_button() const
         }
     }
     return nullptr;
+}
+
+/* static */ TypedArray<Control> BG_Focus_Layers::get_all_focusable_controls_under_control(const Control *p_control)
+{
+    TypedArray<Control> result;
+    if (p_control != nullptr)
+    {
+        const TypedArray<Node> children = p_control->get_children();
+        for (int i = 0; i < children.size(); i++)
+        {
+            const Control *ctrl = cast_to<Control>(children[i]);
+            if (ctrl != nullptr && ctrl->get_focus_mode() != Control::FocusMode::FOCUS_NONE)
+            {
+                result.append(ctrl);
+            }
+            result.append_array(BG_Focus_Layers::get_all_focusable_controls_under_control(ctrl));
+        }
+    }
+    return result;
 }

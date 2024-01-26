@@ -17,6 +17,8 @@ class BG_Focus_Layers : public Object
 protected:
 	static void _bind_methods();
 
+    float _minimum_angle = 0.5f;
+
     bool _is_using_gamepad = true;
     TypedArray<StringName> _focus_layer_stack;
     Dictionary _focus_layer_controls; // {[StringName(focus layer name) : [Array[Control](controls in layer), Control(focused control), Control(back/close button), bool(should loop vertically)]]}
@@ -47,6 +49,9 @@ public:
     void input_type_updated(bool using_gamepad);
     void press_back_button() const;
 
+    void set_minimum_angle(float angle) { _minimum_angle = angle; };
+
     static Control *find_valid_control(const TypedArray<Control> p_controls);
+    static TypedArray<Control> get_all_focusable_controls_under_control(const Control *p_control);
     static BG_Focus_Layers *get_singleton();
 };
