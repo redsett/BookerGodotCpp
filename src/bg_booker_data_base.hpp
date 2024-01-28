@@ -219,6 +219,9 @@ public:
 	int weeks = 0;
 	int get_weeks() const { return weeks; }
 
+	int weeks_before_expire = 0;
+	int get_weeks_before_expire() const { return weeks_before_expire; }
+
 	TypedArray<StringName> monsters_ids;
 	TypedArray<StringName> get_monsters_ids() const { return monsters_ids; }
 
@@ -554,8 +557,11 @@ public:
 	int seconds_per_week = 0;
 	int get_seconds_per_week() const { return seconds_per_week; }
 
-	TypedArray<Vector2i> jobs_per_month_min_max;
-	TypedArray<Vector2i> get_jobs_per_month_min_max() const { return jobs_per_month_min_max; }
+	int starting_job_count = 0;
+	int get_starting_job_count() const { return starting_job_count; }
+
+	TypedArray<int> jobs_per_month;
+	TypedArray<int> get_jobs_per_month() const { return jobs_per_month; }
 	
 	TypedArray<int> job_rerolls_per_month;
 	TypedArray<int> get_job_rerolls_per_month() const { return job_rerolls_per_month; }

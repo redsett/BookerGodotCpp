@@ -118,7 +118,8 @@ void BG_Focus_Layers::_focus_active_control()
     Control *control_to_focus = _get_active_control();
     if(!_check_if_valid_control(control_to_focus))
     {
-        find_control_in_direction(Vector2(0, 1));
+        // find_control_in_direction(Vector2(0, 1));
+        return;
     }
     else
     {
