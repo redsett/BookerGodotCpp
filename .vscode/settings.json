@@ -70,6 +70,8 @@
     "list": "cpp",
     "vector": "cpp",
     "xiosbase": "cpp",
-    "xstring": "cpp"
+    "xstring": "cpp",
+    "ostream": "cpp",
+    "iostream": "cpp"
   }
 }

@@ -29,7 +29,7 @@ struct counter
         UtilityFunctions::print("The function '", func.get_method(), "' took ", elapsed, " seconds to execute. Average Time : ", cont.total_time / cont.total_times); \
     } while (0)
 
-Color convert_int_to_color(int color_int)
+static Color convert_int_to_color(int color_int)
 {
 	const int r = (color_int >> 16) & 255;
 	const int g = (color_int >> 8) & 255;
@@ -39,6 +39,63 @@ Color convert_int_to_color(int color_int)
 		g > 0 ? g/255.0 : 0.0, 
 		b > 0 ? b/255.0 : 0.0
 	);
+}
+
+struct fraction_struct
+{
+	double integral = 0.0f;
+	long numerator = 0;
+	long denominator = 0;
+};
+
+static long gcd(long a, long b)
+{
+    if (a == 0)
+        return b;
+    else if (b == 0)
+        return a;
+
+    if (a < b)
+        return gcd(a, b % a);
+    else
+        return gcd(b, a % b);
+}
+
+static fraction_struct get_fract(double input)
+{
+    double integral = std::floor(input);
+    double frac = input - integral;
+
+    const long precision = 1000000000; // This is the accuracy.
+
+    long gcd_ = gcd(round(frac * precision), precision);
+
+    long denominator = precision / gcd_;
+    long numerator = round(frac * precision) / gcd_;
+
+	fraction_struct frac_struct = fraction_struct();
+	frac_struct.integral = integral;
+	frac_struct.numerator = numerator;
+	frac_struct.denominator = denominator;
+	return frac_struct;
+    // std::cout << integral << " + ";
+    // std::cout << numerator << " / " << denominator << std::endl;
+}
+
+////
+//// BG_Dice
+////
+void BG_Dice::_bind_methods()
+{
+	ClassDB::bind_static_method("BG_Dice", D_METHOD("calculate_dice", "dice"), &BG_Dice::calculate_dice);
+	ClassDB::bind_static_method("BG_Dice", D_METHOD("dice_to_string", "dice"), &BG_Dice::dice_to_string);
+
+	ClassDB::bind_method(D_METHOD("get_roll_count"), &BG_Dice::get_roll_count);
+	ClassDB::bind_method(D_METHOD("set_roll_count"), &BG_Dice::set_roll_count);
+	ClassDB::bind_method(D_METHOD("get_amount_of_sides"), &BG_Dice::get_amount_of_sides);
+	ClassDB::bind_method(D_METHOD("set_amount_of_sides"), &BG_Dice::set_amount_of_sides);
+	ClassDB::bind_method(D_METHOD("get_additive"), &BG_Dice::get_additive);
+	ClassDB::bind_method(D_METHOD("set_additive"), &BG_Dice::set_additive);
 }
 
 ////
@@ -79,11 +136,18 @@ void BG_UnitStat::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_offensive_value"), &BG_UnitStat::set_offensive_value);
 	ClassDB::bind_method(D_METHOD("get_defensive_value"), &BG_UnitStat::get_defensive_value);
 	ClassDB::bind_method(D_METHOD("set_defensive_value"), &BG_UnitStat::set_defensive_value);
+	ClassDB::bind_method(D_METHOD("get_resistant_value"), &BG_UnitStat::get_resistant_value);
+	ClassDB::bind_method(D_METHOD("set_resistant_value"), &BG_UnitStat::set_resistant_value);
+
+	ClassDB::bind_method(D_METHOD("get_dice"), &BG_UnitStat::get_dice);
+	ClassDB::bind_method(D_METHOD("set_dice"), &BG_UnitStat::set_dice);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "bonus_percentage"), "set_bonus_percentage", "get_bonus_percentage");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "offensive_value"), "set_offensive_value", "get_offensive_value");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "defensive_value"), "set_defensive_value", "get_defensive_value");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "resistant_value"), "set_resistant_value", "get_resistant_value");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "dice"), "set_dice", "get_dice");
 }
 
 ////
@@ -234,23 +298,33 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_Monster::get_id);
 	ClassDB::bind_method(D_METHOD("set_id"), &BG_Monster::set_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_Monster::get_name);
-	ClassDB::bind_method(D_METHOD("set_name"), &BG_Monster::set_name);
+	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_Monster::get_max_health);
 	ClassDB::bind_method(D_METHOD("get_current_health"), &BG_Monster::get_current_health);
 	ClassDB::bind_method(D_METHOD("set_current_health"), &BG_Monster::set_current_health);
-	ClassDB::bind_method(D_METHOD("get_level"), &BG_Monster::get_level);
-	ClassDB::bind_method(D_METHOD("set_level"), &BG_Monster::set_level);
+	ClassDB::bind_method(D_METHOD("get_challenge_rating"), &BG_Monster::get_challenge_rating);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_Monster::get_stats);
-	ClassDB::bind_method(D_METHOD("set_stats"), &BG_Monster::set_stats);
 
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_Monster::get_icon_path);
+	ClassDB::bind_method(D_METHOD("get_effect_text"), &BG_Monster::get_effect_text);
 	ClassDB::bind_method(D_METHOD("get_beast_part_rewards"), &BG_Monster::get_beast_part_rewards);
 	ClassDB::bind_method(D_METHOD("get_equipment_rewards"), &BG_Monster::get_equipment_rewards);
+	ClassDB::bind_method(D_METHOD("get_challenge_rating_faction_string"), &BG_Monster::get_challenge_rating_faction_string);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
+	//ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
-	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "stats", PROPERTY_HINT_RESOURCE_TYPE, "BG_UnitStat"), "set_stats", "get_stats");
+	//ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
+	//ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "stats", PROPERTY_HINT_RESOURCE_TYPE, "BG_UnitStat"), "set_stats", "get_stats");
+}
+
+String BG_Monster::get_challenge_rating_faction_string() const
+{
+	String result = "";
+	fraction_struct fract_struct = get_fract(get_challenge_rating());
+	result += String::num_int64(fract_struct.numerator);
+	result += "/";
+	result += String::num_int64(fract_struct.denominator);
+	return result;
 }
 
 ////
@@ -687,11 +761,14 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				BG_Monster *new_monster_type = memnew(BG_Monster);
 				new_monster_type->id = entry["id"];
 				new_monster_type->name = entry["name"];
-				new_monster_type->level = entry["level"];
+				new_monster_type->challenge_rating = float(entry["challenge_rating"]);
+				//new_monster_type->level = int(entry["level"]);
+				new_monster_type->max_health = int(entry["health"]);
 				new_monster_type->icon_path = entry["icon_path"];
+				new_monster_type->effect_text = entry["effect_text"];
 
 				// Stats
-				int defensive_stat_count = 0;
+				// int defensive_stat_count = 0;
 				const Array stats_lines = Array(entry["stats"]);
 				for (int y = 0; y < stats_lines.size(); y++)
 				{
@@ -700,23 +777,26 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					BG_UnitStat *new_stat = memnew(BG_UnitStat);
 					new_stat->id = stat_entry["stat"];
 
-					bool is_defensive_stat = false;
-					for (int z = 0; z < stat_types.size(); z++) {
-						BG_UnitStatDetails *stat = cast_to<BG_UnitStatDetails>(stat_types[z]);
-						if (stat->id == new_stat->id && !stat->is_damage_type) {
-							is_defensive_stat = true;
-							defensive_stat_count += 1;
-						}
-					}
+					// bool is_defensive_stat = false;
+					// for (int z = 0; z < stat_types.size(); z++) {
+					// 	BG_UnitStatDetails *stat = cast_to<BG_UnitStatDetails>(stat_types[z]);
+					// 	if (stat->id == new_stat->id && !stat->is_damage_type) {
+					// 		is_defensive_stat = true;
+					// 		defensive_stat_count += 1;
+					// 	}
+					// }
 
-					float offensive_percentage = float(stat_entry["offensive_percentage"]);
-					float defensive_percentage = float(stat_entry["defensive_percentage"]);
-					if (is_defensive_stat && defensive_stat_count == 1) {
-						new_stat->defensive_value = defensive_percentage * cast_to<BG_LevelGuide>(globals->level_guide[new_monster_type->level - 1])->monster_health;
-					} else {
-						new_stat->offensive_value = offensive_percentage * cast_to<BG_LevelGuide>(globals->level_guide[new_monster_type->level - 1])->monster_base_off_stat;
-						new_stat->defensive_value = defensive_percentage * cast_to<BG_LevelGuide>(globals->level_guide[new_monster_type->level - 1])->monster_base_def_stat;
-					}
+					new_stat->resistant_value = int(stat_entry["resistant_value"]);
+
+					// float offensive_percentage = float(stat_entry["offensive_percentage"]);
+					// float defensive_percentage = float(stat_entry["defensive_percentage"]);
+					// if (is_defensive_stat && defensive_stat_count == 1) {
+					// 	new_stat->defensive_value = defensive_percentage * cast_to<BG_LevelGuide>(globals->level_guide[new_monster_type->level - 1])->monster_health;
+					// } else {
+					// 	new_stat->offensive_value = offensive_percentage * cast_to<BG_LevelGuide>(globals->level_guide[new_monster_type->level - 1])->monster_base_off_stat;
+					// 	new_stat->defensive_value = defensive_percentage * cast_to<BG_LevelGuide>(globals->level_guide[new_monster_type->level - 1])->monster_base_def_stat;
+					// }
+					new_stat->set_dice(BG_Dice::string_to_dice(stat_entry["damage_dice"]));
 					
 					new_monster_type->stats.append(new_stat);
 				}
@@ -866,6 +946,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 						new_stat->id = stat_entry["stat"];
 						new_stat->offensive_value = int(stat_entry["offensive_value"]);
 						new_stat->defensive_value = int(stat_entry["defensive_value"]);
+						new_stat->set_dice(BG_Dice::string_to_dice(stat_entry["damage_dice"]));
 
 						new_item_class->stats.append(new_stat);
 					}
@@ -915,6 +996,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 						new_stat->id = stat_entry["stat"];
 						new_stat->bonus_percentage = float(stat_entry["offensive_bonus"]);
 						new_stat->defensive_value = int(stat_entry["defensive_value"]);
+						new_stat->set_dice(BG_Dice::string_to_dice(stat_entry["damage_dice"]));
 
 						new_item_class->stats.append(new_stat);
 					}
@@ -963,4 +1045,73 @@ BG_Booker_DB::~BG_Booker_DB()
 		memdelete(band_info);
 		band_info = nullptr;
 	}
+}
+
+////
+//// BG_Dice
+////
+/* static */ int BG_Dice::calculate_dice(const TypedArray<BG_Dice> dice)
+{
+	int result = 0;
+	for (int i = 0; i < dice.size(); i++)
+	{
+		if (!dice[i])
+		{
+			continue;
+		}
+		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
+		for (int x = 0; x < die->get_roll_count(); x++)
+		{
+			result += UtilityFunctions::randi_range(1, die->get_amount_of_sides());
+		}
+		result += die->get_additive();
+	}
+
+	return Math::max(0, result);
+}
+
+/* static */ String BG_Dice::dice_to_string(const BG_Dice *dice)
+{
+	if (dice == nullptr)
+	{
+		return "-";
+	}
+	
+	String result = String::num_int64(dice->get_roll_count()) + "d" + String::num_int64(dice->get_amount_of_sides());
+	if (dice->get_additive() > 0)
+		result += " + " + String::num_int64(dice->get_additive());
+	else if (dice->get_additive() < 0)
+		result += " - " + String::num_int64(abs(dice->get_additive()));
+	return result;
+}
+
+/* static */ BG_Dice *BG_Dice::string_to_dice(String string)
+{
+	if (string.is_empty())
+	{
+		return nullptr;
+	}
+	BG_Dice *result = memnew(BG_Dice);
+	result->set_roll_count(string.split("d")[0].to_int());
+
+	const String after_d = string.split("d")[1].replace(" ", ""); // I.e:   6 or 6+1 or 6-1
+	if (after_d.contains("+") || after_d.contains("-"))
+	{
+		if (after_d.contains("+"))
+		{
+			result->set_amount_of_sides(after_d.split("+")[0].to_int());
+			result->set_additive(after_d.split("+")[1].to_int());
+		}
+		else
+		{
+			result->set_amount_of_sides(after_d.split("-")[0].to_int());
+			result->set_additive(after_d.split("-")[1].to_int() * -1); // Negative the number since it's going to subtract.
+		}
+	}
+	else
+	{
+		result->set_amount_of_sides(after_d.to_int());
+	}
+	
+	return result;
 }

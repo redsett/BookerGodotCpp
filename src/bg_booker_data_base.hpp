@@ -9,6 +9,34 @@
 using namespace godot;
 
 ////
+//// BG_Dice
+////
+class BG_Dice : public Object
+{
+	GDCLASS(BG_Dice, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	int roll_count = 0;
+	int get_roll_count() const { return roll_count; }
+	void set_roll_count(int value) { roll_count = value; }
+
+	int amount_of_sides = 0;
+	int get_amount_of_sides() const { return amount_of_sides; }
+	void set_amount_of_sides(int value) { amount_of_sides = value; }
+
+	int additive = 0;
+	int get_additive() const { return additive; }
+	void set_additive(int value) { additive = value; }
+
+	static int calculate_dice(const TypedArray<BG_Dice> dice);
+	static String dice_to_string(const BG_Dice *dice);
+	static BG_Dice *string_to_dice(String string);
+};
+
+////
 //// BG_RarityDetails
 ////
 class BG_RarityDetails : public Object
@@ -88,6 +116,14 @@ public:
 	int defensive_value = 0;
 	int get_defensive_value() const { return defensive_value; }
 	void set_defensive_value(int v) { defensive_value = v; }
+
+	int resistant_value = 0;
+	int get_resistant_value() const { return resistant_value; }
+	void set_resistant_value(int v) { resistant_value = v; }
+
+	BG_Dice *dice = nullptr;
+	BG_Dice *get_dice() const { return dice; }
+	void set_dice(BG_Dice *value) { dice = value; }
 };
 
 ////
@@ -406,28 +442,33 @@ public:
 
 	StringName name;
 	StringName get_name() const { return name; }
-	void set_name(StringName value) { name = value; }
+
+	int max_health = 0;
+	int get_max_health() const { return max_health; }
 
 	int current_health = 0;
 	int get_current_health() const { return current_health; }
 	void set_current_health(int value) { current_health = value; }
 
-	int level = 0;
-	int get_level() const { return level; }
-	void set_level(int value) { level = value; }
+	float challenge_rating = 0.0f;
+	float get_challenge_rating() const { return challenge_rating; }
 
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
-	void set_stats(TypedArray<BG_UnitStat> value) { stats = value; }
 
 	StringName icon_path;
 	StringName get_icon_path() const { return icon_path; }
+
+	StringName effect_text;
+	StringName get_effect_text() const { return effect_text; }
 
 	TypedArray<BG_RewardItem> beast_part_rewards;
 	TypedArray<BG_RewardItem> get_beast_part_rewards() const { return beast_part_rewards; }
 
 	TypedArray<BG_RewardItem> equipment_rewards;
 	TypedArray<BG_RewardItem> get_equipment_rewards() const { return equipment_rewards; }
+
+	String get_challenge_rating_faction_string() const;
 };
 
 ////
