@@ -88,6 +88,7 @@ static fraction_struct get_fract(double input)
 void BG_Dice::_bind_methods()
 {
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("calculate_dice", "dice"), &BG_Dice::calculate_dice);
+	ClassDB::bind_static_method("BG_Dice", D_METHOD("dice_to_nice_name", "dice"), &BG_Dice::dice_to_nice_name);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("dice_to_string", "dice"), &BG_Dice::dice_to_string);
 
 	ClassDB::bind_method(D_METHOD("get_roll_count"), &BG_Dice::get_roll_count);
@@ -169,8 +170,8 @@ void BG_Item::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_is_equipped"), &BG_Item::set_is_equipped);
 	ClassDB::bind_method(D_METHOD("get_rarity_id"), &BG_Item::get_rarity_id);
 	ClassDB::bind_method(D_METHOD("set_rarity_id"), &BG_Item::set_rarity_id);
-	ClassDB::bind_method(D_METHOD("get_graft"), &BG_Item::get_graft);
-	ClassDB::bind_method(D_METHOD("set_graft"), &BG_Item::set_graft);
+	ClassDB::bind_method(D_METHOD("get_grafts"), &BG_Item::get_grafts);
+	ClassDB::bind_method(D_METHOD("set_grafts"), &BG_Item::set_grafts);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "on_shelf"), "set_on_shelf", "get_on_shelf");
@@ -179,7 +180,7 @@ void BG_Item::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "bid_amount"), "set_bid_amount", "get_bid_amount");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_equipped"), "set_is_equipped", "get_is_equipped");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "rarity_id"), "set_rarity_id", "get_rarity_id");
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "graft"), "set_graft", "get_graft");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "grafts"), "set_grafts", "get_grafts");
 }
 
 ////
@@ -190,12 +191,13 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_ItemDetails::get_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_ItemDetails::get_name);
 	ClassDB::bind_method(D_METHOD("get_description"), &BG_ItemDetails::get_description);
+	ClassDB::bind_method(D_METHOD("get_hands"), &BG_ItemDetails::get_hands);
 	ClassDB::bind_method(D_METHOD("get_is_beast_part"), &BG_ItemDetails::get_is_beast_part);
 	ClassDB::bind_method(D_METHOD("get_is_useable_item"), &BG_ItemDetails::get_is_useable_item);
 	ClassDB::bind_method(D_METHOD("get_slot_type_id"), &BG_ItemDetails::get_slot_type_id);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_ItemDetails::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_ItemDetails::get_stats);
-	// ClassDB::bind_static_method("BG_ItemDetails", D_METHOD("get_slot_types"), &BG_ItemDetails::get_slot_types);
+	ClassDB::bind_method(D_METHOD("get_effect_text"), &BG_ItemDetails::get_effect_text);
 }
 
 ////
@@ -263,6 +265,7 @@ void BG_UnitCaste::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitCaste::get_id);
 	ClassDB::bind_method(D_METHOD("set_id"), &BG_UnitCaste::set_id);
+	ClassDB::bind_method(D_METHOD("get_name"), &BG_UnitCaste::get_name);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_UnitCaste::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_UnitCaste::get_stats);
 	ClassDB::bind_method(D_METHOD("set_stats"), &BG_UnitCaste::set_stats);
@@ -321,9 +324,16 @@ String BG_Monster::get_challenge_rating_faction_string() const
 {
 	String result = "";
 	fraction_struct fract_struct = get_fract(get_challenge_rating());
-	result += String::num_int64(fract_struct.numerator);
-	result += "/";
-	result += String::num_int64(fract_struct.denominator);
+	if (fract_struct.integral > 0.0f)
+	{
+		result += String::num_int64(int(fract_struct.integral)) + " ";
+	}
+	if (fract_struct.numerator > 0)
+	{
+		result += String::num_int64(fract_struct.numerator);
+		result += "/";
+		result += String::num_int64(fract_struct.denominator);
+	}
 	return result;
 }
 
@@ -426,6 +436,7 @@ void BG_Booker_DB::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("refresh_data"), &BG_Booker_DB::refresh_data);
 	ClassDB::bind_static_method("BG_Booker_DB", D_METHOD("timer_test"), &BG_Booker_DB::timer_test);
+	ClassDB::bind_static_method("BG_Booker_DB", D_METHOD("get_job_challenge_rating", "monsters"), &BG_Booker_DB::get_job_challenge_rating);
 
 	ClassDB::bind_method(D_METHOD("get_modding_path"), &BG_Booker_DB::get_modding_path);
 	ClassDB::bind_method(D_METHOD("get_globals"), &BG_Booker_DB::get_globals);
@@ -718,6 +729,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 
 				BG_UnitCaste *new_unit_caste = memnew(BG_UnitCaste);
 				new_unit_caste->id = entry["id"];
+				new_unit_caste->name = entry["name"];
 				new_unit_caste->icon_path = entry["icon_path"];
 
 				const Array damage_type_lines = Array(entry["base_damage_type_stats"]);
@@ -934,6 +946,8 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->icon_path = entry["icon_path"];
 					new_item_class->description = entry["description"];
 					new_item_class->slot_type_id = entry["slot_type"];
+					new_item_class->hands = int(entry["hands"]);
+					new_item_class->effect_text = entry["effect_text"];
 					items.append(new_item_class);
 
 					// Stats
@@ -944,8 +958,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 
 						BG_UnitStat *new_stat = memnew(BG_UnitStat);
 						new_stat->id = stat_entry["stat"];
-						new_stat->offensive_value = int(stat_entry["offensive_value"]);
-						new_stat->defensive_value = int(stat_entry["defensive_value"]);
+						new_stat->resistant_value = int(stat_entry["resistant_value"]);
 						new_stat->set_dice(BG_Dice::string_to_dice(stat_entry["damage_dice"]));
 
 						new_item_class->stats.append(new_stat);
@@ -1047,6 +1060,68 @@ BG_Booker_DB::~BG_Booker_DB()
 	}
 }
 
+/* static */ String BG_Booker_DB::get_job_challenge_rating(TypedArray<BG_Monster> monsters)
+{
+	String result;
+
+	const TypedArray<BG_Monster> global_monster_types = BG_Booker_DB::get_singleton()->get_monster_types();
+
+	TypedArray<BG_Monster> unique_monsters;
+	TypedArray<float> challenge_ratings;
+	TypedArray<int> monster_counts;
+	for (int i = 0; i < monsters.size(); i++)
+	{
+		const BG_Monster *monster = nullptr;
+		const BG_Monster *m = cast_to<BG_Monster>(monsters[i]);
+		// Find the global version of this monster, as it has more details that were not saved in the resource.
+		for (int x = 0; x < global_monster_types.size(); x++)
+		{
+			const BG_Monster *gm = cast_to<BG_Monster>(global_monster_types[x]);
+			if (m->get_id() == gm->get_id())
+			{
+				monster = gm;
+				break;
+			}
+		}
+
+		if (monster == nullptr)
+			break;
+
+		if (unique_monsters.count(monster) > 0)
+		{
+			const int array_index = unique_monsters.find(monster);
+			monster_counts[array_index] = int(monster_counts[array_index]) + 1;
+		}
+		else
+		{
+			unique_monsters.append(monster);
+			challenge_ratings.append(monster->get_challenge_rating());
+			monster_counts.append(1);
+		}
+	}
+
+	float challenge_rating = 0.0f;
+	for (int i = 0; i < challenge_ratings.size(); i++)
+	{
+		challenge_rating += float(challenge_ratings[i]) * float(monster_counts[i]);
+	}
+	const int total_monster_count = monsters.size();
+	challenge_rating = challenge_rating + total_monster_count * 0.25f;
+
+	fraction_struct fract_struct = get_fract(challenge_rating);
+	if (fract_struct.integral > 0.0f)
+	{
+		result += String::num_int64(int(fract_struct.integral)) + " ";
+	}
+	if (fract_struct.numerator > 0)
+	{
+		result += String::num_int64(fract_struct.numerator);
+		result += "/";
+		result += String::num_int64(fract_struct.denominator);
+	}
+	return result;
+}
+
 ////
 //// BG_Dice
 ////
@@ -1070,6 +1145,29 @@ BG_Booker_DB::~BG_Booker_DB()
 	return Math::max(0, result);
 }
 
+/* static */ String BG_Dice::dice_to_nice_name(const TypedArray<BG_Dice> dice)
+{
+	int minimum_damage = 0;
+	int maximum_damage = 0;
+	for (int i = 0; i < dice.size(); i++)
+	{
+		if (!dice[i])
+		{
+			continue;
+		}
+		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
+		for (int x = 0; x < die->get_roll_count(); x++)
+		{
+			minimum_damage += 1;
+			maximum_damage += die->get_amount_of_sides();
+		}
+		minimum_damage += die->get_additive();
+		maximum_damage += die->get_additive();
+	}
+
+	return String::num_int64(minimum_damage) + "~" + String::num_int64(maximum_damage);
+}
+
 /* static */ String BG_Dice::dice_to_string(const BG_Dice *dice)
 {
 	if (dice == nullptr)
@@ -1079,9 +1177,9 @@ BG_Booker_DB::~BG_Booker_DB()
 	
 	String result = String::num_int64(dice->get_roll_count()) + "d" + String::num_int64(dice->get_amount_of_sides());
 	if (dice->get_additive() > 0)
-		result += " + " + String::num_int64(dice->get_additive());
+		result += "+" + String::num_int64(dice->get_additive());
 	else if (dice->get_additive() < 0)
-		result += " - " + String::num_int64(abs(dice->get_additive()));
+		result += "-" + String::num_int64(abs(dice->get_additive()));
 	return result;
 }
 

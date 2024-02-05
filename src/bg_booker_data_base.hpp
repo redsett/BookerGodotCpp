@@ -32,6 +32,7 @@ public:
 	void set_additive(int value) { additive = value; }
 
 	static int calculate_dice(const TypedArray<BG_Dice> dice);
+	static String dice_to_nice_name(const TypedArray<BG_Dice> dice);
 	static String dice_to_string(const BG_Dice *dice);
 	static BG_Dice *string_to_dice(String string);
 };
@@ -165,9 +166,9 @@ public:
 	StringName get_rarity_id() const { return rarity_id; }
 	void set_rarity_id(StringName value) { rarity_id = value; }
 
-	Ref<BG_Item> graft;
-	Ref<BG_Item> get_graft() const { return graft; }
-	void set_graft(Ref<BG_Item> value) { graft = value; }
+	TypedArray<BG_Item> grafts;
+	TypedArray<BG_Item> get_grafts() const { return grafts; }
+	void set_grafts(TypedArray<BG_Item> value) { grafts = value; }
 };
 
 ////
@@ -190,6 +191,9 @@ public:
 	StringName description;
 	StringName get_description() const { return description; }
 
+	int hands = 0;
+	int get_hands() const { return hands; }
+
 	bool is_beast_part = false;
 	bool get_is_beast_part() const { return is_beast_part; }
 
@@ -207,6 +211,9 @@ public:
 
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
+
+	StringName effect_text;
+	StringName get_effect_text() const { return effect_text; }
 };
 
 ////
@@ -294,6 +301,9 @@ public:
 	StringName id;
 	StringName get_id() const { return id; }
 	void set_id(StringName p_value) { id = p_value; }
+
+	StringName name;
+	StringName get_name() const { return name; }
 
 	StringName icon_path;
 	StringName get_icon_path() const { return icon_path; }
@@ -666,6 +676,8 @@ public:
 
 	TypedArray<BG_Monster> monster_types;
 	TypedArray<BG_Monster> get_monster_types() const { return monster_types; }
+
+	static String get_job_challenge_rating(TypedArray<BG_Monster> monsters);
 
 private:
 	Dictionary data;
