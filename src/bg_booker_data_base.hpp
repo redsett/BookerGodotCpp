@@ -2,11 +2,36 @@
 
 #include <godot_cpp/classes/object.hpp>
 #include <godot_cpp/classes/ref.hpp>
+#include <godot_cpp/classes/random_number_generator.hpp>
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/templates/vector.hpp>
 
 using namespace godot;
+
+////
+//// BG_Effect
+////
+class BG_Effect : public Object
+{
+	GDCLASS(BG_Effect, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	StringName description;
+	StringName get_description() const { return description; }
+
+	StringName script_path;
+	StringName get_script_path() const { return script_path; }
+
+	StringName status_icon_path;
+	StringName get_status_icon_path() const { return status_icon_path; }
+};
 
 ////
 //// BG_Dice
@@ -31,7 +56,7 @@ public:
 	int get_additive() const { return additive; }
 	void set_additive(int value) { additive = value; }
 
-	static int calculate_dice(const TypedArray<BG_Dice> dice);
+	static int calculate_dice(const TypedArray<BG_Dice> dice, RandomNumberGenerator *random_num_generator = nullptr);
 	static String dice_to_nice_name(const TypedArray<BG_Dice> dice);
 	static String dice_to_string(const BG_Dice *dice);
 	static BG_Dice *string_to_dice(String string);
@@ -212,8 +237,8 @@ public:
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
 
-	StringName effect_text;
-	StringName get_effect_text() const { return effect_text; }
+	TypedArray<StringName> effect_ids;
+	TypedArray<StringName> get_effect_ids() const { return effect_ids; }
 };
 
 ////
@@ -469,8 +494,8 @@ public:
 	StringName icon_path;
 	StringName get_icon_path() const { return icon_path; }
 
-	StringName effect_text;
-	StringName get_effect_text() const { return effect_text; }
+	TypedArray<StringName> effect_ids;
+	TypedArray<StringName> get_effect_ids() const { return effect_ids; }
 
 	TypedArray<BG_RewardItem> beast_part_rewards;
 	TypedArray<BG_RewardItem> get_beast_part_rewards() const { return beast_part_rewards; }
@@ -661,6 +686,9 @@ public:
 
 	TypedArray<BG_ItemDetails> items;
 	TypedArray<BG_ItemDetails> get_items() const { return items; }
+	
+	TypedArray<BG_Effect> effects;
+	TypedArray<BG_Effect> get_effects() const { return effects; }
 
 	BG_BandInfo *band_info = nullptr;
 	BG_BandInfo *get_band_info() const { return band_info; }

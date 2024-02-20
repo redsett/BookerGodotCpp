@@ -83,11 +83,22 @@ static fraction_struct get_fract(double input)
 }
 
 ////
+//// BG_Effect
+////
+void BG_Effect::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_Effect::get_id);
+	ClassDB::bind_method(D_METHOD("get_description"), &BG_Effect::get_description);
+	ClassDB::bind_method(D_METHOD("get_script_path"), &BG_Effect::get_script_path);
+	ClassDB::bind_method(D_METHOD("get_status_icon_path"), &BG_Effect::get_status_icon_path);
+}
+
+////
 //// BG_Dice
 ////
 void BG_Dice::_bind_methods()
 {
-	ClassDB::bind_static_method("BG_Dice", D_METHOD("calculate_dice", "dice"), &BG_Dice::calculate_dice);
+	ClassDB::bind_static_method("BG_Dice", D_METHOD("calculate_dice", "dice", "random_number_generator"), &BG_Dice::calculate_dice);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("dice_to_nice_name", "dice"), &BG_Dice::dice_to_nice_name);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("dice_to_string", "dice"), &BG_Dice::dice_to_string);
 
@@ -197,7 +208,7 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_slot_type_id"), &BG_ItemDetails::get_slot_type_id);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_ItemDetails::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_ItemDetails::get_stats);
-	ClassDB::bind_method(D_METHOD("get_effect_text"), &BG_ItemDetails::get_effect_text);
+	ClassDB::bind_method(D_METHOD("get_effect_ids"), &BG_ItemDetails::get_effect_ids);
 }
 
 ////
@@ -308,7 +319,7 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_Monster::get_stats);
 
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_Monster::get_icon_path);
-	ClassDB::bind_method(D_METHOD("get_effect_text"), &BG_Monster::get_effect_text);
+	ClassDB::bind_method(D_METHOD("get_effect_ids"), &BG_Monster::get_effect_ids);
 	ClassDB::bind_method(D_METHOD("get_beast_part_rewards"), &BG_Monster::get_beast_part_rewards);
 	ClassDB::bind_method(D_METHOD("get_equipment_rewards"), &BG_Monster::get_equipment_rewards);
 	ClassDB::bind_method(D_METHOD("get_challenge_rating_faction_string"), &BG_Monster::get_challenge_rating_faction_string);
@@ -442,6 +453,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_globals"), &BG_Booker_DB::get_globals);
 	ClassDB::bind_method(D_METHOD("get_jobs"), &BG_Booker_DB::get_jobs);
 	ClassDB::bind_method(D_METHOD("get_items"), &BG_Booker_DB::get_items);
+	ClassDB::bind_method(D_METHOD("get_effects"), &BG_Booker_DB::get_effects);
 	ClassDB::bind_method(D_METHOD("get_band_info"), &BG_Booker_DB::get_band_info);
 	ClassDB::bind_method(D_METHOD("get_item_slot_types"), &BG_Booker_DB::get_item_slot_types);
 	ClassDB::bind_method(D_METHOD("get_rarity_types"), &BG_Booker_DB::get_rarity_types);
@@ -777,7 +789,14 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				//new_monster_type->level = int(entry["level"]);
 				new_monster_type->max_health = int(entry["health"]);
 				new_monster_type->icon_path = entry["icon_path"];
-				new_monster_type->effect_text = entry["effect_text"];
+
+				// Effects
+				const Array effect_lines = Array(entry["effects"]);
+				for (int y = 0; y < effect_lines.size(); y++)
+				{
+					const Dictionary effect_entry = effect_lines[y];
+					new_monster_type->effect_ids.append(effect_entry["effect"]);
+				}
 
 				// Stats
 				// int defensive_stat_count = 0;
@@ -947,8 +966,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->description = entry["description"];
 					new_item_class->slot_type_id = entry["slot_type"];
 					new_item_class->hands = int(entry["hands"]);
-					new_item_class->effect_text = entry["effect_text"];
-					items.append(new_item_class);
 
 					// Stats
 					const Array stats_lines = Array(entry["stats"]);
@@ -963,6 +980,16 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 
 						new_item_class->stats.append(new_stat);
 					}
+
+					// Effects
+					const Array effect_lines = Array(entry["effects"]);
+					for (int y = 0; y < effect_lines.size(); y++)
+					{
+						const Dictionary effect_entry = effect_lines[y];
+						new_item_class->effect_ids.append(effect_entry["effect"]);
+					}
+
+					items.append(new_item_class);
 				}
 			}
 
@@ -1032,6 +1059,27 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->is_useable_item = true;
 					items.append(new_item_class);
 				}
+			}
+		}
+	}
+
+	/////
+	///// Effects
+	/////
+	{
+		const Dictionary effects_sheet = BG_JsonUtils::GetCBDSheet(data, "effects");
+		if (effects_sheet.has("lines"))
+		{
+			const Array lines = Array(effects_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
+			{
+				const Dictionary entry = lines[i];
+				BG_Effect *new_effect_class = memnew(BG_Effect);
+				new_effect_class->id = entry["id"];
+				new_effect_class->description = entry["description"];
+				new_effect_class->script_path = entry["script_path"];
+				new_effect_class->status_icon_path = entry["status_icon"];
+				effects.append(new_effect_class);
 			}
 		}
 	}
@@ -1125,7 +1173,7 @@ BG_Booker_DB::~BG_Booker_DB()
 ////
 //// BG_Dice
 ////
-/* static */ int BG_Dice::calculate_dice(const TypedArray<BG_Dice> dice)
+/* static */ int BG_Dice::calculate_dice(const TypedArray<BG_Dice> dice, RandomNumberGenerator *random_num_generator)
 {
 	int result = 0;
 	for (int i = 0; i < dice.size(); i++)
@@ -1137,7 +1185,10 @@ BG_Booker_DB::~BG_Booker_DB()
 		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
 		for (int x = 0; x < die->get_roll_count(); x++)
 		{
-			result += UtilityFunctions::randi_range(1, die->get_amount_of_sides());
+			if (random_num_generator != nullptr)
+				result += random_num_generator->randi_range(1, die->get_amount_of_sides());
+			else
+				result += UtilityFunctions::randi_range(1, die->get_amount_of_sides());
 		}
 		result += die->get_additive();
 	}
