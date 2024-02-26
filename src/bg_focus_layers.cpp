@@ -18,6 +18,7 @@ void BG_Focus_Layers::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_focus_layer", "layer_name"), &BG_Focus_Layers::set_focus_layer);
 	ClassDB::bind_method(D_METHOD("remove_focus_layer", "layer_name", "should_fully_remove_layer"), &BG_Focus_Layers::remove_focus_layer);
 	ClassDB::bind_method(D_METHOD("add_focus_layer", "layer_name", "parent_control", "control_to_focus", "back_button", "should_loop_vertically", "select_layer"), &BG_Focus_Layers::add_focus_layer);
+	ClassDB::bind_method(D_METHOD("get_current_parent_control"), &BG_Focus_Layers::get_current_parent_control);
 	ClassDB::bind_method(D_METHOD("find_control_in_direction", "direction"), &BG_Focus_Layers::find_control_in_direction);
 	ClassDB::bind_method(D_METHOD("input_type_updated", "is_using_gamepad"), &BG_Focus_Layers::input_type_updated);
 	ClassDB::bind_method(D_METHOD("press_back_button"), &BG_Focus_Layers::press_back_button);
@@ -155,6 +156,14 @@ void BG_Focus_Layers::add_focus_layer(
 		set_focus_layer(p_layer_name);
 }
 
+Control *BG_Focus_Layers::get_current_parent_control()
+{
+	if (_focus_layer_stack.is_empty() || !_focus_layer_controls.has(_focus_layer_stack[0]))
+		return nullptr;
+    Array layer_values = _focus_layer_controls[_focus_layer_stack[0]];
+    return cast_to<Control>(layer_values[0]);
+}
+
 /* static */ bool BG_Focus_Layers::_check_if_valid_control(const Control *c)
 {
     if (c != nullptr && c->is_visible_in_tree() && c->get_mouse_filter() != Control::MouseFilter::MOUSE_FILTER_IGNORE)
@@ -178,7 +187,7 @@ bool BG_Focus_Layers::_is_control_top(const Control *ctrl, const TypedArray<Cont
     }
     return true;
 }
-
+ 
 bool BG_Focus_Layers::_is_control_bottom(const Control *ctrl, const TypedArray<Control> &all_ctrls)
 {
     const float c_bottom_y = ctrl->get_global_position().y + ctrl->get_global_rect().size.y;
