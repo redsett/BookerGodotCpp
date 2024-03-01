@@ -237,6 +237,9 @@ public:
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
 
+	StringName ability_id;
+	StringName get_ability_id() const { return ability_id; }
+
 	TypedArray<StringName> effect_ids;
 	TypedArray<StringName> get_effect_ids() const { return effect_ids; }
 };
@@ -687,6 +690,9 @@ public:
 	TypedArray<BG_ItemDetails> items;
 	TypedArray<BG_ItemDetails> get_items() const { return items; }
 	
+	TypedArray<BG_Effect> abilities;
+	TypedArray<BG_Effect> get_abilities() const { return abilities; }
+
 	TypedArray<BG_Effect> effects;
 	TypedArray<BG_Effect> get_effects() const { return effects; }
 

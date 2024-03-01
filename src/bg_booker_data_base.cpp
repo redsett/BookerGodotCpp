@@ -208,6 +208,7 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_slot_type_id"), &BG_ItemDetails::get_slot_type_id);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_ItemDetails::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_ItemDetails::get_stats);
+	ClassDB::bind_method(D_METHOD("get_ability_id"), &BG_ItemDetails::get_ability_id);
 	ClassDB::bind_method(D_METHOD("get_effect_ids"), &BG_ItemDetails::get_effect_ids);
 }
 
@@ -453,6 +454,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_globals"), &BG_Booker_DB::get_globals);
 	ClassDB::bind_method(D_METHOD("get_jobs"), &BG_Booker_DB::get_jobs);
 	ClassDB::bind_method(D_METHOD("get_items"), &BG_Booker_DB::get_items);
+	ClassDB::bind_method(D_METHOD("get_abilities"), &BG_Booker_DB::get_abilities);
 	ClassDB::bind_method(D_METHOD("get_effects"), &BG_Booker_DB::get_effects);
 	ClassDB::bind_method(D_METHOD("get_band_info"), &BG_Booker_DB::get_band_info);
 	ClassDB::bind_method(D_METHOD("get_item_slot_types"), &BG_Booker_DB::get_item_slot_types);
@@ -966,6 +968,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->description = entry["description"];
 					new_item_class->slot_type_id = entry["slot_type"];
 					new_item_class->hands = int(entry["hands"]);
+					new_item_class->ability_id = entry["ability"];
 
 					// Stats
 					const Array stats_lines = Array(entry["stats"]);
@@ -1059,6 +1062,27 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->is_useable_item = true;
 					items.append(new_item_class);
 				}
+			}
+		}
+	}
+
+	/////
+	///// Abilities
+	/////
+	{
+		const Dictionary abilities_sheet = BG_JsonUtils::GetCBDSheet(data, "abilities");
+		if (abilities_sheet.has("lines"))
+		{
+			const Array lines = Array(abilities_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
+			{
+				const Dictionary entry = lines[i];
+				BG_Effect *new_ability_class = memnew(BG_Effect);
+				new_ability_class->id = entry["id"];
+				new_ability_class->description = entry["description"];
+				new_ability_class->script_path = entry["script_path"];
+				new_ability_class->status_icon_path = entry["status_icon"];
+				abilities.append(new_ability_class);
 			}
 		}
 	}
