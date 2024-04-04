@@ -1043,6 +1043,14 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 
 						new_item_class->stats.append(new_stat);
 					}
+
+					// Effects
+					const Array effect_lines = Array(entry["effects"]);
+					for (int y = 0; y < effect_lines.size(); y++)
+					{
+						const Dictionary effect_entry = effect_lines[y];
+						new_item_class->effect_ids.append(effect_entry["effect"]);
+					}
 				}
 			}
 		}

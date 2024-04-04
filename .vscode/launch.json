@@ -17,13 +17,13 @@
     },
     {
       "name": "Test runtime",
-      "type": "lldb",
+      "type": "cppvsdbg",
       "request": "launch",
       "program": "D:/Personal/Godot/Godot_v4.2-stable_win64.exe/Godot_v4.2-stable_win64_console.exe",
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/../Booker",
       "environment": [],
-      "console": "integratedTerminal"
+      "console": "internalConsole"
     },
     {
       "name": "C/C++ Runner: Debug Session",
