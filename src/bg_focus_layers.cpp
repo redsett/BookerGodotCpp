@@ -103,7 +103,10 @@ Control *BG_Focus_Layers::_get_active_control() const
     if (_focus_layer_stack.is_empty())
         return nullptr;
     const Array &layer_values = _focus_layer_controls[_focus_layer_stack[0]];
-    return cast_to<Control>(layer_values[1]);
+    Control *ctrl = cast_to<Control>(layer_values[1]);
+    if (ctrl != nullptr && _check_if_valid_control(ctrl))
+        return ctrl;
+    return nullptr;
 }
 
 Button *BG_Focus_Layers::_get_active_back_button() const
@@ -117,19 +120,11 @@ Button *BG_Focus_Layers::_get_active_back_button() const
 void BG_Focus_Layers::_focus_active_control()
 {
     Control *control_to_focus = _get_active_control();
-    if(!_check_if_valid_control(control_to_focus))
+    if (control_to_focus != nullptr)
     {
-        // find_control_in_direction(Vector2(0, 1));
-        return;
-    }
-    else
-    {
-        if (control_to_focus != nullptr)
-        {
-            control_to_focus->grab_focus();
-            if (!_is_using_gamepad)
-                control_to_focus->release_focus();
-        }
+        control_to_focus->grab_focus();
+        if (!_is_using_gamepad)
+            control_to_focus->release_focus();
     }
 }
 
