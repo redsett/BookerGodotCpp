@@ -17,6 +17,7 @@ void BG_Focus_Layers::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_focus_layer_stack"), &BG_Focus_Layers::get_focus_layer_stack);
 	ClassDB::bind_method(D_METHOD("get_focus_layer_controls"), &BG_Focus_Layers::get_focus_layer_controls);
 	ClassDB::bind_method(D_METHOD("try_set_focused_control", "control_to_focus"), &BG_Focus_Layers::try_set_focused_control);
+	ClassDB::bind_method(D_METHOD("clear_focus_layers", "except_for"), &BG_Focus_Layers::clear_focus_layers);
 	ClassDB::bind_method(D_METHOD("set_focus_layer", "layer_name"), &BG_Focus_Layers::set_focus_layer);
 	ClassDB::bind_method(D_METHOD("remove_focus_layer", "layer_name", "should_fully_remove_layer"), &BG_Focus_Layers::remove_focus_layer);
 	ClassDB::bind_method(D_METHOD("add_focus_layer", "layer_name", "parent_control", "control_to_focus", "back_button", "should_loop_vertically", "select_layer"), &BG_Focus_Layers::add_focus_layer);
@@ -69,6 +70,21 @@ void BG_Focus_Layers::try_set_focused_control(const Control *p_ctrl)
                 _set_control_default_focus_static(cast_to<Control>(layer_controls[i]));
             _focus_active_control();
             break;
+        }
+    }
+}
+
+void BG_Focus_Layers::clear_focus_layers(const TypedArray<StringName> except_for)
+{
+	if (_focus_layer_stack.is_empty())
+		return;
+
+    const Array keys = _focus_layer_controls.keys();
+	for (int i = 0; i < keys.size(); i++)
+    {
+        if (!except_for.has(keys[i]))
+        {
+            remove_focus_layer(keys[i], true);
         }
     }
 }

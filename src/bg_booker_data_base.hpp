@@ -187,6 +187,22 @@ public:
 	bool get_is_equipped() const { return is_equipped; }
 	void set_is_equipped(bool v) { is_equipped = v; }
 
+	float current_durability = 0.0f;
+	float get_current_durability() const { return current_durability; }
+	void set_current_durability(float v) { current_durability = v; }
+
+	float current_fame = 0.0f;
+	float get_current_fame() const { return current_fame; }
+	void set_current_fame(float v) { current_fame = v; }
+
+	int number_of_jobs_participated_in = 0;
+	int get_number_of_jobs_participated_in() const { return number_of_jobs_participated_in; }
+	void set_number_of_jobs_participated_in(int v) { number_of_jobs_participated_in = v; }
+
+	int consecutive_number_of_jobs_participated_in = 0;
+	int get_consecutive_number_of_jobs_participated_in() const { return consecutive_number_of_jobs_participated_in; }
+	void set_consecutive_number_of_jobs_participated_in(int v) { consecutive_number_of_jobs_participated_in = v; }
+
 	StringName rarity_id;
 	StringName get_rarity_id() const { return rarity_id; }
 	void set_rarity_id(StringName value) { rarity_id = value; }
@@ -215,6 +231,12 @@ public:
 
 	StringName description;
 	StringName get_description() const { return description; }
+
+	int act_introduced_in = 0;
+	int get_act_introduced_in() const { return act_introduced_in; }
+
+	int base_value_override = 0;
+	int get_base_value_override() const { return base_value_override; }
 
 	int hands = 0;
 	int get_hands() const { return hands; }
@@ -654,6 +676,33 @@ public:
 
 	TypedArray<Vector2i> job_level_range_min_max;
 	TypedArray<Vector2i> get_job_level_range_min_max() const { return job_level_range_min_max; }
+
+	TypedArray<int> base_equipment_value_for_act;
+	TypedArray<int> get_base_equipment_value_for_act() const { return base_equipment_value_for_act; }
+
+	TypedArray<int> base_beast_part_value_for_act;
+	TypedArray<int> get_base_beast_part_value_for_act() const { return base_beast_part_value_for_act; }
+
+	TypedArray<float> equipment_rarity_multiplier;
+	TypedArray<float> get_equipment_rarity_multiplier() const { return equipment_rarity_multiplier; }
+
+	TypedArray<float> beast_part_rarity_multiplier;
+	TypedArray<float> get_beast_part_rarity_multiplier() const { return beast_part_rarity_multiplier; }
+
+	TypedArray<float> extra_beast_part_rarity_multiplier_while_grafted;
+	TypedArray<float> get_extra_beast_part_rarity_multiplier_while_grafted() const { return extra_beast_part_rarity_multiplier_while_grafted; }
+
+	TypedArray<float> equipment_max_durability_per_act;
+	TypedArray<float> get_equipment_max_durability_per_act() const { return equipment_max_durability_per_act; }
+
+	TypedArray<float> equipment_max_fame_per_act;
+	TypedArray<float> get_equipment_max_fame_per_act() const { return equipment_max_fame_per_act; }
+
+	TypedArray<float> beast_part_max_durability_per_act;
+	TypedArray<float> get_beast_part_max_durability_per_act() const { return beast_part_max_durability_per_act; }
+
+	TypedArray<float> beast_part_max_fame_per_act;
+	TypedArray<float> get_beast_part_max_fame_per_act() const { return beast_part_max_fame_per_act; }
 };
 
 ////

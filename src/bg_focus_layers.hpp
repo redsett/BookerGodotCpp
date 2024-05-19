@@ -39,6 +39,7 @@ public:
     Dictionary get_focus_layer_controls() const { return _focus_layer_controls; }
 
     void try_set_focused_control(const Control *p_ctrl);
+    void clear_focus_layers(const TypedArray<StringName> except_for);
     void set_focus_layer(const StringName &p_layer_name);
     void remove_focus_layer(const StringName &p_layer_name, bool p_full_remove = false);
     void add_focus_layer(
