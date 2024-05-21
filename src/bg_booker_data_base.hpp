@@ -677,21 +677,24 @@ public:
 	TypedArray<Vector2i> job_level_range_min_max;
 	TypedArray<Vector2i> get_job_level_range_min_max() const { return job_level_range_min_max; }
 
+	// Base Values
 	TypedArray<int> base_equipment_value_for_act;
 	TypedArray<int> get_base_equipment_value_for_act() const { return base_equipment_value_for_act; }
 
 	TypedArray<int> base_beast_part_value_for_act;
 	TypedArray<int> get_base_beast_part_value_for_act() const { return base_beast_part_value_for_act; }
 
-	TypedArray<float> equipment_rarity_multiplier;
-	TypedArray<float> get_equipment_rarity_multiplier() const { return equipment_rarity_multiplier; }
+	// Value Multipliers
+	TypedArray<float> equipment_value_rarity_multiplier;
+	TypedArray<float> get_equipment_value_rarity_multiplier() const { return equipment_value_rarity_multiplier; }
 
-	TypedArray<float> beast_part_rarity_multiplier;
-	TypedArray<float> get_beast_part_rarity_multiplier() const { return beast_part_rarity_multiplier; }
+	TypedArray<float> beast_part_value_rarity_multiplier;
+	TypedArray<float> get_beast_part_value_rarity_multiplier() const { return beast_part_value_rarity_multiplier; }
 
-	TypedArray<float> extra_beast_part_rarity_multiplier_while_grafted;
-	TypedArray<float> get_extra_beast_part_rarity_multiplier_while_grafted() const { return extra_beast_part_rarity_multiplier_while_grafted; }
+	TypedArray<float> extra_beast_part_value_rarity_multiplier_while_grafted;
+	TypedArray<float> get_extra_beast_part_value_rarity_multiplier_while_grafted() const { return extra_beast_part_value_rarity_multiplier_while_grafted; }
 
+	// Fame and Durability
 	TypedArray<float> equipment_max_durability_per_act;
 	TypedArray<float> get_equipment_max_durability_per_act() const { return equipment_max_durability_per_act; }
 
@@ -703,6 +706,19 @@ public:
 
 	TypedArray<float> beast_part_max_fame_per_act;
 	TypedArray<float> get_beast_part_max_fame_per_act() const { return beast_part_max_fame_per_act; }
+
+	// Fame and Durability Multipliers
+	TypedArray<float> equipment_durability_rarity_multiplier;
+	TypedArray<float> get_equipment_durability_rarity_multiplier() const { return equipment_durability_rarity_multiplier; }
+
+	TypedArray<float> beast_part_durability_rarity_multiplier;
+	TypedArray<float> get_beast_part_durability_rarity_multiplier() const { return beast_part_durability_rarity_multiplier; }
+
+	TypedArray<float> equipment_fame_rarity_multiplier;
+	TypedArray<float> get_equipment_fame_rarity_multiplier() const { return equipment_fame_rarity_multiplier; }
+
+	TypedArray<float> beast_part_fame_rarity_multiplier;
+	TypedArray<float> get_beast_part_fame_rarity_multiplier() const { return beast_part_fame_rarity_multiplier; }
 };
 
 ////

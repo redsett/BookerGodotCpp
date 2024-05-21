@@ -453,13 +453,17 @@ void BG_Booker_Globals::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_job_level_range_min_max"), &BG_Booker_Globals::get_job_level_range_min_max);
 	ClassDB::bind_method(D_METHOD("get_base_equipment_value_for_act"), &BG_Booker_Globals::get_base_equipment_value_for_act);
 	ClassDB::bind_method(D_METHOD("get_base_beast_part_value_for_act"), &BG_Booker_Globals::get_base_beast_part_value_for_act);
-	ClassDB::bind_method(D_METHOD("get_equipment_rarity_multiplier"), &BG_Booker_Globals::get_equipment_rarity_multiplier);
-	ClassDB::bind_method(D_METHOD("get_beast_part_rarity_multiplier"), &BG_Booker_Globals::get_beast_part_rarity_multiplier);
-	ClassDB::bind_method(D_METHOD("get_extra_beast_part_rarity_multiplier_while_grafted"), &BG_Booker_Globals::get_extra_beast_part_rarity_multiplier_while_grafted);
+	ClassDB::bind_method(D_METHOD("get_equipment_value_rarity_multiplier"), &BG_Booker_Globals::get_equipment_value_rarity_multiplier);
+	ClassDB::bind_method(D_METHOD("get_beast_part_value_rarity_multiplier"), &BG_Booker_Globals::get_beast_part_value_rarity_multiplier);
+	ClassDB::bind_method(D_METHOD("get_extra_beast_part_value_rarity_multiplier_while_grafted"), &BG_Booker_Globals::get_extra_beast_part_value_rarity_multiplier_while_grafted);
 	ClassDB::bind_method(D_METHOD("get_equipment_max_durability_per_act"), &BG_Booker_Globals::get_equipment_max_durability_per_act);
 	ClassDB::bind_method(D_METHOD("get_equipment_max_fame_per_act"), &BG_Booker_Globals::get_equipment_max_fame_per_act);
 	ClassDB::bind_method(D_METHOD("get_beast_part_max_durability_per_act"), &BG_Booker_Globals::get_beast_part_max_durability_per_act);
 	ClassDB::bind_method(D_METHOD("get_beast_part_max_fame_per_act"), &BG_Booker_Globals::get_beast_part_max_fame_per_act);
+	ClassDB::bind_method(D_METHOD("get_equipment_durability_rarity_multiplier"), &BG_Booker_Globals::get_equipment_durability_rarity_multiplier);
+	ClassDB::bind_method(D_METHOD("get_beast_part_durability_rarity_multiplier"), &BG_Booker_Globals::get_beast_part_durability_rarity_multiplier);
+	ClassDB::bind_method(D_METHOD("get_equipment_fame_rarity_multiplier"), &BG_Booker_Globals::get_equipment_fame_rarity_multiplier);
+	ClassDB::bind_method(D_METHOD("get_beast_part_fame_rarity_multiplier"), &BG_Booker_Globals::get_beast_part_fame_rarity_multiplier);
 }
 
 ////
@@ -605,17 +609,25 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 
 			if (lines.has("item_rarity_multiplier"))
 			{
-				globals->equipment_rarity_multiplier.clear();
-				globals->beast_part_rarity_multiplier.clear();
-				globals->extra_beast_part_rarity_multiplier_while_grafted.clear();
+				globals->equipment_value_rarity_multiplier.clear();
+				globals->beast_part_value_rarity_multiplier.clear();
+				globals->extra_beast_part_value_rarity_multiplier_while_grafted.clear();
+				globals->equipment_durability_rarity_multiplier.clear();
+				globals->beast_part_durability_rarity_multiplier.clear();
+				globals->equipment_fame_rarity_multiplier.clear();
+				globals->beast_part_fame_rarity_multiplier.clear();
 
 				const Array item_rarity_multiplier_array = Array(lines["item_rarity_multiplier"]);
 				for (int i = 0; i < item_rarity_multiplier_array.size(); i++)
 				{
 					const Dictionary values = item_rarity_multiplier_array[i];
-					globals->equipment_rarity_multiplier.append(float(values["equipment_rarity_multiplier"]));
-					globals->beast_part_rarity_multiplier.append(float(values["beast_part_rarity_multiplier"]));
-					globals->extra_beast_part_rarity_multiplier_while_grafted.append(float(values["extra_beast_part_rarity_multiplier_while_grafted"]));
+					globals->equipment_value_rarity_multiplier.append(float(values["equipment_value_rarity_multiplier"]));
+					globals->beast_part_value_rarity_multiplier.append(float(values["beast_part_value_rarity_multiplier"]));
+					globals->extra_beast_part_value_rarity_multiplier_while_grafted.append(float(values["extra_beast_part_value_rarity_multiplier_while_grafted"]));
+					globals->equipment_durability_rarity_multiplier.append(float(values["equipment_durability_rarity_multiplier"]));
+					globals->beast_part_durability_rarity_multiplier.append(float(values["beast_part_durability_rarity_multiplier"]));
+					globals->equipment_fame_rarity_multiplier.append(float(values["equipment_fame_rarity_multiplier"]));
+					globals->beast_part_fame_rarity_multiplier.append(float(values["beast_part_fame_rarity_multiplier"]));
 				}
 			}
 
