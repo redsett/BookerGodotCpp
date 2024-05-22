@@ -425,6 +425,8 @@ void BG_LevelGuide::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_monster_health"), &BG_LevelGuide::get_monster_health);
 	ClassDB::bind_method(D_METHOD("get_monster_base_off_stat"), &BG_LevelGuide::get_monster_base_off_stat);
 	ClassDB::bind_method(D_METHOD("get_monster_base_def_stat"), &BG_LevelGuide::get_monster_base_def_stat);
+	ClassDB::bind_method(D_METHOD("get_item_durability_consumption_per_job_level"), &BG_LevelGuide::get_item_durability_consumption_per_job_level);
+	ClassDB::bind_method(D_METHOD("get_item_fame_addition_per_job_level"), &BG_LevelGuide::get_item_fame_addition_per_job_level);
 }
 
 ////
@@ -444,10 +446,8 @@ void BG_ActStats::_bind_methods()
 void BG_Booker_Globals::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_starting_reputation"), &BG_Booker_Globals::get_starting_reputation);
-	ClassDB::bind_method(D_METHOD("get_seconds_per_week"), &BG_Booker_Globals::get_seconds_per_week);
 	ClassDB::bind_method(D_METHOD("get_starting_job_count"), &BG_Booker_Globals::get_starting_job_count);
 	ClassDB::bind_method(D_METHOD("get_jobs_per_month"), &BG_Booker_Globals::get_jobs_per_month);
-	ClassDB::bind_method(D_METHOD("get_job_rerolls_per_month"), &BG_Booker_Globals::get_job_rerolls_per_month);
 	ClassDB::bind_method(D_METHOD("get_act_stats"), &BG_Booker_Globals::get_act_stats);
 	ClassDB::bind_method(D_METHOD("get_level_guide"), &BG_Booker_Globals::get_level_guide);
 	ClassDB::bind_method(D_METHOD("get_job_level_range_min_max"), &BG_Booker_Globals::get_job_level_range_min_max);
@@ -537,8 +537,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			const Dictionary lines = Array(globals_sheet["lines"])[0];
 			if (lines.has("starting_coin"))
 				globals->starting_reputation = lines["starting_coin"];
-			if (lines.has("seconds_per_week"))
-				globals->seconds_per_week = lines["seconds_per_week"];
 			if (lines.has("starting_job_count"))
 				globals->starting_job_count = lines["starting_job_count"];
 
@@ -554,18 +552,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_act_stats->reputation_needed = act["reputation"];
 					new_act_stats->description = act["description"];
 					globals->act_stats.append(new_act_stats);
-				}
-			}
-
-			if (lines.has("job_rerolls_per_month"))
-			{
-				globals->job_rerolls_per_month.clear();
-
-				const Array jobs_rerolls_per_month_array = Array(lines["job_rerolls_per_month"]);
-				for (int i = 0; i < jobs_rerolls_per_month_array.size(); i++)
-				{
-					const Dictionary month = jobs_rerolls_per_month_array[i];
-					globals->job_rerolls_per_month.append(int(month["rerolls"]));
 				}
 			}
 
@@ -683,6 +669,8 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				level_guide_class->monster_health = int(entry["monster_health"]);
 				level_guide_class->monster_base_off_stat = int(entry["monster_base_off_stat"]);
 				level_guide_class->monster_base_def_stat = int(entry["monster_base_def_stat"]);
+				level_guide_class->item_durability_consumption_per_job_level = float(entry["item_durability_consumption_per_job_level"]);
+				level_guide_class->item_fame_addition_per_job_level = float(entry["item_fame_addition_per_job_level"]);
 				globals->level_guide.append(level_guide_class);
 			}
 		}

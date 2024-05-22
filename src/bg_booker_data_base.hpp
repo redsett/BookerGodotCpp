@@ -616,6 +616,12 @@ public:
 
 	int monster_base_def_stat = 0;
 	int get_monster_base_def_stat() const { return monster_base_def_stat; }
+
+	float item_durability_consumption_per_job_level = 0.0f;
+	float get_item_durability_consumption_per_job_level() const { return item_durability_consumption_per_job_level; }
+
+	float item_fame_addition_per_job_level = 0.0f;
+	float get_item_fame_addition_per_job_level() const { return item_fame_addition_per_job_level; }
 };
 
 ////
@@ -655,17 +661,11 @@ public:
 	int starting_reputation = 0;
 	int get_starting_reputation() const { return starting_reputation; }
 
-	int seconds_per_week = 0;
-	int get_seconds_per_week() const { return seconds_per_week; }
-
 	int starting_job_count = 0;
 	int get_starting_job_count() const { return starting_job_count; }
 
 	TypedArray<int> jobs_per_month;
 	TypedArray<int> get_jobs_per_month() const { return jobs_per_month; }
-	
-	TypedArray<int> job_rerolls_per_month;
-	TypedArray<int> get_job_rerolls_per_month() const { return job_rerolls_per_month; }
 
 	//MyCustomClass* result = dynamic_cast<MyCustomClass*>(container.object());
 	TypedArray<BG_ActStats> act_stats;
