@@ -6,14 +6,15 @@
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/godot.hpp>
 
-#include "my_node.hpp"
-#include "card_to_mouse_spline.hpp"
-#include "my_singleton.hpp"
+// #include "my_node.hpp"
+// #include "card_to_mouse_spline.hpp"
+// #include "my_singleton.hpp"
 
-#include "gsg_state.hpp"
-#include "gsg_state_machine.hpp"
+// #include "gsg_state.hpp"
+// #include "gsg_state_machine.hpp"
 #include "bg_booker_data_base.hpp"
 #include "bg_focus_layers.hpp"
+// #include "bg_animation_mirror.hpp"
 
 using namespace godot;
 
@@ -24,11 +25,11 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
 	{
-		ClassDB::register_class<MyNode>();
-		ClassDB::register_class<CardToMouseSpline>();
+		// ClassDB::register_class<MyNode>();
+		// ClassDB::register_class<CardToMouseSpline>();
 
-		ClassDB::register_class<GSGState>();
-		ClassDB::register_class<GSGStateMachine>();
+		// ClassDB::register_class<GSGState>();
+		// ClassDB::register_class<GSGStateMachine>();
 
 		ClassDB::register_class<BG_Effect>();
 		ClassDB::register_class<BG_Dice>();
@@ -52,6 +53,10 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		ClassDB::register_class<BG_Booker_DB>();
 
 		ClassDB::register_class<BG_Focus_Layers>();
+
+		// ClassDB::register_class<BG_AnimationMirrorDataMap>();
+		// ClassDB::register_class<BG_AnimationMirrorData>();
+		// ClassDB::register_class<BG_AnimationMirror>();
 
 		_booker_db = memnew(BG_Booker_DB);
 		_focus_layers = memnew(BG_Focus_Layers);

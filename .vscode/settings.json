@@ -72,6 +72,7 @@
     "xiosbase": "cpp",
     "xstring": "cpp",
     "ostream": "cpp",
-    "iostream": "cpp"
+    "iostream": "cpp",
+    "atomic": "cpp"
   }
 }
