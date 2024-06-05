@@ -31,6 +31,9 @@ public:
 
 	StringName status_icon_path;
 	StringName get_status_icon_path() const { return status_icon_path; }
+
+	Dictionary value_attributes;
+	Dictionary get_value_attributes() const { return value_attributes; }
 };
 
 ////

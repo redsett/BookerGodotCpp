@@ -91,6 +91,7 @@ void BG_Effect::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_description"), &BG_Effect::get_description);
 	ClassDB::bind_method(D_METHOD("get_script_path"), &BG_Effect::get_script_path);
 	ClassDB::bind_method(D_METHOD("get_status_icon_path"), &BG_Effect::get_status_icon_path);
+	ClassDB::bind_method(D_METHOD("get_value_attributes"), &BG_Effect::get_value_attributes);
 }
 
 ////
@@ -101,6 +102,7 @@ void BG_Dice::_bind_methods()
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("calculate_dice", "dice", "random_number_generator"), &BG_Dice::calculate_dice);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("dice_to_nice_name", "dice"), &BG_Dice::dice_to_nice_name);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("dice_to_string", "dice"), &BG_Dice::dice_to_string);
+	ClassDB::bind_static_method("BG_Dice", D_METHOD("string_to_dice", "string"), &BG_Dice::string_to_dice);
 
 	ClassDB::bind_method(D_METHOD("get_roll_count"), &BG_Dice::get_roll_count);
 	ClassDB::bind_method(D_METHOD("set_roll_count"), &BG_Dice::set_roll_count);
@@ -1195,6 +1197,27 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_effect_class->description = entry["description"];
 				new_effect_class->script_path = entry["script_path"];
 				new_effect_class->status_icon_path = entry["status_icon"];
+
+				// Value Attributes
+				const Array value_attribute_lines = Array(entry["value_attributes"]);
+				for (int y = 0; y < value_attribute_lines.size(); y++)
+				{
+					const Dictionary value_attribute_entry = value_attribute_lines[y];
+
+					String name = value_attribute_entry["name"];
+					String value1 = value_attribute_entry["value_1"];
+					String value2 = value_attribute_entry["value_2"];
+
+					Array values;
+					if (!value1.is_empty())
+						values.append(value1);
+					if (!value2.is_empty())
+						values.append(value2);
+
+					if (!values.is_empty())
+						new_effect_class->value_attributes[name] = values;
+				}
+
 				effects.append(new_effect_class);
 			}
 		}
