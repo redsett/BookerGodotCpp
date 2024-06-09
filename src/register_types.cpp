@@ -52,6 +52,7 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		ClassDB::register_class<BG_Booker_Globals>();
 		ClassDB::register_class<BG_Booker_DB>();
 
+		ClassDB::register_class<BG_Focus_Layer_Properties>();
 		ClassDB::register_class<BG_Focus_Layers>();
 
 		// ClassDB::register_class<BG_AnimationMirrorDataMap>();
