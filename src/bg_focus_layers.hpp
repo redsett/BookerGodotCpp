@@ -5,6 +5,7 @@
 #include <godot_cpp/classes/button.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/templates/vector.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace godot;
 
@@ -21,15 +22,27 @@ public:
     void set_focus_layer_name(const StringName &p_focus_layer_name) { _focus_layer_name = p_focus_layer_name; }
 
     Control *_parent_control;
-    Control *get_parent_control() const { return _parent_control; }
+    Control *get_parent_control() const {
+        if (UtilityFunctions::is_instance_valid(_parent_control))
+            return _parent_control;
+        return nullptr;
+    }
     void set_parent_control(Control *p_parent_control) { _parent_control = p_parent_control; }
 
     Control *_focused_control;
-    Control *get_focused_control() const { return _focused_control; }
+    Control *get_focused_control() const {
+        if (UtilityFunctions::is_instance_valid(_focused_control))
+            return _focused_control;
+        return nullptr;
+    }
     void set_focused_control(Control *p_focused_control) { _focused_control = p_focused_control; }
 
     Button *_back_button;
-    Button *get_back_button() const { return _back_button; }
+    Button *get_back_button() const {
+        if (UtilityFunctions::is_instance_valid(_back_button))
+            return _back_button;
+        return nullptr;
+    }
     void set_back_button(Button *p_back_button) { _back_button = p_back_button; }
 
     bool _should_loop_vertically = false;
