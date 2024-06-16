@@ -422,6 +422,7 @@ void BG_Focus_Layers::press_back_button() const
         for (int i = 0; i < children.size(); i++)
         {
             const Control *ctrl = cast_to<Control>(children[i]);
+            // if (_check_if_valid_control(ctrl) && ctrl->get_focus_mode() != Control::FocusMode::FOCUS_NONE)
             if (UtilityFunctions::is_instance_valid(ctrl) && ctrl->get_focus_mode() != Control::FocusMode::FOCUS_NONE)
             {
                 result.append(ctrl);
