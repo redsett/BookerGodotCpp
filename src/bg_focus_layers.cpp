@@ -44,6 +44,7 @@ void BG_Focus_Layers::_bind_methods()
 {
     ClassDB::bind_static_method("BG_Focus_Layers", D_METHOD("find_valid_control", "controls"), &BG_Focus_Layers::find_valid_control);
     ClassDB::bind_static_method("BG_Focus_Layers", D_METHOD("get_all_focusable_controls_under_control", "control"), &BG_Focus_Layers::get_all_focusable_controls_under_control);
+    ClassDB::bind_static_method("BG_Focus_Layers", D_METHOD("get_current_focusable_controls_under_control", "control"), &BG_Focus_Layers::get_current_focusable_controls_under_control);
 
 	ClassDB::bind_method(D_METHOD("get_focus_layer_stack"), &BG_Focus_Layers::get_focus_layer_stack);
 	ClassDB::bind_method(D_METHOD("get_focus_layers"), &BG_Focus_Layers::get_focus_layers);
@@ -422,12 +423,30 @@ void BG_Focus_Layers::press_back_button() const
         for (int i = 0; i < children.size(); i++)
         {
             const Control *ctrl = cast_to<Control>(children[i]);
-            // if (_check_if_valid_control(ctrl) && ctrl->get_focus_mode() != Control::FocusMode::FOCUS_NONE)
             if (UtilityFunctions::is_instance_valid(ctrl) && ctrl->get_focus_mode() != Control::FocusMode::FOCUS_NONE)
             {
                 result.append(ctrl);
             }
             result.append_array(BG_Focus_Layers::get_all_focusable_controls_under_control(ctrl));
+        }
+    }
+    return result;
+}
+
+/* static */ TypedArray<Control> BG_Focus_Layers::get_current_focusable_controls_under_control(const Control *p_control)
+{
+    TypedArray<Control> result;
+    if (UtilityFunctions::is_instance_valid(p_control))
+    {
+        const TypedArray<Node> children = p_control->get_children();
+        for (int i = 0; i < children.size(); i++)
+        {
+            const Control *ctrl = cast_to<Control>(children[i]);
+            if (_check_if_valid_control(ctrl) && ctrl->get_focus_mode() != Control::FocusMode::FOCUS_NONE)
+            {
+                result.append(ctrl);
+            }
+            result.append_array(BG_Focus_Layers::get_current_focusable_controls_under_control(ctrl));
         }
     }
     return result;

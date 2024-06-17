@@ -105,5 +105,6 @@ public:
 
     static Control *find_valid_control(const TypedArray<Control> &p_controls);
     static TypedArray<Control> get_all_focusable_controls_under_control(const Control *p_control);
+    static TypedArray<Control> get_current_focusable_controls_under_control(const Control *p_control);
     static BG_Focus_Layers *get_singleton();
 };
