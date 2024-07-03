@@ -259,6 +259,9 @@ public:
 	StringName icon_path;
 	StringName get_icon_path() const { return icon_path; }
 
+	StringName mesh_path;
+	StringName get_mesh_path() const { return mesh_path; }
+
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
 
@@ -360,6 +363,9 @@ public:
 
 	StringName icon_path;
 	StringName get_icon_path() const { return icon_path; }
+
+	StringName mesh_path;
+	StringName get_mesh_path() const { return mesh_path; }
 
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }

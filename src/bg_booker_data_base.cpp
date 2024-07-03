@@ -223,6 +223,7 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_is_useable_item"), &BG_ItemDetails::get_is_useable_item);
 	ClassDB::bind_method(D_METHOD("get_slot_type_id"), &BG_ItemDetails::get_slot_type_id);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_ItemDetails::get_icon_path);
+	ClassDB::bind_method(D_METHOD("get_mesh_path"), &BG_ItemDetails::get_mesh_path);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_ItemDetails::get_stats);
 	ClassDB::bind_method(D_METHOD("get_ability_id"), &BG_ItemDetails::get_ability_id);
 	ClassDB::bind_method(D_METHOD("get_effect_ids"), &BG_ItemDetails::get_effect_ids);
@@ -295,6 +296,7 @@ void BG_UnitCaste::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_id"), &BG_UnitCaste::set_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_UnitCaste::get_name);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_UnitCaste::get_icon_path);
+	ClassDB::bind_method(D_METHOD("get_mesh_path"), &BG_UnitCaste::get_mesh_path);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_UnitCaste::get_stats);
 	ClassDB::bind_method(D_METHOD("set_stats"), &BG_UnitCaste::set_stats);
 	ClassDB::bind_method(D_METHOD("get_starting_item_ids"), &BG_UnitCaste::get_starting_item_ids);
@@ -828,6 +830,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_unit_caste->id = entry["id"];
 				new_unit_caste->name = entry["name"];
 				new_unit_caste->icon_path = entry["icon_path"];
+				new_unit_caste->mesh_path = entry["mesh_path"];
 
 				const Array damage_type_lines = Array(entry["base_damage_type_stats"]);
 				for (int y = 0; y < damage_type_lines.size(); y++)
@@ -1048,6 +1051,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->id = entry["id"];
 					new_item_class->name = entry["name"];
 					new_item_class->icon_path = entry["icon_path"];
+					new_item_class->mesh_path = entry["mesh_path"];
 					new_item_class->description = entry["description"];
 					new_item_class->act_introduced_in = int(entry["act_introduced_in"]);
 					new_item_class->slot_type_id = entry["slot_type"];
