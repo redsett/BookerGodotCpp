@@ -367,6 +367,9 @@ public:
 	StringName mesh_path;
 	StringName get_mesh_path() const { return mesh_path; }
 
+	StringName proxy_mesh_path;
+	StringName get_proxy_mesh_path() const { return proxy_mesh_path; }
+
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
 	void set_stats(TypedArray<BG_UnitStat> p_value) { stats = p_value; }
