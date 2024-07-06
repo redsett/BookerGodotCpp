@@ -126,6 +126,15 @@ void BG_RarityDetails::_bind_methods()
 }
 
 ////
+//// BG_LoreRarity
+////
+void BG_LoreRarity::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_rarity_id"), &BG_LoreRarity::get_rarity_id);
+	ClassDB::bind_method(D_METHOD("get_description"), &BG_LoreRarity::get_description);
+}
+
+////
 //// BG_UnitStatDetails
 ////
 void BG_UnitStatDetails::_bind_methods()
@@ -215,7 +224,6 @@ void BG_ItemDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_ItemDetails::get_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_ItemDetails::get_name);
-	ClassDB::bind_method(D_METHOD("get_description"), &BG_ItemDetails::get_description);
 	ClassDB::bind_method(D_METHOD("get_act_introduced_in"), &BG_ItemDetails::get_act_introduced_in);
 	ClassDB::bind_method(D_METHOD("get_base_value_override"), &BG_ItemDetails::get_base_value_override);
 	ClassDB::bind_method(D_METHOD("get_hands"), &BG_ItemDetails::get_hands);
@@ -224,6 +232,8 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_slot_type_id"), &BG_ItemDetails::get_slot_type_id);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_ItemDetails::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_mesh_path"), &BG_ItemDetails::get_mesh_path);
+	ClassDB::bind_method(D_METHOD("get_lore"), &BG_ItemDetails::get_lore);
+	ClassDB::bind_method(D_METHOD("get_caste_id"), &BG_ItemDetails::get_caste_id);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_ItemDetails::get_stats);
 	ClassDB::bind_method(D_METHOD("get_ability_id"), &BG_ItemDetails::get_ability_id);
 	ClassDB::bind_method(D_METHOD("get_effect_ids"), &BG_ItemDetails::get_effect_ids);
@@ -1054,11 +1064,23 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->name = entry["name"];
 					new_item_class->icon_path = entry["icon_path"];
 					new_item_class->mesh_path = entry["mesh_path"];
-					new_item_class->description = entry["description"];
 					new_item_class->act_introduced_in = int(entry["act_introduced_in"]);
 					new_item_class->slot_type_id = entry["slot_type"];
+					new_item_class->caste_id = entry["caste"];
 					new_item_class->hands = int(entry["hands"]);
 					new_item_class->ability_id = entry["ability"];
+
+					// Lore
+					new_item_class->lore.clear();
+					const Array lore_lines = Array(entry["lore"]);
+					for (int y = 0; y < lore_lines.size(); y++)
+					{
+						const Dictionary lore_entry = lore_lines[y];
+						BG_LoreRarity *new_lore = memnew(BG_LoreRarity);
+						new_lore->rarity_id = lore_entry["rarity_id"];
+						new_lore->description = lore_entry["description"];
+						new_item_class->lore.append(new_lore);
+					}
 
 					// Stats
 					const Array stats_lines = Array(entry["stats"]);
@@ -1115,7 +1137,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->id = entry["id"];
 					new_item_class->name = entry["name"];
 					new_item_class->icon_path = entry["icon_path"];
-					new_item_class->description = entry["description"];
 					new_item_class->act_introduced_in = int(entry["act_introduced_in"]);
 					new_item_class->base_value_override = int(entry["base_value_override"]);
 					new_item_class->is_beast_part = true;
@@ -1158,7 +1179,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->id = entry["id"];
 					new_item_class->name = entry["name"];
 					new_item_class->icon_path = entry["icon_path"];
-					new_item_class->description = entry["description"];
 					new_item_class->is_useable_item = true;
 					items.append(new_item_class);
 				}

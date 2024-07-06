@@ -96,6 +96,24 @@ public:
 };
 
 ////
+//// BG_LoreRarity
+////
+class BG_LoreRarity : public Object
+{
+	GDCLASS(BG_LoreRarity, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName rarity_id;
+	StringName get_rarity_id() const { return rarity_id; }
+
+	StringName description;
+	StringName get_description() const { return description; }
+};
+
+////
 //// BG_UnitStatDetails
 ////
 class BG_UnitStatDetails : public Object
@@ -232,9 +250,6 @@ public:
 	StringName name;
 	StringName get_name() const { return name; }
 
-	StringName description;
-	StringName get_description() const { return description; }
-
 	int act_introduced_in = 0;
 	int get_act_introduced_in() const { return act_introduced_in; }
 
@@ -247,9 +262,6 @@ public:
 	bool is_beast_part = false;
 	bool get_is_beast_part() const { return is_beast_part; }
 
-	// bool is_permanent = false;
-	// bool get_is_permanent() { return is_permanent; }
-
 	StringName slot_type_id;
 	StringName get_slot_type_id() { return slot_type_id; }
 
@@ -261,6 +273,12 @@ public:
 
 	StringName mesh_path;
 	StringName get_mesh_path() const { return mesh_path; }
+
+	TypedArray<BG_LoreRarity> lore;
+	TypedArray<BG_LoreRarity> get_lore() const { return lore; }
+
+	StringName caste_id;
+	StringName get_caste_id() const { return caste_id; }
 
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
