@@ -29,6 +29,15 @@
 			"alignment": "right",
 			"skipTerminateQuickPick": false,
 			"priority": -20
+		},
+		{
+			"text": "🥮 CDB",
+			"color": "orange",
+			"commandType":"palette",
+			"command": "workbench.action.tasks.runTask|CDB",
+			"alignment": "right",
+			"skipTerminateQuickPick": false,
+			"priority": -1
 		}
 	]
 }

@@ -13,10 +13,11 @@
     - `cd BookerGodotCpp`
 3. Build a debug binary for the current platform.
     - `scons`
-4. Copy bat files into local_bats and update the Godot exe path to where ever yours is.
-    - Copy and paste `open_booker_in_editor.bat` and `play_booker.bat` into the lobal_bats folder.
-    - Open each of the bat files that you copied over, then update the Godot .exe paths to yours.
-5. Open `../BookerGodotCpp` in Visual Studio Code.
+4. Get Castledb, by cloning this repro somewhere that you prefer : https://github.com/redsett/castle.git
+5. Copy bat files into local_bats and update the Godot exe path to where ever yours is.
+    - Copy and paste `open_booker_in_editor.bat`, `play_booker.bat`, `start_castledb.bat` into the lobal_bats folder.
+    - Open each of the bat files that you copied over, then update the paths to yours local path/s.
+6. Open `../BookerGodotCpp` in Visual Studio Code.
     - You can compile, open the editor, or play the game without running the editor by pressing `ctrl + shift + b` then up/down arrows to select what you want to do.
     - OR you can click the icons at the bottom right of the Visual Studio Code editor.
 
