@@ -103,6 +103,7 @@ void BG_Dice::_bind_methods()
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("dice_to_nice_name", "dice"), &BG_Dice::dice_to_nice_name);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("dice_to_string", "dice"), &BG_Dice::dice_to_string);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("string_to_dice", "string"), &BG_Dice::string_to_dice);
+	ClassDB::bind_static_method("BG_Dice", D_METHOD("string_to_dice_options", "string"), &BG_Dice::string_to_dice_options);
 
 	ClassDB::bind_method(D_METHOD("get_roll_count"), &BG_Dice::get_roll_count);
 	ClassDB::bind_method(D_METHOD("set_roll_count"), &BG_Dice::set_roll_count);
@@ -162,6 +163,8 @@ void BG_UnitStat::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_resistant_value"), &BG_UnitStat::get_resistant_value);
 	ClassDB::bind_method(D_METHOD("set_resistant_value"), &BG_UnitStat::set_resistant_value);
 
+	ClassDB::bind_method(D_METHOD("get_dice_string"), &BG_UnitStat::get_dice_string);
+	ClassDB::bind_method(D_METHOD("get_dice_options"), &BG_UnitStat::get_dice_options);
 	ClassDB::bind_method(D_METHOD("get_dice"), &BG_UnitStat::get_dice);
 	ClassDB::bind_method(D_METHOD("set_dice"), &BG_UnitStat::set_dice);
 
@@ -170,7 +173,6 @@ void BG_UnitStat::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "offensive_value"), "set_offensive_value", "get_offensive_value");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "defensive_value"), "set_defensive_value", "get_defensive_value");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "resistant_value"), "set_resistant_value", "get_resistant_value");
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "dice"), "set_dice", "get_dice");
 }
 
 ////
@@ -347,6 +349,8 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_Monster::get_max_health);
 	ClassDB::bind_method(D_METHOD("get_current_health"), &BG_Monster::get_current_health);
 	ClassDB::bind_method(D_METHOD("set_current_health"), &BG_Monster::set_current_health);
+	ClassDB::bind_method(D_METHOD("get_random_variation"), &BG_Monster::get_random_variation);
+	ClassDB::bind_method(D_METHOD("set_random_variation"), &BG_Monster::set_random_variation);
 	ClassDB::bind_method(D_METHOD("get_challenge_rating"), &BG_Monster::get_challenge_rating);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_Monster::get_stats);
 
@@ -357,10 +361,8 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_challenge_rating_faction_string"), &BG_Monster::get_challenge_rating_faction_string);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
-	//ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
-	//ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
-	//ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "stats", PROPERTY_HINT_RESOURCE_TYPE, "BG_UnitStat"), "set_stats", "get_stats");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
 }
 
 String BG_Monster::get_challenge_rating_faction_string() const
@@ -1110,7 +1112,8 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 						BG_UnitStat *new_stat = memnew(BG_UnitStat);
 						new_stat->id = stat_entry["stat"];
 						new_stat->resistant_value = int(stat_entry["resistant_value"]);
-						new_stat->set_dice(BG_Dice::string_to_dice(stat_entry["damage_dice"]));
+						new_stat->dice_string = stat_entry["damage_dice"];
+						new_stat->dice_options = BG_Dice::string_to_dice_options(new_stat->dice_string);
 
 						new_item_class->stats.append(new_stat);
 					}
@@ -1467,5 +1470,62 @@ BG_Booker_DB::~BG_Booker_DB()
 		result->set_amount_of_sides(after_d.to_int());
 	}
 	
+	return result;
+}
+
+/* static */ TypedArray<BG_Dice> BG_Dice::string_to_dice_options(String string)
+{
+	TypedArray<BG_Dice> result;
+	if (string.is_empty())
+	{
+		return result;
+	}
+	if (!string.contains("["))
+	{
+		result.append(BG_Dice::string_to_dice(string));
+		return result;
+	}
+	else
+	{
+		const String bracets_removed = string.split("[")[1].split("]")[0].replace(" ", ""); // [1d3-1d6] to 1d3-1d6
+		const String start_dice = bracets_removed.split("-")[0];
+		const String end_dice = bracets_removed.split("-")[1];
+		// Roll count.
+		const int start_dice_rolls = start_dice.split("d")[0].to_int();
+		const int end_dice_rolls = end_dice.split("d")[0].to_int();
+		// Side count.
+		const int start_dice_sides = start_dice.split("d")[1].to_int();
+		const int end_dice_sides = end_dice.split("d")[1].to_int();
+
+		// Additive
+		int additive = 0;
+		const String after_d = string.split("d")[string.split("d").size() - 1].replace(" ", "");
+		if (after_d.contains("+") || after_d.contains("-"))
+		{
+			if (after_d.contains("+"))
+				additive = after_d.split("+")[1].to_int();
+			else
+				additive = after_d.split("-")[1].to_int() * -1;
+		}
+		const bool has_additive = additive != 0;
+
+		for (int r = start_dice_rolls; r <= end_dice_rolls; r++)
+		{
+			for (int s = start_dice_sides; s <= end_dice_sides; s++)
+			{
+				if (has_additive)
+				{
+					if (additive > 0)
+						result.append(BG_Dice::string_to_dice( String::num_int64(r) + "d" + String::num_int64(s) + "+" + String::num_int64(additive) ));
+					else
+						result.append(BG_Dice::string_to_dice( String::num_int64(r) + "d" + String::num_int64(s) + "-" + String::num_int64(abs(additive)) ));
+				}
+				else
+				{
+					result.append(BG_Dice::string_to_dice( String::num_int64(r) + "d" + String::num_int64(s) ));
+				}
+			}
+		}
+	}
 	return result;
 }

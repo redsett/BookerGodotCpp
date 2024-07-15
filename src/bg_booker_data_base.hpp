@@ -63,6 +63,7 @@ public:
 	static String dice_to_nice_name(const TypedArray<BG_Dice> dice);
 	static String dice_to_string(const BG_Dice *dice);
 	static BG_Dice *string_to_dice(String string);
+	static TypedArray<BG_Dice> string_to_dice_options(String string);
 };
 
 ////
@@ -167,6 +168,12 @@ public:
 	int resistant_value = 0;
 	int get_resistant_value() const { return resistant_value; }
 	void set_resistant_value(int v) { resistant_value = v; }
+
+	StringName dice_string;
+	StringName get_dice_string() const { return dice_string; }
+
+	TypedArray<BG_Dice> dice_options;
+	TypedArray<BG_Dice> get_dice_options() const { return dice_options; }
 
 	BG_Dice *dice = nullptr;
 	BG_Dice *get_dice() const { return dice; }
@@ -540,6 +547,10 @@ public:
 	int current_health = 0;
 	int get_current_health() const { return current_health; }
 	void set_current_health(int value) { current_health = value; }
+
+	int random_variation = 0;
+	int get_random_variation() const { return random_variation; }
+	void set_random_variation(int v) { random_variation = v; }
 
 	float challenge_rating = 0.0f;
 	float get_challenge_rating() const { return challenge_rating; }
