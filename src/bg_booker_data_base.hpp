@@ -187,6 +187,10 @@ public:
 	StringName id;
 	StringName get_id() const { return id; }
 	void set_id(StringName v) { id = v; }
+
+	int random_variation = 0;
+	int get_random_variation() const { return random_variation; }
+	void set_random_variation(int v) { random_variation = v; }
 	
 	bool on_shelf = false;
 	bool get_on_shelf() const { return on_shelf; }
@@ -256,9 +260,6 @@ public:
 	int base_value_override = 0;
 	int get_base_value_override() const { return base_value_override; }
 
-	int hands = 0;
-	int get_hands() const { return hands; }
-
 	bool is_beast_part = false;
 	bool get_is_beast_part() const { return is_beast_part; }
 
@@ -282,6 +283,9 @@ public:
 
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
+
+	int animation_attach_socket = 0;
+	int get_animation_attach_socket() const { return animation_attach_socket; }
 
 	StringName ability_id;
 	StringName get_ability_id() const { return ability_id; }
@@ -672,6 +676,27 @@ public:
 };
 
 ////
+//// BG_EquipmentAnimationDetails
+////
+class BG_EquipmentAnimationDetails : public Object
+{
+	GDCLASS(BG_EquipmentAnimationDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName caste_id;
+	StringName get_caste_id() const { return caste_id; }
+
+	StringName equipment_id;
+	StringName get_equipment_id() const { return equipment_id; }
+
+	StringName in_game_animation_name;
+	StringName get_in_game_animation_name() const { return in_game_animation_name; }
+};
+
+////
 //// BG_Booker_Globals
 ////
 class BG_Booker_Globals : public Object
@@ -787,6 +812,9 @@ public:
 
 	TypedArray<BG_Effect> effects;
 	TypedArray<BG_Effect> get_effects() const { return effects; }
+
+	TypedArray<BG_EquipmentAnimationDetails> equipment_animation_details;
+	TypedArray<BG_EquipmentAnimationDetails> get_equipment_animation_details() const { return equipment_animation_details; }
 
 	BG_BandInfo *band_info = nullptr;
 	BG_BandInfo *get_band_info() const { return band_info; }

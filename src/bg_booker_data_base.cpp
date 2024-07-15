@@ -180,6 +180,8 @@ void BG_Item::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_Item::get_id);
 	ClassDB::bind_method(D_METHOD("set_id"), &BG_Item::set_id);
+	ClassDB::bind_method(D_METHOD("get_random_variation"), &BG_Item::get_random_variation);
+	ClassDB::bind_method(D_METHOD("set_random_variation"), &BG_Item::set_random_variation);
 	ClassDB::bind_method(D_METHOD("get_on_shelf"), &BG_Item::get_on_shelf);
 	ClassDB::bind_method(D_METHOD("set_on_shelf"), &BG_Item::set_on_shelf);
 	ClassDB::bind_method(D_METHOD("get_shelf_index"), &BG_Item::get_shelf_index);
@@ -204,6 +206,7 @@ void BG_Item::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_grafts"), &BG_Item::set_grafts);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "on_shelf"), "set_on_shelf", "get_on_shelf");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "shelf_index"), "set_shelf_index", "get_shelf_index");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "has_bid"), "set_has_bid", "get_has_bid");
@@ -226,7 +229,6 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_ItemDetails::get_name);
 	ClassDB::bind_method(D_METHOD("get_act_introduced_in"), &BG_ItemDetails::get_act_introduced_in);
 	ClassDB::bind_method(D_METHOD("get_base_value_override"), &BG_ItemDetails::get_base_value_override);
-	ClassDB::bind_method(D_METHOD("get_hands"), &BG_ItemDetails::get_hands);
 	ClassDB::bind_method(D_METHOD("get_is_beast_part"), &BG_ItemDetails::get_is_beast_part);
 	ClassDB::bind_method(D_METHOD("get_is_useable_item"), &BG_ItemDetails::get_is_useable_item);
 	ClassDB::bind_method(D_METHOD("get_slot_type_id"), &BG_ItemDetails::get_slot_type_id);
@@ -235,6 +237,7 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_lore"), &BG_ItemDetails::get_lore);
 	ClassDB::bind_method(D_METHOD("get_caste_id"), &BG_ItemDetails::get_caste_id);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_ItemDetails::get_stats);
+	ClassDB::bind_method(D_METHOD("get_animation_attach_socket"), &BG_ItemDetails::get_animation_attach_socket);
 	ClassDB::bind_method(D_METHOD("get_ability_id"), &BG_ItemDetails::get_ability_id);
 	ClassDB::bind_method(D_METHOD("get_effect_ids"), &BG_ItemDetails::get_effect_ids);
 }
@@ -455,6 +458,16 @@ void BG_ActStats::_bind_methods()
 }
 
 ////
+//// BG_EquipmentAnimationDetails
+////
+void BG_EquipmentAnimationDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_caste_id"), &BG_EquipmentAnimationDetails::get_caste_id);
+	ClassDB::bind_method(D_METHOD("get_equipment_id"), &BG_EquipmentAnimationDetails::get_equipment_id);
+	ClassDB::bind_method(D_METHOD("get_in_game_animation_name"), &BG_EquipmentAnimationDetails::get_in_game_animation_name);
+}
+
+////
 //// BG_Booker_Globals
 ////
 void BG_Booker_Globals::_bind_methods()
@@ -497,6 +510,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_items"), &BG_Booker_DB::get_items);
 	ClassDB::bind_method(D_METHOD("get_abilities"), &BG_Booker_DB::get_abilities);
 	ClassDB::bind_method(D_METHOD("get_effects"), &BG_Booker_DB::get_effects);
+	ClassDB::bind_method(D_METHOD("get_equipment_animation_details"), &BG_Booker_DB::get_equipment_animation_details);
 	ClassDB::bind_method(D_METHOD("get_band_info"), &BG_Booker_DB::get_band_info);
 	ClassDB::bind_method(D_METHOD("get_item_slot_types"), &BG_Booker_DB::get_item_slot_types);
 	ClassDB::bind_method(D_METHOD("get_rarity_types"), &BG_Booker_DB::get_rarity_types);
@@ -1072,8 +1086,8 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->act_introduced_in = int(entry["act_introduced_in"]);
 					new_item_class->slot_type_id = entry["slot_type"];
 					new_item_class->caste_id = entry["caste"];
-					new_item_class->hands = int(entry["hands"]);
 					new_item_class->ability_id = entry["ability"];
+					new_item_class->animation_attach_socket = entry["anim_attach_socket"];
 
 					// Lore
 					new_item_class->lore.clear();
@@ -1250,6 +1264,27 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				}
 
 				effects.append(new_effect_class);
+			}
+		}
+	}
+
+	/////
+	///// Equipment Animation Details
+	/////
+	{
+		const Dictionary animation_sheet = BG_JsonUtils::GetCBDSheet(data, "animations");
+		if (animation_sheet.has("lines"))
+		{
+			equipment_animation_details.clear();
+			const Array lines = Array(animation_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
+			{
+				const Dictionary entry = lines[i];
+				BG_EquipmentAnimationDetails *new_anim_details_class = memnew(BG_EquipmentAnimationDetails);
+				new_anim_details_class->caste_id = entry["caste_id"];
+				new_anim_details_class->equipment_id = entry["equipment_id"];
+				new_anim_details_class->in_game_animation_name = entry["in_game_animation_name"];
+				equipment_animation_details.append(new_anim_details_class);
 			}
 		}
 	}
