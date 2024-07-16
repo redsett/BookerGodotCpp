@@ -141,6 +141,7 @@ void BG_LoreRarity::_bind_methods()
 void BG_UnitStatDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitStatDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_nice_name"), &BG_UnitStatDetails::get_nice_name);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_UnitStatDetails::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_is_damage_type"), &BG_UnitStatDetails::get_is_damage_type);
 	ClassDB::bind_method(D_METHOD("get_color"), &BG_UnitStatDetails::get_color);
@@ -759,6 +760,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 
 				BG_UnitStatDetails *new_stat_types = memnew(BG_UnitStatDetails);
 				new_stat_types->id = entry["id"];
+				new_stat_types->nice_name = entry["name"];
 				new_stat_types->icon_path = entry["icon_path"];
 				new_stat_types->is_damage_type = bool(entry["is_damage_type"]);
 				new_stat_types->color = convert_int_to_color(int(entry["color"]));
@@ -948,7 +950,8 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					// 	new_stat->offensive_value = offensive_percentage * cast_to<BG_LevelGuide>(globals->level_guide[new_monster_type->level - 1])->monster_base_off_stat;
 					// 	new_stat->defensive_value = defensive_percentage * cast_to<BG_LevelGuide>(globals->level_guide[new_monster_type->level - 1])->monster_base_def_stat;
 					// }
-					new_stat->set_dice(BG_Dice::string_to_dice(stat_entry["damage_dice"]));
+					new_stat->dice_string = stat_entry["damage_dice"];
+					new_stat->dice_options = BG_Dice::string_to_dice_options(new_stat->dice_string);
 					
 					new_monster_type->stats.append(new_stat);
 				}

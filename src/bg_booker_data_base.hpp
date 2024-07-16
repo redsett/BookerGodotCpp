@@ -128,6 +128,9 @@ public:
 	StringName id;
 	StringName get_id() const { return id; }
 
+	StringName nice_name;
+	StringName get_nice_name() const { return nice_name; }
+
 	String icon_path = "";
 	String get_icon_path() const { return icon_path; }
 
