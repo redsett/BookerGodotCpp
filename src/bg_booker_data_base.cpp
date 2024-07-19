@@ -1062,6 +1062,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 		const Dictionary item_slot_types_sheet = BG_JsonUtils::GetCBDSheet(data, "item_slot_types");
 		if (item_slot_types_sheet.has("lines"))
 		{
+			item_slot_types.clear();
 			const Array lines = Array(item_slot_types_sheet["lines"]);
 			for (int i = 0; i < lines.size(); i++)
 			{
@@ -1079,6 +1080,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			const Dictionary equipment_sheet = BG_JsonUtils::GetCBDSheet(data, "equipment");
 			if (equipment_sheet.has("lines"))
 			{
+				items.clear();
 				const Array lines = Array(equipment_sheet["lines"]);
 				for (int i = 0; i < lines.size(); i++)
 				{
@@ -1165,7 +1167,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->act_introduced_in = int(entry["act_introduced_in"]);
 					new_item_class->base_value_override = int(entry["base_value_override"]);
 					new_item_class->is_beast_part = true;
-					items.append(new_item_class);
 
 					// Stats
 					const Array stats_lines = Array(entry["stats"]);
@@ -1189,6 +1190,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 						const Dictionary effect_entry = effect_lines[y];
 						new_item_class->effect_ids.append(effect_entry["effect"]);
 					}
+					items.append(new_item_class);
 				}
 			}
 		}
@@ -1218,6 +1220,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 		const Dictionary abilities_sheet = BG_JsonUtils::GetCBDSheet(data, "abilities");
 		if (abilities_sheet.has("lines"))
 		{
+			abilities.clear();
 			const Array lines = Array(abilities_sheet["lines"]);
 			for (int i = 0; i < lines.size(); i++)
 			{
@@ -1239,6 +1242,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 		const Dictionary effects_sheet = BG_JsonUtils::GetCBDSheet(data, "effects");
 		if (effects_sheet.has("lines"))
 		{
+			effects.clear();
 			const Array lines = Array(effects_sheet["lines"]);
 			for (int i = 0; i < lines.size(); i++)
 			{
