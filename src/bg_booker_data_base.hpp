@@ -10,6 +10,27 @@
 using namespace godot;
 
 ////
+//// BG_AudioData
+////
+class BG_AudioData : public Object
+{
+	GDCLASS(BG_AudioData, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	TypedArray<StringName> act_file_paths;
+	TypedArray<StringName> get_act_file_paths() const { return act_file_paths; }
+
+	TypedArray<int> act_volume_db_base_values;
+	TypedArray<int> get_act_volume_db_base_values() const { return act_volume_db_base_values; }
+};
+
+////
 //// BG_Effect
 ////
 class BG_Effect : public Object
@@ -22,6 +43,9 @@ protected:
 public:
 	StringName id;
 	StringName get_id() const { return id; }
+
+	StringName nice_name;
+	StringName get_nice_name() const { return nice_name; }
 
 	StringName description;
 	StringName get_description() const { return description; }
@@ -814,6 +838,9 @@ public:
 
 	BG_Booker_Globals *globals = nullptr;
 	BG_Booker_Globals *get_globals() const { return globals; }
+
+	TypedArray<BG_AudioData> audio_data;
+	TypedArray<BG_AudioData> get_audio_data() const { return audio_data; }
 
 	TypedArray<BG_JobDetails> jobs;
 	TypedArray<BG_JobDetails> get_jobs() const { return jobs; }

@@ -83,11 +83,22 @@ static fraction_struct get_fract(double input)
 }
 
 ////
+//// BG_AudioData
+////
+void BG_AudioData::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_AudioData::get_id);
+	ClassDB::bind_method(D_METHOD("get_act_file_paths"), &BG_AudioData::get_act_file_paths);
+	ClassDB::bind_method(D_METHOD("get_act_volume_db_base_values"), &BG_AudioData::get_act_volume_db_base_values);
+}
+
+////
 //// BG_Effect
 ////
 void BG_Effect::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_Effect::get_id);
+	ClassDB::bind_method(D_METHOD("get_nice_name"), &BG_Effect::get_nice_name);
 	ClassDB::bind_method(D_METHOD("get_description"), &BG_Effect::get_description);
 	ClassDB::bind_method(D_METHOD("get_script_path"), &BG_Effect::get_script_path);
 	ClassDB::bind_method(D_METHOD("get_status_icon_path"), &BG_Effect::get_status_icon_path);
@@ -509,6 +520,7 @@ void BG_Booker_DB::_bind_methods()
 
 	ClassDB::bind_method(D_METHOD("get_modding_path"), &BG_Booker_DB::get_modding_path);
 	ClassDB::bind_method(D_METHOD("get_globals"), &BG_Booker_DB::get_globals);
+	ClassDB::bind_method(D_METHOD("get_audio_data"), &BG_Booker_DB::get_audio_data);
 	ClassDB::bind_method(D_METHOD("get_jobs"), &BG_Booker_DB::get_jobs);
 	ClassDB::bind_method(D_METHOD("get_items"), &BG_Booker_DB::get_items);
 	ClassDB::bind_method(D_METHOD("get_abilities"), &BG_Booker_DB::get_abilities);
@@ -703,6 +715,33 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				level_guide_class->item_durability_consumption_per_job_level = float(entry["item_durability_consumption_per_job_level"]);
 				level_guide_class->item_fame_addition_per_job_level = float(entry["item_fame_addition_per_job_level"]);
 				globals->level_guide.append(level_guide_class);
+			}
+		}
+	}
+
+	/////
+	///// Audio
+	/////
+	{
+		const Dictionary audio_sheet = BG_JsonUtils::GetCBDSheet(data, "audio");
+		if (audio_sheet.has("lines"))
+		{
+			audio_data.clear();
+			const Array lines = Array(audio_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
+			{
+				const Dictionary entry = lines[i];
+				BG_AudioData *new_audio_class = memnew(BG_AudioData);
+				new_audio_class->id = entry["id"];
+
+				const Array per_act_lines = Array(entry["per_act"]);
+				for (int y = 0; y < per_act_lines.size(); y++)
+				{
+					const Dictionary per_act_entry = per_act_lines[y];
+					new_audio_class->act_file_paths.append(per_act_entry["path"]);
+					new_audio_class->act_volume_db_base_values.append(int(per_act_entry["volume_db"]));
+				}
+				audio_data.append(new_audio_class);
 			}
 		}
 	}
@@ -1249,6 +1288,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				const Dictionary entry = lines[i];
 				BG_Effect *new_effect_class = memnew(BG_Effect);
 				new_effect_class->id = entry["id"];
+				new_effect_class->nice_name = entry["name"];
 				new_effect_class->description = entry["description"];
 				new_effect_class->script_path = entry["script_path"];
 				new_effect_class->status_icon_path = entry["status_icon"];
