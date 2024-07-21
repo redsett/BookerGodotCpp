@@ -249,7 +249,7 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_ItemDetails::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_mesh_path"), &BG_ItemDetails::get_mesh_path);
 	ClassDB::bind_method(D_METHOD("get_lore"), &BG_ItemDetails::get_lore);
-	ClassDB::bind_method(D_METHOD("get_caste_id"), &BG_ItemDetails::get_caste_id);
+	ClassDB::bind_method(D_METHOD("get_caste_ids"), &BG_ItemDetails::get_caste_ids);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_ItemDetails::get_stats);
 	ClassDB::bind_method(D_METHOD("get_animation_attach_socket"), &BG_ItemDetails::get_animation_attach_socket);
 	ClassDB::bind_method(D_METHOD("get_ability_id"), &BG_ItemDetails::get_ability_id);
@@ -892,6 +892,8 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			for (int i = 0; i < lines.size(); i++)
 			{
 				const Dictionary entry = lines[i];
+				if (bool(entry["disabled"]))
+					continue;
 
 				BG_UnitCaste *new_unit_caste = memnew(BG_UnitCaste);
 				new_unit_caste->id = entry["id"];
@@ -1124,6 +1126,9 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				for (int i = 0; i < lines.size(); i++)
 				{
 					const Dictionary entry = lines[i];
+					if (bool(entry["disabled"]))
+						continue;
+
 					BG_ItemDetails *new_item_class = memnew(BG_ItemDetails);
 					new_item_class->id = entry["id"];
 					new_item_class->name = entry["name"];
@@ -1131,7 +1136,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->mesh_path = entry["mesh_path"];
 					new_item_class->act_introduced_in = int(entry["act_introduced_in"]);
 					new_item_class->slot_type_id = entry["slot_type"];
-					new_item_class->caste_id = entry["caste"];
 					new_item_class->ability_id = entry["ability"];
 					new_item_class->animation_attach_socket = entry["anim_attach_socket"];
 
@@ -1145,6 +1149,15 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 						new_lore->rarity_id = lore_entry["rarity_id"];
 						new_lore->description = lore_entry["description"];
 						new_item_class->lore.append(new_lore);
+					}
+
+					// Caste
+					new_item_class->caste_ids.clear();
+					const Array caste_lines = Array(entry["caste"]);
+					for (int y = 0; y < caste_lines.size(); y++)
+					{
+						const Dictionary caste_entry = caste_lines[y];
+						new_item_class->caste_ids.append(caste_entry["id"]);
 					}
 
 					// Stats

@@ -312,8 +312,8 @@ public:
 	TypedArray<BG_LoreRarity> lore;
 	TypedArray<BG_LoreRarity> get_lore() const { return lore; }
 
-	StringName caste_id;
-	StringName get_caste_id() const { return caste_id; }
+	TypedArray<StringName> caste_ids;
+	TypedArray<StringName> get_caste_ids() const { return caste_ids; }
 
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
