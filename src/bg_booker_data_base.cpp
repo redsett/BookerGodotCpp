@@ -101,6 +101,7 @@ void BG_Effect::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_nice_name"), &BG_Effect::get_nice_name);
 	ClassDB::bind_method(D_METHOD("get_description"), &BG_Effect::get_description);
 	ClassDB::bind_method(D_METHOD("get_script_path"), &BG_Effect::get_script_path);
+	ClassDB::bind_method(D_METHOD("get_use_owning_item_icon"), &BG_Effect::get_use_owning_item_icon);
 	ClassDB::bind_method(D_METHOD("get_status_icon_path"), &BG_Effect::get_status_icon_path);
 	ClassDB::bind_method(D_METHOD("get_value_attributes"), &BG_Effect::get_value_attributes);
 }
@@ -1304,6 +1305,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_effect_class->nice_name = entry["name"];
 				new_effect_class->description = entry["description"];
 				new_effect_class->script_path = entry["script_path"];
+				new_effect_class->use_owning_item_icon = bool(entry["use_owning_item_icon"]);
 				new_effect_class->status_icon_path = entry["status_icon"];
 
 				// Value Attributes

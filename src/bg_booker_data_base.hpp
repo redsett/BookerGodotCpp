@@ -53,6 +53,9 @@ public:
 	StringName script_path;
 	StringName get_script_path() const { return script_path; }
 
+	bool use_owning_item_icon = false;
+	bool get_use_owning_item_icon() const { return use_owning_item_icon; }
+
 	StringName status_icon_path;
 	StringName get_status_icon_path() const { return status_icon_path; }
 
