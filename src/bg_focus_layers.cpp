@@ -353,7 +353,7 @@ void BG_Focus_Layers::find_control_in_direction(Vector2 direction)
                 {
                     float distance = last_control_dir_location.distance_to(c_center_location);
                     if (!should_get_farthest_control)
-                        distance *= angle; // Favor controls in a better angle.
+                        distance *= Math::max(1.0f, (abs(angle - 1.0f) + 0.75f) ); // Favor controls in a better angle.
                     if ((should_get_farthest_control && distance > best_distance) || (!should_get_farthest_control && distance < best_distance))
                     {
                         best_distance = distance;
