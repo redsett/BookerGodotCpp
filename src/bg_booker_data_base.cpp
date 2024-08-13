@@ -93,17 +93,26 @@ void BG_AudioData::_bind_methods()
 }
 
 ////
+//// BG_EffectRarityDetails
+////
+void BG_EffectRarityDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_rarity_id"), &BG_EffectRarityDetails::get_rarity_id);
+	ClassDB::bind_method(D_METHOD("get_description"), &BG_EffectRarityDetails::get_description);
+	ClassDB::bind_method(D_METHOD("get_script_path"), &BG_EffectRarityDetails::get_script_path);
+	ClassDB::bind_method(D_METHOD("get_value_attributes"), &BG_EffectRarityDetails::get_value_attributes);
+}
+
+////
 //// BG_Effect
 ////
 void BG_Effect::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_Effect::get_id);
 	ClassDB::bind_method(D_METHOD("get_nice_name"), &BG_Effect::get_nice_name);
-	ClassDB::bind_method(D_METHOD("get_description"), &BG_Effect::get_description);
-	ClassDB::bind_method(D_METHOD("get_script_path"), &BG_Effect::get_script_path);
+	ClassDB::bind_method(D_METHOD("get_details_per_rarity"), &BG_Effect::get_details_per_rarity);
 	ClassDB::bind_method(D_METHOD("get_use_owning_item_icon"), &BG_Effect::get_use_owning_item_icon);
 	ClassDB::bind_method(D_METHOD("get_status_icon_path"), &BG_Effect::get_status_icon_path);
-	ClassDB::bind_method(D_METHOD("get_value_attributes"), &BG_Effect::get_value_attributes);
 }
 
 ////
@@ -253,7 +262,6 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_caste_ids"), &BG_ItemDetails::get_caste_ids);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_ItemDetails::get_stats);
 	ClassDB::bind_method(D_METHOD("get_animation_attach_socket"), &BG_ItemDetails::get_animation_attach_socket);
-	ClassDB::bind_method(D_METHOD("get_ability_id"), &BG_ItemDetails::get_ability_id);
 	ClassDB::bind_method(D_METHOD("get_effect_ids"), &BG_ItemDetails::get_effect_ids);
 }
 
@@ -524,7 +532,6 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_audio_data"), &BG_Booker_DB::get_audio_data);
 	ClassDB::bind_method(D_METHOD("get_jobs"), &BG_Booker_DB::get_jobs);
 	ClassDB::bind_method(D_METHOD("get_items"), &BG_Booker_DB::get_items);
-	ClassDB::bind_method(D_METHOD("get_abilities"), &BG_Booker_DB::get_abilities);
 	ClassDB::bind_method(D_METHOD("get_effects"), &BG_Booker_DB::get_effects);
 	ClassDB::bind_method(D_METHOD("get_equipment_animation_details"), &BG_Booker_DB::get_equipment_animation_details);
 	ClassDB::bind_method(D_METHOD("get_band_info"), &BG_Booker_DB::get_band_info);
@@ -1137,7 +1144,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->mesh_path = entry["mesh_path"];
 					new_item_class->act_introduced_in = int(entry["act_introduced_in"]);
 					new_item_class->slot_type_id = entry["slot_type"];
-					new_item_class->ability_id = entry["ability"];
 					new_item_class->animation_attach_socket = entry["anim_attach_socket"];
 
 					// Lore
@@ -1267,28 +1273,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 	}
 
 	/////
-	///// Abilities
-	/////
-	{
-		const Dictionary abilities_sheet = BG_JsonUtils::GetCBDSheet(data, "abilities");
-		if (abilities_sheet.has("lines"))
-		{
-			abilities.clear();
-			const Array lines = Array(abilities_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++)
-			{
-				const Dictionary entry = lines[i];
-				BG_Effect *new_ability_class = memnew(BG_Effect);
-				new_ability_class->id = entry["id"];
-				new_ability_class->description = entry["description"];
-				new_ability_class->script_path = entry["script_path"];
-				new_ability_class->status_icon_path = entry["status_icon"];
-				abilities.append(new_ability_class);
-			}
-		}
-	}
-
-	/////
 	///// Effects
 	/////
 	{
@@ -1303,30 +1287,42 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				BG_Effect *new_effect_class = memnew(BG_Effect);
 				new_effect_class->id = entry["id"];
 				new_effect_class->nice_name = entry["name"];
-				new_effect_class->description = entry["description"];
-				new_effect_class->script_path = entry["script_path"];
 				new_effect_class->use_owning_item_icon = bool(entry["use_owning_item_icon"]);
 				new_effect_class->status_icon_path = entry["status_icon"];
 
-				// Value Attributes
-				const Array value_attribute_lines = Array(entry["value_attributes"]);
-				for (int y = 0; y < value_attribute_lines.size(); y++)
+				// Rarities
+				const Array rarity_lines = Array(entry["details_per_rarity"]);
+				for (int r = 0; r < rarity_lines.size(); r++)
 				{
-					const Dictionary value_attribute_entry = value_attribute_lines[y];
+					const Dictionary rarity_entry = rarity_lines[r];
+					BG_EffectRarityDetails *new_rarity_class = memnew(BG_EffectRarityDetails);
 
-					String name = value_attribute_entry["name"];
-					String value1 = value_attribute_entry["value_1"];
-					String value2 = value_attribute_entry["value_2"];
+					new_rarity_class->rarity_id = rarity_entry["rarity"];
+					new_rarity_class->description = rarity_entry["description"];
+					new_rarity_class->script_path = rarity_entry["script_path"];
 
-					Array values;
-					if (!value1.is_empty())
-						values.append(value1);
-					if (!value2.is_empty())
-						values.append(value2);
+					// Value Attributes
+					const Array value_attribute_lines = Array(rarity_entry["value_attributes"]);
+					for (int y = 0; y < value_attribute_lines.size(); y++)
+					{
+						const Dictionary value_attribute_entry = value_attribute_lines[y];
 
-					if (!values.is_empty())
-						new_effect_class->value_attributes[name] = values;
+						String name = value_attribute_entry["name"];
+						String value1 = value_attribute_entry["value_1"];
+						String value2 = value_attribute_entry["value_2"];
+
+						Array values;
+						if (!value1.is_empty())
+							values.append(value1);
+						if (!value2.is_empty())
+							values.append(value2);
+
+						new_rarity_class->value_attributes[name] = values;
+					}
+
+					new_effect_class->details_per_rarity.append(new_rarity_class);
 				}
+
 
 				effects.append(new_effect_class);
 			}

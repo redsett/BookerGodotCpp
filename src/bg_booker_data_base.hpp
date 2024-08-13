@@ -31,6 +31,30 @@ public:
 };
 
 ////
+//// BG_EffectRarityDetails
+////
+class BG_EffectRarityDetails : public Object
+{
+	GDCLASS(BG_EffectRarityDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName rarity_id;
+	StringName get_rarity_id() const { return rarity_id; }
+
+	StringName description;
+	StringName get_description() const { return description; }
+
+	StringName script_path;
+	StringName get_script_path() const { return script_path; }
+
+	Dictionary value_attributes;
+	Dictionary get_value_attributes() const { return value_attributes; }
+};
+
+////
 //// BG_Effect
 ////
 class BG_Effect : public Object
@@ -47,20 +71,14 @@ public:
 	StringName nice_name;
 	StringName get_nice_name() const { return nice_name; }
 
-	StringName description;
-	StringName get_description() const { return description; }
-
-	StringName script_path;
-	StringName get_script_path() const { return script_path; }
+	TypedArray<BG_EffectRarityDetails> details_per_rarity;
+	TypedArray<BG_EffectRarityDetails> get_details_per_rarity() const { return details_per_rarity; }
 
 	bool use_owning_item_icon = false;
 	bool get_use_owning_item_icon() const { return use_owning_item_icon; }
 
 	StringName status_icon_path;
 	StringName get_status_icon_path() const { return status_icon_path; }
-
-	Dictionary value_attributes;
-	Dictionary get_value_attributes() const { return value_attributes; }
 };
 
 ////
@@ -323,9 +341,6 @@ public:
 
 	int animation_attach_socket = 0;
 	int get_animation_attach_socket() const { return animation_attach_socket; }
-
-	StringName ability_id;
-	StringName get_ability_id() const { return ability_id; }
 
 	TypedArray<StringName> effect_ids;
 	TypedArray<StringName> get_effect_ids() const { return effect_ids; }
@@ -850,9 +865,6 @@ public:
 
 	TypedArray<BG_ItemDetails> items;
 	TypedArray<BG_ItemDetails> get_items() const { return items; }
-	
-	TypedArray<BG_Effect> abilities;
-	TypedArray<BG_Effect> get_abilities() const { return abilities; }
 
 	TypedArray<BG_Effect> effects;
 	TypedArray<BG_Effect> get_effects() const { return effects; }
