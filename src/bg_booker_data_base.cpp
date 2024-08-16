@@ -1451,7 +1451,7 @@ BG_Booker_DB::~BG_Booker_DB()
 		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
 		for (int x = 0; x < die->get_roll_count(); x++)
 		{
-			if (UtilityFunctions::is_instance_valid(random_num_generator))
+			if ( (random_num_generator != nullptr) && UtilityFunctions::is_instance_id_valid(random_num_generator->get_instance_id()) )
 				result += random_num_generator->randi_range(1, die->get_amount_of_sides());
 			else
 				result += UtilityFunctions::randi_range(1, die->get_amount_of_sides());
@@ -1487,7 +1487,7 @@ BG_Booker_DB::~BG_Booker_DB()
 
 /* static */ String BG_Dice::dice_to_string(const BG_Dice *dice)
 {
-	if (!UtilityFunctions::is_instance_valid(dice))
+	if ( (dice == nullptr) || !UtilityFunctions::is_instance_id_valid(dice->get_instance_id()) )
 	{
 		return "-";
 	}

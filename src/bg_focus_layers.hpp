@@ -16,6 +16,10 @@ class BG_Focus_Layer_Properties : public Object
 protected:
     static void _bind_methods();
 
+    static bool bg_is_instance_valid(const Object *obj) {
+        return (obj == nullptr) ? false : UtilityFunctions::is_instance_id_valid(obj->get_instance_id());
+    };
+
 public:
     StringName _focus_layer_name;
     const StringName &get_focus_layer_name() const { return _focus_layer_name; }
@@ -23,7 +27,7 @@ public:
 
     Control *_parent_control;
     Control *get_parent_control() const {
-        if (UtilityFunctions::is_instance_valid(_parent_control))
+        if (bg_is_instance_valid(_parent_control))
             return _parent_control;
         return nullptr;
     }
@@ -31,7 +35,7 @@ public:
 
     Control *_focused_control;
     Control *get_focused_control() const {
-        if (UtilityFunctions::is_instance_valid(_focused_control))
+        if (bg_is_instance_valid(_focused_control))
             return _focused_control;
         return nullptr;
     }
@@ -39,7 +43,7 @@ public:
 
     Button *_back_button;
     Button *get_back_button() const {
-        if (UtilityFunctions::is_instance_valid(_back_button))
+        if (bg_is_instance_valid(_back_button))
             return _back_button;
         return nullptr;
     }
@@ -59,6 +63,10 @@ class BG_Focus_Layers : public Object
 	static BG_Focus_Layers *singleton;
 
 protected:
+    static bool bg_is_instance_valid(const Object *obj) {
+        return (obj == nullptr) ? false : UtilityFunctions::is_instance_id_valid(obj->get_instance_id());
+    };
+
 	static void _bind_methods();
 
     float _minimum_angle = 0.5f;
