@@ -447,6 +447,9 @@ public:
 
 	TypedArray<StringName> starting_item_ids;
 	TypedArray<StringName> get_starting_item_ids() const { return starting_item_ids; }
+
+	TypedArray<StringName> element_availability_ids;
+	TypedArray<StringName> get_element_availability_ids() const { return element_availability_ids; }
 };
 
 ////
@@ -602,6 +605,9 @@ public:
 
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
+
+	TypedArray<StringName> element_availability_ids;
+	TypedArray<StringName> get_element_availability_ids() const { return element_availability_ids; }
 
 	StringName icon_path;
 	StringName get_icon_path() const { return icon_path; }

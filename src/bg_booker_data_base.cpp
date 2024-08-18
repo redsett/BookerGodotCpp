@@ -336,6 +336,7 @@ void BG_UnitCaste::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_UnitCaste::get_stats);
 	ClassDB::bind_method(D_METHOD("set_stats"), &BG_UnitCaste::set_stats);
 	ClassDB::bind_method(D_METHOD("get_starting_item_ids"), &BG_UnitCaste::get_starting_item_ids);
+	ClassDB::bind_method(D_METHOD("get_element_availability_ids"), &BG_UnitCaste::get_element_availability_ids);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "stats", PROPERTY_HINT_RESOURCE_TYPE, "BG_UnitStat"), "set_stats", "get_stats");
@@ -374,6 +375,7 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_random_variation"), &BG_Monster::set_random_variation);
 	ClassDB::bind_method(D_METHOD("get_challenge_rating"), &BG_Monster::get_challenge_rating);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_Monster::get_stats);
+	ClassDB::bind_method(D_METHOD("get_element_availability_ids"), &BG_Monster::get_element_availability_ids);
 
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_Monster::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_effect_ids"), &BG_Monster::get_effect_ids);
@@ -929,11 +931,18 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_unit_caste->stats.append(new_stat);
 				}
 
-				const Array starting_items_lines = Array(entry["starting_items"]);
+				const Array starting_items_lines = Array(entry["random_starting_items"]);
 				for (int y = 0; y < starting_items_lines.size(); y++)
 				{
 					const Dictionary starting_item_entry = starting_items_lines[y];
 					new_unit_caste->starting_item_ids.append(starting_item_entry["item"]);
+				}
+
+				const Array element_availability_lines = Array(entry["element_availability"]);
+				for (int y = 0; y < element_availability_lines.size(); y++)
+				{
+					const Dictionary element_availability_entry = element_availability_lines[y];
+					new_unit_caste->element_availability_ids.append(element_availability_entry["element"]);
 				}
 				band_info->unit_castes.append(new_unit_caste);
 			}
@@ -1003,6 +1012,14 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_stat->dice_options = BG_Dice::string_to_dice_options(new_stat->dice_string);
 					
 					new_monster_type->stats.append(new_stat);
+				}
+
+				// Element Availability
+				const Array element_availability_lines = Array(entry["element_availability"]);
+				for (int y = 0; y < element_availability_lines.size(); y++)
+				{
+					const Dictionary element_availability_entry = element_availability_lines[y];
+					new_monster_type->element_availability_ids.append(element_availability_entry["element"]);
 				}
 
 				// Beast Part Rewards
