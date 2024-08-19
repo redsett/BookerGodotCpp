@@ -365,6 +365,27 @@ public:
 };
 
 ////
+//// BG_JobDistributionForAct
+////
+class BG_JobDistributionForAct : public Object
+{
+	GDCLASS(BG_JobDistributionForAct, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	int act;
+	int get_act() const { return act; }
+
+	int min_week;
+	int get_min_week() const { return min_week; }
+
+	int max_week;
+	int get_max_week() const { return max_week; }
+};
+
+////
 //// BG_JobDetails
 ////
 class BG_JobDetails : public Object
@@ -381,16 +402,8 @@ public:
 	StringName name;
 	StringName get_name() const { return name; }
 
-	int level = 0;
-	int get_level() const { return level; }
-
-	StringName description;
-	StringName get_description() const { return description; }
-
-	//FString clanmember;
-
-	int weeks = 0;
-	int get_weeks() const { return weeks; }
+	int weeks_to_complete = 0;
+	int get_weeks_to_complete() const { return weeks_to_complete; }
 
 	int weeks_before_expire = 0;
 	int get_weeks_before_expire() const { return weeks_before_expire; }
@@ -410,19 +423,19 @@ public:
 	bool is_boss = false;
 	bool get_is_boss() const { return is_boss; }
 
-	TypedArray<int> acts_allowed_in;
-	TypedArray<int> get_acts_allowed_in() const { return acts_allowed_in; }
-
 	float drop_rate_adder = 0.0f;
 	float get_drop_rate_adder() const { return drop_rate_adder; }
+
+	TypedArray<BG_JobDistributionForAct> distribution_per_act;
+	TypedArray<BG_JobDistributionForAct> get_distribution_per_act() const { return distribution_per_act; }
 };
 
 ////
 //// BG_UnitCaste
 ////
-class BG_UnitCaste : public Resource
+class BG_UnitCaste : public Object
 {
-	GDCLASS(BG_UnitCaste, Resource);
+	GDCLASS(BG_UnitCaste, Object);
 
 protected:
 	static void _bind_methods();
@@ -430,7 +443,6 @@ protected:
 public:
 	StringName id;
 	StringName get_id() const { return id; }
-	void set_id(StringName p_value) { id = p_value; }
 
 	StringName name;
 	StringName get_name() const { return name; }
@@ -441,9 +453,20 @@ public:
 	TypedArray<StringName> lod_mesh_paths;
 	TypedArray<StringName> get_lod_mesh_paths() const { return lod_mesh_paths; }
 
+	Vector2 scale_min = Vector2();
+	Vector2 get_scale_min() const { return scale_min; }
+
+	Vector2 scale_max = Vector2();
+	Vector2 get_scale_max() const { return scale_max; }
+
+	Vector2 scale_min_extreme = Vector2();
+	Vector2 get_scale_min_extreme() const { return scale_min_extreme; }
+
+	Vector2 scale_max_extreme = Vector2();
+	Vector2 get_scale_max_extreme() const { return scale_max_extreme; }
+
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
-	void set_stats(TypedArray<BG_UnitStat> p_value) { stats = p_value; }
 
 	TypedArray<StringName> starting_item_ids;
 	TypedArray<StringName> get_starting_item_ids() const { return starting_item_ids; }
@@ -471,14 +494,6 @@ public:
 	int get_current_health() const { return current_health; }
 	void set_current_health(int value) { current_health = value; }
 
-	int level = 1;
-	int get_level() const { return level; }
-	void set_level(int value) { level = value; }
-
-	float experience = 0.0;
-	float get_experience() const { return experience; }
-	void set_experience(float value) { experience = value; }
-
 	int slot_index = 0;
 	int get_slot_index() const { return slot_index; }
 	void set_slot_index(int value) { slot_index = value; }
@@ -491,9 +506,9 @@ public:
 	StringName get_personality_dialgue_id() const { return personality_dialgue_id; }
 	void set_personality_dialgue_id(StringName value) { personality_dialgue_id = value; }
 
-	Ref<BG_UnitCaste> caste = nullptr;
-	Ref<BG_UnitCaste> get_caste() const { return caste; }
-	void set_caste(Ref<BG_UnitCaste> value) { caste = value; }
+	StringName caste_id;
+	StringName get_caste_id() const { return caste_id; }
+	void set_caste_id(StringName value) { caste_id = value; }
 
 	TypedArray<BG_Item> equipment;
 	TypedArray<BG_Item> get_equipment() const { return equipment; }
@@ -564,11 +579,6 @@ public:
 	StringName id;
 	StringName get_id() const { return id; }
 	void set_id(StringName value) { id = value; }
-
-	// TArray<FString> willWin;
-	// TArray<FString> barelyWillWin;
-	// TArray<FString> bandTooWeak;
-	// TArray<FString> fatigued;
 };
 
 ////
@@ -650,15 +660,6 @@ public:
 	TypedArray<BG_PersonalityDialgue> personality_dialgue;
 	TypedArray<BG_PersonalityDialgue> get_personality_dialgue() const { return personality_dialgue; }
 
-	TypedArray<int> level_min;
-	TypedArray<int> get_level_min() const { return level_min; }
-
-	TypedArray<int> level_max;
-	TypedArray<int> get_level_max() const { return level_max; }
-
-	TypedArray<float> monthly_cost_level_multiplier;
-	TypedArray<float> get_monthly_cost_level_multiplier() const { return monthly_cost_level_multiplier; }
-
 	Vector2 band_size_min_max;
 	Vector2 get_band_size_min_max() const { return band_size_min_max; }
 
@@ -668,53 +669,35 @@ public:
 	TypedArray<BG_UnitCaste> unit_castes;
 	TypedArray<BG_UnitCaste> get_unit_castes() const { return unit_castes; }
 
-	int max_band_member_level = 0;
-	int get_max_band_member_level() const { return max_band_member_level; }
-
 	int max_number_of_bands = 0;
 	int get_max_number_of_bands() const { return max_number_of_bands; }
 };
 
 ////
-//// BG_LevelGuide
+//// BG_ChallengeRatingGuide
 ////
-class BG_LevelGuide : public Object
+class BG_ChallengeRatingGuide : public Object
 {
-	GDCLASS(BG_LevelGuide, Object);
+	GDCLASS(BG_ChallengeRatingGuide, Object);
 
 protected:
 	static void _bind_methods();
 
 public:
+	Vector2 cr_min_max = Vector2();
+	Vector2 get_cr_min_max() const { return cr_min_max; }
+
 	int job_rep_reward = 0;
 	int get_job_rep_reward() const { return job_rep_reward; }
 
 	int job_duralation = 0;
 	int get_job_duralation() const { return job_duralation; }
 
-	float rest_duralation = 0.0f;
-	float get_rest_duralation() const { return rest_duralation; }
+	float item_durability_consumption = 0.0f;
+	float get_item_durability_consumption() const { return item_durability_consumption; }
 
-	float leveling_speed = 0.0f;
-	float get_leveling_speed() const { return leveling_speed; }
-
-	int band_member_upkeep = 0;
-	int get_band_member_upkeep() const { return band_member_upkeep; }
-
-	int monster_health = 0;
-	int get_monster_health() const { return monster_health; }
-
-	int monster_base_off_stat = 0;
-	int get_monster_base_off_stat() const { return monster_base_off_stat; }
-
-	int monster_base_def_stat = 0;
-	int get_monster_base_def_stat() const { return monster_base_def_stat; }
-
-	float item_durability_consumption_per_job_level = 0.0f;
-	float get_item_durability_consumption_per_job_level() const { return item_durability_consumption_per_job_level; }
-
-	float item_fame_addition_per_job_level = 0.0f;
-	float get_item_fame_addition_per_job_level() const { return item_fame_addition_per_job_level; }
+	float item_fame_addition = 0.0f;
+	float get_item_fame_addition() const { return item_fame_addition; }
 };
 
 ////
@@ -728,13 +711,14 @@ protected:
 	static void _bind_methods();
 
 public:
-	int reputation_needed = 0;
-	int get_reputation_needed() const { return reputation_needed; }
-	void set_reputation_needed(int p_value) { reputation_needed = p_value; }
+	int total_week_count = 0;
+	int get_total_week_count() const { return total_week_count; }
 
-	String description = "";
-	String get_description() const { return description; }
-	void set_description(String p_value) { description = p_value; }
+	int total_job_count = 0;
+	int get_total_job_count() const { return total_job_count; }
+
+	StringName job_handout_curve_path;
+	StringName get_job_handout_curve_path() const { return job_handout_curve_path; }
 };
 
 ////
@@ -775,21 +759,12 @@ public:
 	int starting_reputation = 0;
 	int get_starting_reputation() const { return starting_reputation; }
 
-	int starting_job_count = 0;
-	int get_starting_job_count() const { return starting_job_count; }
-
-	TypedArray<int> jobs_per_month;
-	TypedArray<int> get_jobs_per_month() const { return jobs_per_month; }
-
 	//MyCustomClass* result = dynamic_cast<MyCustomClass*>(container.object());
 	TypedArray<BG_ActStats> act_stats;
 	TypedArray<BG_ActStats> get_act_stats() const { return act_stats; }
 	
-	TypedArray<BG_LevelGuide> level_guide;
-	TypedArray<BG_LevelGuide> get_level_guide() const { return level_guide; }
-
-	TypedArray<Vector2i> job_level_range_min_max;
-	TypedArray<Vector2i> get_job_level_range_min_max() const { return job_level_range_min_max; }
+	TypedArray<BG_ChallengeRatingGuide> challenge_rating_guide;
+	TypedArray<BG_ChallengeRatingGuide> get_challenge_rating_guide() const { return challenge_rating_guide; }
 
 	// Base Values
 	TypedArray<int> base_equipment_value_for_act;
@@ -893,7 +868,8 @@ public:
 	TypedArray<BG_Monster> monster_types;
 	TypedArray<BG_Monster> get_monster_types() const { return monster_types; }
 
-	static String get_job_challenge_rating(TypedArray<BG_Monster> monsters);
+	static float get_job_challenge_rating_value(const TypedArray<BG_Monster> monsters);
+	static String get_job_challenge_rating(const TypedArray<BG_Monster> monsters);
 
 private:
 	Dictionary data;

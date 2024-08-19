@@ -274,29 +274,23 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_name"), &BG_BandMember::set_name);
 	ClassDB::bind_method(D_METHOD("get_current_health"), &BG_BandMember::get_current_health);
 	ClassDB::bind_method(D_METHOD("set_current_health"), &BG_BandMember::set_current_health);
-	ClassDB::bind_method(D_METHOD("get_level"), &BG_BandMember::get_level);
-	ClassDB::bind_method(D_METHOD("set_level"), &BG_BandMember::set_level);
-	ClassDB::bind_method(D_METHOD("get_experience"), &BG_BandMember::get_experience);
-	ClassDB::bind_method(D_METHOD("set_experience"), &BG_BandMember::set_experience);
 	ClassDB::bind_method(D_METHOD("get_slot_index"), &BG_BandMember::get_slot_index);
 	ClassDB::bind_method(D_METHOD("set_slot_index"), &BG_BandMember::set_slot_index);
 	ClassDB::bind_method(D_METHOD("get_scale"), &BG_BandMember::get_scale);
 	ClassDB::bind_method(D_METHOD("set_scale"), &BG_BandMember::set_scale);
 	ClassDB::bind_method(D_METHOD("get_personality_dialgue_id"), &BG_BandMember::get_personality_dialgue_id);
 	ClassDB::bind_method(D_METHOD("set_personality_dialgue_id"), &BG_BandMember::set_personality_dialgue_id);
-	ClassDB::bind_method(D_METHOD("get_caste"), &BG_BandMember::get_caste);
-	ClassDB::bind_method(D_METHOD("set_caste"), &BG_BandMember::set_caste);
+	ClassDB::bind_method(D_METHOD("get_caste_id"), &BG_BandMember::get_caste_id);
+	ClassDB::bind_method(D_METHOD("set_caste_id"), &BG_BandMember::set_caste_id);
 	ClassDB::bind_method(D_METHOD("get_equipment"), &BG_BandMember::get_equipment);
 	ClassDB::bind_method(D_METHOD("set_equipment"), &BG_BandMember::set_equipment);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "experience"), "set_experience", "get_experience");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "slot_index"), "set_slot_index", "get_slot_index");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "scale"), "set_scale", "get_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "personality_dialgue_id"), "set_personality_dialgue_id", "get_personality_dialgue_id");
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "caste", PROPERTY_HINT_RESOURCE_TYPE, "BG_UnitCaste"), "set_caste", "get_caste");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "caste_id"), "set_caste_id", "get_caste_id");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipment"), "set_equipment", "get_equipment");
 }
 
@@ -329,17 +323,16 @@ void BG_Band::_bind_methods()
 void BG_UnitCaste::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitCaste::get_id);
-	ClassDB::bind_method(D_METHOD("set_id"), &BG_UnitCaste::set_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_UnitCaste::get_name);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_UnitCaste::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_lod_mesh_paths"), &BG_UnitCaste::get_lod_mesh_paths);
+	ClassDB::bind_method(D_METHOD("get_scale_min"), &BG_UnitCaste::get_scale_min);
+	ClassDB::bind_method(D_METHOD("get_scale_max"), &BG_UnitCaste::get_scale_max);
+	ClassDB::bind_method(D_METHOD("get_scale_min_extreme"), &BG_UnitCaste::get_scale_min_extreme);
+	ClassDB::bind_method(D_METHOD("get_scale_max_extreme"), &BG_UnitCaste::get_scale_max_extreme);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_UnitCaste::get_stats);
-	ClassDB::bind_method(D_METHOD("set_stats"), &BG_UnitCaste::set_stats);
 	ClassDB::bind_method(D_METHOD("get_starting_item_ids"), &BG_UnitCaste::get_starting_item_ids);
 	ClassDB::bind_method(D_METHOD("get_element_availability_ids"), &BG_UnitCaste::get_element_availability_ids);
-
-	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
-	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "stats", PROPERTY_HINT_RESOURCE_TYPE, "BG_UnitStat"), "set_stats", "get_stats");
 }
 
 ////
@@ -415,13 +408,9 @@ void BG_BandInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_first_names"), &BG_BandInfo::get_first_names);
 	ClassDB::bind_method(D_METHOD("get_last_names"), &BG_BandInfo::get_last_names);
 	ClassDB::bind_method(D_METHOD("get_personality_dialgue"), &BG_BandInfo::get_personality_dialgue);
-	ClassDB::bind_method(D_METHOD("get_level_min"), &BG_BandInfo::get_level_min);
-	ClassDB::bind_method(D_METHOD("get_level_max"), &BG_BandInfo::get_level_max);
-	ClassDB::bind_method(D_METHOD("get_monthly_cost_level_multiplier"), &BG_BandInfo::get_monthly_cost_level_multiplier);
 	ClassDB::bind_method(D_METHOD("get_band_size_min_max"), &BG_BandInfo::get_band_size_min_max);
 	ClassDB::bind_method(D_METHOD("get_num_bands_for_hire"), &BG_BandInfo::get_num_bands_for_hire);
 	ClassDB::bind_method(D_METHOD("get_unit_castes"), &BG_BandInfo::get_unit_castes);
-	ClassDB::bind_method(D_METHOD("get_max_band_member_level"), &BG_BandInfo::get_max_band_member_level);
 	ClassDB::bind_method(D_METHOD("get_max_number_of_bands"), &BG_BandInfo::get_max_number_of_bands);
 }
 
@@ -435,40 +424,43 @@ void BG_RewardItem::_bind_methods()
 }
 
 ////
+//// BG_JobDistributionForAct
+////
+void BG_JobDistributionForAct::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_act"), &BG_JobDistributionForAct::get_act);
+	ClassDB::bind_method(D_METHOD("get_min_week"), &BG_JobDistributionForAct::get_min_week);
+	ClassDB::bind_method(D_METHOD("get_max_week"), &BG_JobDistributionForAct::get_max_week);
+}
+
+////
 //// BG_JobDetails
 ////
 void BG_JobDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_JobDetails::get_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_JobDetails::get_name);
-	ClassDB::bind_method(D_METHOD("get_level"), &BG_JobDetails::get_level);
-	ClassDB::bind_method(D_METHOD("get_description"), &BG_JobDetails::get_description);
-	ClassDB::bind_method(D_METHOD("get_weeks"), &BG_JobDetails::get_weeks);
+	ClassDB::bind_method(D_METHOD("get_weeks_to_complete"), &BG_JobDetails::get_weeks_to_complete);
 	ClassDB::bind_method(D_METHOD("get_weeks_before_expire"), &BG_JobDetails::get_weeks_before_expire);
 	ClassDB::bind_method(D_METHOD("get_monsters_ids"), &BG_JobDetails::get_monsters_ids);
 	ClassDB::bind_method(D_METHOD("get_monsters_spawn_chances"), &BG_JobDetails::get_monsters_spawn_chances);
 	ClassDB::bind_method(D_METHOD("get_monster_count_range"), &BG_JobDetails::get_monster_count_range);
 	ClassDB::bind_method(D_METHOD("get_is_unique"), &BG_JobDetails::get_is_unique);
 	ClassDB::bind_method(D_METHOD("get_is_boss"), &BG_JobDetails::get_is_boss);
-	ClassDB::bind_method(D_METHOD("get_acts_allowed_in"), &BG_JobDetails::get_acts_allowed_in);
 	ClassDB::bind_method(D_METHOD("get_drop_rate_adder"), &BG_JobDetails::get_drop_rate_adder);
+	ClassDB::bind_method(D_METHOD("get_distribution_per_act"), &BG_JobDetails::get_distribution_per_act);
 }
 
 ////
-//// BG_LevelGuide
+//// BG_ChallengeRatingGuide
 ////
-void BG_LevelGuide::_bind_methods()
+void BG_ChallengeRatingGuide::_bind_methods()
 {
-	ClassDB::bind_method(D_METHOD("get_job_rep_reward"), &BG_LevelGuide::get_job_rep_reward);
-	ClassDB::bind_method(D_METHOD("get_job_duralation"), &BG_LevelGuide::get_job_duralation);
-	ClassDB::bind_method(D_METHOD("get_rest_duralation"), &BG_LevelGuide::get_rest_duralation);
-	ClassDB::bind_method(D_METHOD("get_leveling_speed"), &BG_LevelGuide::get_leveling_speed);
-	ClassDB::bind_method(D_METHOD("get_band_member_upkeep"), &BG_LevelGuide::get_band_member_upkeep);
-	ClassDB::bind_method(D_METHOD("get_monster_health"), &BG_LevelGuide::get_monster_health);
-	ClassDB::bind_method(D_METHOD("get_monster_base_off_stat"), &BG_LevelGuide::get_monster_base_off_stat);
-	ClassDB::bind_method(D_METHOD("get_monster_base_def_stat"), &BG_LevelGuide::get_monster_base_def_stat);
-	ClassDB::bind_method(D_METHOD("get_item_durability_consumption_per_job_level"), &BG_LevelGuide::get_item_durability_consumption_per_job_level);
-	ClassDB::bind_method(D_METHOD("get_item_fame_addition_per_job_level"), &BG_LevelGuide::get_item_fame_addition_per_job_level);
+	ClassDB::bind_method(D_METHOD("get_cr_min_max"), &BG_ChallengeRatingGuide::get_cr_min_max);
+	ClassDB::bind_method(D_METHOD("get_job_rep_reward"), &BG_ChallengeRatingGuide::get_job_rep_reward);
+	ClassDB::bind_method(D_METHOD("get_job_duralation"), &BG_ChallengeRatingGuide::get_job_duralation);
+	ClassDB::bind_method(D_METHOD("get_item_durability_consumption"), &BG_ChallengeRatingGuide::get_item_durability_consumption);
+	ClassDB::bind_method(D_METHOD("get_item_fame_addition"), &BG_ChallengeRatingGuide::get_item_fame_addition);
 }
 
 ////
@@ -476,10 +468,9 @@ void BG_LevelGuide::_bind_methods()
 ////
 void BG_ActStats::_bind_methods()
 {
-	ClassDB::bind_method(D_METHOD("set_reputation_needed", "int"), &BG_ActStats::set_reputation_needed);
-	ClassDB::bind_method(D_METHOD("get_reputation_needed"), &BG_ActStats::get_reputation_needed);
-	ClassDB::bind_method(D_METHOD("set_description", "string"), &BG_ActStats::set_description);
-	ClassDB::bind_method(D_METHOD("get_description"), &BG_ActStats::get_description);
+	ClassDB::bind_method(D_METHOD("get_total_week_count"), &BG_ActStats::get_total_week_count);
+	ClassDB::bind_method(D_METHOD("get_total_job_count"), &BG_ActStats::get_total_job_count);
+	ClassDB::bind_method(D_METHOD("get_job_handout_curve_path"), &BG_ActStats::get_job_handout_curve_path);
 }
 
 ////
@@ -498,11 +489,8 @@ void BG_EquipmentAnimationDetails::_bind_methods()
 void BG_Booker_Globals::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_starting_reputation"), &BG_Booker_Globals::get_starting_reputation);
-	ClassDB::bind_method(D_METHOD("get_starting_job_count"), &BG_Booker_Globals::get_starting_job_count);
-	ClassDB::bind_method(D_METHOD("get_jobs_per_month"), &BG_Booker_Globals::get_jobs_per_month);
 	ClassDB::bind_method(D_METHOD("get_act_stats"), &BG_Booker_Globals::get_act_stats);
-	ClassDB::bind_method(D_METHOD("get_level_guide"), &BG_Booker_Globals::get_level_guide);
-	ClassDB::bind_method(D_METHOD("get_job_level_range_min_max"), &BG_Booker_Globals::get_job_level_range_min_max);
+	ClassDB::bind_method(D_METHOD("get_challenge_rating_guide"), &BG_Booker_Globals::get_challenge_rating_guide);
 	ClassDB::bind_method(D_METHOD("get_base_equipment_value_for_act"), &BG_Booker_Globals::get_base_equipment_value_for_act);
 	ClassDB::bind_method(D_METHOD("get_base_beast_part_value_for_act"), &BG_Booker_Globals::get_base_beast_part_value_for_act);
 	ClassDB::bind_method(D_METHOD("get_equipment_value_rarity_multiplier"), &BG_Booker_Globals::get_equipment_value_rarity_multiplier);
@@ -527,6 +515,7 @@ void BG_Booker_DB::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("refresh_data"), &BG_Booker_DB::refresh_data);
 	ClassDB::bind_static_method("BG_Booker_DB", D_METHOD("timer_test"), &BG_Booker_DB::timer_test);
+	ClassDB::bind_static_method("BG_Booker_DB", D_METHOD("get_job_challenge_rating_value", "monsters"), &BG_Booker_DB::get_job_challenge_rating_value);
 	ClassDB::bind_static_method("BG_Booker_DB", D_METHOD("get_job_challenge_rating", "monsters"), &BG_Booker_DB::get_job_challenge_rating);
 
 	ClassDB::bind_method(D_METHOD("get_modding_path"), &BG_Booker_DB::get_modding_path);
@@ -588,47 +577,29 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 		if (globals_sheet.has("lines"))
 		{
 			const Dictionary lines = Array(globals_sheet["lines"])[0];
-			if (lines.has("starting_coin"))
-				globals->starting_reputation = lines["starting_coin"];
-			if (lines.has("starting_job_count"))
-				globals->starting_job_count = lines["starting_job_count"];
+			if (lines.has("starting_reputation"))
+				globals->starting_reputation = lines["starting_reputation"];
 
-			if (lines.has("reputation_needed_per_act"))
+			if (lines.has("job_globals") && lines.has("weeks_per_act"))
 			{
 				globals->act_stats.clear();
 
-				const Array rep_needed_per_act_array = Array(lines["reputation_needed_per_act"]);
-				for (int i = 0; i < rep_needed_per_act_array.size(); i++)
+				const Array weeks_per_act_array = Array(lines["weeks_per_act"]);
+				const Array job_globals_array = Array(lines["job_globals"]);
+				for (int i = 0; i < weeks_per_act_array.size(); i++)
 				{
-					const Dictionary act = rep_needed_per_act_array[i];
 					BG_ActStats *new_act_stats = memnew(BG_ActStats);
-					new_act_stats->reputation_needed = act["reputation"];
-					new_act_stats->description = act["description"];
+
+					const Dictionary weeks_per_act = weeks_per_act_array[i];
+					new_act_stats->total_week_count = int(weeks_per_act["weeks_count"]);
+
+					const Dictionary job_globals_entry = job_globals_array[i];
+					const Array jobs_distribution_per_act_array = Array(job_globals_entry["jobs_distribution_per_act"]);
+					const Dictionary jobs_distribution_per_act_entry = jobs_distribution_per_act_array[0];
+					new_act_stats->total_job_count = int(jobs_distribution_per_act_entry["job_count"]);
+					new_act_stats->job_handout_curve_path = jobs_distribution_per_act_entry["curve"];
+
 					globals->act_stats.append(new_act_stats);
-				}
-			}
-
-			if (lines.has("jobs_per_month"))
-			{
-				globals->jobs_per_month.clear();
-
-				const Array jobs_per_month_array = Array(lines["jobs_per_month"]);
-				for (int i = 0; i < jobs_per_month_array.size(); i++)
-				{
-					const Dictionary month = jobs_per_month_array[i];
-					globals->jobs_per_month.append(int(month["count"]));
-				}
-			}
-
-			if (lines.has("job_level_range"))
-			{
-				globals->job_level_range_min_max.clear();
-
-				const Array job_level_range_array = Array(lines["job_level_range"]);
-				for (int i = 0; i < job_level_range_array.size(); i++)
-				{
-					const Dictionary month = job_level_range_array[i];
-					globals->job_level_range_min_max.append(Vector2i(int(month["min"]), int(month["max"])));
 				}
 			}
 
@@ -701,30 +672,25 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 	}
 
 	/////
-	///// Level Guide
+	///// Challenge Rating Guide
 	/////
 	{
-		const Dictionary level_guide_sheet = BG_JsonUtils::GetCBDSheet(data, "level_guide");
-		if (level_guide_sheet.has("lines"))
+		const Dictionary challenge_rating_guide_sheet = BG_JsonUtils::GetCBDSheet(data, "challenge_rating_guide");
+		if (challenge_rating_guide_sheet.has("lines"))
 		{
-			globals->level_guide.clear();
+			globals->challenge_rating_guide.clear();
 
-			const Array lines = Array(level_guide_sheet["lines"]);
+			const Array lines = Array(challenge_rating_guide_sheet["lines"]);
 			for (int i = 0; i < lines.size(); i++)
 			{
 				const Dictionary entry = lines[i];
-				BG_LevelGuide *level_guide_class = memnew(BG_LevelGuide);
-				level_guide_class->job_rep_reward = int(entry["job_rep_reward"]);
-				level_guide_class->job_duralation = int(entry["job_duralation"]);
-				level_guide_class->rest_duralation = float(entry["rest_duralation"]);
-				level_guide_class->leveling_speed = float(entry["leveling_speed"]);
-				level_guide_class->band_member_upkeep = int(entry["band_member_upkeep"]);
-				level_guide_class->monster_health = int(entry["monster_health"]);
-				level_guide_class->monster_base_off_stat = int(entry["monster_base_off_stat"]);
-				level_guide_class->monster_base_def_stat = int(entry["monster_base_def_stat"]);
-				level_guide_class->item_durability_consumption_per_job_level = float(entry["item_durability_consumption_per_job_level"]);
-				level_guide_class->item_fame_addition_per_job_level = float(entry["item_fame_addition_per_job_level"]);
-				globals->level_guide.append(level_guide_class);
+				BG_ChallengeRatingGuide *challenge_rating_guide_class = memnew(BG_ChallengeRatingGuide);
+				challenge_rating_guide_class->cr_min_max = Vector2(float(entry["cr_min"]), float(entry["cr_max"]));
+				challenge_rating_guide_class->job_rep_reward = int(entry["job_rep_reward"]);
+				challenge_rating_guide_class->job_duralation = int(entry["job_duralation"]);
+				challenge_rating_guide_class->item_durability_consumption = float(entry["item_durability_consumption"]);
+				challenge_rating_guide_class->item_fame_addition = float(entry["item_fame_addition"]);
+				globals->challenge_rating_guide.append(challenge_rating_guide_class);
 			}
 		}
 	}
@@ -829,8 +795,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			const Dictionary lines = Array(bands_sheet["lines"])[0];
 			if (lines.has("num_bands_for_hire"))
 				band_info->num_bands_for_hire = lines["num_bands_for_hire"];
-			if (lines.has("max_band_member_level"))
-				band_info->max_band_member_level = lines["max_band_member_level"];
 			if (lines.has("max_number_of_bands"))
 				band_info->max_number_of_bands = lines["max_number_of_bands"];
 
@@ -916,6 +880,16 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				{
 					const Dictionary lod_mesh_path_entry = lod_mesh_path_lines[y];
 					new_unit_caste->lod_mesh_paths.append(lod_mesh_path_entry["path"]);
+				}
+
+				const Array scale_limits_lines = Array(entry["scale_limits"]);
+				for (int y = 0; y < scale_limits_lines.size(); y++)
+				{
+					const Dictionary scale_limits_entry = scale_limits_lines[y];
+					new_unit_caste->scale_min = Vector2(float(scale_limits_entry["min_x"]), float(scale_limits_entry["min_y"]));
+					new_unit_caste->scale_max = Vector2(float(scale_limits_entry["max_x"]), float(scale_limits_entry["max_y"]));
+					new_unit_caste->scale_min_extreme = Vector2(float(scale_limits_entry["extreme_min_x"]), float(scale_limits_entry["extreme_min_y"]));
+					new_unit_caste->scale_max_extreme = Vector2(float(scale_limits_entry["extreme_max_x"]), float(scale_limits_entry["extreme_max_y"]));
 				}
 
 				const Array damage_type_lines = Array(entry["base_damage_type_stats"]);
@@ -1068,52 +1042,39 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				BG_JobDetails *new_job_class = memnew(BG_JobDetails);
 				new_job_class->id = entry["id"];
 				new_job_class->name = entry["name"];
-				new_job_class->level = int(entry["level"]);
-				new_job_class->description = entry["description"];
 				new_job_class->drop_rate_adder = entry["drop_rate_adder"];
-				new_job_class->weeks = int(entry["weeks"]);
+				new_job_class->weeks_to_complete = int(entry["weeks_to_complete"]);
 				new_job_class->weeks_before_expire = int(entry["weeks_before_expire"]);
 				new_job_class->is_unique = bool(entry["is_unique"]);
 				new_job_class->is_boss = bool(entry["is_boss"]);
 
 				const Array monsters_lines = Array(entry["monsters"]);
-				for (int i = 0; i < monsters_lines.size(); i++)
+				for (int y = 0; y < monsters_lines.size(); y++)
 				{
-					const Dictionary monster_entry = monsters_lines[i];
+					const Dictionary monster_entry = monsters_lines[y];
 					new_job_class->monsters_ids.append(monster_entry["monster"]);
 					new_job_class->monsters_spawn_chances.append(float(monster_entry["spawn_chance"]));
 				}
 
 				const Array monster_count_range_lines = Array(entry["monster_count_range"]);
-				for (int i = 0; i < monster_count_range_lines.size(); i++)
+				for (int y = 0; y < monster_count_range_lines.size(); y++)
 				{
-					const Dictionary monster_count_range_entry = monster_count_range_lines[i];
+					const Dictionary monster_count_range_entry = monster_count_range_lines[y];
 					new_job_class->monster_count_range = Vector2i(int(monster_count_range_entry["min"]), int(monster_count_range_entry["max"]));
 					break;
 				}
 
-				// TypedArray<String> item_types;
-				// item_types.append("weapon_rewards");
-				// item_types.append("beast_part_rewards");
-				// item_types.append("item_rewards");
-				// for (int x = 0; x < item_types.size(); x++)
-				// {
-				// 	const Array reward_lines = Array(entry[item_types[x]]);
-				// 	for (int y = 0; y < reward_lines.size(); y++)
-				// 	{
-				// 		const Dictionary reward_entry = reward_lines[y];
-				// 		BG_RewardItem *new_reward_class = memnew(BG_RewardItem);
-				// 		new_reward_class->id = reward_entry["reward"];
-				// 		new_reward_class->drop_rate = float(reward_entry["drop_rate"]);
-				// 		new_job_class->rewards.append(new_reward_class);
-				// 	}
-				// }
-
-				const Array acts_lines = Array(entry["acts"]);
-				for (int i = 0; i < acts_lines.size(); i++)
+				const Array distribution_per_act_lines = Array(entry["distribution_per_act"]);
+				for (int y = 0; y < distribution_per_act_lines.size(); y++)
 				{
-					const Dictionary acts_entry = acts_lines[i];
-					new_job_class->acts_allowed_in.append(int(acts_entry["act"]));
+					const Dictionary distribution_per_act_entry = distribution_per_act_lines[y];
+
+					BG_JobDistributionForAct *new_job_distribution_for_act_class = memnew(BG_JobDistributionForAct);
+					new_job_distribution_for_act_class->act = int(distribution_per_act_entry["act"]);
+					new_job_distribution_for_act_class->min_week = int(distribution_per_act_entry["min_week"]);
+					new_job_distribution_for_act_class->max_week = int(distribution_per_act_entry["max_week"]);
+
+					new_job_class->distribution_per_act.append(new_job_distribution_for_act_class);
 				}
 
 				jobs.append(new_job_class);
@@ -1391,10 +1352,8 @@ BG_Booker_DB::~BG_Booker_DB()
 	}
 }
 
-/* static */ String BG_Booker_DB::get_job_challenge_rating(TypedArray<BG_Monster> monsters)
+/* static */ float BG_Booker_DB::get_job_challenge_rating_value(const TypedArray<BG_Monster> monsters)
 {
-	String result;
-
 	const TypedArray<BG_Monster> global_monster_types = BG_Booker_DB::get_singleton()->get_monster_types();
 
 	TypedArray<BG_Monster> unique_monsters;
@@ -1437,9 +1396,15 @@ BG_Booker_DB::~BG_Booker_DB()
 		challenge_rating += float(challenge_ratings[i]) * float(monster_counts[i]);
 	}
 	const int total_monster_count = monsters.size();
-	challenge_rating = challenge_rating + total_monster_count * 0.25f;
 
-	fraction_struct fract_struct = get_fract(challenge_rating);
+	return challenge_rating + total_monster_count * 0.25f;
+}
+
+/* static */ String BG_Booker_DB::get_job_challenge_rating(const TypedArray<BG_Monster> monsters)
+{
+	String result = "";
+
+	fraction_struct fract_struct = get_fract(BG_Booker_DB::get_job_challenge_rating_value(monsters));
 	if (fract_struct.integral > 0.0f)
 	{
 		result += String::num_int64(int(fract_struct.integral)) + " ";
