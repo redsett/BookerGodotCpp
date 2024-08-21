@@ -50,6 +50,7 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		ClassDB::register_class<BG_BandInfo>();
 		ClassDB::register_class<BG_RewardItem>();
 		ClassDB::register_class<BG_JobDistributionForAct>();
+		ClassDB::register_class<BG_JobMonsterDetails>();
 		ClassDB::register_class<BG_JobDetails>();
 		ClassDB::register_class<BG_ChallengeRatingGuide>();
 		ClassDB::register_class<BG_ActStats>();

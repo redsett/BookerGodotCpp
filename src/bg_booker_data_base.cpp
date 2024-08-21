@@ -434,6 +434,15 @@ void BG_JobDistributionForAct::_bind_methods()
 }
 
 ////
+//// BG_JobMonsterDetails
+////
+void BG_JobMonsterDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_monster_id"), &BG_JobMonsterDetails::get_monster_id);
+	ClassDB::bind_method(D_METHOD("get_monster_count_range"), &BG_JobMonsterDetails::get_monster_count_range);
+}
+
+////
 //// BG_JobDetails
 ////
 void BG_JobDetails::_bind_methods()
@@ -442,9 +451,7 @@ void BG_JobDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_JobDetails::get_name);
 	ClassDB::bind_method(D_METHOD("get_weeks_to_complete"), &BG_JobDetails::get_weeks_to_complete);
 	ClassDB::bind_method(D_METHOD("get_weeks_before_expire"), &BG_JobDetails::get_weeks_before_expire);
-	ClassDB::bind_method(D_METHOD("get_monsters_ids"), &BG_JobDetails::get_monsters_ids);
-	ClassDB::bind_method(D_METHOD("get_monsters_spawn_chances"), &BG_JobDetails::get_monsters_spawn_chances);
-	ClassDB::bind_method(D_METHOD("get_monster_count_range"), &BG_JobDetails::get_monster_count_range);
+	ClassDB::bind_method(D_METHOD("get_monster_details"), &BG_JobDetails::get_monster_details);
 	ClassDB::bind_method(D_METHOD("get_is_unique"), &BG_JobDetails::get_is_unique);
 	ClassDB::bind_method(D_METHOD("get_is_boss"), &BG_JobDetails::get_is_boss);
 	ClassDB::bind_method(D_METHOD("get_drop_rate_adder"), &BG_JobDetails::get_drop_rate_adder);
@@ -941,7 +948,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_monster_type->id = entry["id"];
 				new_monster_type->name = entry["name"];
 				new_monster_type->challenge_rating = float(entry["challenge_rating"]);
-				//new_monster_type->level = int(entry["level"]);
 				new_monster_type->max_health = int(entry["health"]);
 				new_monster_type->icon_path = entry["icon_path"];
 
@@ -1052,16 +1058,18 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				for (int y = 0; y < monsters_lines.size(); y++)
 				{
 					const Dictionary monster_entry = monsters_lines[y];
-					new_job_class->monsters_ids.append(monster_entry["monster"]);
-					new_job_class->monsters_spawn_chances.append(float(monster_entry["spawn_chance"]));
-				}
+					BG_JobMonsterDetails *new_job_monster_details_class = memnew(BG_JobMonsterDetails);
+					new_job_monster_details_class->monster_id = monster_entry["monster"];
 
-				const Array monster_count_range_lines = Array(entry["monster_count_range"]);
-				for (int y = 0; y < monster_count_range_lines.size(); y++)
-				{
-					const Dictionary monster_count_range_entry = monster_count_range_lines[y];
-					new_job_class->monster_count_range = Vector2i(int(monster_count_range_entry["min"]), int(monster_count_range_entry["max"]));
-					break;
+					const Array monster_count_range_lines = Array(monster_entry["monster_count_range"]);
+					for (int z = 0; z < monster_count_range_lines.size(); z++)
+					{
+						const Dictionary monster_count_range_entry = monster_count_range_lines[z];
+						new_job_monster_details_class->monster_count_range = Vector2i(int(monster_count_range_entry["min"]), int(monster_count_range_entry["max"]));
+						break;
+					}
+
+					new_job_class->monster_details.append(new_job_monster_details_class);
 				}
 
 				const Array distribution_per_act_lines = Array(entry["distribution_per_act"]);

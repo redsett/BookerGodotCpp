@@ -386,6 +386,24 @@ public:
 };
 
 ////
+//// BG_JobMonsterDetails
+////
+class BG_JobMonsterDetails : public Object
+{
+	GDCLASS(BG_JobMonsterDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName monster_id;
+	StringName get_monster_id() const { return monster_id; }
+
+	Vector2i monster_count_range;
+	Vector2i get_monster_count_range() const { return monster_count_range; }
+};
+
+////
 //// BG_JobDetails
 ////
 class BG_JobDetails : public Object
@@ -408,14 +426,8 @@ public:
 	int weeks_before_expire = 0;
 	int get_weeks_before_expire() const { return weeks_before_expire; }
 
-	TypedArray<StringName> monsters_ids;
-	TypedArray<StringName> get_monsters_ids() const { return monsters_ids; }
-
-	TypedArray<float> monsters_spawn_chances;
-	TypedArray<float> get_monsters_spawn_chances() const { return monsters_spawn_chances; }
-
-	Vector2i monster_count_range;
-	Vector2i get_monster_count_range() const { return monster_count_range; }
+	TypedArray<BG_JobMonsterDetails> monster_details;
+	TypedArray<BG_JobMonsterDetails> get_monster_details() const { return monster_details; }
 
 	bool is_unique = false;
 	bool get_is_unique() const { return is_unique; }
