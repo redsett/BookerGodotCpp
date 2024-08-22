@@ -367,21 +367,20 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_random_variation"), &BG_Monster::get_random_variation);
 	ClassDB::bind_method(D_METHOD("set_random_variation"), &BG_Monster::set_random_variation);
 	ClassDB::bind_method(D_METHOD("get_challenge_rating"), &BG_Monster::get_challenge_rating);
+	ClassDB::bind_method(D_METHOD("get_monster_type"), &BG_Monster::get_monster_type);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_Monster::get_stats);
 	ClassDB::bind_method(D_METHOD("get_element_availability_ids"), &BG_Monster::get_element_availability_ids);
 
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_Monster::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_effect_ids"), &BG_Monster::get_effect_ids);
-	ClassDB::bind_method(D_METHOD("get_beast_part_rewards"), &BG_Monster::get_beast_part_rewards);
-	ClassDB::bind_method(D_METHOD("get_equipment_rewards"), &BG_Monster::get_equipment_rewards);
-	ClassDB::bind_method(D_METHOD("get_challenge_rating_faction_string"), &BG_Monster::get_challenge_rating_faction_string);
+	ClassDB::bind_method(D_METHOD("get_challenge_rating_fraction_string"), &BG_Monster::get_challenge_rating_fraction_string);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
 }
 
-String BG_Monster::get_challenge_rating_faction_string() const
+String BG_Monster::get_challenge_rating_fraction_string() const
 {
 	String result = "";
 	fraction_struct fract_struct = get_fract(get_challenge_rating());
@@ -434,12 +433,24 @@ void BG_JobDistributionForAct::_bind_methods()
 }
 
 ////
+//// BG_JobMonsterDropDetails
+////
+void BG_JobMonsterDropDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_item_id"), &BG_JobMonsterDropDetails::get_item_id);
+	ClassDB::bind_method(D_METHOD("get_forced_rarity_id"), &BG_JobMonsterDropDetails::get_forced_rarity_id);
+	ClassDB::bind_method(D_METHOD("get_drop_weight"), &BG_JobMonsterDropDetails::get_drop_weight);
+}
+
+////
 //// BG_JobMonsterDetails
 ////
 void BG_JobMonsterDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_monster_id"), &BG_JobMonsterDetails::get_monster_id);
 	ClassDB::bind_method(D_METHOD("get_monster_count_range"), &BG_JobMonsterDetails::get_monster_count_range);
+	ClassDB::bind_method(D_METHOD("get_drops"), &BG_JobMonsterDetails::get_drops);
+	ClassDB::bind_method(D_METHOD("get_always_drop_at_least_one"), &BG_JobMonsterDetails::get_always_drop_at_least_one);
 }
 
 ////
@@ -454,7 +465,6 @@ void BG_JobDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_monster_details"), &BG_JobDetails::get_monster_details);
 	ClassDB::bind_method(D_METHOD("get_is_unique"), &BG_JobDetails::get_is_unique);
 	ClassDB::bind_method(D_METHOD("get_is_boss"), &BG_JobDetails::get_is_boss);
-	ClassDB::bind_method(D_METHOD("get_drop_rate_adder"), &BG_JobDetails::get_drop_rate_adder);
 	ClassDB::bind_method(D_METHOD("get_distribution_per_act"), &BG_JobDetails::get_distribution_per_act);
 }
 
@@ -496,6 +506,7 @@ void BG_EquipmentAnimationDetails::_bind_methods()
 void BG_Booker_Globals::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_starting_reputation"), &BG_Booker_Globals::get_starting_reputation);
+	ClassDB::bind_method(D_METHOD("get_chance_of_no_drop"), &BG_Booker_Globals::get_chance_of_no_drop);
 	ClassDB::bind_method(D_METHOD("get_act_stats"), &BG_Booker_Globals::get_act_stats);
 	ClassDB::bind_method(D_METHOD("get_challenge_rating_guide"), &BG_Booker_Globals::get_challenge_rating_guide);
 	ClassDB::bind_method(D_METHOD("get_base_equipment_value_for_act"), &BG_Booker_Globals::get_base_equipment_value_for_act);
@@ -586,6 +597,9 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			const Dictionary lines = Array(globals_sheet["lines"])[0];
 			if (lines.has("starting_reputation"))
 				globals->starting_reputation = lines["starting_reputation"];
+
+			if (lines.has("chance_of_no_drop"))
+				globals->chance_of_no_drop = lines["chance_of_no_drop"];
 
 			if (lines.has("job_globals") && lines.has("weeks_per_act"))
 			{
@@ -950,6 +964,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_monster_type->challenge_rating = float(entry["challenge_rating"]);
 				new_monster_type->max_health = int(entry["health"]);
 				new_monster_type->icon_path = entry["icon_path"];
+				new_monster_type->monster_type = int(entry["type"]);
 
 				// Effects
 				const Array effect_lines = Array(entry["effects"]);
@@ -1001,32 +1016,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					const Dictionary element_availability_entry = element_availability_lines[y];
 					new_monster_type->element_availability_ids.append(element_availability_entry["element"]);
 				}
-
-				// Beast Part Rewards
-				const Array beast_part_rewards_lines = Array(entry["beast_part_rewards"]);
-				for (int y = 0; y < beast_part_rewards_lines.size(); y++)
-				{
-					const Dictionary beast_part_reward_entry = beast_part_rewards_lines[y];
-
-					BG_RewardItem *new_beast_part_reward = memnew(BG_RewardItem);
-					new_beast_part_reward->id = beast_part_reward_entry["beast_part"];
-					new_beast_part_reward->drop_rate = float(beast_part_reward_entry["drop_rate"]);
-
-					new_monster_type->beast_part_rewards.append(new_beast_part_reward);
-				}
-
-				// Equipment Rewards
-				const Array equipment_rewards_lines = Array(entry["equipment_rewards"]);
-				for (int y = 0; y < equipment_rewards_lines.size(); y++)
-				{
-					const Dictionary equipment_reward_entry = equipment_rewards_lines[y];
-
-					BG_RewardItem *new_equipment_reward = memnew(BG_RewardItem);
-					new_equipment_reward->id = equipment_reward_entry["equipment"];
-					new_equipment_reward->drop_rate = float(equipment_reward_entry["drop_rate"]);
-
-					new_monster_type->equipment_rewards.append(new_equipment_reward);
-				}
+				
 				monster_types.append(new_monster_type);
 			}
 		}
@@ -1048,7 +1038,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				BG_JobDetails *new_job_class = memnew(BG_JobDetails);
 				new_job_class->id = entry["id"];
 				new_job_class->name = entry["name"];
-				new_job_class->drop_rate_adder = entry["drop_rate_adder"];
 				new_job_class->weeks_to_complete = int(entry["weeks_to_complete"]);
 				new_job_class->weeks_before_expire = int(entry["weeks_before_expire"]);
 				new_job_class->is_unique = bool(entry["is_unique"]);
@@ -1060,6 +1049,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					const Dictionary monster_entry = monsters_lines[y];
 					BG_JobMonsterDetails *new_job_monster_details_class = memnew(BG_JobMonsterDetails);
 					new_job_monster_details_class->monster_id = monster_entry["monster"];
+					new_job_monster_details_class->always_drop_at_least_one = bool(monster_entry["always_drop_at_least_one"]);
 
 					const Array monster_count_range_lines = Array(monster_entry["monster_count_range"]);
 					for (int z = 0; z < monster_count_range_lines.size(); z++)
@@ -1067,6 +1057,33 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 						const Dictionary monster_count_range_entry = monster_count_range_lines[z];
 						new_job_monster_details_class->monster_count_range = Vector2i(int(monster_count_range_entry["min"]), int(monster_count_range_entry["max"]));
 						break;
+					}
+
+					const Array drops_lines = Array(monster_entry["drops"]);
+					for (int z = 0; z < drops_lines.size(); z++)
+					{
+						const Dictionary drops_entry = drops_lines[z];
+
+						const StringName beast_part_id = drops_entry["beast_part"];
+						if (!beast_part_id.is_empty())
+						{
+							BG_JobMonsterDropDetails *new_job_monster_drop_details_class = memnew(BG_JobMonsterDropDetails);
+							new_job_monster_drop_details_class->item_id = drops_entry["beast_part"];
+							new_job_monster_drop_details_class->forced_rarity_id = drops_entry["forced_rarity"];
+							new_job_monster_drop_details_class->drop_weight = float(drops_entry["drop_weight"]);
+
+							new_job_monster_details_class->drops.append(new_job_monster_drop_details_class);
+						}
+						const StringName equipment_id = drops_entry["equipment"];
+						if (!equipment_id.is_empty())
+						{
+							BG_JobMonsterDropDetails *new_job_monster_drop_details_class = memnew(BG_JobMonsterDropDetails);
+							new_job_monster_drop_details_class->item_id = drops_entry["equipment"];
+							new_job_monster_drop_details_class->forced_rarity_id = drops_entry["forced_rarity"];
+							new_job_monster_drop_details_class->drop_weight = float(drops_entry["drop_weight"]);
+
+							new_job_monster_details_class->drops.append(new_job_monster_drop_details_class);
+						}
 					}
 
 					new_job_class->monster_details.append(new_job_monster_details_class);

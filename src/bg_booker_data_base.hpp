@@ -386,6 +386,27 @@ public:
 };
 
 ////
+//// BG_JobMonsterDropDetails
+////
+class BG_JobMonsterDropDetails : public Object
+{
+	GDCLASS(BG_JobMonsterDropDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName item_id;
+	StringName get_item_id() const { return item_id; }
+
+	StringName forced_rarity_id;
+	StringName get_forced_rarity_id() const { return forced_rarity_id; }
+
+	float drop_weight;
+	float get_drop_weight() const { return drop_weight; }
+};
+
+////
 //// BG_JobMonsterDetails
 ////
 class BG_JobMonsterDetails : public Object
@@ -401,6 +422,12 @@ public:
 
 	Vector2i monster_count_range;
 	Vector2i get_monster_count_range() const { return monster_count_range; }
+
+	TypedArray<BG_JobMonsterDropDetails> drops;
+	TypedArray<BG_JobMonsterDropDetails> get_drops() { return drops; }
+
+	bool always_drop_at_least_one = false;
+	bool get_always_drop_at_least_one() { return always_drop_at_least_one; };
 };
 
 ////
@@ -434,9 +461,6 @@ public:
 
 	bool is_boss = false;
 	bool get_is_boss() const { return is_boss; }
-
-	float drop_rate_adder = 0.0f;
-	float get_drop_rate_adder() const { return drop_rate_adder; }
 
 	TypedArray<BG_JobDistributionForAct> distribution_per_act;
 	TypedArray<BG_JobDistributionForAct> get_distribution_per_act() const { return distribution_per_act; }
@@ -625,6 +649,9 @@ public:
 	float challenge_rating = 0.0f;
 	float get_challenge_rating() const { return challenge_rating; }
 
+	int monster_type = 0;
+	int get_monster_type() const { return monster_type; }
+
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
 
@@ -637,13 +664,7 @@ public:
 	TypedArray<StringName> effect_ids;
 	TypedArray<StringName> get_effect_ids() const { return effect_ids; }
 
-	TypedArray<BG_RewardItem> beast_part_rewards;
-	TypedArray<BG_RewardItem> get_beast_part_rewards() const { return beast_part_rewards; }
-
-	TypedArray<BG_RewardItem> equipment_rewards;
-	TypedArray<BG_RewardItem> get_equipment_rewards() const { return equipment_rewards; }
-
-	String get_challenge_rating_faction_string() const;
+	String get_challenge_rating_fraction_string() const;
 };
 
 ////
@@ -770,6 +791,9 @@ public:
 
 	int starting_reputation = 0;
 	int get_starting_reputation() const { return starting_reputation; }
+
+	float chance_of_no_drop = 0.0;
+	float get_chance_of_no_drop() const { return chance_of_no_drop; }
 
 	//MyCustomClass* result = dynamic_cast<MyCustomClass*>(container.object());
 	TypedArray<BG_ActStats> act_stats;
