@@ -283,6 +283,10 @@ public:
 	int get_consecutive_number_of_jobs_participated_in() const { return consecutive_number_of_jobs_participated_in; }
 	void set_consecutive_number_of_jobs_participated_in(int v) { consecutive_number_of_jobs_participated_in = v; }
 
+	bool should_count_in_item_rarity_disparity = true;
+	bool get_should_count_in_item_rarity_disparity() const { return should_count_in_item_rarity_disparity; }
+	void set_should_count_in_item_rarity_disparity(bool v) { should_count_in_item_rarity_disparity = v; }
+
 	StringName rarity_id;
 	StringName get_rarity_id() const { return rarity_id; }
 	void set_rarity_id(StringName value) { rarity_id = value; }

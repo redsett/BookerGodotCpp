@@ -224,6 +224,8 @@ void BG_Item::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_number_of_jobs_participated_in"), &BG_Item::set_number_of_jobs_participated_in);
 	ClassDB::bind_method(D_METHOD("get_consecutive_number_of_jobs_participated_in"), &BG_Item::get_consecutive_number_of_jobs_participated_in);
 	ClassDB::bind_method(D_METHOD("set_consecutive_number_of_jobs_participated_in"), &BG_Item::set_consecutive_number_of_jobs_participated_in);
+	ClassDB::bind_method(D_METHOD("get_should_count_in_item_rarity_disparity"), &BG_Item::get_should_count_in_item_rarity_disparity);
+	ClassDB::bind_method(D_METHOD("set_should_count_in_item_rarity_disparity"), &BG_Item::set_should_count_in_item_rarity_disparity);
 	ClassDB::bind_method(D_METHOD("get_rarity_id"), &BG_Item::get_rarity_id);
 	ClassDB::bind_method(D_METHOD("set_rarity_id"), &BG_Item::set_rarity_id);
 	ClassDB::bind_method(D_METHOD("get_grafts"), &BG_Item::get_grafts);
@@ -240,6 +242,7 @@ void BG_Item::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_fame"), "set_current_fame", "get_current_fame");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "number_of_jobs_participated_in"), "set_number_of_jobs_participated_in", "get_number_of_jobs_participated_in");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "consecutive_number_of_jobs_participated_in"), "set_consecutive_number_of_jobs_participated_in", "get_consecutive_number_of_jobs_participated_in");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "should_count_in_item_rarity_disparity"), "set_should_count_in_item_rarity_disparity", "get_should_count_in_item_rarity_disparity");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "rarity_id"), "set_rarity_id", "get_rarity_id");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "grafts"), "set_grafts", "get_grafts");
 }
