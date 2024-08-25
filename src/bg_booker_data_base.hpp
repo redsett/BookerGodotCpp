@@ -708,6 +708,9 @@ public:
 
 	int max_number_of_bands = 0;
 	int get_max_number_of_bands() const { return max_number_of_bands; }
+
+	TypedArray<int> rep_cost_per_band;
+	TypedArray<int> get_rep_cost_per_band() const { return rep_cost_per_band; }
 };
 
 ////

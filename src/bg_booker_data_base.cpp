@@ -414,6 +414,7 @@ void BG_BandInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_num_bands_for_hire"), &BG_BandInfo::get_num_bands_for_hire);
 	ClassDB::bind_method(D_METHOD("get_unit_castes"), &BG_BandInfo::get_unit_castes);
 	ClassDB::bind_method(D_METHOD("get_max_number_of_bands"), &BG_BandInfo::get_max_number_of_bands);
+	ClassDB::bind_method(D_METHOD("get_rep_cost_per_band"), &BG_BandInfo::get_rep_cost_per_band);
 }
 
 ////
@@ -873,6 +874,18 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				const Array band_sizes_array = Array(lines["band_sizes"]);
 				const Dictionary entry = band_sizes_array[0];
 				band_info->band_size_min_max = Vector2(entry["band_size_min"], entry["band_size_max"]);
+			}
+
+			if (lines.has("rep_cost_per_band"))
+			{
+				band_info->rep_cost_per_band.clear();
+
+				const Array rep_cost_per_band_array = Array(lines["rep_cost_per_band"]);
+				for (int i = 0; i < rep_cost_per_band_array.size(); i++)
+				{
+					const Dictionary entry = rep_cost_per_band_array[i];
+					band_info->rep_cost_per_band.append(int(entry["rep_cost"]));
+				}
 			}
 		}
 	}
