@@ -448,9 +448,6 @@ public:
 	StringName id;
 	StringName get_id() const { return id; }
 
-	StringName name;
-	StringName get_name() const { return name; }
-
 	int weeks_to_complete = 0;
 	int get_weeks_to_complete() const { return weeks_to_complete; }
 
