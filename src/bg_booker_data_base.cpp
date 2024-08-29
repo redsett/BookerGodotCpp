@@ -198,6 +198,15 @@ void BG_UnitStat::_bind_methods()
 }
 
 ////
+//// BG_ItemSlotType
+////
+void BG_ItemSlotType::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_ItemSlotType::get_id);
+	ClassDB::bind_method(D_METHOD("get_name"), &BG_ItemSlotType::get_name);
+}
+
+////
 //// BG_Item
 ////
 void BG_Item::_bind_methods()
@@ -281,8 +290,6 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_slot_index"), &BG_BandMember::set_slot_index);
 	ClassDB::bind_method(D_METHOD("get_scale"), &BG_BandMember::get_scale);
 	ClassDB::bind_method(D_METHOD("set_scale"), &BG_BandMember::set_scale);
-	ClassDB::bind_method(D_METHOD("get_personality_dialgue_id"), &BG_BandMember::get_personality_dialgue_id);
-	ClassDB::bind_method(D_METHOD("set_personality_dialgue_id"), &BG_BandMember::set_personality_dialgue_id);
 	ClassDB::bind_method(D_METHOD("get_caste_id"), &BG_BandMember::get_caste_id);
 	ClassDB::bind_method(D_METHOD("set_caste_id"), &BG_BandMember::set_caste_id);
 	ClassDB::bind_method(D_METHOD("get_equipment"), &BG_BandMember::get_equipment);
@@ -292,7 +299,6 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "slot_index"), "set_slot_index", "get_slot_index");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "scale"), "set_scale", "get_scale");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "personality_dialgue_id"), "set_personality_dialgue_id", "get_personality_dialgue_id");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "caste_id"), "set_caste_id", "get_caste_id");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipment"), "set_equipment", "get_equipment");
 }
@@ -348,15 +354,6 @@ void BG_BandNameInfo::_bind_methods()
 }
 
 ////
-//// BG_PersonalityDialgue
-////
-void BG_PersonalityDialgue::_bind_methods()
-{
-	ClassDB::bind_method(D_METHOD("get_id"), &BG_PersonalityDialgue::get_id);
-	ClassDB::bind_method(D_METHOD("set_id"), &BG_PersonalityDialgue::set_id);
-}
-
-////
 //// BG_Monster
 ////
 void BG_Monster::_bind_methods()
@@ -409,7 +406,6 @@ void BG_BandInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_icon_paths"), &BG_BandInfo::get_icon_paths);
 	ClassDB::bind_method(D_METHOD("get_first_names"), &BG_BandInfo::get_first_names);
 	ClassDB::bind_method(D_METHOD("get_last_names"), &BG_BandInfo::get_last_names);
-	ClassDB::bind_method(D_METHOD("get_personality_dialgue"), &BG_BandInfo::get_personality_dialgue);
 	ClassDB::bind_method(D_METHOD("get_band_size_min_max"), &BG_BandInfo::get_band_size_min_max);
 	ClassDB::bind_method(D_METHOD("get_num_bands_for_hire"), &BG_BandInfo::get_num_bands_for_hire);
 	ClassDB::bind_method(D_METHOD("get_unit_castes"), &BG_BandInfo::get_unit_castes);
@@ -1132,8 +1128,12 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			const Array lines = Array(item_slot_types_sheet["lines"]);
 			for (int i = 0; i < lines.size(); i++)
 			{
+				BG_ItemSlotType *new_item_slot_type_class = memnew(BG_ItemSlotType);
+
 				const Dictionary entry = lines[i];
-				item_slot_types.append(entry["id"]);
+				new_item_slot_type_class->id = entry["id"];
+				new_item_slot_type_class->name = entry["name"];
+				item_slot_types.append(new_item_slot_type_class);
 			}
 		}
 	}

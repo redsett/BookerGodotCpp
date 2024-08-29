@@ -229,6 +229,24 @@ public:
 };
 
 ////
+//// BG_ItemSlotType
+////
+class BG_ItemSlotType : public Object
+{
+	GDCLASS(BG_ItemSlotType, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	StringName name;
+	StringName get_name() const { return name; }
+};
+
+////
 //// BG_Item
 ////
 class BG_Item : public Resource
@@ -539,10 +557,6 @@ public:
 	Vector3 get_scale() const { return scale; }
 	void set_scale(Vector3 value) { scale = value; }
 
-	StringName personality_dialgue_id;
-	StringName get_personality_dialgue_id() const { return personality_dialgue_id; }
-	void set_personality_dialgue_id(StringName value) { personality_dialgue_id = value; }
-
 	StringName caste_id;
 	StringName get_caste_id() const { return caste_id; }
 	void set_caste_id(StringName value) { caste_id = value; }
@@ -600,22 +614,6 @@ public:
 
 	TypedArray<String> hiring_dialogue_choices;
 	TypedArray<String> get_hiring_dialogue_choices() const { return hiring_dialogue_choices; }
-};
-
-////
-//// BG_PersonalityDialgue
-////
-class BG_PersonalityDialgue : public Object
-{
-	GDCLASS(BG_PersonalityDialgue, Object);
-
-protected:
-	static void _bind_methods();
-
-public:
-	StringName id;
-	StringName get_id() const { return id; }
-	void set_id(StringName value) { id = value; }
 };
 
 ////
@@ -690,9 +688,6 @@ public:
 
 	TypedArray<StringName> last_names;
 	TypedArray<StringName> get_last_names() const { return last_names; }
-
-	TypedArray<BG_PersonalityDialgue> personality_dialgue;
-	TypedArray<BG_PersonalityDialgue> get_personality_dialgue() const { return personality_dialgue; }
 
 	Vector2 band_size_min_max;
 	Vector2 get_band_size_min_max() const { return band_size_min_max; }
@@ -896,8 +891,8 @@ public:
 	BG_BandInfo *band_info = nullptr;
 	BG_BandInfo *get_band_info() const { return band_info; }
 
-	TypedArray<StringName> item_slot_types;
-	TypedArray<StringName> get_item_slot_types() const { return item_slot_types; }
+	TypedArray<BG_ItemSlotType> item_slot_types;
+	TypedArray<BG_ItemSlotType> get_item_slot_types() const { return item_slot_types; }
 
 	TypedArray<BG_RarityDetails> rarity_types;
 	TypedArray<BG_RarityDetails> get_rarity_types() const { return rarity_types; }
