@@ -792,6 +792,8 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			for (int i = 0; i < lines.size(); i++)
 			{
 				const Dictionary entry = lines[i];
+				if (bool(entry["disabled"]))
+					continue;
 
 				BG_UnitStatDetails *new_stat_types = memnew(BG_UnitStatDetails);
 				new_stat_types->id = entry["id"];
