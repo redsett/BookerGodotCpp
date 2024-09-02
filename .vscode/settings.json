@@ -73,6 +73,8 @@
     "xstring": "cpp",
     "ostream": "cpp",
     "iostream": "cpp",
-    "atomic": "cpp"
+    "atomic": "cpp",
+    "thread": "cpp",
+    "xlocale": "cpp"
   }
 }

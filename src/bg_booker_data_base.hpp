@@ -189,9 +189,9 @@ public:
 ////
 //// BG_UnitStat
 ////
-class BG_UnitStat : public Resource
+class BG_UnitStat : public Object
 {
-	GDCLASS(BG_UnitStat, Resource);
+	GDCLASS(BG_UnitStat, Object);
 
 protected:
 	static void _bind_methods();
@@ -203,19 +203,23 @@ public:
 
 	float bonus_percentage = 0.0f;
 	float get_bonus_percentage() const { return bonus_percentage; }
-	void set_bonus_percentage(float v) { bonus_percentage = v; }
 
 	int offensive_value = 0;
 	int get_offensive_value() const { return offensive_value; }
-	void set_offensive_value(int v) { offensive_value = v; }
 
 	int defensive_value = 0;
 	int get_defensive_value() const { return defensive_value; }
-	void set_defensive_value(int v) { defensive_value = v; }
 
-	int resistant_value = 0;
-	int get_resistant_value() const { return resistant_value; }
-	void set_resistant_value(int v) { resistant_value = v; }
+	int resistant_unsaved_stored_value = 0;
+	int get_resistant_unsaved_stored_value() const { return resistant_unsaved_stored_value; }
+	void set_resistant_unsaved_stored_value(int v) { resistant_unsaved_stored_value = v; }
+
+	StringName resistant_value_text;
+	StringName get_resistant_value_text() const { return resistant_value_text; }
+
+	Vector2i resistant_value_min_max;
+	Vector2i get_resistant_value_min_max() const { return resistant_value_min_max; }
+	void set_resistant_value_min_max(Vector2i v) { resistant_value_min_max = v; }
 
 	StringName dice_string;
 	StringName get_dice_string() const { return dice_string; }
@@ -226,6 +230,8 @@ public:
 	BG_Dice *dice = nullptr;
 	BG_Dice *get_dice() const { return dice; }
 	void set_dice(BG_Dice *value) { dice = value; }
+
+	static Vector2i string_to_resistant_value_min_max(String string);
 };
 
 ////
@@ -382,8 +388,29 @@ public:
 	StringName id;
 	StringName get_id() const { return id; }
 
-	float drop_rate = 0.0;
-	float get_drop_rate() const { return drop_rate; }
+	TypedArray<StringName> rarity_availabilities;
+	TypedArray<StringName> get_rarity_availabilities() const { return rarity_availabilities; }
+
+	float drop_weight = 0.0;
+	float get_drop_weight() const { return drop_weight; }
+};
+
+////
+//// BG_ItemDropPool
+////
+class BG_ItemDropPool : public Object
+{
+	GDCLASS(BG_ItemDropPool, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	TypedArray<BG_RewardItem> item_drops;
+	TypedArray<BG_RewardItem> get_item_drops() const { return item_drops; }
 };
 
 ////
@@ -408,27 +435,6 @@ public:
 };
 
 ////
-//// BG_JobMonsterDropDetails
-////
-class BG_JobMonsterDropDetails : public Object
-{
-	GDCLASS(BG_JobMonsterDropDetails, Object);
-
-protected:
-	static void _bind_methods();
-
-public:
-	StringName item_id;
-	StringName get_item_id() const { return item_id; }
-
-	StringName forced_rarity_id;
-	StringName get_forced_rarity_id() const { return forced_rarity_id; }
-
-	float drop_weight;
-	float get_drop_weight() const { return drop_weight; }
-};
-
-////
 //// BG_JobMonsterDetails
 ////
 class BG_JobMonsterDetails : public Object
@@ -445,8 +451,8 @@ public:
 	Vector2i monster_count_range;
 	Vector2i get_monster_count_range() const { return monster_count_range; }
 
-	TypedArray<BG_JobMonsterDropDetails> drops;
-	TypedArray<BG_JobMonsterDropDetails> get_drops() { return drops; }
+	TypedArray<BG_RewardItem> drops;
+	TypedArray<BG_RewardItem> get_drops() { return drops; }
 
 	bool always_drop_at_least_one = false;
 	bool get_always_drop_at_least_one() { return always_drop_at_least_one; };
@@ -767,8 +773,8 @@ public:
 	StringName caste_id;
 	StringName get_caste_id() const { return caste_id; }
 
-	StringName equipment_id;
-	StringName get_equipment_id() const { return equipment_id; }
+	TypedArray<StringName> equipment_ids;
+	TypedArray<StringName> get_equipment_ids() const { return equipment_ids; }
 
 	StringName in_game_animation_name;
 	StringName get_in_game_animation_name() const { return in_game_animation_name; }
@@ -881,6 +887,9 @@ public:
 
 	TypedArray<BG_ItemDetails> items;
 	TypedArray<BG_ItemDetails> get_items() const { return items; }
+
+	TypedArray<BG_ItemDropPool> item_drop_pools;
+	TypedArray<BG_ItemDropPool> get_item_drop_pools() const { return item_drop_pools; }
 
 	TypedArray<BG_Effect> effects;
 	TypedArray<BG_Effect> get_effects() const { return effects; }
