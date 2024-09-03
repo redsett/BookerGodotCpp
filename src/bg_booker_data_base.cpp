@@ -198,6 +198,7 @@ void BG_ItemSlotType::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_ItemSlotType::get_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_ItemSlotType::get_name);
+	ClassDB::bind_method(D_METHOD("get_percentage_of_all_items_dropped_per_act"), &BG_ItemSlotType::get_percentage_of_all_items_dropped_per_act);
 }
 
 ////
@@ -1157,8 +1158,8 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 										new_job_reward_item_class->rarity_availabilities = reward_item->rarity_availabilities.duplicate();
 
 									new_job_monster_details_class->drops.append(new_job_reward_item_class);
-									break;
 								}
+								break;
 							}
 						}
 
@@ -1201,6 +1202,14 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				const Dictionary entry = lines[i];
 				new_item_slot_type_class->id = entry["id"];
 				new_item_slot_type_class->name = entry["name"];
+
+				const Array percentage_of_all_items_dropped_per_act_lines = Array(entry["percentage_of_all_items_dropped_per_act"]);
+				for (int y = 0; y < percentage_of_all_items_dropped_per_act_lines.size(); y++)
+				{
+					const Dictionary percentage_of_all_items_dropped_entry = percentage_of_all_items_dropped_per_act_lines[y];
+					new_item_slot_type_class->percentage_of_all_items_dropped_per_act.append(float(percentage_of_all_items_dropped_entry["percent"]));
+				}
+
 				item_slot_types.append(new_item_slot_type_class);
 			}
 		}
@@ -1311,6 +1320,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->icon_path = entry["icon_path"];
 					new_item_class->act_introduced_in = int(entry["act_introduced_in"]);
 					new_item_class->base_value_override = int(entry["base_value_override"]);
+					new_item_class->slot_type_id = entry["slot_type"];
 					new_item_class->is_beast_part = true;
 
 					// Stats

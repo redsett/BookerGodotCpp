@@ -250,6 +250,9 @@ public:
 
 	StringName name;
 	StringName get_name() const { return name; }
+
+	TypedArray<float> percentage_of_all_items_dropped_per_act;
+	TypedArray<float> get_percentage_of_all_items_dropped_per_act() const { return percentage_of_all_items_dropped_per_act; }
 };
 
 ////

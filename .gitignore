@@ -15,3 +15,4 @@ src/*.obj
 local_bats/*.bat
 
 *.pdb
+msvc_capture.log
