@@ -706,12 +706,6 @@ public:
 
 	TypedArray<BG_UnitCaste> unit_castes;
 	TypedArray<BG_UnitCaste> get_unit_castes() const { return unit_castes; }
-
-	int max_number_of_bands = 0;
-	int get_max_number_of_bands() const { return max_number_of_bands; }
-
-	TypedArray<int> rep_cost_per_band;
-	TypedArray<int> get_rep_cost_per_band() const { return rep_cost_per_band; }
 };
 
 ////
@@ -781,6 +775,36 @@ public:
 
 	StringName in_game_animation_name;
 	StringName get_in_game_animation_name() const { return in_game_animation_name; }
+};
+
+////
+//// BG_BookerSkillTreeSlotDetails
+////
+class BG_BookerSkillTreeSlotDetails : public Object
+{
+	GDCLASS(BG_BookerSkillTreeSlotDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	bool is_parent_button;
+	bool get_is_parent_button() const { return is_parent_button; }
+
+	StringName skill_name;
+	StringName get_skill_name() const { return skill_name; }
+
+	StringName skill_description;
+	StringName get_skill_description() const { return skill_description; }
+
+	int required_rep;
+	int get_required_rep() const { return required_rep; }
+
+	StringName parent_skill_id;
+	StringName get_parent_skill_id() const { return parent_skill_id; }
 };
 
 ////
@@ -884,6 +908,9 @@ public:
 
 	TypedArray<BG_AudioData> audio_data;
 	TypedArray<BG_AudioData> get_audio_data() const { return audio_data; }
+
+	TypedArray<BG_BookerSkillTreeSlotDetails> booker_skill_tree_details;
+	TypedArray<BG_BookerSkillTreeSlotDetails> get_booker_skill_tree_details() const { return booker_skill_tree_details; }
 
 	TypedArray<BG_JobDetails> jobs;
 	TypedArray<BG_JobDetails> get_jobs() const { return jobs; }

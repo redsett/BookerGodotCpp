@@ -404,8 +404,6 @@ void BG_BandInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_band_size_min_max"), &BG_BandInfo::get_band_size_min_max);
 	ClassDB::bind_method(D_METHOD("get_num_bands_for_hire"), &BG_BandInfo::get_num_bands_for_hire);
 	ClassDB::bind_method(D_METHOD("get_unit_castes"), &BG_BandInfo::get_unit_castes);
-	ClassDB::bind_method(D_METHOD("get_max_number_of_bands"), &BG_BandInfo::get_max_number_of_bands);
-	ClassDB::bind_method(D_METHOD("get_rep_cost_per_band"), &BG_BandInfo::get_rep_cost_per_band);
 }
 
 ////
@@ -495,6 +493,19 @@ void BG_EquipmentAnimationDetails::_bind_methods()
 }
 
 ////
+//// BG_BookerSkillTreeSlotDetails
+////
+void BG_BookerSkillTreeSlotDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_BookerSkillTreeSlotDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_is_parent_button"), &BG_BookerSkillTreeSlotDetails::get_is_parent_button);
+	ClassDB::bind_method(D_METHOD("get_skill_name"), &BG_BookerSkillTreeSlotDetails::get_skill_name);
+	ClassDB::bind_method(D_METHOD("get_skill_description"), &BG_BookerSkillTreeSlotDetails::get_skill_description);
+	ClassDB::bind_method(D_METHOD("get_required_rep"), &BG_BookerSkillTreeSlotDetails::get_required_rep);
+	ClassDB::bind_method(D_METHOD("get_parent_skill_id"), &BG_BookerSkillTreeSlotDetails::get_parent_skill_id);
+}
+
+////
 //// BG_Booker_Globals
 ////
 void BG_Booker_Globals::_bind_methods()
@@ -533,6 +544,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_modding_path"), &BG_Booker_DB::get_modding_path);
 	ClassDB::bind_method(D_METHOD("get_globals"), &BG_Booker_DB::get_globals);
 	ClassDB::bind_method(D_METHOD("get_audio_data"), &BG_Booker_DB::get_audio_data);
+	ClassDB::bind_method(D_METHOD("get_booker_skill_tree_details"), &BG_Booker_DB::get_booker_skill_tree_details);
 	ClassDB::bind_method(D_METHOD("get_jobs"), &BG_Booker_DB::get_jobs);
 	ClassDB::bind_method(D_METHOD("get_items"), &BG_Booker_DB::get_items);
 	ClassDB::bind_method(D_METHOD("get_item_drop_pools"), &BG_Booker_DB::get_item_drop_pools);
@@ -739,6 +751,33 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 	}
 
 	/////
+	///// Booker Skill Tree
+	/////
+	{
+		const Dictionary booker_skill_tree_sheet = BG_JsonUtils::GetCBDSheet(data, "booker_skill_tree");
+		if (booker_skill_tree_sheet.has("lines"))
+		{
+			booker_skill_tree_details.clear();
+			const Array lines = Array(booker_skill_tree_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
+			{
+				const Dictionary entry = lines[i];
+				if (bool(entry["disabled"]))
+					continue;
+				BG_BookerSkillTreeSlotDetails *new_booker_skill_tree_slot_details_class = memnew(BG_BookerSkillTreeSlotDetails);
+				new_booker_skill_tree_slot_details_class->id = entry["id"];
+				new_booker_skill_tree_slot_details_class->is_parent_button = bool(entry["is_parent_btn"]);
+				new_booker_skill_tree_slot_details_class->skill_name = entry["skill_name"];
+				new_booker_skill_tree_slot_details_class->skill_description = entry["skill_description"];
+				new_booker_skill_tree_slot_details_class->required_rep = int(entry["required_rep"]);
+				new_booker_skill_tree_slot_details_class->parent_skill_id = entry["parent_skill"];
+
+				booker_skill_tree_details.append(new_booker_skill_tree_slot_details_class);
+			}
+		}
+	}
+
+	/////
 	///// Rarity Types
 	/////
 	{
@@ -813,8 +852,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			const Dictionary lines = Array(bands_sheet["lines"])[0];
 			if (lines.has("num_bands_for_hire"))
 				band_info->num_bands_for_hire = lines["num_bands_for_hire"];
-			if (lines.has("max_number_of_bands"))
-				band_info->max_number_of_bands = lines["max_number_of_bands"];
 
 			if (lines.has("names"))
 			{
@@ -867,18 +904,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				const Array band_sizes_array = Array(lines["band_sizes"]);
 				const Dictionary entry = band_sizes_array[0];
 				band_info->band_size_min_max = Vector2(entry["band_size_min"], entry["band_size_max"]);
-			}
-
-			if (lines.has("rep_cost_per_band"))
-			{
-				band_info->rep_cost_per_band.clear();
-
-				const Array rep_cost_per_band_array = Array(lines["rep_cost_per_band"]);
-				for (int i = 0; i < rep_cost_per_band_array.size(); i++)
-				{
-					const Dictionary entry = rep_cost_per_band_array[i];
-					band_info->rep_cost_per_band.append(int(entry["rep_cost"]));
-				}
 			}
 		}
 	}

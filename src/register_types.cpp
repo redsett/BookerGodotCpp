@@ -56,6 +56,7 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		ClassDB::register_class<BG_ChallengeRatingGuide>();
 		ClassDB::register_class<BG_ActStats>();
 		ClassDB::register_class<BG_EquipmentAnimationDetails>();
+		ClassDB::register_class<BG_BookerSkillTreeSlotDetails>();
 		ClassDB::register_class<BG_Booker_Globals>();
 		ClassDB::register_class<BG_Booker_DB>();
 
