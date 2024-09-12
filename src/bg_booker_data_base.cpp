@@ -514,6 +514,7 @@ void BG_Booker_Globals::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_chance_of_no_drop"), &BG_Booker_Globals::get_chance_of_no_drop);
 	ClassDB::bind_method(D_METHOD("get_act_stats"), &BG_Booker_Globals::get_act_stats);
 	ClassDB::bind_method(D_METHOD("get_challenge_rating_guide"), &BG_Booker_Globals::get_challenge_rating_guide);
+	ClassDB::bind_method(D_METHOD("get_monster_element_distribution"), &BG_Booker_Globals::get_monster_element_distribution);
 	ClassDB::bind_method(D_METHOD("get_base_equipment_value_for_act"), &BG_Booker_Globals::get_base_equipment_value_for_act);
 	ClassDB::bind_method(D_METHOD("get_base_beast_part_value_for_act"), &BG_Booker_Globals::get_base_beast_part_value_for_act);
 	ClassDB::bind_method(D_METHOD("get_equipment_value_rarity_multiplier"), &BG_Booker_Globals::get_equipment_value_rarity_multiplier);
@@ -628,6 +629,18 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_act_stats->job_handout_curve_path = jobs_distribution_per_act_entry["curve"];
 
 					globals->act_stats.append(new_act_stats);
+				}
+			}
+
+			if (lines.has("monster_element_distribution"))
+			{
+				globals->monster_element_distribution.clear();
+
+				const Array monster_element_distribution_array = Array(lines["monster_element_distribution"]);
+				for (int i = 0; i < monster_element_distribution_array.size(); i++)
+				{
+					const Dictionary values = monster_element_distribution_array[i];
+					globals->monster_element_distribution.append(float(values["percentage"]));
 				}
 			}
 

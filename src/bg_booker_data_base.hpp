@@ -834,6 +834,9 @@ public:
 	TypedArray<BG_ChallengeRatingGuide> challenge_rating_guide;
 	TypedArray<BG_ChallengeRatingGuide> get_challenge_rating_guide() const { return challenge_rating_guide; }
 
+	TypedArray<float> monster_element_distribution;
+	TypedArray<float> get_monster_element_distribution() const { return monster_element_distribution; }
+
 	// Base Values
 	TypedArray<int> base_equipment_value_for_act;
 	TypedArray<int> get_base_equipment_value_for_act() const { return base_equipment_value_for_act; }
