@@ -302,6 +302,10 @@ public:
 	float get_current_fame() const { return current_fame; }
 	void set_current_fame(float v) { current_fame = v; }
 
+	int weeks_left_to_finish_graft = 0;
+	int get_weeks_left_to_finish_graft() const { return weeks_left_to_finish_graft; }
+	void set_weeks_left_to_finish_graft(int v) { weeks_left_to_finish_graft = v; }
+
 	int number_of_jobs_participated_in = 0;
 	int get_number_of_jobs_participated_in() const { return number_of_jobs_participated_in; }
 	void set_number_of_jobs_participated_in(int v) { number_of_jobs_participated_in = v; }
