@@ -566,6 +566,10 @@ public:
 	int get_slot_index() const { return slot_index; }
 	void set_slot_index(int value) { slot_index = value; }
 
+	int random_variation = 0;
+	int get_random_variation() const { return random_variation; }
+	void set_random_variation(int v) { random_variation = v; }
+
 	Vector3 scale;
 	Vector3 get_scale() const { return scale; }
 	void set_scale(Vector3 value) { scale = value; }
