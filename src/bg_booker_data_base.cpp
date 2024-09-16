@@ -121,6 +121,7 @@ void BG_Effect::_bind_methods()
 void BG_Dice::_bind_methods()
 {
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("calculate_dice", "dice", "random_number_generator"), &BG_Dice::calculate_dice);
+	ClassDB::bind_static_method("BG_Dice", D_METHOD("get_dice_max_roll", "dice"), &BG_Dice::get_dice_max_roll);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("dice_to_nice_name", "dice"), &BG_Dice::dice_to_nice_name);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("dice_to_string", "dice"), &BG_Dice::dice_to_string);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("string_to_dice", "string"), &BG_Dice::string_to_dice);
@@ -1630,6 +1631,26 @@ BG_Booker_DB::~BG_Booker_DB()
 	}
 
 	return Math::max(0, result);
+}
+
+/* static */ int BG_Dice::get_dice_max_roll(const TypedArray<BG_Dice> dice)
+{
+	int result = 0;
+	for (int i = 0; i < dice.size(); i++)
+	{
+		if (!dice[i])
+		{
+			continue;
+		}
+		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
+		for (int x = 0; x < die->get_roll_count(); x++)
+		{
+			result += die->get_amount_of_sides();
+		}
+		result += die->get_additive();
+	}
+
+	return result;
 }
 
 /* static */ String BG_Dice::dice_to_nice_name(const TypedArray<BG_Dice> dice)

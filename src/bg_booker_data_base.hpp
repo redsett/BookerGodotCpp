@@ -105,6 +105,7 @@ public:
 	void set_additive(int value) { additive = value; }
 
 	static int calculate_dice(const TypedArray<BG_Dice> dice, RandomNumberGenerator *random_num_generator = nullptr);
+	static int get_dice_max_roll(const TypedArray<BG_Dice> dice);
 	static String dice_to_nice_name(const TypedArray<BG_Dice> dice);
 	static String dice_to_string(const BG_Dice *dice);
 	static BG_Dice *string_to_dice(String string);
