@@ -345,12 +345,6 @@ public:
 	StringName name;
 	StringName get_name() const { return name; }
 
-	int act_introduced_in = 0;
-	int get_act_introduced_in() const { return act_introduced_in; }
-
-	int base_value_override = 0;
-	int get_base_value_override() const { return base_value_override; }
-
 	bool is_beast_part = false;
 	bool get_is_beast_part() const { return is_beast_part; }
 
@@ -380,6 +374,15 @@ public:
 
 	TypedArray<StringName> effect_ids;
 	TypedArray<StringName> get_effect_ids() const { return effect_ids; }
+
+	int sell_value_tier = 0;
+	int get_sell_value_tier() const { return sell_value_tier; }
+
+	int fame_value_tier = 0;
+	int get_fame_value_tier() const { return fame_value_tier; }
+
+	int durability_value_tier = 0;
+	int get_durability_value_tier() const { return durability_value_tier; }	
 };
 
 ////
@@ -846,14 +849,17 @@ public:
 	TypedArray<float> monster_element_distribution;
 	TypedArray<float> get_monster_element_distribution() const { return monster_element_distribution; }
 
-	// Base Values
-	TypedArray<int> base_equipment_value_for_act;
-	TypedArray<int> get_base_equipment_value_for_act() const { return base_equipment_value_for_act; }
+	// Teir Values
+	TypedArray<int> sell_tier_values;
+	TypedArray<int> get_sell_tier_values() const { return sell_tier_values; }
 
-	TypedArray<int> base_beast_part_value_for_act;
-	TypedArray<int> get_base_beast_part_value_for_act() const { return base_beast_part_value_for_act; }
+	TypedArray<int> fame_tier_values;
+	TypedArray<int> get_fame_tier_values() const { return fame_tier_values; }
 
-	// Value Multipliers
+	TypedArray<int> durability_teir_values;
+	TypedArray<int> get_durability_teir_values() const { return durability_teir_values; }
+
+	// Teir Value Multipliers
 	TypedArray<float> equipment_value_rarity_multiplier;
 	TypedArray<float> get_equipment_value_rarity_multiplier() const { return equipment_value_rarity_multiplier; }
 
@@ -863,20 +869,6 @@ public:
 	TypedArray<float> extra_beast_part_value_rarity_multiplier_while_grafted;
 	TypedArray<float> get_extra_beast_part_value_rarity_multiplier_while_grafted() const { return extra_beast_part_value_rarity_multiplier_while_grafted; }
 
-	// Fame and Durability
-	TypedArray<float> equipment_max_durability_per_act;
-	TypedArray<float> get_equipment_max_durability_per_act() const { return equipment_max_durability_per_act; }
-
-	TypedArray<float> equipment_max_fame_per_act;
-	TypedArray<float> get_equipment_max_fame_per_act() const { return equipment_max_fame_per_act; }
-
-	TypedArray<float> beast_part_max_durability_per_act;
-	TypedArray<float> get_beast_part_max_durability_per_act() const { return beast_part_max_durability_per_act; }
-
-	TypedArray<float> beast_part_max_fame_per_act;
-	TypedArray<float> get_beast_part_max_fame_per_act() const { return beast_part_max_fame_per_act; }
-
-	// Fame and Durability Multipliers
 	TypedArray<float> equipment_durability_rarity_multiplier;
 	TypedArray<float> get_equipment_durability_rarity_multiplier() const { return equipment_durability_rarity_multiplier; }
 
@@ -888,6 +880,12 @@ public:
 
 	TypedArray<float> beast_part_fame_rarity_multiplier;
 	TypedArray<float> get_beast_part_fame_rarity_multiplier() const { return beast_part_fame_rarity_multiplier; }
+
+	float inventory_sell_multiplier = 0.0;
+	float get_inventory_sell_multiplier() const { return inventory_sell_multiplier; }
+
+	float item_passive_income_multiplier = 0.0;
+	float get_item_passive_income_multiplier() const { return item_passive_income_multiplier; }
 };
 
 ////

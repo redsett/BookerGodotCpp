@@ -262,8 +262,6 @@ void BG_ItemDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_ItemDetails::get_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_ItemDetails::get_name);
-	ClassDB::bind_method(D_METHOD("get_act_introduced_in"), &BG_ItemDetails::get_act_introduced_in);
-	ClassDB::bind_method(D_METHOD("get_base_value_override"), &BG_ItemDetails::get_base_value_override);
 	ClassDB::bind_method(D_METHOD("get_is_beast_part"), &BG_ItemDetails::get_is_beast_part);
 	ClassDB::bind_method(D_METHOD("get_is_useable_item"), &BG_ItemDetails::get_is_useable_item);
 	ClassDB::bind_method(D_METHOD("get_slot_type_id"), &BG_ItemDetails::get_slot_type_id);
@@ -274,6 +272,9 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_ItemDetails::get_stats);
 	ClassDB::bind_method(D_METHOD("get_animation_attach_socket"), &BG_ItemDetails::get_animation_attach_socket);
 	ClassDB::bind_method(D_METHOD("get_effect_ids"), &BG_ItemDetails::get_effect_ids);
+	ClassDB::bind_method(D_METHOD("get_sell_value_tier"), &BG_ItemDetails::get_sell_value_tier);
+	ClassDB::bind_method(D_METHOD("get_fame_value_tier"), &BG_ItemDetails::get_fame_value_tier);
+	ClassDB::bind_method(D_METHOD("get_durability_value_tier"), &BG_ItemDetails::get_durability_value_tier);
 }
 
 ////
@@ -522,19 +523,21 @@ void BG_Booker_Globals::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_act_stats"), &BG_Booker_Globals::get_act_stats);
 	ClassDB::bind_method(D_METHOD("get_challenge_rating_guide"), &BG_Booker_Globals::get_challenge_rating_guide);
 	ClassDB::bind_method(D_METHOD("get_monster_element_distribution"), &BG_Booker_Globals::get_monster_element_distribution);
-	ClassDB::bind_method(D_METHOD("get_base_equipment_value_for_act"), &BG_Booker_Globals::get_base_equipment_value_for_act);
-	ClassDB::bind_method(D_METHOD("get_base_beast_part_value_for_act"), &BG_Booker_Globals::get_base_beast_part_value_for_act);
+
+	ClassDB::bind_method(D_METHOD("get_sell_tier_values"), &BG_Booker_Globals::get_sell_tier_values);
+	ClassDB::bind_method(D_METHOD("get_fame_tier_values"), &BG_Booker_Globals::get_fame_tier_values);
+	ClassDB::bind_method(D_METHOD("get_durability_teir_values"), &BG_Booker_Globals::get_durability_teir_values);
+
 	ClassDB::bind_method(D_METHOD("get_equipment_value_rarity_multiplier"), &BG_Booker_Globals::get_equipment_value_rarity_multiplier);
 	ClassDB::bind_method(D_METHOD("get_beast_part_value_rarity_multiplier"), &BG_Booker_Globals::get_beast_part_value_rarity_multiplier);
 	ClassDB::bind_method(D_METHOD("get_extra_beast_part_value_rarity_multiplier_while_grafted"), &BG_Booker_Globals::get_extra_beast_part_value_rarity_multiplier_while_grafted);
-	ClassDB::bind_method(D_METHOD("get_equipment_max_durability_per_act"), &BG_Booker_Globals::get_equipment_max_durability_per_act);
-	ClassDB::bind_method(D_METHOD("get_equipment_max_fame_per_act"), &BG_Booker_Globals::get_equipment_max_fame_per_act);
-	ClassDB::bind_method(D_METHOD("get_beast_part_max_durability_per_act"), &BG_Booker_Globals::get_beast_part_max_durability_per_act);
-	ClassDB::bind_method(D_METHOD("get_beast_part_max_fame_per_act"), &BG_Booker_Globals::get_beast_part_max_fame_per_act);
 	ClassDB::bind_method(D_METHOD("get_equipment_durability_rarity_multiplier"), &BG_Booker_Globals::get_equipment_durability_rarity_multiplier);
 	ClassDB::bind_method(D_METHOD("get_beast_part_durability_rarity_multiplier"), &BG_Booker_Globals::get_beast_part_durability_rarity_multiplier);
 	ClassDB::bind_method(D_METHOD("get_equipment_fame_rarity_multiplier"), &BG_Booker_Globals::get_equipment_fame_rarity_multiplier);
 	ClassDB::bind_method(D_METHOD("get_beast_part_fame_rarity_multiplier"), &BG_Booker_Globals::get_beast_part_fame_rarity_multiplier);
+
+	ClassDB::bind_method(D_METHOD("get_inventory_sell_multiplier"), &BG_Booker_Globals::get_inventory_sell_multiplier);
+	ClassDB::bind_method(D_METHOD("get_item_passive_income_multiplier"), &BG_Booker_Globals::get_item_passive_income_multiplier);
 }
 
 ////
@@ -611,10 +614,16 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 		{
 			const Dictionary lines = Array(globals_sheet["lines"])[0];
 			if (lines.has("starting_reputation"))
-				globals->starting_reputation = lines["starting_reputation"];
+				globals->starting_reputation = int(lines["starting_reputation"]);
 
 			if (lines.has("chance_of_no_drop"))
-				globals->chance_of_no_drop = lines["chance_of_no_drop"];
+				globals->chance_of_no_drop = float(lines["chance_of_no_drop"]);
+			
+			if (lines.has("inventory_sell_multiplier"))
+				globals->inventory_sell_multiplier = float(lines["inventory_sell_multiplier"]);
+
+			if (lines.has("item_passive_income_multiplier"))
+				globals->item_passive_income_multiplier = float(lines["item_passive_income_multiplier"]);
 
 			if (lines.has("job_globals") && lines.has("weeks_per_act"))
 			{
@@ -651,21 +660,23 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				}
 			}
 
-			if (lines.has("item_value_per_act"))
+			if (lines.has("item_teir_values"))
 			{
-				globals->base_equipment_value_for_act.clear();
-				globals->base_beast_part_value_for_act.clear();
+				globals->sell_tier_values.clear();
+				globals->fame_tier_values.clear();
+				globals->durability_teir_values.clear();
 
-				const Array item_value_per_act_array = Array(lines["item_value_per_act"]);
+				const Array item_value_per_act_array = Array(lines["item_teir_values"]);
 				for (int i = 0; i < item_value_per_act_array.size(); i++)
 				{
 					const Dictionary values = item_value_per_act_array[i];
-					globals->base_equipment_value_for_act.append(int(values["base_equipment_value_for_act"]));
-					globals->base_beast_part_value_for_act.append(int(values["base_beast_part_value_for_act"]));
+					globals->sell_tier_values.append(int(values["sell_tier_values"]));
+					globals->fame_tier_values.append(int(values["fame_tier_values"]));
+					globals->durability_teir_values.append(int(values["durability_teir_values"]));
 				}
 			}
 
-			if (lines.has("item_rarity_multiplier"))
+			if (lines.has("item_teir_rarity_multipliers"))
 			{
 				globals->equipment_value_rarity_multiplier.clear();
 				globals->beast_part_value_rarity_multiplier.clear();
@@ -675,7 +686,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				globals->equipment_fame_rarity_multiplier.clear();
 				globals->beast_part_fame_rarity_multiplier.clear();
 
-				const Array item_rarity_multiplier_array = Array(lines["item_rarity_multiplier"]);
+				const Array item_rarity_multiplier_array = Array(lines["item_teir_rarity_multipliers"]);
 				for (int i = 0; i < item_rarity_multiplier_array.size(); i++)
 				{
 					const Dictionary values = item_rarity_multiplier_array[i];
@@ -686,34 +697,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					globals->beast_part_durability_rarity_multiplier.append(float(values["beast_part_durability_rarity_multiplier"]));
 					globals->equipment_fame_rarity_multiplier.append(float(values["equipment_fame_rarity_multiplier"]));
 					globals->beast_part_fame_rarity_multiplier.append(float(values["beast_part_fame_rarity_multiplier"]));
-				}
-			}
-
-			if (lines.has("item_durability_per_act"))
-			{
-				globals->equipment_max_durability_per_act.clear();
-				globals->beast_part_max_durability_per_act.clear();
-
-				const Array item_durability_per_act_array = Array(lines["item_durability_per_act"]);
-				for (int i = 0; i < item_durability_per_act_array.size(); i++)
-				{
-					const Dictionary values = item_durability_per_act_array[i];
-					globals->equipment_max_durability_per_act.append(float(values["equipment"]));
-					globals->beast_part_max_durability_per_act.append(float(values["beast_part"]));
-				}
-			}
-
-			if (lines.has("item_fame_per_act"))
-			{
-				globals->equipment_max_fame_per_act.clear();
-				globals->beast_part_max_fame_per_act.clear();
-
-				const Array item_fame_per_act_array = Array(lines["item_fame_per_act"]);
-				for (int i = 0; i < item_fame_per_act_array.size(); i++)
-				{
-					const Dictionary values = item_fame_per_act_array[i];
-					globals->equipment_max_fame_per_act.append(float(values["equipment"]));
-					globals->beast_part_max_fame_per_act.append(float(values["beast_part"]));
 				}
 			}
 		}
@@ -1281,9 +1264,10 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->name = entry["name"];
 					new_item_class->icon_path = entry["icon_path"];
 					new_item_class->mesh_path = entry["mesh_path"];
-					new_item_class->act_introduced_in = int(entry["act_introduced_in"]);
 					new_item_class->slot_type_id = entry["slot_type"];
 					new_item_class->animation_attach_socket = entry["anim_attach_socket"];
+					new_item_class->sell_value_tier = int(entry["sell_value_tier"]);
+					new_item_class->fame_value_tier = int(entry["fame_value_tier"]);
 
 					// Lore
 					new_item_class->lore.clear();
@@ -1363,10 +1347,10 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->id = entry["id"];
 					new_item_class->name = entry["name"];
 					new_item_class->icon_path = entry["icon_path"];
-					new_item_class->act_introduced_in = int(entry["act_introduced_in"]);
-					new_item_class->base_value_override = int(entry["base_value_override"]);
 					new_item_class->slot_type_id = entry["slot_type"];
 					new_item_class->is_beast_part = true;
+					new_item_class->sell_value_tier = int(entry["sell_value_tier"]);
+					new_item_class->fame_value_tier = int(entry["fame_value_tier"]);
 
 					// Stats
 					const Array stats_lines = Array(entry["stats"]);
