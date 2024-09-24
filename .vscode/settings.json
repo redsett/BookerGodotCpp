@@ -75,6 +75,7 @@
     "iostream": "cpp",
     "atomic": "cpp",
     "thread": "cpp",
-    "xlocale": "cpp"
+    "xlocale": "cpp",
+    "system_error": "cpp"
   }
 }

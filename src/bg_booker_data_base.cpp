@@ -296,6 +296,8 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_caste_id"), &BG_BandMember::set_caste_id);
 	ClassDB::bind_method(D_METHOD("get_equipment"), &BG_BandMember::get_equipment);
 	ClassDB::bind_method(D_METHOD("set_equipment"), &BG_BandMember::set_equipment);
+	ClassDB::bind_method(D_METHOD("get_is_city_asset"), &BG_BandMember::get_is_city_asset);
+	ClassDB::bind_method(D_METHOD("set_is_city_asset"), &BG_BandMember::set_is_city_asset);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
@@ -514,12 +516,25 @@ void BG_BookerSkillTreeSlotDetails::_bind_methods()
 }
 
 ////
+//// BG_CityInfo
+////
+void BG_CityInfo::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_nice_name"), &BG_CityInfo::get_nice_name);
+	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_CityInfo::get_icon_path);
+	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_CityInfo::get_max_health);
+	ClassDB::bind_method(D_METHOD("get_stats"), &BG_CityInfo::get_stats);
+	ClassDB::bind_method(D_METHOD("get_equipment_ids"), &BG_CityInfo::get_equipment_ids);
+}
+
+////
 //// BG_Booker_Globals
 ////
 void BG_Booker_Globals::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_starting_reputation"), &BG_Booker_Globals::get_starting_reputation);
 	ClassDB::bind_method(D_METHOD("get_chance_of_no_drop"), &BG_Booker_Globals::get_chance_of_no_drop);
+	ClassDB::bind_method(D_METHOD("get_city_info"), &BG_Booker_Globals::get_city_info);
 	ClassDB::bind_method(D_METHOD("get_act_stats"), &BG_Booker_Globals::get_act_stats);
 	ClassDB::bind_method(D_METHOD("get_challenge_rating_guide"), &BG_Booker_Globals::get_challenge_rating_guide);
 	ClassDB::bind_method(D_METHOD("get_monster_element_distribution"), &BG_Booker_Globals::get_monster_element_distribution);
@@ -698,6 +713,54 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					globals->equipment_fame_rarity_multiplier.append(float(values["equipment_fame_rarity_multiplier"]));
 					globals->beast_part_fame_rarity_multiplier.append(float(values["beast_part_fame_rarity_multiplier"]));
 				}
+			}
+		}
+	}
+
+	/////
+	///// City Info
+	/////
+	{
+		const Dictionary city_info_sheet = BG_JsonUtils::GetCBDSheet(data, "city_info");
+		if (city_info_sheet.has("lines"))
+		{
+			globals->city_info.clear();
+
+			const Array lines = Array(city_info_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
+			{
+				const Dictionary entry = lines[i];
+
+				BG_CityInfo *new_city_info = memnew(BG_CityInfo);
+				new_city_info->nice_name = entry["name"];
+				new_city_info->icon_path = entry["icon_path"];
+				new_city_info->max_health = int(entry["health"]);
+
+				// Stats
+				const Array stats_lines = Array(entry["stats"]);
+				for (int y = 0; y < stats_lines.size(); y++)
+				{
+					const Dictionary stat_entry = stats_lines[y];
+
+					BG_UnitStat *new_stat = memnew(BG_UnitStat);
+					new_stat->id = stat_entry["stat"];
+					new_stat->resistant_value_text = stat_entry["resistant_value"];
+					new_stat->resistant_value_min_max = BG_UnitStat::string_to_resistant_value_min_max(stat_entry["resistant_value"]);
+					new_stat->dice_string = stat_entry["damage_dice"];
+					new_stat->dice_options = BG_Dice::string_to_dice_options(new_stat->dice_string);
+					
+					new_city_info->stats.append(new_stat);
+				}
+
+				// Equipment
+				const Array equipment_lines = Array(entry["equipment"]);
+				for (int y = 0; y < equipment_lines.size(); y++)
+				{
+					const Dictionary equipment_entry = equipment_lines[y];
+					new_city_info->equipment_ids.append(equipment_entry["equipment"]);
+				}
+				
+				globals->city_info.append(new_city_info);
 			}
 		}
 	}

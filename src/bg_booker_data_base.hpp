@@ -585,6 +585,10 @@ public:
 	TypedArray<BG_Item> equipment;
 	TypedArray<BG_Item> get_equipment() const { return equipment; }
 	void set_equipment(TypedArray<BG_Item> value) { equipment = value; }
+
+	bool is_city_asset = false;
+	bool get_is_city_asset() const { return is_city_asset; }
+	void set_is_city_asset(bool v) { is_city_asset = v; }
 };
 
 ////
@@ -820,6 +824,33 @@ public:
 };
 
 ////
+//// BG_CityInfo
+////
+class BG_CityInfo : public Object
+{
+	GDCLASS(BG_CityInfo, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName nice_name;
+	StringName get_nice_name() const { return nice_name; }
+
+	StringName icon_path;
+	StringName get_icon_path() const { return icon_path; }
+
+	int max_health;
+	int get_max_health() const { return max_health; }
+
+	TypedArray<BG_UnitStat> stats;
+	TypedArray<BG_UnitStat> get_stats() const { return stats; }
+
+	TypedArray<StringName> equipment_ids;
+	TypedArray<StringName> get_equipment_ids() const { return equipment_ids; }
+};
+
+////
 //// BG_Booker_Globals
 ////
 class BG_Booker_Globals : public Object
@@ -838,6 +869,9 @@ public:
 
 	float chance_of_no_drop = 0.0;
 	float get_chance_of_no_drop() const { return chance_of_no_drop; }
+
+	TypedArray<BG_CityInfo> city_info;
+	TypedArray<BG_CityInfo> get_city_info() const { return city_info; }
 
 	//MyCustomClass* result = dynamic_cast<MyCustomClass*>(container.object());
 	TypedArray<BG_ActStats> act_stats;
