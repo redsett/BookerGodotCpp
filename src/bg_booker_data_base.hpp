@@ -31,6 +31,27 @@ public:
 };
 
 ////
+//// BG_HueShiftData
+////
+class BG_HueShiftData : public Object
+{
+	GDCLASS(BG_HueShiftData, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName mask_path;
+	StringName get_mask_path() const { return mask_path; }
+
+	Color from_color = Color(1.0, 1.0, 1.0);
+	Color get_from_color() const { return from_color; }
+
+	float multiplier;
+	float get_multiplier() const { return multiplier; }
+};
+
+////
 //// BG_EffectRarityDetails
 ////
 class BG_EffectRarityDetails : public Object
@@ -356,6 +377,9 @@ public:
 
 	StringName icon_path;
 	StringName get_icon_path() const { return icon_path; }
+
+	BG_HueShiftData *hue_shift_data = nullptr;
+	BG_HueShiftData *get_hue_shift_data() const { return hue_shift_data; };
 
 	StringName mesh_path;
 	StringName get_mesh_path() const { return mesh_path; }
@@ -688,6 +712,9 @@ public:
 	TypedArray<StringName> effect_ids;
 	TypedArray<StringName> get_effect_ids() const { return effect_ids; }
 
+	BG_HueShiftData *hue_shift_data = nullptr;
+	BG_HueShiftData *get_hue_shift_data() const { return hue_shift_data; };
+
 	String get_challenge_rating_fraction_string() const;
 };
 
@@ -842,9 +869,6 @@ public:
 
 	int max_health;
 	int get_max_health() const { return max_health; }
-
-	TypedArray<BG_UnitStat> stats;
-	TypedArray<BG_UnitStat> get_stats() const { return stats; }
 
 	TypedArray<StringName> equipment_ids;
 	TypedArray<StringName> get_equipment_ids() const { return equipment_ids; }

@@ -93,6 +93,16 @@ void BG_AudioData::_bind_methods()
 }
 
 ////
+//// BG_HueShiftData
+////
+void BG_HueShiftData::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_mask_path"), &BG_HueShiftData::get_mask_path);
+	ClassDB::bind_method(D_METHOD("get_from_color"), &BG_HueShiftData::get_from_color);
+	ClassDB::bind_method(D_METHOD("get_multiplier"), &BG_HueShiftData::get_multiplier);
+}
+
+////
 //// BG_EffectRarityDetails
 ////
 void BG_EffectRarityDetails::_bind_methods()
@@ -266,6 +276,7 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_is_useable_item"), &BG_ItemDetails::get_is_useable_item);
 	ClassDB::bind_method(D_METHOD("get_slot_type_id"), &BG_ItemDetails::get_slot_type_id);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_ItemDetails::get_icon_path);
+	ClassDB::bind_method(D_METHOD("get_hue_shift_data"), &BG_ItemDetails::get_hue_shift_data);
 	ClassDB::bind_method(D_METHOD("get_mesh_path"), &BG_ItemDetails::get_mesh_path);
 	ClassDB::bind_method(D_METHOD("get_lore"), &BG_ItemDetails::get_lore);
 	ClassDB::bind_method(D_METHOD("get_caste_ids"), &BG_ItemDetails::get_caste_ids);
@@ -378,6 +389,7 @@ void BG_Monster::_bind_methods()
 
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_Monster::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_effect_ids"), &BG_Monster::get_effect_ids);
+	ClassDB::bind_method(D_METHOD("get_hue_shift_data"), &BG_Monster::get_hue_shift_data);
 	ClassDB::bind_method(D_METHOD("get_challenge_rating_fraction_string"), &BG_Monster::get_challenge_rating_fraction_string);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
@@ -523,7 +535,6 @@ void BG_CityInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_nice_name"), &BG_CityInfo::get_nice_name);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_CityInfo::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_CityInfo::get_max_health);
-	ClassDB::bind_method(D_METHOD("get_stats"), &BG_CityInfo::get_stats);
 	ClassDB::bind_method(D_METHOD("get_equipment_ids"), &BG_CityInfo::get_equipment_ids);
 }
 
@@ -735,22 +746,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_city_info->nice_name = entry["name"];
 				new_city_info->icon_path = entry["icon_path"];
 				new_city_info->max_health = int(entry["health"]);
-
-				// Stats
-				const Array stats_lines = Array(entry["stats"]);
-				for (int y = 0; y < stats_lines.size(); y++)
-				{
-					const Dictionary stat_entry = stats_lines[y];
-
-					BG_UnitStat *new_stat = memnew(BG_UnitStat);
-					new_stat->id = stat_entry["stat"];
-					new_stat->resistant_value_text = stat_entry["resistant_value"];
-					new_stat->resistant_value_min_max = BG_UnitStat::string_to_resistant_value_min_max(stat_entry["resistant_value"]);
-					new_stat->dice_string = stat_entry["damage_dice"];
-					new_stat->dice_options = BG_Dice::string_to_dice_options(new_stat->dice_string);
-					
-					new_city_info->stats.append(new_stat);
-				}
 
 				// Equipment
 				const Array equipment_lines = Array(entry["equipment"]);
@@ -1066,12 +1061,18 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_monster_type->icon_path = entry["icon_path"];
 				new_monster_type->monster_type = int(entry["type"]);
 
-				// Effects
-				const Array effect_lines = Array(entry["effects"]);
-				for (int y = 0; y < effect_lines.size(); y++)
+				// Hue Shifting
+				const Array hue_shifting_lines = Array(entry["hue_shifting"]);
+				for (int y = 0; y < hue_shifting_lines.size(); y++)
 				{
-					const Dictionary effect_entry = effect_lines[y];
-					new_monster_type->effect_ids.append(effect_entry["effect"]);
+					const Dictionary hue_shifting_entry = hue_shifting_lines[y];
+
+					BG_HueShiftData *new_hue_shift_data = memnew(BG_HueShiftData);
+					new_hue_shift_data->mask_path = hue_shifting_entry["mask_path"];
+					new_hue_shift_data->from_color = convert_int_to_color(int(hue_shifting_entry["from_color"]));
+					new_hue_shift_data->multiplier = float(hue_shifting_entry["multiplier"]);
+
+					new_monster_type->hue_shift_data = new_hue_shift_data;
 				}
 
 				// Stats
@@ -1099,6 +1100,14 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_monster_type->element_availability_ids.append(element_availability_entry["element"]);
 				}
 				
+				// Effects
+				const Array effect_lines = Array(entry["effects"]);
+				for (int y = 0; y < effect_lines.size(); y++)
+				{
+					const Dictionary effect_entry = effect_lines[y];
+					new_monster_type->effect_ids.append(effect_entry["effect"]);
+				}
+
 				monster_types.append(new_monster_type);
 			}
 		}
@@ -1332,6 +1341,20 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->sell_value_tier = int(entry["sell_value_tier"]);
 					new_item_class->fame_value_tier = int(entry["fame_value_tier"]);
 
+					// Hue Shifting
+					const Array hue_shifting_lines = Array(entry["hue_shifting"]);
+					for (int y = 0; y < hue_shifting_lines.size(); y++)
+					{
+						const Dictionary hue_shifting_entry = hue_shifting_lines[y];
+
+						BG_HueShiftData *new_hue_shift_data = memnew(BG_HueShiftData);
+						new_hue_shift_data->mask_path = hue_shifting_entry["mask_path"];
+						new_hue_shift_data->from_color = convert_int_to_color(int(hue_shifting_entry["from_color"]));
+						new_hue_shift_data->multiplier = float(hue_shifting_entry["multiplier"]);
+
+						new_item_class->hue_shift_data = new_hue_shift_data;
+					}
+
 					// Lore
 					new_item_class->lore.clear();
 					const Array lore_lines = Array(entry["lore"]);
@@ -1414,6 +1437,20 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->is_beast_part = true;
 					new_item_class->sell_value_tier = int(entry["sell_value_tier"]);
 					new_item_class->fame_value_tier = int(entry["fame_value_tier"]);
+
+					// Hue Shifting
+					const Array hue_shifting_lines = Array(entry["hue_shifting"]);
+					for (int y = 0; y < hue_shifting_lines.size(); y++)
+					{
+						const Dictionary hue_shifting_entry = hue_shifting_lines[y];
+
+						BG_HueShiftData *new_hue_shift_data = memnew(BG_HueShiftData);
+						new_hue_shift_data->mask_path = hue_shifting_entry["mask_path"];
+						new_hue_shift_data->from_color = convert_int_to_color(int(hue_shifting_entry["from_color"]));
+						new_hue_shift_data->multiplier = float(hue_shifting_entry["multiplier"]);
+
+						new_item_class->hue_shift_data = new_hue_shift_data;
+					}
 
 					// Stats
 					const Array stats_lines = Array(entry["stats"]);
