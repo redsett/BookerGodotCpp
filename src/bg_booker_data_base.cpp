@@ -350,6 +350,7 @@ void BG_UnitCaste::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitCaste::get_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_UnitCaste::get_name);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_UnitCaste::get_icon_path);
+	ClassDB::bind_method(D_METHOD("get_hue_shift_data"), &BG_UnitCaste::get_hue_shift_data);
 	ClassDB::bind_method(D_METHOD("get_lod_mesh_paths"), &BG_UnitCaste::get_lod_mesh_paths);
 	ClassDB::bind_method(D_METHOD("get_scale_min"), &BG_UnitCaste::get_scale_min);
 	ClassDB::bind_method(D_METHOD("get_scale_max"), &BG_UnitCaste::get_scale_max);
@@ -989,6 +990,20 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_unit_caste->id = entry["id"];
 				new_unit_caste->name = entry["name"];
 				new_unit_caste->icon_path = entry["icon_path"];
+
+				// Hue Shifting
+				const Array hue_shifting_lines = Array(entry["hue_shifting"]);
+				for (int y = 0; y < hue_shifting_lines.size(); y++)
+				{
+					const Dictionary hue_shifting_entry = hue_shifting_lines[y];
+
+					BG_HueShiftData *new_hue_shift_data = memnew(BG_HueShiftData);
+					new_hue_shift_data->mask_path = hue_shifting_entry["mask_path"];
+					new_hue_shift_data->from_color = convert_int_to_color(int(hue_shifting_entry["from_color"]));
+					new_hue_shift_data->multiplier = float(hue_shifting_entry["multiplier"]);
+
+					new_unit_caste->hue_shift_data = new_hue_shift_data;
+				}
 
 				new_unit_caste->lod_mesh_paths.clear();
 				const Array lod_mesh_path_lines = Array(entry["lod_mesh_paths"]);

@@ -546,6 +546,9 @@ public:
 	StringName icon_path;
 	StringName get_icon_path() const { return icon_path; }
 
+	BG_HueShiftData *hue_shift_data = nullptr;
+	BG_HueShiftData *get_hue_shift_data() const { return hue_shift_data; };
+
 	TypedArray<StringName> lod_mesh_paths;
 	TypedArray<StringName> get_lod_mesh_paths() const { return lod_mesh_paths; }
 
