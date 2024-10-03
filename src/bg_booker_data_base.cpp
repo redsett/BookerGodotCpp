@@ -177,6 +177,8 @@ void BG_UnitStatDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_UnitStatDetails::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_is_damage_type"), &BG_UnitStatDetails::get_is_damage_type);
 	ClassDB::bind_method(D_METHOD("get_color"), &BG_UnitStatDetails::get_color);
+	ClassDB::bind_method(D_METHOD("get_text_color"), &BG_UnitStatDetails::get_text_color);
+	ClassDB::bind_method(D_METHOD("get_in_world_color"), &BG_UnitStatDetails::get_in_world_color);
 }
 
 ////
@@ -897,7 +899,9 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_stat_types->nice_name = entry["name"];
 				new_stat_types->icon_path = entry["icon_path"];
 				new_stat_types->is_damage_type = bool(entry["is_damage_type"]);
-				new_stat_types->color = convert_int_to_color(int(entry["color"]));
+				new_stat_types->color = convert_int_to_color(int(entry["widget_color"]));
+				new_stat_types->text_color = convert_int_to_color(int(entry["text_color"]));
+				new_stat_types->in_world_color = convert_int_to_color(int(entry["in_world_color"]));
 
 				stat_types.append(new_stat_types);
 			}

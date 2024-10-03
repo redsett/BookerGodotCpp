@@ -206,6 +206,12 @@ public:
 
 	Color color = Color(1.0, 1.0, 1.0);
 	Color get_color() const { return color; }
+
+	Color text_color = Color(1.0, 1.0, 1.0);
+	Color get_text_color() const { return text_color; }
+
+	Color in_world_color = Color(1.0, 1.0, 1.0);
+	Color get_in_world_color() const { return in_world_color; }
 };
 
 ////
