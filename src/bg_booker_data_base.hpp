@@ -204,8 +204,8 @@ public:
 	bool is_damage_type = false;
 	bool get_is_damage_type() const { return is_damage_type; }
 
-	Color color = Color(1.0, 1.0, 1.0);
-	Color get_color() const { return color; }
+	Color widget_color = Color(1.0, 1.0, 1.0);
+	Color get_widget_color() const { return widget_color; }
 
 	Color text_color = Color(1.0, 1.0, 1.0);
 	Color get_text_color() const { return text_color; }

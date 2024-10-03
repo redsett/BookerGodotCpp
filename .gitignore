@@ -16,3 +16,4 @@ local_bats/*.bat
 
 *.pdb
 msvc_capture.log
+msvc_capture.log
