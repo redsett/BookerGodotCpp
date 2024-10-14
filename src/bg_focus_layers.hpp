@@ -17,7 +17,12 @@ protected:
     static void _bind_methods();
 
     static bool bg_is_instance_valid(const Object *obj) {
-        return (obj == nullptr) ? false : UtilityFunctions::is_instance_id_valid(obj->get_instance_id());
+        try {
+            return UtilityFunctions::is_instance_id_valid(obj->get_instance_id());
+        }
+        catch (...) {
+        }
+        return false;
     };
 
 public:
