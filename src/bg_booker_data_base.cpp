@@ -477,7 +477,6 @@ void BG_JobMonsterDetails::_bind_methods()
 void BG_JobDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_JobDetails::get_id);
-	ClassDB::bind_method(D_METHOD("get_weeks_to_complete"), &BG_JobDetails::get_weeks_to_complete);
 	ClassDB::bind_method(D_METHOD("get_weeks_before_expire"), &BG_JobDetails::get_weeks_before_expire);
 	ClassDB::bind_method(D_METHOD("get_monster_details"), &BG_JobDetails::get_monster_details);
 	ClassDB::bind_method(D_METHOD("get_is_unique"), &BG_JobDetails::get_is_unique);
@@ -1197,7 +1196,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				const Dictionary entry = lines[i];
 				BG_JobDetails *new_job_class = memnew(BG_JobDetails);
 				new_job_class->id = entry["id"];
-				new_job_class->weeks_to_complete = int(entry["weeks_to_complete"]);
 				new_job_class->weeks_before_expire = int(entry["weeks_before_expire"]);
 				new_job_class->is_unique = bool(entry["is_unique"]);
 				new_job_class->is_boss = bool(entry["is_boss"]);

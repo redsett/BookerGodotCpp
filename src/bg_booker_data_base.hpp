@@ -513,9 +513,6 @@ public:
 	StringName id;
 	StringName get_id() const { return id; }
 
-	int weeks_to_complete = 0;
-	int get_weeks_to_complete() const { return weeks_to_complete; }
-
 	int weeks_before_expire = 0;
 	int get_weeks_before_expire() const { return weeks_before_expire; }
 
