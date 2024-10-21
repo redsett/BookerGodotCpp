@@ -211,6 +211,7 @@ void BG_ItemSlotType::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_ItemSlotType::get_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_ItemSlotType::get_name);
+	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_ItemSlotType::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_percentage_of_all_items_dropped_per_act"), &BG_ItemSlotType::get_percentage_of_all_items_dropped_per_act);
 }
 
@@ -277,6 +278,7 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_is_beast_part"), &BG_ItemDetails::get_is_beast_part);
 	ClassDB::bind_method(D_METHOD("get_is_useable_item"), &BG_ItemDetails::get_is_useable_item);
 	ClassDB::bind_method(D_METHOD("get_slot_type_id"), &BG_ItemDetails::get_slot_type_id);
+	ClassDB::bind_method(D_METHOD("get_beast_part_available_item_slot_types"), &BG_ItemDetails::get_beast_part_available_item_slot_types);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_ItemDetails::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_hue_shift_data"), &BG_ItemDetails::get_hue_shift_data);
 	ClassDB::bind_method(D_METHOD("get_mesh_path"), &BG_ItemDetails::get_mesh_path);
@@ -1319,6 +1321,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				const Dictionary entry = lines[i];
 				new_item_slot_type_class->id = entry["id"];
 				new_item_slot_type_class->name = entry["name"];
+				new_item_slot_type_class->icon_path = entry["icon_path"];
 
 				const Array percentage_of_all_items_dropped_per_act_lines = Array(entry["percentage_of_all_items_dropped_per_act"]);
 				for (int y = 0; y < percentage_of_all_items_dropped_per_act_lines.size(); y++)
@@ -1467,6 +1470,14 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 						new_hue_shift_data->multiplier = float(hue_shifting_entry["multiplier"]);
 
 						new_item_class->hue_shift_data = new_hue_shift_data;
+					}
+
+					// Available Item Slot Types
+					const Array available_item_slot_types_lines = Array(entry["available_item_slot_types"]);
+					for (int y = 0; y < available_item_slot_types_lines.size(); y++)
+					{
+						const Dictionary slot_type_entry = available_item_slot_types_lines[y];
+						new_item_class->beast_part_available_item_slot_types.append(slot_type_entry["slot_type"]);
 					}
 
 					// Stats

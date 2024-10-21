@@ -279,6 +279,9 @@ public:
 	StringName name;
 	StringName get_name() const { return name; }
 
+	StringName icon_path;
+	StringName get_icon_path() const { return icon_path; }
+
 	TypedArray<float> percentage_of_all_items_dropped_per_act;
 	TypedArray<float> get_percentage_of_all_items_dropped_per_act() const { return percentage_of_all_items_dropped_per_act; }
 };
@@ -377,6 +380,9 @@ public:
 
 	StringName slot_type_id;
 	StringName get_slot_type_id() { return slot_type_id; }
+
+	TypedArray<StringName> beast_part_available_item_slot_types;
+	TypedArray<StringName> get_beast_part_available_item_slot_types() const { return beast_part_available_item_slot_types; }
 
 	bool is_useable_item = false;
 	bool get_is_useable_item() { return is_useable_item; }
