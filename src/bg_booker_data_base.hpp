@@ -127,6 +127,7 @@ public:
 
 	static int calculate_dice(const TypedArray<BG_Dice> dice, RandomNumberGenerator *random_num_generator = nullptr);
 	static int get_dice_max_roll(const TypedArray<BG_Dice> dice);
+	static int get_dice_average_roll(const TypedArray<BG_Dice> dice);
 	static String dice_to_nice_name(const TypedArray<BG_Dice> dice);
 	static String dice_to_string(const BG_Dice *dice);
 	static BG_Dice *string_to_dice(String string);
@@ -959,6 +960,12 @@ public:
 
 	float item_passive_income_multiplier = 0.0;
 	float get_item_passive_income_multiplier() const { return item_passive_income_multiplier; }
+
+	float percent_amount_to_add_on_same_element_per_damage_value = 0.0;
+	float get_percent_amount_to_add_on_same_element_per_damage_value() const { return percent_amount_to_add_on_same_element_per_damage_value; }
+	
+	float percent_amount_to_subtract_on_weak_element_per_damage_value = 0.0;
+	float get_percent_amount_to_subtract_on_weak_element_per_damage_value() const { return percent_amount_to_subtract_on_weak_element_per_damage_value; }
 };
 
 ////

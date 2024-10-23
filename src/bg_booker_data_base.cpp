@@ -132,6 +132,7 @@ void BG_Dice::_bind_methods()
 {
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("calculate_dice", "dice", "random_number_generator"), &BG_Dice::calculate_dice);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("get_dice_max_roll", "dice"), &BG_Dice::get_dice_max_roll);
+	ClassDB::bind_static_method("BG_Dice", D_METHOD("get_dice_average_roll", "dice"), &BG_Dice::get_dice_average_roll);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("dice_to_nice_name", "dice"), &BG_Dice::dice_to_nice_name);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("dice_to_string", "dice"), &BG_Dice::dice_to_string);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("string_to_dice", "string"), &BG_Dice::string_to_dice);
@@ -569,6 +570,9 @@ void BG_Booker_Globals::_bind_methods()
 
 	ClassDB::bind_method(D_METHOD("get_inventory_sell_multiplier"), &BG_Booker_Globals::get_inventory_sell_multiplier);
 	ClassDB::bind_method(D_METHOD("get_item_passive_income_multiplier"), &BG_Booker_Globals::get_item_passive_income_multiplier);
+
+	ClassDB::bind_method(D_METHOD("get_percent_amount_to_add_on_same_element_per_damage_value"), &BG_Booker_Globals::get_percent_amount_to_add_on_same_element_per_damage_value);
+	ClassDB::bind_method(D_METHOD("get_percent_amount_to_subtract_on_weak_element_per_damage_value"), &BG_Booker_Globals::get_percent_amount_to_subtract_on_weak_element_per_damage_value);
 }
 
 ////
@@ -647,15 +651,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			if (lines.has("starting_reputation"))
 				globals->starting_reputation = int(lines["starting_reputation"]);
 
-			if (lines.has("chance_of_no_drop"))
-				globals->chance_of_no_drop = float(lines["chance_of_no_drop"]);
-			
-			if (lines.has("inventory_sell_multiplier"))
-				globals->inventory_sell_multiplier = float(lines["inventory_sell_multiplier"]);
-
-			if (lines.has("item_passive_income_multiplier"))
-				globals->item_passive_income_multiplier = float(lines["item_passive_income_multiplier"]);
-
 			if (lines.has("job_globals") && lines.has("weeks_per_act"))
 			{
 				globals->act_stats.clear();
@@ -688,6 +683,17 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				{
 					const Dictionary values = monster_element_distribution_array[i];
 					globals->monster_element_distribution.append(float(values["percentage"]));
+				}
+			}
+
+			if (lines.has("damage_resistance_modifiers"))
+			{
+				const Array damage_resistance_modifiers_array = Array(lines["damage_resistance_modifiers"]);
+				for (int i = 0; i < damage_resistance_modifiers_array.size(); i++)
+				{
+					const Dictionary values = damage_resistance_modifiers_array[i];
+					globals->percent_amount_to_add_on_same_element_per_damage_value = float(values["percent_amount_to_add_on_same_element_per_damage_value"]);
+					globals->percent_amount_to_subtract_on_weak_element_per_damage_value = float(values["percent_amount_to_subtract_on_weak_element_per_damage_value"]);
 				}
 			}
 
@@ -730,6 +736,15 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					globals->beast_part_fame_rarity_multiplier.append(float(values["beast_part_fame_rarity_multiplier"]));
 				}
 			}
+			
+			if (lines.has("inventory_sell_multiplier"))
+				globals->inventory_sell_multiplier = float(lines["inventory_sell_multiplier"]);
+
+			if (lines.has("item_passive_income_multiplier"))
+				globals->item_passive_income_multiplier = float(lines["item_passive_income_multiplier"]);
+			
+			if (lines.has("chance_of_no_drop"))
+				globals->chance_of_no_drop = float(lines["chance_of_no_drop"]);
 		}
 	}
 
@@ -1765,6 +1780,29 @@ BG_Booker_DB::~BG_Booker_DB()
 	}
 
 	return result;
+}
+
+/* static */ int BG_Dice::get_dice_average_roll(const TypedArray<BG_Dice> dice)
+{
+	int max_roll = 0;
+	int additives = 0;
+	int roll_counts = 0;
+	for (int i = 0; i < dice.size(); i++)
+	{
+		if (!dice[i])
+		{
+			continue;
+		}
+		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
+		for (int x = 0; x < die->get_roll_count(); x++)
+		{
+			roll_counts += 1;
+			max_roll += die->get_amount_of_sides();
+		}
+		additives += die->get_additive();
+	}
+
+	return int(float(max_roll + roll_counts) * 0.5f) + additives;
 }
 
 /* static */ String BG_Dice::dice_to_nice_name(const TypedArray<BG_Dice> dice)
