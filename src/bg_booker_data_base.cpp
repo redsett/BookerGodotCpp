@@ -252,6 +252,8 @@ void BG_Item::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_rarity_id"), &BG_Item::set_rarity_id);
 	ClassDB::bind_method(D_METHOD("get_grafts"), &BG_Item::get_grafts);
 	ClassDB::bind_method(D_METHOD("set_grafts"), &BG_Item::set_grafts);
+	ClassDB::bind_method(D_METHOD("get_forced_damage_element"), &BG_Item::get_forced_damage_element);
+	ClassDB::bind_method(D_METHOD("set_forced_damage_element"), &BG_Item::set_forced_damage_element);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
@@ -268,6 +270,7 @@ void BG_Item::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "should_count_in_item_rarity_disparity"), "set_should_count_in_item_rarity_disparity", "get_should_count_in_item_rarity_disparity");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "rarity_id"), "set_rarity_id", "get_rarity_id");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "grafts"), "set_grafts", "get_grafts");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "forced_damage_element"), "set_forced_damage_element", "get_forced_damage_element");
 }
 
 ////

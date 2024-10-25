@@ -360,6 +360,10 @@ public:
 	TypedArray<BG_Item> grafts;
 	TypedArray<BG_Item> get_grafts() const { return grafts; }
 	void set_grafts(TypedArray<BG_Item> value) { grafts = value; }
+
+	StringName forced_damage_element;
+	StringName get_forced_damage_element() const { return forced_damage_element; }
+	void set_forced_damage_element(StringName v) { forced_damage_element = v; }
 };
 
 ////
