@@ -238,9 +238,11 @@ public:
 
 	int offensive_value = 0;
 	int get_offensive_value() const { return offensive_value; }
+	void set_offensive_value(int v) { offensive_value = v; }
 
 	int defensive_value = 0;
 	int get_defensive_value() const { return defensive_value; }
+	void set_defensive_value(int v) { defensive_value = v; }
 
 	int resistant_unsaved_stored_value = 0;
 	int get_resistant_unsaved_stored_value() const { return resistant_unsaved_stored_value; }
@@ -349,7 +351,7 @@ public:
 	int get_consecutive_number_of_jobs_participated_in() const { return consecutive_number_of_jobs_participated_in; }
 	void set_consecutive_number_of_jobs_participated_in(int v) { consecutive_number_of_jobs_participated_in = v; }
 
-	bool should_count_in_item_rarity_disparity = true;
+	bool should_count_in_item_rarity_disparity = false;
 	bool get_should_count_in_item_rarity_disparity() const { return should_count_in_item_rarity_disparity; }
 	void set_should_count_in_item_rarity_disparity(bool v) { should_count_in_item_rarity_disparity = v; }
 
