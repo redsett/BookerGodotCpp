@@ -285,26 +285,40 @@ Control *BG_Focus_Layers::get_current_parent_control() const
 }
 
 
-bool BG_Focus_Layers::_is_control_top(const Control *ctrl, const TypedArray<Control> &all_ctrls)
+bool BG_Focus_Layers::_is_control_top(const Vector2 &direction, const Control *ctrl, const TypedArray<Control> &all_ctrls)
 {
     const float c_top_y = ctrl->get_global_position().y;
     for (int i = 0; i < all_ctrls.size(); i++)
     {
         const Control *child = cast_to<Control>(all_ctrls[i]);
         if (c_top_y > child->get_global_position().y && _check_if_valid_control(child))
-            return false;
+        {
+            const Vector2 c_center_location = ctrl->get_global_position() + (ctrl->get_global_rect().size * 0.5);
+            const Vector2 child_center_location = child->get_global_position() + (child->get_global_rect().size * 0.5);
+            static const float PI = 3.14159f;
+            const float angle = Math::abs(direction.angle_to(child_center_location - c_center_location) / PI);
+            if (Math::abs(angle) < _minimum_angle)
+                return false;
+        }
     }
     return true;
 }
  
-bool BG_Focus_Layers::_is_control_bottom(const Control *ctrl, const TypedArray<Control> &all_ctrls)
+bool BG_Focus_Layers::_is_control_bottom(const Vector2 &direction, const Control *ctrl, const TypedArray<Control> &all_ctrls)
 {
     const float c_bottom_y = ctrl->get_global_position().y + ctrl->get_global_rect().size.y;
     for (int i = 0; i < all_ctrls.size(); i++)
     {
         const Control *child = cast_to<Control>(all_ctrls[i]);
         if (c_bottom_y < (child->get_global_position().y + child->get_global_rect().size.y) && _check_if_valid_control(child))
-            return false;
+        {
+            const Vector2 c_center_location = ctrl->get_global_position() + (ctrl->get_global_rect().size * 0.5);
+            const Vector2 child_center_location = child->get_global_position() + (child->get_global_rect().size * 0.5);
+            static const float PI = 3.14159f;
+            const float angle = Math::abs(direction.angle_to(child_center_location - c_center_location) / PI);
+            if (Math::abs(angle) < _minimum_angle)
+                return false;
+        }
     }
     return true;
 }
@@ -325,11 +339,11 @@ void BG_Focus_Layers::find_control_in_direction(Vector2 direction)
         {
 			last_control_dir_location = last_selected_control->get_global_position() + (last_selected_control->get_global_rect().size * Vector2(0.5, 0.0));
 			if (prop->get_should_loop_vertically())
-				should_get_farthest_control = _is_control_top(last_selected_control, ctrls);
+				should_get_farthest_control = _is_control_top(direction, last_selected_control, ctrls);
         } else if (direction == Vector2(0, 1))
         {
 			if (prop->get_should_loop_vertically())
-				should_get_farthest_control = _is_control_bottom(last_selected_control, ctrls);
+				should_get_farthest_control = _is_control_bottom(direction, last_selected_control, ctrls);
 			last_control_dir_location = last_selected_control->get_global_position() + (last_selected_control->get_global_rect().size * Vector2(0.5, 1.0));
         } else if (direction == Vector2(1, 0))
         {
@@ -348,12 +362,15 @@ void BG_Focus_Layers::find_control_in_direction(Vector2 direction)
             {
                 const Vector2 c_center_location = c->get_global_position() + (c->get_global_rect().size * 0.5);
                 static const float PI = 3.14159f;
-                const float angle = abs(direction.angle_to(last_control_dir_location - c_center_location) / PI);
+                const float angle = Math::abs(direction.angle_to(last_control_dir_location - c_center_location) / PI);
                 if ((should_get_farthest_control && angle < _minimum_angle) || (!should_get_farthest_control && angle > _minimum_angle))
                 {
                     float distance = last_control_dir_location.distance_to(c_center_location);
                     if (!should_get_farthest_control)
-                        distance *= Math::max(1.0f, (abs(angle - 1.0f) + 0.75f) ); // Favor controls in a better angle.
+                        distance *= Math::max(1.0f, (Math::abs(angle - 1.0f) + 0.75f) ); // Favor controls in a better angle.
+                    else
+                        distance *= Math::abs(angle - 1.0) - _minimum_angle; // Favor controls in a better angle.
+
                     if ((should_get_farthest_control && distance > best_distance) || (!should_get_farthest_control && distance < best_distance))
                     {
                         best_distance = distance;

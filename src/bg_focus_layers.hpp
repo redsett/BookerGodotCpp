@@ -82,8 +82,8 @@ protected:
 
     inline void _set_control_default_focus_static(Control *p_control);
     void _focus_active_control();
-    bool _is_control_top(const Control *ctrl, const TypedArray<Control> &all_ctrls);
-    bool _is_control_bottom(const Control *ctrl, const TypedArray<Control> &all_ctrls);
+    bool _is_control_top(const Vector2 &direction, const Control *ctrl, const TypedArray<Control> &all_ctrls);
+    bool _is_control_bottom(const Vector2 &direction, const Control *ctrl, const TypedArray<Control> &all_ctrls);
     Control *_get_active_control();
     Button *_get_active_back_button() const;
     static bool _check_if_valid_control(const Control *c);
