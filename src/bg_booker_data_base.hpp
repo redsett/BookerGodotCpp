@@ -632,6 +632,10 @@ public:
 	TypedArray<BG_Item> get_equipment() const { return equipment; }
 	void set_equipment(TypedArray<BG_Item> value) { equipment = value; }
 
+	StringName infused_element_id;
+	StringName get_infused_element_id() const { return infused_element_id; }
+	void set_infused_element_id(StringName v) { infused_element_id = v; }
+
 	bool is_city_asset = false;
 	bool get_is_city_asset() const { return is_city_asset; }
 	void set_is_city_asset(bool v) { is_city_asset = v; }

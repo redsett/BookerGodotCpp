@@ -318,6 +318,8 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_caste_id"), &BG_BandMember::set_caste_id);
 	ClassDB::bind_method(D_METHOD("get_equipment"), &BG_BandMember::get_equipment);
 	ClassDB::bind_method(D_METHOD("set_equipment"), &BG_BandMember::set_equipment);
+	ClassDB::bind_method(D_METHOD("get_infused_element_id"), &BG_BandMember::get_infused_element_id);
+	ClassDB::bind_method(D_METHOD("set_infused_element_id"), &BG_BandMember::set_infused_element_id);
 	ClassDB::bind_method(D_METHOD("get_is_city_asset"), &BG_BandMember::get_is_city_asset);
 	ClassDB::bind_method(D_METHOD("set_is_city_asset"), &BG_BandMember::set_is_city_asset);
 
@@ -328,6 +330,7 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "scale"), "set_scale", "get_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "caste_id"), "set_caste_id", "get_caste_id");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipment"), "set_equipment", "get_equipment");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "infused_element_id"), "set_infused_element_id", "get_infused_element_id");
 }
 
 ////
