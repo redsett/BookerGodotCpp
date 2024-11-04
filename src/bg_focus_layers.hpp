@@ -9,13 +9,14 @@
 
 using namespace godot;
 
-class BG_Focus_Layer_Properties : public Object
+class BG_Focus_Layer_Properties : public RefCounted
 {
-	GDCLASS(BG_Focus_Layer_Properties, Object);
+	GDCLASS(BG_Focus_Layer_Properties, RefCounted);
 
 protected:
     static void _bind_methods();
 
+public:
     static bool bg_is_instance_valid(const Object *obj) {
         try {
             return UtilityFunctions::is_instance_id_valid(obj->get_instance_id());
@@ -25,7 +26,6 @@ protected:
         return false;
     };
 
-public:
     StringName _focus_layer_name;
     const StringName &get_focus_layer_name() const { return _focus_layer_name; }
     void set_focus_layer_name(const StringName &p_focus_layer_name) { _focus_layer_name = p_focus_layer_name; }
@@ -68,10 +68,6 @@ class BG_Focus_Layers : public Object
 	static BG_Focus_Layers *singleton;
 
 protected:
-    static bool bg_is_instance_valid(const Object *obj) {
-        return (obj == nullptr) ? false : UtilityFunctions::is_instance_id_valid(obj->get_instance_id());
-    };
-
 	static void _bind_methods();
 
     float _minimum_angle = 0.5f;

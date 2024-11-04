@@ -1,4 +1,5 @@
 #include "bg_booker_data_base.hpp"
+#include "bg_focus_layers.hpp"
 
 #include "bg_json_utils.hpp"
 
@@ -137,6 +138,8 @@ void BG_Dice::_bind_methods()
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("dice_to_string", "dice"), &BG_Dice::dice_to_string);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("string_to_dice", "string"), &BG_Dice::string_to_dice);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("string_to_dice_options", "string"), &BG_Dice::string_to_dice_options);
+	ClassDB::bind_static_method("BG_Dice", D_METHOD("add_bonus_to_die", "die", "bonus"), &BG_Dice::add_bonus_to_die);
+	ClassDB::bind_static_method("BG_Dice", D_METHOD("duplicate_dice", "dice"), &BG_Dice::duplicate_dice);
 
 	ClassDB::bind_method(D_METHOD("get_roll_count"), &BG_Dice::get_roll_count);
 	ClassDB::bind_method(D_METHOD("set_roll_count"), &BG_Dice::set_roll_count);
@@ -206,6 +209,20 @@ void BG_UnitStat::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_dice_options"), &BG_UnitStat::get_dice_options);
 	ClassDB::bind_method(D_METHOD("get_dice"), &BG_UnitStat::get_dice);
 	ClassDB::bind_method(D_METHOD("set_dice"), &BG_UnitStat::set_dice);
+}
+
+BG_UnitStat::~BG_UnitStat()
+{
+	// if (BG_Focus_Layer_Properties::bg_is_instance_valid(dice))
+	// {
+	// 	memdelete(dice);
+	// }
+	// for (int i = 0; i < dice_options.size(); i++)
+	// {
+	// 	const BG_Dice *die = cast_to<BG_Dice>(dice_options[i]);
+	// 	if (BG_Focus_Layer_Properties::bg_is_instance_valid(die))
+	// 		memdelete(die);
+	// }
 }
 
 ////
@@ -1178,6 +1195,8 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				for (int y = 0; y < items_lines.size(); y++)
 				{
 					const Dictionary drops_entry = items_lines[y];
+					if (bool(drops_entry["disabled"]))
+						continue;
 
 					TypedArray<String> item_types;
 					item_types.append("equipment_id");
@@ -1752,11 +1771,9 @@ BG_Booker_DB::~BG_Booker_DB()
 	int result = 0;
 	for (int i = 0; i < dice.size(); i++)
 	{
-		if (!dice[i])
-		{
-			continue;
-		}
 		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
+		if (!BG_Focus_Layer_Properties::bg_is_instance_valid(dice[i]))
+			continue;
 		for (int x = 0; x < die->get_roll_count(); x++)
 		{
 			if ( (random_num_generator != nullptr) && UtilityFunctions::is_instance_id_valid(random_num_generator->get_instance_id()) )
@@ -1775,11 +1792,9 @@ BG_Booker_DB::~BG_Booker_DB()
 	int result = 0;
 	for (int i = 0; i < dice.size(); i++)
 	{
-		if (!dice[i])
-		{
-			continue;
-		}
 		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
+		if (!BG_Focus_Layer_Properties::bg_is_instance_valid(die))
+			continue;
 		for (int x = 0; x < die->get_roll_count(); x++)
 		{
 			result += die->get_amount_of_sides();
@@ -1797,11 +1812,9 @@ BG_Booker_DB::~BG_Booker_DB()
 	int roll_counts = 0;
 	for (int i = 0; i < dice.size(); i++)
 	{
-		if (!dice[i])
-		{
-			continue;
-		}
 		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
+		if (!BG_Focus_Layer_Properties::bg_is_instance_valid(dice[i]))
+			continue;
 		for (int x = 0; x < die->get_roll_count(); x++)
 		{
 			roll_counts += 1;
@@ -1819,11 +1832,9 @@ BG_Booker_DB::~BG_Booker_DB()
 	int maximum_damage = 0;
 	for (int i = 0; i < dice.size(); i++)
 	{
-		if (!dice[i])
-		{
-			continue;
-		}
 		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
+		if (!BG_Focus_Layer_Properties::bg_is_instance_valid(dice[i]))
+			continue;
 		for (int x = 0; x < die->get_roll_count(); x++)
 		{
 			minimum_damage += 1;
@@ -1838,7 +1849,7 @@ BG_Booker_DB::~BG_Booker_DB()
 
 /* static */ String BG_Dice::dice_to_string(const BG_Dice *dice)
 {
-	if ( (dice == nullptr) || !UtilityFunctions::is_instance_id_valid(dice->get_instance_id()) )
+	if ( !BG_Focus_Layer_Properties::bg_is_instance_valid(dice) )
 	{
 		return "-";
 	}
@@ -1936,5 +1947,23 @@ BG_Booker_DB::~BG_Booker_DB()
 			}
 		}
 	}
+	return result;
+}
+
+/* static */ BG_Dice *BG_Dice::add_bonus_to_die(BG_Dice *die, const float bonus)
+{
+	if (!BG_Focus_Layer_Properties::bg_is_instance_valid(die)) return nullptr;
+	die->amount_of_sides += int(float(die->amount_of_sides) * bonus);
+	die->additive += int(float(die->additive) * bonus);
+	return die;
+}
+
+/* static */ BG_Dice *BG_Dice::duplicate_dice(const BG_Dice *dice)
+{
+	if (!BG_Focus_Layer_Properties::bg_is_instance_valid(dice)) return nullptr;
+	BG_Dice *result = memnew(BG_Dice);
+	result->roll_count = dice->roll_count;
+	result->amount_of_sides = dice->amount_of_sides;
+	result->additive = dice->additive;
 	return result;
 }

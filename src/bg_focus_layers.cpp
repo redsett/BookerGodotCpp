@@ -27,7 +27,7 @@ void BG_Focus_Layer_Properties::_bind_methods()
     for (int i = 0; i < p_focus_layers.size(); i++)
     {
         const BG_Focus_Layer_Properties *prop = cast_to<BG_Focus_Layer_Properties>(p_focus_layers[i]);
-        if (bg_is_instance_valid(prop) && prop->get_focus_layer_name() == p_focus_layer_name)
+        if (BG_Focus_Layer_Properties::bg_is_instance_valid(prop) && prop->get_focus_layer_name() == p_focus_layer_name)
         {
             return true;
         }
@@ -68,7 +68,7 @@ BG_Focus_Layers *BG_Focus_Layers::get_singleton()
 
 BG_Focus_Layers::BG_Focus_Layers()
 {
-	ERR_FAIL_COND(bg_is_instance_valid(singleton));
+	ERR_FAIL_COND(BG_Focus_Layer_Properties::bg_is_instance_valid(singleton));
 	singleton = this;
 }
 
@@ -94,7 +94,7 @@ void BG_Focus_Layers::try_set_focused_control(Control *p_ctrl)
     for (int i = 0; i < _focus_layers.size(); i++)
     {
         BG_Focus_Layer_Properties *prop = cast_to<BG_Focus_Layer_Properties>(_focus_layers[i]);
-        if (bg_is_instance_valid(prop))
+        if (BG_Focus_Layer_Properties::bg_is_instance_valid(prop))
         {
             const TypedArray<Control> layer_controls = BG_Focus_Layers::get_all_focusable_controls_under_control(prop->get_parent_control());
             if (layer_controls.has(p_ctrl))
@@ -117,7 +117,7 @@ void BG_Focus_Layers::clear_focus_layers(const TypedArray<StringName> &except_fo
     for (int i = _focus_layers.size() - 1; i >= 0; --i) // Reverse loop since we are removing layers as we go.
     {
         const BG_Focus_Layer_Properties *prop = cast_to<BG_Focus_Layer_Properties>(_focus_layers[i]);
-        if (bg_is_instance_valid(prop) && !except_for.has(prop->get_focus_layer_name()))
+        if (BG_Focus_Layer_Properties::bg_is_instance_valid(prop) && !except_for.has(prop->get_focus_layer_name()))
         {
             remove_focus_layer(prop->get_focus_layer_name(), true);
         }
@@ -146,7 +146,7 @@ void BG_Focus_Layers::remove_focus_layer(const StringName &p_layer_name, bool p_
         for (int i = 0; i < _focus_layers.size(); i++)
         {
             const BG_Focus_Layer_Properties *prop = cast_to<BG_Focus_Layer_Properties>(_focus_layers[i]);
-            if (bg_is_instance_valid(prop) && prop->get_focus_layer_name() == p_layer_name)
+            if (BG_Focus_Layer_Properties::bg_is_instance_valid(prop) && prop->get_focus_layer_name() == p_layer_name)
             {
                 _focus_layers.erase(prop);
                 break;
@@ -167,7 +167,7 @@ BG_Focus_Layer_Properties *BG_Focus_Layers::get_active_focus_layer() const
     for (int i = 0; i < _focus_layers.size(); i++)
     {
         BG_Focus_Layer_Properties *prop = cast_to<BG_Focus_Layer_Properties>(_focus_layers[i]);
-        if (bg_is_instance_valid(prop) && prop->get_focus_layer_name() == String(_focus_layer_stack[0]))
+        if (BG_Focus_Layer_Properties::bg_is_instance_valid(prop) && prop->get_focus_layer_name() == String(_focus_layer_stack[0]))
         {
             return prop;
         }
@@ -181,13 +181,13 @@ Control *BG_Focus_Layers::_get_active_control()
         return nullptr;
     
     BG_Focus_Layer_Properties *prop = get_active_focus_layer();
-    if (!bg_is_instance_valid(prop))
+    if (!BG_Focus_Layer_Properties::bg_is_instance_valid(prop))
     {
         UtilityFunctions::print("ERROR: Could not find control to focus in _get_active_control(), this is probably very bad. Did not focus a control.");
         return nullptr;
     }
     
-    if (bg_is_instance_valid(prop->get_focused_control()) && _check_if_valid_control(prop->get_focused_control())) {
+    if (BG_Focus_Layer_Properties::bg_is_instance_valid(prop->get_focused_control()) && _check_if_valid_control(prop->get_focused_control())) {
         return prop->get_focused_control();
     } else {
         // Let's find a new control to focus.
@@ -205,7 +205,7 @@ Control *BG_Focus_Layers::_get_active_control()
 Button *BG_Focus_Layers::_get_active_back_button() const
 {
     const BG_Focus_Layer_Properties *prop = get_active_focus_layer_const();
-    if (!bg_is_instance_valid(prop))
+    if (!BG_Focus_Layer_Properties::bg_is_instance_valid(prop))
         return nullptr;
     return prop->get_back_button();
 }
@@ -213,7 +213,7 @@ Button *BG_Focus_Layers::_get_active_back_button() const
 void BG_Focus_Layers::_focus_active_control()
 {
     Control *control_to_focus = _get_active_control();
-    if (!bg_is_instance_valid(control_to_focus))
+    if (!BG_Focus_Layer_Properties::bg_is_instance_valid(control_to_focus))
         return;
     
     control_to_focus->grab_focus();
@@ -236,7 +236,7 @@ void BG_Focus_Layers::add_focus_layer(
 		_set_control_default_focus_static(cast_to<Control>(focusable_ctrls[i]));
 
     Button *back_btn = cast_to<Button>(p_back_button);
-    if (bg_is_instance_valid(back_btn))
+    if (BG_Focus_Layer_Properties::bg_is_instance_valid(back_btn))
         back_btn->set_visible(!_is_using_gamepad);
 
     // Remove the existing focus layer if it already exists.
@@ -245,7 +245,7 @@ void BG_Focus_Layers::add_focus_layer(
         for (int i = 0; i < _focus_layers.size(); i++)
         {
             const BG_Focus_Layer_Properties *prop = cast_to<BG_Focus_Layer_Properties>(_focus_layers[i]);
-            if (bg_is_instance_valid(prop) && prop->get_focus_layer_name() == p_layer_name)
+            if (BG_Focus_Layer_Properties::bg_is_instance_valid(prop) && prop->get_focus_layer_name() == p_layer_name)
             {
                 _focus_layers.erase(prop);
                 break;
@@ -268,17 +268,17 @@ void BG_Focus_Layers::add_focus_layer(
 Control *BG_Focus_Layers::get_current_parent_control() const
 {
     const BG_Focus_Layer_Properties *prop = get_active_focus_layer_const();
-    if (!bg_is_instance_valid(prop))
+    if (!BG_Focus_Layer_Properties::bg_is_instance_valid(prop))
         return nullptr;
     return prop->get_parent_control();
 }
 
 /* static */ bool BG_Focus_Layers::_check_if_valid_control(const Control *c)
 {
-    if (bg_is_instance_valid(c) && c->is_visible_in_tree() && c->get_mouse_filter() != Control::MouseFilter::MOUSE_FILTER_IGNORE)
+    if (BG_Focus_Layer_Properties::bg_is_instance_valid(c) && c->is_visible_in_tree() && c->get_mouse_filter() != Control::MouseFilter::MOUSE_FILTER_IGNORE)
     {
         const Button *btn = cast_to<Button>(c);
-        if (!bg_is_instance_valid(btn) || !btn->is_disabled())
+        if (!BG_Focus_Layer_Properties::bg_is_instance_valid(btn) || !btn->is_disabled())
             return true;
     }
     return false;
@@ -326,12 +326,12 @@ bool BG_Focus_Layers::_is_control_bottom(const Vector2 &direction, const Control
 void BG_Focus_Layers::find_control_in_direction(Vector2 direction)
 {
     BG_Focus_Layer_Properties *prop = get_active_focus_layer();
-    if (!bg_is_instance_valid(prop))
+    if (!BG_Focus_Layer_Properties::bg_is_instance_valid(prop))
         return;
     
     const TypedArray<Control> ctrls = BG_Focus_Layers::get_all_focusable_controls_under_control(prop->get_parent_control());
 	Control *last_selected_control = _get_active_control();
-	if (bg_is_instance_valid(last_selected_control))
+	if (BG_Focus_Layer_Properties::bg_is_instance_valid(last_selected_control))
     {
 		bool should_get_farthest_control = false;
 		Vector2 last_control_dir_location = Vector2();
@@ -358,7 +358,7 @@ void BG_Focus_Layers::find_control_in_direction(Vector2 direction)
         for (int i = 0; i < ctrls.size(); i++)
         {
             Control *c = cast_to<Control>(ctrls[i]);
-            if (bg_is_instance_valid(c) && c != last_selected_control && _check_if_valid_control(c))
+            if (BG_Focus_Layer_Properties::bg_is_instance_valid(c) && c != last_selected_control && _check_if_valid_control(c))
             {
                 const Vector2 c_center_location = c->get_global_position() + (c->get_global_rect().size * 0.5);
                 static const float PI = 3.14159f;
@@ -380,13 +380,13 @@ void BG_Focus_Layers::find_control_in_direction(Vector2 direction)
             }
         }
 
-		if (bg_is_instance_valid(new_selected_control))
+		if (BG_Focus_Layer_Properties::bg_is_instance_valid(new_selected_control))
             prop->set_focused_control(new_selected_control);
     }
 
 	if (last_selected_control != prop->get_focused_control())
     {
-        if (bg_is_instance_valid(last_selected_control) && last_selected_control->has_focus())
+        if (BG_Focus_Layer_Properties::bg_is_instance_valid(last_selected_control) && last_selected_control->has_focus())
 		    last_selected_control->release_focus();
 		_focus_active_control();
     }
@@ -404,19 +404,19 @@ void BG_Focus_Layers::input_type_updated(bool using_gamepad)
     else
     {
         Input::get_singleton()->set_mouse_mode(Input::MouseMode::MOUSE_MODE_VISIBLE);
-        if (!_focus_layer_stack.is_empty() && bg_is_instance_valid(_get_active_control()))
+        if (!_focus_layer_stack.is_empty() && BG_Focus_Layer_Properties::bg_is_instance_valid(_get_active_control()))
             _get_active_control()->release_focus();
     }
 
     Button *btn = _get_active_back_button();
-    if (bg_is_instance_valid(btn))
+    if (BG_Focus_Layer_Properties::bg_is_instance_valid(btn))
         btn->set_visible(!_is_using_gamepad);
 }
 
 void BG_Focus_Layers::press_back_button() const
 {
     Button *btn = _get_active_back_button();
-    if (bg_is_instance_valid(btn))
+    if (BG_Focus_Layer_Properties::bg_is_instance_valid(btn))
         btn->emit_signal("pressed");
 }
 
@@ -434,13 +434,13 @@ void BG_Focus_Layers::press_back_button() const
 /* static */ TypedArray<Control> BG_Focus_Layers::get_all_focusable_controls_under_control(const Control *p_control)
 {
     TypedArray<Control> result;
-    if (bg_is_instance_valid(p_control))
+    if (BG_Focus_Layer_Properties::bg_is_instance_valid(p_control))
     {
         const TypedArray<Node> children = p_control->get_children();
         for (int i = 0; i < children.size(); i++)
         {
             const Control *ctrl = cast_to<Control>(children[i]);
-            if (bg_is_instance_valid(ctrl) && ctrl->get_focus_mode() != Control::FocusMode::FOCUS_NONE)
+            if (BG_Focus_Layer_Properties::bg_is_instance_valid(ctrl) && ctrl->get_focus_mode() != Control::FocusMode::FOCUS_NONE)
             {
                 result.append(ctrl);
             }
@@ -453,7 +453,7 @@ void BG_Focus_Layers::press_back_button() const
 /* static */ TypedArray<Control> BG_Focus_Layers::get_current_focusable_controls_under_control(const Control *p_control)
 {
     TypedArray<Control> result;
-    if (bg_is_instance_valid(p_control))
+    if (BG_Focus_Layer_Properties::bg_is_instance_valid(p_control))
     {
         const TypedArray<Node> children = p_control->get_children();
         for (int i = 0; i < children.size(); i++)

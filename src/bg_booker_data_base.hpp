@@ -132,6 +132,8 @@ public:
 	static String dice_to_string(const BG_Dice *dice);
 	static BG_Dice *string_to_dice(String string);
 	static TypedArray<BG_Dice> string_to_dice_options(String string);
+	static BG_Dice *add_bonus_to_die(BG_Dice *dice, const float bonus);
+	static BG_Dice *duplicate_dice(const BG_Dice *dice);
 };
 
 ////
@@ -221,14 +223,16 @@ public:
 ////
 //// BG_UnitStat
 ////
-class BG_UnitStat : public Object
+class BG_UnitStat : public RefCounted
 {
-	GDCLASS(BG_UnitStat, Object);
+	GDCLASS(BG_UnitStat, RefCounted);
 
 protected:
 	static void _bind_methods();
 
 public:
+	~BG_UnitStat();
+
 	StringName id;
 	StringName get_id() const { return id; }
 	void set_id(StringName value) { id = value; }
