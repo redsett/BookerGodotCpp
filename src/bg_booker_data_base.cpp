@@ -98,6 +98,7 @@ void BG_AudioData::_bind_methods()
 ////
 void BG_HueShiftData::_bind_methods()
 {
+	ClassDB::bind_method(D_METHOD("get_stat_id"), &BG_HueShiftData::get_stat_id);
 	ClassDB::bind_method(D_METHOD("get_mask_path"), &BG_HueShiftData::get_mask_path);
 	ClassDB::bind_method(D_METHOD("get_from_color"), &BG_HueShiftData::get_from_color);
 	ClassDB::bind_method(D_METHOD("get_multiplier"), &BG_HueShiftData::get_multiplier);
@@ -1130,11 +1131,12 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					const Dictionary hue_shifting_entry = hue_shifting_lines[y];
 
 					BG_HueShiftData *new_hue_shift_data = memnew(BG_HueShiftData);
+					new_hue_shift_data->stat_id = hue_shifting_entry["stat_type"];
 					new_hue_shift_data->mask_path = hue_shifting_entry["mask_path"];
 					new_hue_shift_data->from_color = convert_int_to_color(int(hue_shifting_entry["from_color"]));
 					new_hue_shift_data->multiplier = float(hue_shifting_entry["multiplier"]);
 
-					new_monster_type->hue_shift_data = new_hue_shift_data;
+					new_monster_type->hue_shift_data.append(new_hue_shift_data);
 				}
 
 				// Stats
@@ -1240,6 +1242,8 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			for (int i = 0; i < lines.size(); i++)
 			{
 				const Dictionary entry = lines[i];
+				if (bool(entry["disabled"])) continue;
+
 				BG_JobDetails *new_job_class = memnew(BG_JobDetails);
 				new_job_class->id = entry["id"];
 				new_job_class->weeks_before_expire = int(entry["weeks_before_expire"]);

@@ -41,6 +41,9 @@ protected:
 	static void _bind_methods();
 
 public:
+	StringName stat_id;
+	StringName get_stat_id() const { return stat_id; }
+
 	StringName mask_path;
 	StringName get_mask_path() const { return mask_path; }
 
@@ -742,8 +745,8 @@ public:
 	TypedArray<StringName> effect_ids;
 	TypedArray<StringName> get_effect_ids() const { return effect_ids; }
 
-	BG_HueShiftData *hue_shift_data = nullptr;
-	BG_HueShiftData *get_hue_shift_data() const { return hue_shift_data; };
+	TypedArray<BG_HueShiftData> hue_shift_data;
+	TypedArray<BG_HueShiftData> get_hue_shift_data() const { return hue_shift_data; };
 
 	String get_challenge_rating_fraction_string() const;
 };

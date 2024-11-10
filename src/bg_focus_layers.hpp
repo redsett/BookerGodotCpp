@@ -9,9 +9,9 @@
 
 using namespace godot;
 
-class BG_Focus_Layer_Properties : public RefCounted
+class BG_Focus_Layer_Properties : public Object
 {
-	GDCLASS(BG_Focus_Layer_Properties, RefCounted);
+	GDCLASS(BG_Focus_Layer_Properties, Object);
 
 protected:
     static void _bind_methods();
