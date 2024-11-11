@@ -1866,13 +1866,13 @@ BG_Booker_DB::~BG_Booker_DB()
 	return result;
 }
 
-/* static */ BG_Dice *BG_Dice::string_to_dice(String string)
+/* static */ Ref<BG_Dice> BG_Dice::string_to_dice(String string)
 {
 	if (string.is_empty())
 	{
 		return nullptr;
 	}
-	BG_Dice *result = memnew(BG_Dice);
+	Ref<BG_Dice> result = memnew(BG_Dice);
 	result->set_roll_count(string.split("d")[0].to_int());
 
 	const String after_d = string.split("d")[1].replace(" ", ""); // I.e:   6 or 6+1 or 6-1
@@ -1962,10 +1962,10 @@ BG_Booker_DB::~BG_Booker_DB()
 	return die;
 }
 
-/* static */ BG_Dice *BG_Dice::duplicate_dice(const BG_Dice *dice)
+/* static */ Ref<BG_Dice> BG_Dice::duplicate_dice(const BG_Dice *dice)
 {
 	if (!BG_Focus_Layer_Properties::bg_is_instance_valid(dice)) return nullptr;
-	BG_Dice *result = memnew(BG_Dice);
+	Ref<BG_Dice> result = memnew(BG_Dice);
 	result->roll_count = dice->roll_count;
 	result->amount_of_sides = dice->amount_of_sides;
 	result->additive = dice->additive;

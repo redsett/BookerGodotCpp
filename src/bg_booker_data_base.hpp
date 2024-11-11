@@ -108,9 +108,9 @@ public:
 ////
 //// BG_Dice
 ////
-class BG_Dice : public Object
+class BG_Dice : public RefCounted
 {
-	GDCLASS(BG_Dice, Object);
+	GDCLASS(BG_Dice, RefCounted);
 
 protected:
 	static void _bind_methods();
@@ -133,10 +133,10 @@ public:
 	static int get_dice_average_roll(const TypedArray<BG_Dice> dice);
 	static String dice_to_nice_name(const TypedArray<BG_Dice> dice);
 	static String dice_to_string(const BG_Dice *dice);
-	static BG_Dice *string_to_dice(String string);
+	static Ref<BG_Dice> string_to_dice(String string);
 	static TypedArray<BG_Dice> string_to_dice_options(String string);
 	static BG_Dice *add_bonus_to_die(BG_Dice *dice, const float bonus);
-	static BG_Dice *duplicate_dice(const BG_Dice *dice);
+	static Ref<BG_Dice> duplicate_dice(const BG_Dice *dice);
 };
 
 ////
@@ -268,9 +268,9 @@ public:
 	TypedArray<BG_Dice> dice_options;
 	TypedArray<BG_Dice> get_dice_options() const { return dice_options; }
 
-	BG_Dice *dice = nullptr;
-	BG_Dice *get_dice() const { return dice; }
-	void set_dice(BG_Dice *value) { dice = value; }
+	Ref<BG_Dice> dice = nullptr;
+	Ref<BG_Dice> get_dice() const { return dice; }
+	void set_dice(Ref<BG_Dice> value) { dice = value; }
 
 	static Vector2i string_to_resistant_value_min_max(String string);
 };

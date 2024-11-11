@@ -240,28 +240,36 @@ void BG_Focus_Layers::add_focus_layer(
     if (BG_Focus_Layer_Properties::bg_is_instance_valid(back_btn))
         back_btn->set_visible(!_is_using_gamepad);
 
-    // Remove the existing focus layer if it already exists.
+
+    BG_Focus_Layer_Properties *new_prop_layer = nullptr;
+
+    // Reuse the existing focus layer if it already exists.
     if (BG_Focus_Layer_Properties::has_focus_layer(_focus_layers, p_layer_name))
     {
         for (int i = 0; i < _focus_layers.size(); i++)
         {
-            const BG_Focus_Layer_Properties *prop = cast_to<BG_Focus_Layer_Properties>(_focus_layers[i]);
+            BG_Focus_Layer_Properties *prop = cast_to<BG_Focus_Layer_Properties>(_focus_layers[i]);
             if (BG_Focus_Layer_Properties::bg_is_instance_valid(prop) && prop->get_focus_layer_name() == p_layer_name)
             {
+                new_prop_layer = prop;
                 _focus_layers.erase(prop);
-                memdelete(prop);
+                _focus_layers.append(prop);
                 break;
             }
         }
     }
 
-    BG_Focus_Layer_Properties *new_prop = memnew(BG_Focus_Layer_Properties);
-    new_prop->set_focus_layer_name(p_layer_name);
-    new_prop->set_parent_control(p_parent_control);
-    new_prop->set_focused_control(p_focused_control);
-    new_prop->set_back_button(back_btn);
-    new_prop->set_should_loop_vertically(p_should_loop_vertically);
-    _focus_layers.append(new_prop);
+    if (new_prop_layer == nullptr)
+    {
+        new_prop_layer = memnew(BG_Focus_Layer_Properties);
+        _focus_layers.append(new_prop_layer);
+    }
+
+    new_prop_layer->set_focus_layer_name(p_layer_name);
+    new_prop_layer->set_parent_control(p_parent_control);
+    new_prop_layer->set_focused_control(p_focused_control);
+    new_prop_layer->set_back_button(back_btn);
+    new_prop_layer->set_should_loop_vertically(p_should_loop_vertically);
 
 	if (p_select_layer)
 		set_focus_layer(p_layer_name);
