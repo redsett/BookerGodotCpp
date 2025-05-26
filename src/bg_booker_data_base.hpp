@@ -6,8 +6,51 @@
 #include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/templates/vector.hpp>
+#include <godot_cpp/templates/hash_map.hpp>
 
 using namespace godot;
+
+////
+//// BG_LocalizeEntryData
+////
+class BG_LocalizeEntryData : public Object
+{
+	GDCLASS(BG_LocalizeEntryData, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	String code_start;
+	String get_code_start() const { return code_start; }
+
+	String text;
+	String get_text() const { return text; }
+
+	String code_end;
+	String get_code_end() const { return code_end; }
+};
+
+////
+//// BG_MailData
+////
+class BG_MailData : public Object
+{
+	GDCLASS(BG_MailData, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	int act;
+	int get_act() const { return act; }
+
+	int week;
+	int get_week() const { return week; }
+};
 
 ////
 //// BG_AudioData
@@ -384,23 +427,30 @@ protected:
 	static void _bind_methods();
 
 public:
+	enum ItemType : int32_t {
+		GEAR,
+		BEAST_PART,
+		CONSUMABLE
+	};
+
 	StringName id;
 	StringName get_id() const { return id; }
 
 	StringName name;
 	StringName get_name() const { return name; }
 
-	bool is_beast_part = false;
-	bool get_is_beast_part() const { return is_beast_part; }
+	ItemType slot_type = GEAR;
+	ItemType get_slot_type() const { return slot_type; }
+
+	bool is_gear() const { return slot_type == GEAR; }
+	bool is_beast_part() const { return slot_type == BEAST_PART; }
+	bool is_consumable() const { return slot_type == CONSUMABLE; }
 
 	StringName slot_type_id;
 	StringName get_slot_type_id() { return slot_type_id; }
 
 	TypedArray<StringName> beast_part_available_item_slot_types;
 	TypedArray<StringName> get_beast_part_available_item_slot_types() const { return beast_part_available_item_slot_types; }
-
-	bool is_useable_item = false;
-	bool get_is_useable_item() { return is_useable_item; }
 
 	StringName icon_path;
 	StringName get_icon_path() const { return icon_path; }
@@ -435,6 +485,8 @@ public:
 	int durability_value_tier = 0;
 	int get_durability_value_tier() const { return durability_value_tier; }	
 };
+
+VARIANT_ENUM_CAST(BG_ItemDetails::ItemType);
 
 ////
 //// BG_RewardItem
@@ -1046,6 +1098,14 @@ public:
 
 	TypedArray<BG_Monster> monster_types;
 	TypedArray<BG_Monster> get_monster_types() const { return monster_types; }
+
+	TypedArray<BG_MailData> mail_data;
+	TypedArray<BG_MailData> get_mail_data() const { return mail_data; }
+
+	// Sheet Name, Key, Data
+	HashMap<StringName, HashMap<StringName, TypedArray<BG_LocalizeEntryData>>> localize_data;
+	TypedArray<BG_LocalizeEntryData> get_localize_data(const StringName sheet_name, const StringName key);
+	String get_localize_string(const StringName sheet_name, const StringName key, bool ignore_code_data = false);
 
 	static float get_job_challenge_rating_value(const TypedArray<BG_Monster> monsters);
 	static String get_job_challenge_rating(const TypedArray<BG_Monster> monsters);

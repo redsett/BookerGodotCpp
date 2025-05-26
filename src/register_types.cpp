@@ -31,6 +31,8 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		// ClassDB::register_class<GSGState>();
 		// ClassDB::register_class<GSGStateMachine>();
 
+		ClassDB::register_class<BG_LocalizeEntryData>();
+		ClassDB::register_class<BG_MailData>();
 		ClassDB::register_class<BG_AudioData>();
 		ClassDB::register_class<BG_HueShiftData>();
 		ClassDB::register_class<BG_EffectRarityDetails>();

@@ -84,6 +84,26 @@ static fraction_struct get_fract(double input)
 }
 
 ////
+//// BG_LocalizeEntryData
+////
+void BG_LocalizeEntryData::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_code_start"), &BG_LocalizeEntryData::get_code_start);
+	ClassDB::bind_method(D_METHOD("get_text"), &BG_LocalizeEntryData::get_text);
+	ClassDB::bind_method(D_METHOD("get_code_end"), &BG_LocalizeEntryData::get_code_end);
+}
+
+////
+//// BG_MailData
+////
+void BG_MailData::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_MailData::get_id);
+	ClassDB::bind_method(D_METHOD("get_act"), &BG_MailData::get_act);
+	ClassDB::bind_method(D_METHOD("get_week"), &BG_MailData::get_week);
+}
+
+////
 //// BG_AudioData
 ////
 void BG_AudioData::_bind_methods()
@@ -286,8 +306,10 @@ void BG_ItemDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_ItemDetails::get_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_ItemDetails::get_name);
-	ClassDB::bind_method(D_METHOD("get_is_beast_part"), &BG_ItemDetails::get_is_beast_part);
-	ClassDB::bind_method(D_METHOD("get_is_useable_item"), &BG_ItemDetails::get_is_useable_item);
+	ClassDB::bind_method(D_METHOD("get_slot_type"), &BG_ItemDetails::get_slot_type);
+	ClassDB::bind_method(D_METHOD("is_gear"), &BG_ItemDetails::is_gear);
+	ClassDB::bind_method(D_METHOD("is_beast_part"), &BG_ItemDetails::is_beast_part);
+	ClassDB::bind_method(D_METHOD("is_consumable"), &BG_ItemDetails::is_consumable);
 	ClassDB::bind_method(D_METHOD("get_slot_type_id"), &BG_ItemDetails::get_slot_type_id);
 	ClassDB::bind_method(D_METHOD("get_beast_part_available_item_slot_types"), &BG_ItemDetails::get_beast_part_available_item_slot_types);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_ItemDetails::get_icon_path);
@@ -301,6 +323,10 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_sell_value_tier"), &BG_ItemDetails::get_sell_value_tier);
 	ClassDB::bind_method(D_METHOD("get_fame_value_tier"), &BG_ItemDetails::get_fame_value_tier);
 	ClassDB::bind_method(D_METHOD("get_durability_value_tier"), &BG_ItemDetails::get_durability_value_tier);
+
+	BIND_ENUM_CONSTANT(GEAR);
+	BIND_ENUM_CONSTANT(BEAST_PART);
+	BIND_ENUM_CONSTANT(CONSUMABLE);
 }
 
 ////
@@ -613,6 +639,9 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_rarity_types"), &BG_Booker_DB::get_rarity_types);
 	ClassDB::bind_method(D_METHOD("get_stat_types"), &BG_Booker_DB::get_stat_types);
 	ClassDB::bind_method(D_METHOD("get_monster_types"), &BG_Booker_DB::get_monster_types);
+	ClassDB::bind_method(D_METHOD("get_mail_data"), &BG_Booker_DB::get_mail_data);
+	ClassDB::bind_method(D_METHOD("get_localize_data", "sheet_name", "key"), &BG_Booker_DB::get_localize_data);
+	ClassDB::bind_method(D_METHOD("get_localize_string", "sheet_name", "key", "ignore_code_data"), &BG_Booker_DB::get_localize_string);
 }
 
 BG_Booker_DB *BG_Booker_DB::get_singleton()
@@ -1089,6 +1118,30 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 	}
 
 	/////
+	///// Mail Data
+	/////
+	{
+		const Dictionary mail_data_sheet = BG_JsonUtils::GetCBDSheet(data, "mail_entries");
+		if (mail_data_sheet.has("lines"))
+		{
+			mail_data.clear();
+
+			const Array lines = Array(mail_data_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
+			{
+				const Dictionary entry = lines[i];
+
+				BG_MailData *new_mail_data = memnew(BG_MailData);
+				new_mail_data->id = entry["id"];
+				new_mail_data->act = int(entry["act"]) + 1;
+				new_mail_data->week = int(entry["week"]);
+
+				mail_data.append(new_mail_data);
+			}
+		}
+	}
+
+	/////
 	///// Monster Types
 	/////
 	{
@@ -1189,6 +1242,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					TypedArray<String> item_types;
 					item_types.append("equipment_id");
 					item_types.append("beast_part_id");
+					item_types.append("consumable_id");
 					for (int it = 0; it < item_types.size(); it++)
 					{
 						const String item_type = item_types[it];
@@ -1260,6 +1314,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 						TypedArray<String> item_types;
 						item_types.append("beast_part");
 						item_types.append("equipment");
+						item_types.append("consumable");
 						for (int it = 0; it < item_types.size(); it++)
 						{
 							const String item_type = item_types[it];
@@ -1488,7 +1543,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_item_class->name = entry["name"];
 					new_item_class->icon_path = entry["icon_path"];
 					new_item_class->slot_type_id = entry["slot_type"];
-					new_item_class->is_beast_part = true;
+					new_item_class->slot_type = BG_ItemDetails::BEAST_PART;
 					new_item_class->sell_value_tier = int(entry["sell_value_tier"]);
 					new_item_class->fame_value_tier = int(entry["fame_value_tier"]);
 
@@ -1541,18 +1596,29 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			}
 		}
 		{
-			const Dictionary items_sheet = BG_JsonUtils::GetCBDSheet(data, "items");
-			if (items_sheet.has("lines"))
+			const Dictionary consumables_sheet = BG_JsonUtils::GetCBDSheet(data, "consumables");
+			if (consumables_sheet.has("lines"))
 			{
-				const Array lines = Array(items_sheet["lines"]);
+				const Array lines = Array(consumables_sheet["lines"]);
 				for (int i = 0; i < lines.size(); i++)
 				{
 					const Dictionary entry = lines[i];
+					if (bool(entry["disabled"]))
+						continue;
 					BG_ItemDetails *new_item_class = memnew(BG_ItemDetails);
 					new_item_class->id = entry["id"];
 					new_item_class->name = entry["name"];
+					new_item_class->slot_type_id = entry["slot_type"];
 					new_item_class->icon_path = entry["icon_path"];
-					new_item_class->is_useable_item = true;
+					new_item_class->slot_type = BG_ItemDetails::CONSUMABLE;
+
+					// Effects
+					const Array effect_lines = Array(entry["effects"]);
+					for (int y = 0; y < effect_lines.size(); y++)
+					{
+						const Dictionary effect_entry = effect_lines[y];
+						new_item_class->effect_ids.append(effect_entry["effect"]);
+					}
 					items.append(new_item_class);
 				}
 			}
@@ -1666,6 +1732,96 @@ BG_Booker_DB::~BG_Booker_DB()
 		memdelete(band_info);
 		band_info = nullptr;
 	}
+}
+
+TypedArray<BG_LocalizeEntryData> BG_Booker_DB::get_localize_data(const StringName sheet_name, const StringName key)
+{
+	// Check if we already have it.
+	if (localize_data.has(sheet_name)) {
+		if (localize_data[sheet_name].has(key)) {
+			return localize_data[sheet_name][key];
+		}
+	}
+	else {
+		localize_data[sheet_name] = HashMap<StringName, TypedArray<BG_LocalizeEntryData>>();
+	}
+
+	// Open and read the file.
+	const String key_as_string = String(key);
+	ERR_FAIL_COND_V_EDMSG(key_as_string == "", {}, "ERROR : Localization key is \"\", sheet: " + sheet_name);
+
+	const String actual_sheet_name = "BookerText - " + String(sheet_name) + ".tsv";
+	const String file_path = "res://Localization/" + actual_sheet_name;
+	const Ref<FileAccess> file = FileAccess::open(file_path, FileAccess::READ);
+	ERR_FAIL_NULL_V_EDMSG(file, {}, "ERROR : Could not open localization file : " + file_path);
+
+	// Store all of the data into a packed string array.
+	uint8_t number_of_columns = 0;
+	const String sheet_as_string = file->get_as_text(true);
+	PackedStringArray sheet_data;
+	{
+		const PackedStringArray sheet_data_lines = sheet_as_string.split("\n");
+		for (int i = 0; i < sheet_data_lines.size(); ++i) {
+			sheet_data.append_array(sheet_data_lines[i].split("\t"));
+		}
+
+		ERR_FAIL_COND_V_EDMSG(sheet_data_lines.size() < 1, {}, "ERROR : Localization data has no lines?, sheet: " + sheet_name);
+		number_of_columns = sheet_data_lines[0].split("\t").size();
+	}
+
+	// Lambda for creating a new entry.
+    auto create_new_entry = [](const uint16_t index_start, const PackedStringArray &sd) -> BG_LocalizeEntryData * {
+		BG_LocalizeEntryData *new_localization_class = memnew(BG_LocalizeEntryData);
+		new_localization_class->code_start = sd[index_start + 1];
+		new_localization_class->text = sd[index_start + 2].replace("  ", "\n\n");
+		if (new_localization_class->text.ends_with(" ")) {
+			new_localization_class->text = new_localization_class->text.rsplit(" ", true, 1)[0] + "\n\n";
+		}
+		new_localization_class->code_end = sd[index_start + 3];
+		return new_localization_class;
+    };
+
+	// Loop through the data to find the correct key.
+	for (int i = number_of_columns; i < sheet_data.size(); i += number_of_columns) {
+		if (key_as_string != sheet_data[i]) continue; // Check if it's the correct key.
+
+		TypedArray<BG_LocalizeEntryData> result = TypedArray<BG_LocalizeEntryData>();
+		result.append(create_new_entry(i, sheet_data));
+
+		// Also get any extra lines it has.
+		uint16_t counter = number_of_columns;
+		while ((sheet_data.size() > (i + counter)) && sheet_data[i + counter] == "") {
+			ERR_FAIL_COND_V_EDMSG(sheet_data.size() < (i + (number_of_columns - 1)), {}, "ERROR : Localization data is invalid, sheet: " + sheet_name + ", key: " + key);
+			result.append(create_new_entry(i + counter, sheet_data));
+			counter += number_of_columns;
+		}
+		i += counter - number_of_columns;
+
+		localize_data[sheet_name][key] = result;
+		return result;
+	}
+
+	ERR_FAIL_COND_V_EDMSG(true, {}, "ERROR : Could not find localization data for, sheet: " + sheet_name + ", key: " + key);
+	return {};
+}
+
+String BG_Booker_DB::get_localize_string(const StringName sheet_name, const StringName key, bool ignore_code_data)
+{
+	TypedArray<BG_LocalizeEntryData> data = get_localize_data(sheet_name, key);
+	ERR_FAIL_COND_V_EDMSG(data.size() < 1, "LOCALIZATION NOT FOUND", "ERROR : Could not find localization data for, sheet: " + sheet_name + ", key: " + key);
+	
+	String result = "";
+	for (uint16_t i = 0; i < data.size(); ++i) {
+		const BG_LocalizeEntryData *d = cast_to<BG_LocalizeEntryData>(data[i]);
+		if (ignore_code_data) {
+			result += d->get_text();
+		}
+		else {
+			result += (d->get_code_start() + d->get_text() + d->get_code_end());
+		}
+	}
+
+	return result;
 }
 
 /* static */ float BG_Booker_DB::get_job_challenge_rating_value(const TypedArray<BG_Monster> monsters)

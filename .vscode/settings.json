@@ -78,6 +78,11 @@
     "xlocale": "cpp",
     "system_error": "cpp",
     "cmath": "cpp",
-    "type_traits": "cpp"
+    "type_traits": "cpp",
+    "locale": "cpp",
+    "xlocmes": "cpp",
+    "xlocmon": "cpp",
+    "xlocnum": "cpp",
+    "xloctime": "cpp"
   }
 }
