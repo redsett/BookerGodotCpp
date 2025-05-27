@@ -1102,10 +1102,12 @@ public:
 	TypedArray<BG_MailData> mail_data;
 	TypedArray<BG_MailData> get_mail_data() const { return mail_data; }
 
+	bool revert_localization_to_english = true;
+	void set_revert_localization_to_english(bool revert) { revert_localization_to_english = revert; }
 	// Sheet Name, Key, Data
 	HashMap<StringName, HashMap<StringName, TypedArray<BG_LocalizeEntryData>>> localize_data;
-	TypedArray<BG_LocalizeEntryData> get_localize_data(const StringName sheet_name, const StringName key);
-	String get_localize_string(const StringName sheet_name, const StringName key, bool ignore_code_data = false);
+	TypedArray<BG_LocalizeEntryData> get_localize_data(const StringName sheet_name, const StringName key, const StringName language);
+	String get_localize_string(const StringName sheet_name, const StringName key, const StringName language, bool ignore_code_data = false);
 
 	static float get_job_challenge_rating_value(const TypedArray<BG_Monster> monsters);
 	static String get_job_challenge_rating(const TypedArray<BG_Monster> monsters);

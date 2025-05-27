@@ -640,8 +640,9 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_stat_types"), &BG_Booker_DB::get_stat_types);
 	ClassDB::bind_method(D_METHOD("get_monster_types"), &BG_Booker_DB::get_monster_types);
 	ClassDB::bind_method(D_METHOD("get_mail_data"), &BG_Booker_DB::get_mail_data);
-	ClassDB::bind_method(D_METHOD("get_localize_data", "sheet_name", "key"), &BG_Booker_DB::get_localize_data);
-	ClassDB::bind_method(D_METHOD("get_localize_string", "sheet_name", "key", "ignore_code_data"), &BG_Booker_DB::get_localize_string);
+	ClassDB::bind_method(D_METHOD("set_revert_localization_to_english"), &BG_Booker_DB::set_revert_localization_to_english);
+	ClassDB::bind_method(D_METHOD("get_localize_data", "sheet_name", "key", "language"), &BG_Booker_DB::get_localize_data);
+	ClassDB::bind_method(D_METHOD("get_localize_string", "sheet_name", "key", "language", "ignore_code_data"), &BG_Booker_DB::get_localize_string);
 }
 
 BG_Booker_DB *BG_Booker_DB::get_singleton()
@@ -1734,7 +1735,7 @@ BG_Booker_DB::~BG_Booker_DB()
 	}
 }
 
-TypedArray<BG_LocalizeEntryData> BG_Booker_DB::get_localize_data(const StringName sheet_name, const StringName key)
+TypedArray<BG_LocalizeEntryData> BG_Booker_DB::get_localize_data(const StringName sheet_name, const StringName key, const StringName language)
 {
 	// Check if we already have it.
 	if (localize_data.has(sheet_name)) {
@@ -1756,28 +1757,48 @@ TypedArray<BG_LocalizeEntryData> BG_Booker_DB::get_localize_data(const StringNam
 	ERR_FAIL_NULL_V_EDMSG(file, {}, "ERROR : Could not open localization file : " + file_path);
 
 	// Store all of the data into a packed string array.
+	uint8_t language_index = 0;
 	uint8_t number_of_columns = 0;
-	const String sheet_as_string = file->get_as_text(true);
+
+	const String sheet_as_string = file->get_as_text();
 	PackedStringArray sheet_data;
 	{
-		const PackedStringArray sheet_data_lines = sheet_as_string.split("\n");
+		const PackedStringArray sheet_data_lines = sheet_as_string.split("\r\n");
 		for (int i = 0; i < sheet_data_lines.size(); ++i) {
-			sheet_data.append_array(sheet_data_lines[i].split("\t"));
+			if (!sheet_data_lines[i].is_empty()) {
+				sheet_data.append_array(sheet_data_lines[i].split("\t"));
+			}
 		}
-
+		
 		ERR_FAIL_COND_V_EDMSG(sheet_data_lines.size() < 1, {}, "ERROR : Localization data has no lines?, sheet: " + sheet_name);
 		number_of_columns = sheet_data_lines[0].split("\t").size();
+
+		const String language_as_string = String(language);
+		for (int i = 3; i < number_of_columns; ++i) {
+			if (sheet_data[i] == language_as_string) {
+				language_index = i;
+				break;
+			}
+		}
+
+		if (revert_localization_to_english && language_index == 0) {
+			return get_localize_data(sheet_name, key, "en");
+		}
+		else {
+			ERR_FAIL_COND_V_EDMSG(language_index == 0, {}, "ERROR : Localization laguage not found in sheet: " + sheet_name + ", langauge: " + language);
+		}
 	}
 
 	// Lambda for creating a new entry.
-    auto create_new_entry = [](const uint16_t index_start, const PackedStringArray &sd) -> BG_LocalizeEntryData * {
+    auto create_new_entry = [](uint16_t index_start, const PackedStringArray &sd, uint8_t lang_index) -> BG_LocalizeEntryData * {
 		BG_LocalizeEntryData *new_localization_class = memnew(BG_LocalizeEntryData);
 		new_localization_class->code_start = sd[index_start + 1];
-		new_localization_class->text = sd[index_start + 2].replace("  ", "\n\n");
-		if (new_localization_class->text.ends_with(" ")) {
-			new_localization_class->text = new_localization_class->text.rsplit(" ", true, 1)[0] + "\n\n";
+		new_localization_class->code_end = sd[index_start + 2];
+		new_localization_class->text = sd[index_start + lang_index];
+		if (new_localization_class->text.ends_with("\n\"")) {
+			new_localization_class->text += "\n";
 		}
-		new_localization_class->code_end = sd[index_start + 3];
+		new_localization_class->text = new_localization_class->text.replace("\"", "");
 		return new_localization_class;
     };
 
@@ -1786,13 +1807,14 @@ TypedArray<BG_LocalizeEntryData> BG_Booker_DB::get_localize_data(const StringNam
 		if (key_as_string != sheet_data[i]) continue; // Check if it's the correct key.
 
 		TypedArray<BG_LocalizeEntryData> result = TypedArray<BG_LocalizeEntryData>();
-		result.append(create_new_entry(i, sheet_data));
+		result.append(create_new_entry(i, sheet_data, language_index));
 
 		// Also get any extra lines it has.
 		uint16_t counter = number_of_columns;
 		while ((sheet_data.size() > (i + counter)) && sheet_data[i + counter] == "") {
-			ERR_FAIL_COND_V_EDMSG(sheet_data.size() < (i + (number_of_columns - 1)), {}, "ERROR : Localization data is invalid, sheet: " + sheet_name + ", key: " + key);
-			result.append(create_new_entry(i + counter, sheet_data));
+			ERR_FAIL_COND_V_EDMSG(sheet_data.size() < (i + (number_of_columns - 1)), {}, 
+				"ERROR : Localization data is invalid, sheet: " + sheet_name + ", key: " + key + ", langauge: " + language);
+			result.append(create_new_entry(i + counter, sheet_data, language_index));
 			counter += number_of_columns;
 		}
 		i += counter - number_of_columns;
@@ -1801,14 +1823,15 @@ TypedArray<BG_LocalizeEntryData> BG_Booker_DB::get_localize_data(const StringNam
 		return result;
 	}
 
-	ERR_FAIL_COND_V_EDMSG(true, {}, "ERROR : Could not find localization data for, sheet: " + sheet_name + ", key: " + key);
+	ERR_FAIL_COND_V_EDMSG(true, {}, "ERROR : Could not find localization data for, sheet: " + sheet_name + ", key: " + key + ", langauge: " + language);
 	return {};
 }
 
-String BG_Booker_DB::get_localize_string(const StringName sheet_name, const StringName key, bool ignore_code_data)
+String BG_Booker_DB::get_localize_string(const StringName sheet_name, const StringName key, const StringName language, bool ignore_code_data)
 {
-	TypedArray<BG_LocalizeEntryData> data = get_localize_data(sheet_name, key);
-	ERR_FAIL_COND_V_EDMSG(data.size() < 1, "LOCALIZATION NOT FOUND", "ERROR : Could not find localization data for, sheet: " + sheet_name + ", key: " + key);
+	TypedArray<BG_LocalizeEntryData> data = get_localize_data(sheet_name, key, language);
+	ERR_FAIL_COND_V_EDMSG(data.size() < 1, 
+		"LOCALIZATION NOT FOUND", "ERROR : Could not find localization data for, sheet: " + sheet_name + ", key: " + key + ", langauge: " + language);
 	
 	String result = "";
 	for (uint16_t i = 0; i < data.size(); ++i) {
