@@ -2,6 +2,7 @@
 
 #include <godot_cpp/variant/variant.hpp>
 #include <godot_cpp/classes/input.hpp>
+#include <godot_cpp/classes/sub_viewport.hpp>
 
 ////
 //// BG_Focus_Layer_Properties
@@ -297,14 +298,16 @@ Control *BG_Focus_Layers::get_current_parent_control() const
 
 bool BG_Focus_Layers::_is_control_top(const Vector2 &direction, const Control *ctrl, const TypedArray<Control> &all_ctrls)
 {
-    const float c_top_y = ctrl->get_global_position().y;
+    const Vector2 &ctrl_pos = ctrl->get_screen_transform().get_origin();
+    const float c_top_y = ctrl_pos.y;
     for (int i = 0; i < all_ctrls.size(); i++)
     {
         const Control *child = cast_to<Control>(all_ctrls[i]);
-        if (c_top_y > child->get_global_position().y && _check_if_valid_control(child))
+        const Vector2 &child_ctrl_pos = child->get_screen_transform().get_origin();
+        if (c_top_y > child_ctrl_pos.y && _check_if_valid_control(child))
         {
-            const Vector2 c_center_location = ctrl->get_global_position() + (ctrl->get_global_rect().size * 0.5);
-            const Vector2 child_center_location = child->get_global_position() + (child->get_global_rect().size * 0.5);
+            const Vector2 c_center_location = ctrl_pos + (ctrl->get_global_rect().size * 0.5);
+            const Vector2 child_center_location = child_ctrl_pos + (child->get_global_rect().size * 0.5);
             static const float PI = 3.14159f;
             const float angle = Math::abs(direction.angle_to(child_center_location - c_center_location) / PI);
             if (Math::abs(angle) < _minimum_angle)
@@ -316,14 +319,16 @@ bool BG_Focus_Layers::_is_control_top(const Vector2 &direction, const Control *c
  
 bool BG_Focus_Layers::_is_control_bottom(const Vector2 &direction, const Control *ctrl, const TypedArray<Control> &all_ctrls)
 {
-    const float c_bottom_y = ctrl->get_global_position().y + ctrl->get_global_rect().size.y;
+    const Vector2 &ctrl_pos = ctrl->get_screen_transform().get_origin();
+    const float c_bottom_y = ctrl_pos.y + ctrl->get_global_rect().size.y;
     for (int i = 0; i < all_ctrls.size(); i++)
     {
         const Control *child = cast_to<Control>(all_ctrls[i]);
-        if (c_bottom_y < (child->get_global_position().y + child->get_global_rect().size.y) && _check_if_valid_control(child))
+        const Vector2 &child_ctrl_pos = child->get_screen_transform().get_origin();
+        if (c_bottom_y < (child_ctrl_pos.y + child->get_global_rect().size.y) && _check_if_valid_control(child))
         {
-            const Vector2 c_center_location = ctrl->get_global_position() + (ctrl->get_global_rect().size * 0.5);
-            const Vector2 child_center_location = child->get_global_position() + (child->get_global_rect().size * 0.5);
+            const Vector2 c_center_location = ctrl_pos + (ctrl->get_global_rect().size * 0.5);
+            const Vector2 child_center_location = child_ctrl_pos + (child->get_global_rect().size * 0.5);
             static const float PI = 3.14159f;
             const float angle = Math::abs(direction.angle_to(child_center_location - c_center_location) / PI);
             if (Math::abs(angle) < _minimum_angle)
@@ -347,20 +352,20 @@ void BG_Focus_Layers::find_control_in_direction(Vector2 direction)
 		Vector2 last_control_dir_location = Vector2();
 		if (direction == Vector2(0, -1))
         {
-			last_control_dir_location = last_selected_control->get_global_position() + (last_selected_control->get_global_rect().size * Vector2(0.5, 0.0));
+			last_control_dir_location = last_selected_control->get_screen_transform().get_origin() + (last_selected_control->get_global_rect().size * Vector2(0.5, 0.0));
 			if (prop->get_should_loop_vertically())
 				should_get_farthest_control = _is_control_top(direction, last_selected_control, ctrls);
         } else if (direction == Vector2(0, 1))
         {
 			if (prop->get_should_loop_vertically())
 				should_get_farthest_control = _is_control_bottom(direction, last_selected_control, ctrls);
-			last_control_dir_location = last_selected_control->get_global_position() + (last_selected_control->get_global_rect().size * Vector2(0.5, 1.0));
+			last_control_dir_location = last_selected_control->get_screen_transform().get_origin() + (last_selected_control->get_global_rect().size * Vector2(0.5, 1.0));
         } else if (direction == Vector2(1, 0))
         {
-			last_control_dir_location = last_selected_control->get_global_position() + (last_selected_control->get_global_rect().size * Vector2(1.0, 0.5));
+			last_control_dir_location = last_selected_control->get_screen_transform().get_origin() + (last_selected_control->get_global_rect().size * Vector2(1.0, 0.5));
         } else
         {
-			last_control_dir_location = last_selected_control->get_global_position() + (last_selected_control->get_global_rect().size * Vector2(0.0, 0.5));
+			last_control_dir_location = last_selected_control->get_screen_transform().get_origin() + (last_selected_control->get_global_rect().size * Vector2(0.0, 0.5));
         }
 
 		Control *new_selected_control = nullptr;
@@ -370,7 +375,7 @@ void BG_Focus_Layers::find_control_in_direction(Vector2 direction)
             Control *c = cast_to<Control>(ctrls[i]);
             if (BG_Focus_Layer_Properties::bg_is_instance_valid(c) && c != last_selected_control && _check_if_valid_control(c))
             {
-                const Vector2 c_center_location = c->get_global_position() + (c->get_global_rect().size * 0.5);
+                const Vector2 c_center_location = c->get_screen_transform().get_origin() + (c->get_global_rect().size * 0.5);
                 static const float PI = 3.14159f;
                 const float angle = Math::abs(direction.angle_to(last_control_dir_location - c_center_location) / PI);
                 if ((should_get_farthest_control && angle < _minimum_angle) || (!should_get_farthest_control && angle > _minimum_angle))
@@ -450,9 +455,21 @@ void BG_Focus_Layers::press_back_button() const
         for (int i = 0; i < children.size(); i++)
         {
             const Control *ctrl = cast_to<Control>(children[i]);
-            if (BG_Focus_Layer_Properties::bg_is_instance_valid(ctrl) && ctrl->get_focus_mode() != Control::FocusMode::FOCUS_NONE)
+            if (BG_Focus_Layer_Properties::bg_is_instance_valid(ctrl))
             {
-                result.append(ctrl);
+                if (ctrl->get_focus_mode() != Control::FocusMode::FOCUS_NONE) {
+                    result.append(ctrl);
+                }
+            }
+            else {
+                const SubViewport *sub_viewport = cast_to<SubViewport>(children[i]);
+                if (BG_Focus_Layer_Properties::bg_is_instance_valid(sub_viewport)) {
+                    const TypedArray<Node> s_children = sub_viewport->get_children();
+                    for (int si = 0; si < s_children.size(); si++)
+                    {
+                        result.append_array(BG_Focus_Layers::get_all_focusable_controls_under_control(cast_to<Control>(s_children[si])));
+                    }
+                }
             }
             result.append_array(BG_Focus_Layers::get_all_focusable_controls_under_control(ctrl));
         }
@@ -469,9 +486,21 @@ void BG_Focus_Layers::press_back_button() const
         for (int i = 0; i < children.size(); i++)
         {
             const Control *ctrl = cast_to<Control>(children[i]);
-            if (_check_if_valid_control(ctrl) && ctrl->get_focus_mode() != Control::FocusMode::FOCUS_NONE)
-            {
-                result.append(ctrl);
+            if (BG_Focus_Layer_Properties::bg_is_instance_valid(ctrl)) {
+                if (_check_if_valid_control(ctrl) && ctrl->get_focus_mode() != Control::FocusMode::FOCUS_NONE)
+                {
+                    result.append(ctrl);
+                }
+            }
+            else {
+                const SubViewport *sub_viewport = cast_to<SubViewport>(children[i]);
+                if (BG_Focus_Layer_Properties::bg_is_instance_valid(sub_viewport)) {
+                    const TypedArray<Node> s_children = sub_viewport->get_children();
+                    for (int si = 0; si < s_children.size(); si++)
+                    {
+                        result.append_array(BG_Focus_Layers::get_current_focusable_controls_under_control(cast_to<Control>(s_children[si])));
+                    }
+                }
             }
             result.append_array(BG_Focus_Layers::get_current_focusable_controls_under_control(ctrl));
         }
