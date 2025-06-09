@@ -159,7 +159,6 @@ void BG_Dice::_bind_methods()
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("dice_to_string", "dice"), &BG_Dice::dice_to_string);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("string_to_dice", "string"), &BG_Dice::string_to_dice);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("string_to_dice_options", "string"), &BG_Dice::string_to_dice_options);
-	ClassDB::bind_static_method("BG_Dice", D_METHOD("add_bonus_to_die", "die", "bonus"), &BG_Dice::add_bonus_to_die);
 	ClassDB::bind_static_method("BG_Dice", D_METHOD("duplicate_dice", "dice"), &BG_Dice::duplicate_dice);
 
 	ClassDB::bind_method(D_METHOD("get_roll_count"), &BG_Dice::get_roll_count);
@@ -168,6 +167,8 @@ void BG_Dice::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_amount_of_sides"), &BG_Dice::set_amount_of_sides);
 	ClassDB::bind_method(D_METHOD("get_additive"), &BG_Dice::get_additive);
 	ClassDB::bind_method(D_METHOD("set_additive"), &BG_Dice::set_additive);
+	ClassDB::bind_method(D_METHOD("get_multiplier"), &BG_Dice::get_multiplier);
+	ClassDB::bind_method(D_METHOD("set_multiplier"), &BG_Dice::set_multiplier);
 }
 
 ////
@@ -348,8 +349,6 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_caste_id"), &BG_BandMember::set_caste_id);
 	ClassDB::bind_method(D_METHOD("get_equipment"), &BG_BandMember::get_equipment);
 	ClassDB::bind_method(D_METHOD("set_equipment"), &BG_BandMember::set_equipment);
-	ClassDB::bind_method(D_METHOD("get_infused_element_id"), &BG_BandMember::get_infused_element_id);
-	ClassDB::bind_method(D_METHOD("set_infused_element_id"), &BG_BandMember::set_infused_element_id);
 	ClassDB::bind_method(D_METHOD("get_is_city_asset"), &BG_BandMember::get_is_city_asset);
 	ClassDB::bind_method(D_METHOD("set_is_city_asset"), &BG_BandMember::set_is_city_asset);
 	ClassDB::bind_method(D_METHOD("get_element_upgrades"), &BG_BandMember::get_element_upgrades);
@@ -362,7 +361,6 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "scale"), "set_scale", "get_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "caste_id"), "set_caste_id", "get_caste_id");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipment"), "set_equipment", "get_equipment");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "infused_element_id"), "set_infused_element_id", "get_infused_element_id");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "element_upgrades"), "set_element_upgrades", "get_element_upgrades");
 }
 
@@ -614,6 +612,11 @@ void BG_Booker_Globals::_bind_methods()
 
 	ClassDB::bind_method(D_METHOD("get_percent_amount_to_add_on_same_element_per_damage_value"), &BG_Booker_Globals::get_percent_amount_to_add_on_same_element_per_damage_value);
 	ClassDB::bind_method(D_METHOD("get_percent_amount_to_subtract_on_weak_element_per_damage_value"), &BG_Booker_Globals::get_percent_amount_to_subtract_on_weak_element_per_damage_value);
+
+	ClassDB::bind_method(D_METHOD("get_hit_perfect_timing_multiplier"), &BG_Booker_Globals::get_hit_perfect_timing_multiplier);
+	ClassDB::bind_method(D_METHOD("get_hit_good_timing_multiplier"), &BG_Booker_Globals::get_hit_good_timing_multiplier);
+	ClassDB::bind_method(D_METHOD("get_parry_perfect_timing_multiplier"), &BG_Booker_Globals::get_parry_perfect_timing_multiplier);
+	ClassDB::bind_method(D_METHOD("get_parry_good_timing_multiplier"), &BG_Booker_Globals::get_parry_good_timing_multiplier);
 }
 
 ////
@@ -716,6 +719,19 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_act_stats->job_handout_curve_path = jobs_distribution_per_act_entry["curve"];
 
 					globals->act_stats.append(new_act_stats);
+				}
+			}
+
+			if (lines.has("qte_values"))
+			{
+				const Array qte_values_array = Array(lines["qte_values"]);
+				for (int i = 0; i < qte_values_array.size(); i++)
+				{
+					const Dictionary values = qte_values_array[i];
+					globals->hit_perfect_timing_multiplier = float(values["hit_perfect_timing_multiplier"]);
+					globals->hit_good_timing_multiplier = float(values["hit_good_timing_multiplier"]);
+					globals->parry_perfect_timing_multiplier = float(values["parry_perfect_timing_multiplier"]);
+					globals->parry_good_timing_multiplier = float(values["parry_good_timing_multiplier"]);
 				}
 			}
 
@@ -1943,83 +1959,97 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 ////
 /* static */ int BG_Dice::calculate_dice(const TypedArray<BG_Dice> dice, RandomNumberGenerator *random_num_generator)
 {
-	int result = 0;
+	float result = 0.0;
 	for (int i = 0; i < dice.size(); i++)
 	{
 		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
 		if (!BG_Focus_Layer_Properties::bg_is_instance_valid(dice[i]))
 			continue;
+		
+		float die_result = 0.0;
 		for (int x = 0; x < die->get_roll_count(); x++)
 		{
 			if ( (random_num_generator != nullptr) && UtilityFunctions::is_instance_id_valid(random_num_generator->get_instance_id()) )
-				result += random_num_generator->randi_range(1, die->get_amount_of_sides());
+				die_result += random_num_generator->randf_range(1.0, float(die->get_amount_of_sides()));
 			else
-				result += UtilityFunctions::randi_range(1, die->get_amount_of_sides());
+				die_result += UtilityFunctions::randf_range(1.0, float(die->get_amount_of_sides()));
 		}
-		result += die->get_additive();
+		die_result += float(die->get_additive());
+		die_result *= die->get_multiplier();
+		result += die_result;
 	}
 
-	return Math::max(0, result);
+	const int result_int = int(Math::round(result));
+	return Math::max(0, result_int);
 }
 
 /* static */ int BG_Dice::get_dice_max_roll(const TypedArray<BG_Dice> dice)
 {
-	int result = 0;
+	float result = 0.0;
 	for (int i = 0; i < dice.size(); i++)
 	{
 		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
 		if (!BG_Focus_Layer_Properties::bg_is_instance_valid(die))
 			continue;
+		
+		float die_result = 0.0;
 		for (int x = 0; x < die->get_roll_count(); x++)
 		{
-			result += die->get_amount_of_sides();
+			die_result += float(die->get_amount_of_sides());
 		}
-		result += die->get_additive();
+		die_result += float(die->get_additive());
+		die_result *= die->get_multiplier();
+		result += die_result;
 	}
 
-	return result;
+	const int result_int = int(Math::round(result));
+	return result_int;
 }
 
 /* static */ int BG_Dice::get_dice_average_roll(const TypedArray<BG_Dice> dice)
 {
-	int max_roll = 0;
-	int additives = 0;
-	int roll_counts = 0;
+	float max_roll = 0.0;
+	float additives = 0.0;
+	float roll_counts = 0.0;
 	for (int i = 0; i < dice.size(); i++)
 	{
 		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
 		if (!BG_Focus_Layer_Properties::bg_is_instance_valid(dice[i]))
 			continue;
+		
+		roll_counts += die->get_roll_count();
 		for (int x = 0; x < die->get_roll_count(); x++)
 		{
-			roll_counts += 1;
-			max_roll += die->get_amount_of_sides();
+			max_roll += (float(die->get_amount_of_sides()) * die->get_multiplier());
 		}
-		additives += die->get_additive();
+		additives += (float(die->get_additive()) * die->get_multiplier());
 	}
 
-	return int(float(max_roll + roll_counts) * 0.5f) + additives;
+	return int(Math::round((max_roll + roll_counts * 0.5f) + additives));
 }
 
 /* static */ String BG_Dice::dice_to_nice_name(const TypedArray<BG_Dice> dice)
 {
-	int minimum_damage = 0;
-	int maximum_damage = 0;
+	float minimum_damage = 0.0;
+	float maximum_damage = 0.0;
 	for (int i = 0; i < dice.size(); i++)
 	{
 		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
 		if (!BG_Focus_Layer_Properties::bg_is_instance_valid(dice[i]))
 			continue;
+		
 		for (int x = 0; x < die->get_roll_count(); x++)
 		{
-			minimum_damage += 1;
-			maximum_damage += die->get_amount_of_sides();
+			minimum_damage += (float(1) * die->get_multiplier());
+			maximum_damage += (float(die->get_amount_of_sides()) * die->get_multiplier());
 		}
-		minimum_damage += die->get_additive();
-		maximum_damage += die->get_additive();
+		minimum_damage += (float(die->get_additive()) * die->get_multiplier());
+		maximum_damage += (float(die->get_additive()) * die->get_multiplier());
 	}
 
-	return String::num_int64(minimum_damage) + "~" + String::num_int64(maximum_damage);
+	const int minimum_damage_int = int(Math::round(minimum_damage));
+	const int maximum_damage_int = int(Math::round(maximum_damage));
+	return String::num_int64(minimum_damage_int) + "~" + String::num_int64(maximum_damage_int);
 }
 
 /* static */ String BG_Dice::dice_to_string(const Ref<BG_Dice> dice)
@@ -2029,11 +2059,17 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 		return "-";
 	}
 	
-	String result = String::num_int64(dice->get_roll_count()) + "d" + String::num_int64(dice->get_amount_of_sides());
-	if (dice->get_additive() > 0)
+	const int roll_count = dice->get_roll_count();
+	const int amount_of_sides = int(Math::round(float(dice->get_amount_of_sides()) * dice->get_multiplier()));
+	String result = String::num_int64(roll_count) + "d" + String::num_int64(amount_of_sides);
+	if (dice->get_additive() > 0) {
+		const int additive = int(Math::round(float(dice->get_additive()) * dice->get_multiplier()));
 		result += "+" + String::num_int64(dice->get_additive());
-	else if (dice->get_additive() < 0)
+	}
+	else if (dice->get_additive() < 0) {
+		const int additive = int(Math::round(float(dice->get_additive()) * dice->get_multiplier()));
 		result += "-" + String::num_int64(abs(dice->get_additive()));
+	}
 	return result;
 }
 
@@ -2125,14 +2161,6 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 	return result;
 }
 
-/* static */ Ref<BG_Dice> BG_Dice::add_bonus_to_die(Ref<BG_Dice> die, const float bonus)
-{
-	if (die == nullptr || !BG_Focus_Layer_Properties::bg_is_instance_valid(die.ptr())) return nullptr;
-	die->amount_of_sides += int(float(die->amount_of_sides) * bonus);
-	die->additive += int(float(die->additive) * bonus);
-	return die;
-}
-
 /* static */ Ref<BG_Dice> BG_Dice::duplicate_dice(const Ref<BG_Dice> dice)
 {
 	if (dice == nullptr || !BG_Focus_Layer_Properties::bg_is_instance_valid(dice.ptr())) return nullptr;
@@ -2140,5 +2168,6 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 	result->roll_count = dice->roll_count;
 	result->amount_of_sides = dice->amount_of_sides;
 	result->additive = dice->additive;
+	result->multiplier = dice->multiplier;
 	return result;
 }

@@ -171,6 +171,10 @@ public:
 	int get_additive() const { return additive; }
 	void set_additive(int value) { additive = value; }
 
+	float multiplier = 1.0;
+	float get_multiplier() const { return multiplier; }
+	void set_multiplier(float value) { multiplier = value; }
+
 	static int calculate_dice(const TypedArray<BG_Dice> dice, RandomNumberGenerator *random_num_generator = nullptr);
 	static int get_dice_max_roll(const TypedArray<BG_Dice> dice);
 	static int get_dice_average_roll(const TypedArray<BG_Dice> dice);
@@ -178,7 +182,6 @@ public:
 	static String dice_to_string(const Ref<BG_Dice> dice);
 	static Ref<BG_Dice> string_to_dice(String string);
 	static TypedArray<BG_Dice> string_to_dice_options(String string);
-	static Ref<BG_Dice> add_bonus_to_die(Ref<BG_Dice> dice, const float bonus);
 	static Ref<BG_Dice> duplicate_dice(const Ref<BG_Dice> dice);
 };
 
@@ -689,10 +692,6 @@ public:
 	TypedArray<BG_Item> get_equipment() const { return equipment; }
 	void set_equipment(TypedArray<BG_Item> value) { equipment = value; }
 
-	StringName infused_element_id;
-	StringName get_infused_element_id() const { return infused_element_id; }
-	void set_infused_element_id(StringName v) { infused_element_id = v; }
-
 	bool is_city_asset = false;
 	bool get_is_city_asset() const { return is_city_asset; }
 	void set_is_city_asset(bool v) { is_city_asset = v; }
@@ -1037,6 +1036,19 @@ public:
 	
 	float percent_amount_to_subtract_on_weak_element_per_damage_value = 0.0;
 	float get_percent_amount_to_subtract_on_weak_element_per_damage_value() const { return percent_amount_to_subtract_on_weak_element_per_damage_value; }
+
+	// QTE multipliers
+	float hit_perfect_timing_multiplier = 0.0;
+	float get_hit_perfect_timing_multiplier() const { return hit_perfect_timing_multiplier; }
+
+	float hit_good_timing_multiplier = 0.0;
+	float get_hit_good_timing_multiplier() const { return hit_good_timing_multiplier; }
+
+	float parry_perfect_timing_multiplier = 0.0;
+	float get_parry_perfect_timing_multiplier() const { return parry_perfect_timing_multiplier; }
+
+	float parry_good_timing_multiplier = 0.0;
+	float get_parry_good_timing_multiplier() const { return parry_good_timing_multiplier; }
 };
 
 ////
