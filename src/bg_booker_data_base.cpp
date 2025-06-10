@@ -1799,7 +1799,7 @@ TypedArray<BG_LocalizeEntryData> BG_Booker_DB::get_localize_data(const StringNam
 			if (line == "\"")
 				d->text += line.replace("\"", "\n\n");
 			else
-				d->text += "\n" + line;
+				d->text += "\n" + line.replace("\"", "");
 			continue;
 		}
 		const PackedStringArray line_data = line.replace("\"", "").split("\t");
