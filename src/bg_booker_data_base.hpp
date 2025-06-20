@@ -1028,6 +1028,9 @@ public:
 	float inventory_sell_multiplier = 0.0;
 	float get_inventory_sell_multiplier() const { return inventory_sell_multiplier; }
 
+	float dismantle_multiplier = 0.0;
+	float get_dismantle_multiplier() const { return dismantle_multiplier; }
+
 	float item_passive_income_multiplier = 0.0;
 	float get_item_passive_income_multiplier() const { return item_passive_income_multiplier; }
 

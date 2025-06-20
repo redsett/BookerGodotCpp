@@ -608,6 +608,7 @@ void BG_Booker_Globals::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_beast_part_fame_rarity_multiplier"), &BG_Booker_Globals::get_beast_part_fame_rarity_multiplier);
 
 	ClassDB::bind_method(D_METHOD("get_inventory_sell_multiplier"), &BG_Booker_Globals::get_inventory_sell_multiplier);
+	ClassDB::bind_method(D_METHOD("get_dismantle_multiplier"), &BG_Booker_Globals::get_dismantle_multiplier);
 	ClassDB::bind_method(D_METHOD("get_item_passive_income_multiplier"), &BG_Booker_Globals::get_item_passive_income_multiplier);
 
 	ClassDB::bind_method(D_METHOD("get_percent_amount_to_add_on_same_element_per_damage_value"), &BG_Booker_Globals::get_percent_amount_to_add_on_same_element_per_damage_value);
@@ -800,6 +801,9 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			
 			if (lines.has("inventory_sell_multiplier"))
 				globals->inventory_sell_multiplier = float(lines["inventory_sell_multiplier"]);
+
+			if (lines.has("dismantle_multiplier"))
+				globals->dismantle_multiplier = float(lines["dismantle_multiplier"]);
 
 			if (lines.has("item_passive_income_multiplier"))
 				globals->item_passive_income_multiplier = float(lines["item_passive_income_multiplier"]);
