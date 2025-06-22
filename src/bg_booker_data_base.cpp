@@ -104,6 +104,39 @@ void BG_MailData::_bind_methods()
 }
 
 ////
+//// BG_MarketplaceData
+////
+void BG_MarketplaceData::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_items_per_month_min_max"), &BG_MarketplaceData::get_items_per_month_min_max);
+	ClassDB::bind_method(D_METHOD("get_entries"), &BG_MarketplaceData::get_entries);
+}
+
+////
+//// BG_MarketplaceEntryData
+////
+void BG_MarketplaceEntryData::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_act"), &BG_MarketplaceEntryData::get_act);
+	ClassDB::bind_method(D_METHOD("get_starting_month"), &BG_MarketplaceEntryData::get_starting_month);
+	ClassDB::bind_method(D_METHOD("get_item_drop_pool_ids"), &BG_MarketplaceEntryData::get_item_drop_pool_ids);
+}
+
+////
+//// BG_MarketplaceSaveData
+////
+void BG_MarketplaceSaveData::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_seed"), &BG_MarketplaceSaveData::get_seed);
+	ClassDB::bind_method(D_METHOD("set_seed"), &BG_MarketplaceSaveData::set_seed);
+	ClassDB::bind_method(D_METHOD("get_items_sold_indexies"), &BG_MarketplaceSaveData::get_items_sold_indexies);
+	ClassDB::bind_method(D_METHOD("set_items_sold_indexies"), &BG_MarketplaceSaveData::set_items_sold_indexies);
+
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "seed"), "set_seed", "get_seed");
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "items_sold_indexies"), "set_items_sold_indexies", "get_items_sold_indexies");
+}
+
+////
 //// BG_AudioData
 ////
 void BG_AudioData::_bind_methods()
@@ -570,6 +603,7 @@ void BG_BookerSkillTreeSlotDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_skill_description"), &BG_BookerSkillTreeSlotDetails::get_skill_description);
 	ClassDB::bind_method(D_METHOD("get_required_rep"), &BG_BookerSkillTreeSlotDetails::get_required_rep);
 	ClassDB::bind_method(D_METHOD("get_parent_skill_id"), &BG_BookerSkillTreeSlotDetails::get_parent_skill_id);
+	ClassDB::bind_method(D_METHOD("get_value_attributes"), &BG_BookerSkillTreeSlotDetails::get_value_attributes);
 }
 
 ////
@@ -608,7 +642,6 @@ void BG_Booker_Globals::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_beast_part_fame_rarity_multiplier"), &BG_Booker_Globals::get_beast_part_fame_rarity_multiplier);
 
 	ClassDB::bind_method(D_METHOD("get_inventory_sell_multiplier"), &BG_Booker_Globals::get_inventory_sell_multiplier);
-	ClassDB::bind_method(D_METHOD("get_dismantle_multiplier"), &BG_Booker_Globals::get_dismantle_multiplier);
 	ClassDB::bind_method(D_METHOD("get_item_passive_income_multiplier"), &BG_Booker_Globals::get_item_passive_income_multiplier);
 
 	ClassDB::bind_method(D_METHOD("get_percent_amount_to_add_on_same_element_per_damage_value"), &BG_Booker_Globals::get_percent_amount_to_add_on_same_element_per_damage_value);
@@ -645,6 +678,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_item_slot_types"), &BG_Booker_DB::get_item_slot_types);
 	ClassDB::bind_method(D_METHOD("get_rarity_types"), &BG_Booker_DB::get_rarity_types);
 	ClassDB::bind_method(D_METHOD("get_stat_types"), &BG_Booker_DB::get_stat_types);
+	ClassDB::bind_method(D_METHOD("get_market_place_data"), &BG_Booker_DB::get_market_place_data);
 	ClassDB::bind_method(D_METHOD("get_monster_types"), &BG_Booker_DB::get_monster_types);
 	ClassDB::bind_method(D_METHOD("get_mail_data"), &BG_Booker_DB::get_mail_data);
 	ClassDB::bind_method(D_METHOD("set_revert_localization_to_english"), &BG_Booker_DB::set_revert_localization_to_english);
@@ -802,9 +836,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			if (lines.has("inventory_sell_multiplier"))
 				globals->inventory_sell_multiplier = float(lines["inventory_sell_multiplier"]);
 
-			if (lines.has("dismantle_multiplier"))
-				globals->dismantle_multiplier = float(lines["dismantle_multiplier"]);
-
 			if (lines.has("item_passive_income_multiplier"))
 				globals->item_passive_income_multiplier = float(lines["item_passive_income_multiplier"]);
 			
@@ -917,6 +948,18 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_booker_skill_tree_slot_details_class->skill_description = entry["skill_description"];
 				new_booker_skill_tree_slot_details_class->required_rep = int(entry["required_rep"]);
 				new_booker_skill_tree_slot_details_class->parent_skill_id = entry["parent_skill"];
+
+				// Value Attributes
+				const Array value_attribute_lines = Array(entry["value_attributes"]);
+				for (int y = 0; y < value_attribute_lines.size(); y++)
+				{
+					const Dictionary value_attribute_entry = value_attribute_lines[y];
+
+					const float value1 = float(value_attribute_entry["value_1"]);
+					const float value2 = float(value_attribute_entry["value_2"]);
+					new_booker_skill_tree_slot_details_class->value_attributes.append(value1);
+					new_booker_skill_tree_slot_details_class->value_attributes.append(value2);
+				}
 
 				booker_skill_tree_details.append(new_booker_skill_tree_slot_details_class);
 			}
@@ -1161,6 +1204,54 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_mail_data->week = int(entry["week"]);
 
 				mail_data.append(new_mail_data);
+			}
+		}
+	}
+
+	/////
+	///// Marketplace
+	/////
+	{
+		const Dictionary marketplace_data_sheet = BG_JsonUtils::GetCBDSheet(data, "marketplace");
+		if (marketplace_data_sheet.has("lines"))
+		{
+			if (market_place_data != nullptr) {
+				memdelete(market_place_data);
+			}
+			market_place_data = memnew(BG_MarketplaceData);
+
+			const Array lines = Array(marketplace_data_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
+			{
+				const Dictionary entry = lines[i];
+
+				// Items Per Month
+				const Array items_per_month_lines = Array(entry["items_per_month"]);
+				for (int y = 0; y < items_per_month_lines.size(); y++)
+				{
+					const Dictionary items_per_month_lines_entry = items_per_month_lines[y];
+					market_place_data->items_per_month_min_max = Vector2i(int(items_per_month_lines_entry["min"]), int(items_per_month_lines_entry["max"]));
+				}
+
+				// Entries
+				const Array entries_lines = Array(entry["entries"]);
+				for (int y = 0; y < entries_lines.size(); y++)
+				{
+					const Dictionary entries_entry = entries_lines[y];
+
+					BG_MarketplaceEntryData *new_marketplace_entry_data = memnew(BG_MarketplaceEntryData);
+					new_marketplace_entry_data->act = int(entries_entry["act"]);
+					new_marketplace_entry_data->starting_month = int(entries_entry["starting_month"]);
+
+					const Array item_drop_pool_lines = Array(entries_entry["item_drop_pools"]);
+					for (int x = 0; x < item_drop_pool_lines.size(); x++)
+					{
+						const Dictionary item_drop_pool_entry = item_drop_pool_lines[x];
+						new_marketplace_entry_data->item_drop_pool_ids.append(item_drop_pool_entry["pool"]);
+					}
+
+					market_place_data->entries.append(new_marketplace_entry_data);
+				}
 			}
 		}
 	}

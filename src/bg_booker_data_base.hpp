@@ -53,6 +53,65 @@ public:
 };
 
 ////
+//// BG_MarketplaceEntryData
+////
+class BG_MarketplaceEntryData : public Object
+{
+	GDCLASS(BG_MarketplaceEntryData, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	int act;
+	int get_act() const { return act; }
+
+	int starting_month;
+	int get_starting_month() const { return starting_month; }
+
+	TypedArray<StringName> item_drop_pool_ids;
+	TypedArray<StringName> get_item_drop_pool_ids() const { return item_drop_pool_ids; }
+};
+
+////
+//// BG_MarketplaceData
+////
+class BG_MarketplaceData : public Object
+{
+	GDCLASS(BG_MarketplaceData, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	Vector2i items_per_month_min_max;
+	Vector2i get_items_per_month_min_max() const { return items_per_month_min_max; }
+
+	TypedArray<BG_MarketplaceEntryData> entries;
+	TypedArray<BG_MarketplaceEntryData> get_entries() const { return entries; }
+};
+
+////
+//// BG_MarketplaceSaveData
+////
+class BG_MarketplaceSaveData : public Resource
+{
+	GDCLASS(BG_MarketplaceSaveData, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	int seed;
+	int get_seed() const { return seed; }
+	void set_seed(int new_seed) { seed = new_seed; }
+
+	TypedArray<int> items_sold_indexies;
+	TypedArray<int> get_items_sold_indexies() const { return items_sold_indexies; }
+	void set_items_sold_indexies(TypedArray<int> v) { items_sold_indexies = v; }
+};
+
+////
 //// BG_AudioData
 ////
 class BG_AudioData : public Object
@@ -934,6 +993,9 @@ public:
 
 	StringName parent_skill_id;
 	StringName get_parent_skill_id() const { return parent_skill_id; }
+
+	TypedArray<float> value_attributes;
+	TypedArray<float> get_value_attributes() const { return value_attributes; }
 };
 
 ////
@@ -1028,9 +1090,6 @@ public:
 	float inventory_sell_multiplier = 0.0;
 	float get_inventory_sell_multiplier() const { return inventory_sell_multiplier; }
 
-	float dismantle_multiplier = 0.0;
-	float get_dismantle_multiplier() const { return dismantle_multiplier; }
-
 	float item_passive_income_multiplier = 0.0;
 	float get_item_passive_income_multiplier() const { return item_passive_income_multiplier; }
 
@@ -1114,6 +1173,9 @@ public:
 
 	TypedArray<BG_UnitStatDetails> stat_types;
 	TypedArray<BG_UnitStatDetails> get_stat_types() const { return stat_types; }
+
+	BG_MarketplaceData *market_place_data = nullptr;
+	BG_MarketplaceData *get_market_place_data() const { return market_place_data; }
 
 	TypedArray<BG_Monster> monster_types;
 	TypedArray<BG_Monster> get_monster_types() const { return monster_types; }
