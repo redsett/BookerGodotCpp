@@ -6,14 +6,9 @@
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/godot.hpp>
 
-// #include "my_node.hpp"
-// #include "card_to_mouse_spline.hpp"
-// #include "my_singleton.hpp"
-
-// #include "gsg_state.hpp"
-// #include "gsg_state_machine.hpp"
 #include "bg_booker_data_base.hpp"
 #include "bg_focus_layers.hpp"
+#include "bg_hex_grid.hpp"
 // #include "bg_animation_mirror.hpp"
 
 using namespace godot;
@@ -25,12 +20,6 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
 	{
-		// ClassDB::register_class<MyNode>();
-		// ClassDB::register_class<CardToMouseSpline>();
-
-		// ClassDB::register_class<GSGState>();
-		// ClassDB::register_class<GSGStateMachine>();
-
 		ClassDB::register_class<BG_LocalizeEntryData>();
 		ClassDB::register_class<BG_MailData>();
 		ClassDB::register_class<BG_MarketplaceData>();
@@ -69,6 +58,10 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 
 		ClassDB::register_class<BG_Focus_Layer_Properties>();
 		ClassDB::register_class<BG_Focus_Layers>();
+
+
+		ClassDB::register_class<BG_Hex>();
+		ClassDB::register_class<BG_HexGrid>();
 
 		// ClassDB::register_class<BG_AnimationMirrorDataMap>();
 		// ClassDB::register_class<BG_AnimationMirrorData>();

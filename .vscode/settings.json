@@ -83,6 +83,13 @@
     "xlocmes": "cpp",
     "xlocmon": "cpp",
     "xlocnum": "cpp",
-    "xloctime": "cpp"
+    "xloctime": "cpp",
+    "ios": "cpp",
+    "map": "cpp",
+    "unordered_map": "cpp",
+    "queue": "cpp",
+    "optional": "cpp",
+    "xtr1common": "cpp",
+    "deque": "cpp"
   }
 }
