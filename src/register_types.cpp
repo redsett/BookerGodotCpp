@@ -60,6 +60,8 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		ClassDB::register_class<BG_Focus_Layers>();
 
 
+		ClassDB::register_class<BG_HexSaveData>();
+		ClassDB::register_class<BG_BattleBoardSaveData>();
 		ClassDB::register_class<BG_Hex>();
 		ClassDB::register_class<BG_HexGrid>();
 

@@ -577,6 +577,7 @@ void BG_ChallengeRatingGuide::_bind_methods()
 ////
 void BG_ActStats::_bind_methods()
 {
+	ClassDB::bind_method(D_METHOD("get_battle_board_scene_path"), &BG_ActStats::get_battle_board_scene_path);
 	ClassDB::bind_method(D_METHOD("get_total_week_count"), &BG_ActStats::get_total_week_count);
 	ClassDB::bind_method(D_METHOD("get_total_job_count"), &BG_ActStats::get_total_job_count);
 	ClassDB::bind_method(D_METHOD("get_job_handout_curve_path"), &BG_ActStats::get_job_handout_curve_path);
@@ -747,7 +748,9 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					const Dictionary weeks_per_act = weeks_per_act_array[i];
 					new_act_stats->total_week_count = int(weeks_per_act["weeks_count"]);
 
+					
 					const Dictionary job_globals_entry = job_globals_array[i];
+					new_act_stats->battle_board_scene_path = job_globals_entry["battle_board_scene_path"];
 					const Array jobs_distribution_per_act_array = Array(job_globals_entry["jobs_distribution_per_act"]);
 					const Dictionary jobs_distribution_per_act_entry = jobs_distribution_per_act_array[0];
 					new_act_stats->total_job_count = int(jobs_distribution_per_act_entry["job_count"]);

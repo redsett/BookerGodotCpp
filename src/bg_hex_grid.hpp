@@ -1,6 +1,7 @@
 #pragma once
 
 #include <godot_cpp/classes/object.hpp>
+#include <godot_cpp/classes/resource.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -8,6 +9,45 @@
 
 using namespace godot;
 
+////
+//// BG_HexSaveData
+////
+class BG_HexSaveData : public Resource
+{
+	GDCLASS(BG_HexSaveData, Resource);
+
+protected:
+    static void _bind_methods();
+
+public:
+    int q = 0;
+    int get_q() const { return q; }
+    void set_q(int v) { q = v; }
+
+    int r = 0;
+    int get_r() const { return r; }
+    void set_r(int v) { r = v; }
+};
+
+////
+//// BG_BattleBoardSaveData
+////
+class BG_BattleBoardSaveData : public Resource
+{
+	GDCLASS(BG_BattleBoardSaveData, Resource);
+
+protected:
+    static void _bind_methods();
+
+public:
+    TypedArray<BG_HexSaveData> hex_slots;
+    TypedArray<BG_HexSaveData> get_hex_slots() const { return hex_slots; }
+    void set_hex_slots(TypedArray<BG_HexSaveData> v) { hex_slots = v; }
+};
+
+////
+//// BG_Hex
+////
 class BG_Hex : public Object
 {
 	GDCLASS(BG_Hex, Object);
@@ -50,6 +90,9 @@ public:
     }
 };
 
+////
+//// BG_HexGrid
+////
 class BG_HexGrid : public Object
 {
 	GDCLASS(BG_HexGrid, Object);

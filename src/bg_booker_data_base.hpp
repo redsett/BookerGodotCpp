@@ -934,6 +934,9 @@ protected:
 	static void _bind_methods();
 
 public:
+	StringName battle_board_scene_path;
+	StringName get_battle_board_scene_path() const { return battle_board_scene_path; }
+
 	int total_week_count = 0;
 	int get_total_week_count() const { return total_week_count; }
 

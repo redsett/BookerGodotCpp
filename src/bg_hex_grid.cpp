@@ -5,6 +5,31 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 
 ////
+//// BG_HexSaveData
+////
+void BG_HexSaveData::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_q"), &BG_HexSaveData::get_q);
+	ClassDB::bind_method(D_METHOD("set_q"), &BG_HexSaveData::set_q);
+	ClassDB::bind_method(D_METHOD("get_r"), &BG_HexSaveData::get_r);
+	ClassDB::bind_method(D_METHOD("set_r"), &BG_HexSaveData::set_r);
+
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "q"), "set_q", "get_q");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "r"), "set_r", "get_r");
+}
+
+////
+//// BG_BattleBoardSaveData
+////
+void BG_BattleBoardSaveData::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_hex_slots"), &BG_BattleBoardSaveData::get_hex_slots);
+	ClassDB::bind_method(D_METHOD("set_hex_slots"), &BG_BattleBoardSaveData::set_hex_slots);
+
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "hex_slots"), "set_hex_slots", "get_hex_slots");
+}
+
+////
 //// BG_Hex
 ////
 void BG_Hex::_bind_methods()
