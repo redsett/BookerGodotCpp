@@ -10,6 +10,30 @@
 using namespace godot;
 
 ////
+//// BG_HexRowElement
+////
+class BG_HexRowElement : public Resource
+{
+	GDCLASS(BG_HexRowElement, Resource);
+
+protected:
+    static void _bind_methods();
+
+public:
+    int column_index = 0;
+    int get_column_index() const { return column_index; }
+    void set_column_index(int v) { column_index = v; }
+
+    int empties = 0;
+    int get_empties() const { return empties; }
+    void set_empties(int v) { empties = v; }
+
+    int row_count = 0;
+    int get_row_count() const { return row_count; }
+    void set_row_count(int v) { row_count = v; }
+};
+
+////
 //// BG_HexSaveData
 ////
 class BG_HexSaveData : public Resource
@@ -100,6 +124,9 @@ class BG_HexGrid : public Object
 protected:
 	static void _bind_methods();
 
+    float x_offset_percent = 0.0;
+    float y_offset_percent = 0.0;
+
     Vector2i get_direction_difference(const BG_Hex *hex, Vector2i d) const;
 
 public:
@@ -140,8 +167,11 @@ public:
     void set_offset_between_hexes(float v) { offset_between_hexes = v; }
 
     Vector2 get_center_of_hex_location(const BG_Hex *hex) const {
-        const float half_size = size_per_hex * 0.5;
-        return hex->get_location() + Vector2(half_size, half_size);
+        const Vector2 half_size = Vector2(
+            size_per_hex * 0.5,// * (1.0 - x_offset_percent), 
+            size_per_hex * 0.5// * (1.0 - y_offset_percent)
+        );
+        return hex->get_location() + half_size;
     }
 
     BG_Hex *get_hex_in_direction(const BG_Hex *from_hex, Vector2i d) const;

@@ -5,6 +5,23 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 
 ////
+//// BG_HexRowElement
+////
+void BG_HexRowElement::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_column_index"), &BG_HexRowElement::get_column_index);
+	ClassDB::bind_method(D_METHOD("set_column_index"), &BG_HexRowElement::set_column_index);
+	ClassDB::bind_method(D_METHOD("get_empties"), &BG_HexRowElement::get_empties);
+	ClassDB::bind_method(D_METHOD("set_empties"), &BG_HexRowElement::set_empties);
+	ClassDB::bind_method(D_METHOD("get_row_count"), &BG_HexRowElement::get_row_count);
+	ClassDB::bind_method(D_METHOD("set_row_count"), &BG_HexRowElement::set_row_count);
+
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "column_index"), "set_column_index", "get_column_index");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "empties"), "set_empties", "get_empties");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "row_count"), "set_row_count", "get_row_count");
+}
+
+////
 //// BG_HexSaveData
 ////
 void BG_HexSaveData::_bind_methods()
@@ -248,8 +265,10 @@ void BG_HexGrid::add_row(int column_index, int initial_emptys, int count)
     }
 }
 
-void BG_HexGrid::update_locations(float x_offset_percent, float y_offset_percent)
+void BG_HexGrid::update_locations(float p_x_offset_percent, float p_y_offset_percent)
 {
+    x_offset_percent = p_x_offset_percent;
+    y_offset_percent = p_y_offset_percent;
 	for (int i = 0; i < grid.size(); ++i)
 	{
 		BG_Hex *h = cast_to<BG_Hex>(grid[i]);
