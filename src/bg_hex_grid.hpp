@@ -10,27 +10,52 @@
 using namespace godot;
 
 ////
-//// BG_HexRowElement
+//// BG_HexVisualAssetData
 ////
-class BG_HexRowElement : public Resource
+class BG_HexVisualAssetData : public Resource
 {
-	GDCLASS(BG_HexRowElement, Resource);
+	GDCLASS(BG_HexVisualAssetData, Resource);
 
 protected:
     static void _bind_methods();
 
 public:
-    int column_index = 0;
-    int get_column_index() const { return column_index; }
-    void set_column_index(int v) { column_index = v; }
+	enum HexVisualAssetTypes : int32_t {
+        CITY,
+		REST,
+		MONSTER_SPAWN,
+        WALL
+	};
 
-    int empties = 0;
-    int get_empties() const { return empties; }
-    void set_empties(int v) { empties = v; }
+    HexVisualAssetTypes hex_type = MONSTER_SPAWN;
+    HexVisualAssetTypes get_hex_type() const { return hex_type; }
+    void set_hex_type(HexVisualAssetTypes v) { hex_type = v; }
 
-    int row_count = 0;
-    int get_row_count() const { return row_count; }
-    void set_row_count(int v) { row_count = v; }
+    float rotation = 0.0;
+    float get_rotation() const { return rotation; }
+    void set_rotation(float v) { rotation = v; }
+};
+
+VARIANT_ENUM_CAST(BG_HexVisualAssetData::HexVisualAssetTypes);
+
+////
+//// BG_HexVisualData
+////
+class BG_HexVisualData : public Resource
+{
+	GDCLASS(BG_HexVisualData, Resource);
+
+protected:
+    static void _bind_methods();
+
+public:
+    Vector2i qr = Vector2i();
+    Vector2i get_qr() const { return qr; }
+    void set_qr(Vector2i v) { qr = v; }
+
+    TypedArray<BG_HexVisualAssetData> hex_asset_datas;
+    TypedArray<BG_HexVisualAssetData> get_hex_asset_datas() const { return hex_asset_datas; }
+    void set_hex_asset_datas(TypedArray<BG_HexVisualAssetData> v) { hex_asset_datas = v; }
 };
 
 ////

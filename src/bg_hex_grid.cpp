@@ -5,20 +5,40 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 
 ////
-//// BG_HexRowElement
+//// BG_HexVisualAssetData
 ////
-void BG_HexRowElement::_bind_methods()
+void BG_HexVisualAssetData::_bind_methods()
 {
-	ClassDB::bind_method(D_METHOD("get_column_index"), &BG_HexRowElement::get_column_index);
-	ClassDB::bind_method(D_METHOD("set_column_index"), &BG_HexRowElement::set_column_index);
-	ClassDB::bind_method(D_METHOD("get_empties"), &BG_HexRowElement::get_empties);
-	ClassDB::bind_method(D_METHOD("set_empties"), &BG_HexRowElement::set_empties);
-	ClassDB::bind_method(D_METHOD("get_row_count"), &BG_HexRowElement::get_row_count);
-	ClassDB::bind_method(D_METHOD("set_row_count"), &BG_HexRowElement::set_row_count);
+	ClassDB::bind_method(D_METHOD("get_hex_type"), &BG_HexVisualAssetData::get_hex_type);
+	ClassDB::bind_method(D_METHOD("set_hex_type"), &BG_HexVisualAssetData::set_hex_type);
+	ClassDB::bind_method(D_METHOD("get_rotation"), &BG_HexVisualAssetData::get_rotation);
+	ClassDB::bind_method(D_METHOD("set_rotation"), &BG_HexVisualAssetData::set_rotation);
 
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "column_index"), "set_column_index", "get_column_index");
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "empties"), "set_empties", "get_empties");
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "row_count"), "set_row_count", "get_row_count");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "hex_type", PROPERTY_HINT_ENUM, "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3"), "set_hex_type", "get_hex_type");
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "rotation"), "set_rotation", "get_rotation");
+
+    // ClassDB::bind_integer_constant("BG_HexVisualAssetData", "HexVisualAssetTypes", "CITY", CITY);
+    // ClassDB::bind_integer_constant("BG_HexVisualAssetData", "HexVisualAssetTypes", "REST", REST);
+    // ClassDB::bind_integer_constant("BG_HexVisualAssetData", "HexVisualAssetTypes", "MONSTER_SPAWN", MONSTER_SPAWN);
+    // ClassDB::bind_integer_constant("BG_HexVisualAssetData", "HexVisualAssetTypes", "WALL", WALL);
+	BIND_ENUM_CONSTANT(CITY);
+	BIND_ENUM_CONSTANT(REST);
+	BIND_ENUM_CONSTANT(MONSTER_SPAWN);
+	BIND_ENUM_CONSTANT(WALL);
+}
+
+////
+//// BG_HexVisualData
+////
+void BG_HexVisualData::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_qr"), &BG_HexVisualData::get_qr);
+	ClassDB::bind_method(D_METHOD("set_qr"), &BG_HexVisualData::set_qr);
+	ClassDB::bind_method(D_METHOD("get_hex_asset_datas"), &BG_HexVisualData::get_hex_asset_datas);
+	ClassDB::bind_method(D_METHOD("set_hex_asset_datas"), &BG_HexVisualData::set_hex_asset_datas);
+
+    ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "qr"), "set_qr", "get_qr");
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "hex_asset_datas"), "set_hex_asset_datas", "get_hex_asset_datas");
 }
 
 ////
