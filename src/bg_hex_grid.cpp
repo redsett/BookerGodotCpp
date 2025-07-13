@@ -9,22 +9,24 @@
 ////
 void BG_HexVisualAssetData::_bind_methods()
 {
+    ClassDB::bind_static_method("BG_HexVisualAssetData", D_METHOD("get_hex_type_names"), &BG_HexVisualAssetData::get_hex_type_names);
+
 	ClassDB::bind_method(D_METHOD("get_hex_type"), &BG_HexVisualAssetData::get_hex_type);
 	ClassDB::bind_method(D_METHOD("set_hex_type"), &BG_HexVisualAssetData::set_hex_type);
 	ClassDB::bind_method(D_METHOD("get_rotation"), &BG_HexVisualAssetData::get_rotation);
 	ClassDB::bind_method(D_METHOD("set_rotation"), &BG_HexVisualAssetData::set_rotation);
+	ClassDB::bind_method(D_METHOD("get_section_index"), &BG_HexVisualAssetData::get_section_index);
+	ClassDB::bind_method(D_METHOD("set_section_index"), &BG_HexVisualAssetData::set_section_index);
 
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "hex_type", PROPERTY_HINT_ENUM, "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3"), "set_hex_type", "get_hex_type");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "hex_type", PROPERTY_HINT_ENUM, "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3,SECTION:4"), "set_hex_type", "get_hex_type");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "rotation"), "set_rotation", "get_rotation");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "section_index"), "set_section_index", "get_section_index");
 
-    // ClassDB::bind_integer_constant("BG_HexVisualAssetData", "HexVisualAssetTypes", "CITY", CITY);
-    // ClassDB::bind_integer_constant("BG_HexVisualAssetData", "HexVisualAssetTypes", "REST", REST);
-    // ClassDB::bind_integer_constant("BG_HexVisualAssetData", "HexVisualAssetTypes", "MONSTER_SPAWN", MONSTER_SPAWN);
-    // ClassDB::bind_integer_constant("BG_HexVisualAssetData", "HexVisualAssetTypes", "WALL", WALL);
 	BIND_ENUM_CONSTANT(CITY);
 	BIND_ENUM_CONSTANT(REST);
 	BIND_ENUM_CONSTANT(MONSTER_SPAWN);
 	BIND_ENUM_CONSTANT(WALL);
+	BIND_ENUM_CONSTANT(SECTION);
 }
 
 ////
@@ -97,6 +99,7 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_hex_in_direction", "from_hex", "direction"), &BG_HexGrid::get_hex_in_direction);
 	ClassDB::bind_method(D_METHOD("get_hex_neighbors", "from_hex"), &BG_HexGrid::get_hex_neighbors);
 	ClassDB::bind_method(D_METHOD("get_hex_by_coords", "coords"), &BG_HexGrid::get_hex_by_coords);
+	ClassDB::bind_method(D_METHOD("get_hex_by_qr", "qr"), &BG_HexGrid::get_hex_by_qr);
 	ClassDB::bind_method(D_METHOD("add_hex", "hex"), &BG_HexGrid::add_hex);
 	ClassDB::bind_method(D_METHOD("add_row", "column_index", "initial_emptys", "count"), &BG_HexGrid::add_row);
 	ClassDB::bind_method(D_METHOD("update_locations", "x_offset_percent", "y_offset_percent"), &BG_HexGrid::update_locations);
@@ -202,6 +205,17 @@ BG_Hex *BG_HexGrid::get_hex_by_coords(Vector2i coords) const
 	{
 		BG_Hex *h = cast_to<BG_Hex>(grid[i]);
         if (coords == h->get_coords())
+            return h;
+    }
+    return nullptr;
+}
+
+BG_Hex *BG_HexGrid::get_hex_by_qr(Vector2i qr) const
+{
+	for (int i = 0; i < grid.size(); ++i)
+	{
+		BG_Hex *h = cast_to<BG_Hex>(grid[i]);
+        if (qr == Vector2i(h->get_q(), h->get_r()))
             return h;
     }
     return nullptr;

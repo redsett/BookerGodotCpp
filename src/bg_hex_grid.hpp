@@ -24,8 +24,19 @@ public:
         CITY,
 		REST,
 		MONSTER_SPAWN,
-        WALL
+        WALL,
+        SECTION,
 	};
+
+    static PackedStringArray get_hex_type_names() {
+        PackedStringArray result;
+        result.append("CITY");
+        result.append("REST");
+        result.append("MONSTER_SPAWN");
+        result.append("WALL");
+        result.append("SECTION");
+        return result;
+    }
 
     HexVisualAssetTypes hex_type = MONSTER_SPAWN;
     HexVisualAssetTypes get_hex_type() const { return hex_type; }
@@ -34,6 +45,10 @@ public:
     float rotation = 0.0;
     float get_rotation() const { return rotation; }
     void set_rotation(float v) { rotation = v; }
+
+    int section_index = 0;
+    int get_section_index() const { return section_index; }
+    void set_section_index(int v) { section_index = v; }
 };
 
 VARIANT_ENUM_CAST(BG_HexVisualAssetData::HexVisualAssetTypes);
@@ -204,6 +219,7 @@ public:
     Dictionary get_hex_neighbors(const BG_Hex *from_hex) const;
 
     BG_Hex *get_hex_by_coords(Vector2i coords) const;
+    BG_Hex *get_hex_by_qr(Vector2i qr) const;
 
     void add_hex(const BG_Hex *hex);
     void add_row(int column_index, int initial_emptys, int count);
