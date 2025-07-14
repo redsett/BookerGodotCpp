@@ -46,6 +46,10 @@ public:
     float get_rotation() const { return rotation; }
     void set_rotation(float v) { rotation = v; }
 
+    float scale_multiplier = 1.0;
+    float get_scale_multiplier() const { return scale_multiplier; }
+    void set_scale_multiplier(float v) { scale_multiplier = v; }
+
     int section_index = 0;
     int get_section_index() const { return section_index; }
     void set_section_index(int v) { section_index = v; }
@@ -74,39 +78,51 @@ public:
 };
 
 ////
-//// BG_HexSaveData
+//// BG_HexGameSaveData
 ////
-class BG_HexSaveData : public Resource
+class BG_HexGameSaveData : public Resource
 {
-	GDCLASS(BG_HexSaveData, Resource);
+	GDCLASS(BG_HexGameSaveData, Resource);
 
 protected:
     static void _bind_methods();
 
 public:
-    int q = 0;
-    int get_q() const { return q; }
-    void set_q(int v) { q = v; }
+	enum HexGameAssetTypes : int32_t {
+        BAND,
+		JOB,
+		CITY,
+	};
 
-    int r = 0;
-    int get_r() const { return r; }
-    void set_r(int v) { r = v; }
+    HexGameAssetTypes asset_type = BAND;
+    HexGameAssetTypes get_asset_type() const { return asset_type; }
+    void set_asset_type(HexGameAssetTypes v) { asset_type = v; }
+
+    Vector2i qr = Vector2i();
+    Vector2i get_qr() const { return qr; }
+    void set_qr(Vector2i v) { qr = v; }
+
+    int unique_id_reference = 0;
+    int get_unique_id_reference() const { return unique_id_reference; }
+    void set_unique_id_reference(int v) { unique_id_reference = v; }
 };
 
+VARIANT_ENUM_CAST(BG_HexGameSaveData::HexGameAssetTypes);
+
 ////
-//// BG_BattleBoardSaveData
+//// BG_BattleBoardGameSaveData
 ////
-class BG_BattleBoardSaveData : public Resource
+class BG_BattleBoardGameSaveData : public Resource
 {
-	GDCLASS(BG_BattleBoardSaveData, Resource);
+	GDCLASS(BG_BattleBoardGameSaveData, Resource);
 
 protected:
     static void _bind_methods();
 
 public:
-    TypedArray<BG_HexSaveData> hex_slots;
-    TypedArray<BG_HexSaveData> get_hex_slots() const { return hex_slots; }
-    void set_hex_slots(TypedArray<BG_HexSaveData> v) { hex_slots = v; }
+    TypedArray<BG_HexGameSaveData> hex_slots;
+    TypedArray<BG_HexGameSaveData> get_hex_slots() const { return hex_slots; }
+    void set_hex_slots(TypedArray<BG_HexGameSaveData> v) { hex_slots = v; }
 };
 
 ////

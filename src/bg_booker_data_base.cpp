@@ -402,6 +402,8 @@ void BG_BandMember::_bind_methods()
 ////
 void BG_Band::_bind_methods()
 {
+	ClassDB::bind_method(D_METHOD("get_unique_id"), &BG_Band::get_unique_id);
+	ClassDB::bind_method(D_METHOD("set_unique_id"), &BG_Band::set_unique_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_Band::get_name);
 	ClassDB::bind_method(D_METHOD("set_name"), &BG_Band::set_name);
 	ClassDB::bind_method(D_METHOD("get_resting"), &BG_Band::get_resting);
@@ -414,6 +416,7 @@ void BG_Band::_bind_methods()
 	ClassDB::bind_method(D_METHOD("has_job"), &BG_Band::has_job);
 	ClassDB::bind_method(D_METHOD("clear_job"), &BG_Band::clear_job);
 
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "unique_id"), "set_unique_id", "get_unique_id");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "resting"), "set_resting", "get_resting");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "band_members"), "set_band_members", "get_band_members");

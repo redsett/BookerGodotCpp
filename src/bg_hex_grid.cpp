@@ -15,11 +15,14 @@ void BG_HexVisualAssetData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_hex_type"), &BG_HexVisualAssetData::set_hex_type);
 	ClassDB::bind_method(D_METHOD("get_rotation"), &BG_HexVisualAssetData::get_rotation);
 	ClassDB::bind_method(D_METHOD("set_rotation"), &BG_HexVisualAssetData::set_rotation);
+	ClassDB::bind_method(D_METHOD("get_scale_multiplier"), &BG_HexVisualAssetData::get_scale_multiplier);
+	ClassDB::bind_method(D_METHOD("set_scale_multiplier"), &BG_HexVisualAssetData::set_scale_multiplier);
 	ClassDB::bind_method(D_METHOD("get_section_index"), &BG_HexVisualAssetData::get_section_index);
 	ClassDB::bind_method(D_METHOD("set_section_index"), &BG_HexVisualAssetData::set_section_index);
 
     ADD_PROPERTY(PropertyInfo(Variant::INT, "hex_type", PROPERTY_HINT_ENUM, "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3,SECTION:4"), "set_hex_type", "get_hex_type");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "rotation"), "set_rotation", "get_rotation");
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "scale_multiplier"), "set_scale_multiplier", "get_scale_multiplier");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "section_index"), "set_section_index", "get_section_index");
 
 	BIND_ENUM_CONSTANT(CITY);
@@ -44,26 +47,33 @@ void BG_HexVisualData::_bind_methods()
 }
 
 ////
-//// BG_HexSaveData
+//// BG_HexGameSaveData
 ////
-void BG_HexSaveData::_bind_methods()
+void BG_HexGameSaveData::_bind_methods()
 {
-	ClassDB::bind_method(D_METHOD("get_q"), &BG_HexSaveData::get_q);
-	ClassDB::bind_method(D_METHOD("set_q"), &BG_HexSaveData::set_q);
-	ClassDB::bind_method(D_METHOD("get_r"), &BG_HexSaveData::get_r);
-	ClassDB::bind_method(D_METHOD("set_r"), &BG_HexSaveData::set_r);
+	ClassDB::bind_method(D_METHOD("get_asset_type"), &BG_HexGameSaveData::get_asset_type);
+	ClassDB::bind_method(D_METHOD("set_asset_type"), &BG_HexGameSaveData::set_asset_type);
+	ClassDB::bind_method(D_METHOD("get_qr"), &BG_HexGameSaveData::get_qr);
+	ClassDB::bind_method(D_METHOD("set_qr"), &BG_HexGameSaveData::set_qr);
+	ClassDB::bind_method(D_METHOD("get_unique_id_reference"), &BG_HexGameSaveData::get_unique_id_reference);
+	ClassDB::bind_method(D_METHOD("set_unique_id_reference"), &BG_HexGameSaveData::set_unique_id_reference);
 
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "q"), "set_q", "get_q");
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "r"), "set_r", "get_r");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "asset_type", PROPERTY_HINT_ENUM, "BAND:0,JOB:1,CITY:2"), "set_asset_type", "get_asset_type");
+    ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "qr"), "set_qr", "get_qr");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "unique_id_reference"), "set_unique_id_reference", "get_unique_id_reference");
+
+    BIND_ENUM_CONSTANT(BAND);
+    BIND_ENUM_CONSTANT(JOB);
+    BIND_ENUM_CONSTANT(CITY);
 }
 
 ////
-//// BG_BattleBoardSaveData
+//// BG_BattleBoardGameSaveData
 ////
-void BG_BattleBoardSaveData::_bind_methods()
+void BG_BattleBoardGameSaveData::_bind_methods()
 {
-	ClassDB::bind_method(D_METHOD("get_hex_slots"), &BG_BattleBoardSaveData::get_hex_slots);
-	ClassDB::bind_method(D_METHOD("set_hex_slots"), &BG_BattleBoardSaveData::set_hex_slots);
+	ClassDB::bind_method(D_METHOD("get_hex_slots"), &BG_BattleBoardGameSaveData::get_hex_slots);
+	ClassDB::bind_method(D_METHOD("set_hex_slots"), &BG_BattleBoardGameSaveData::set_hex_slots);
 
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "hex_slots"), "set_hex_slots", "get_hex_slots");
 }

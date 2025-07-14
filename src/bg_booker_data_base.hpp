@@ -771,6 +771,10 @@ protected:
 	static void _bind_methods();
 
 public:
+	int unique_id = 0;
+	int get_unique_id() const { return unique_id; }
+	void set_unique_id(int value) { unique_id = value; }
+	
 	StringName name;
 	StringName get_name() const { return name; }
 	void set_name(StringName value) { name = value; }
