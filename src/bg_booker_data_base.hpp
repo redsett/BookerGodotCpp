@@ -702,6 +702,9 @@ public:
 	Vector2 scale_max_extreme = Vector2();
 	Vector2 get_scale_max_extreme() const { return scale_max_extreme; }
 
+	int travel_distance = 0;
+	int get_travel_distance() const { return travel_distance; }
+
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
 
@@ -774,7 +777,7 @@ public:
 	int unique_id = 0;
 	int get_unique_id() const { return unique_id; }
 	void set_unique_id(int value) { unique_id = value; }
-	
+
 	StringName name;
 	StringName get_name() const { return name; }
 	void set_name(StringName value) { name = value; }

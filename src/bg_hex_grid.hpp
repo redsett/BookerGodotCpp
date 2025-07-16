@@ -232,7 +232,8 @@ public:
 
     BG_Hex *get_hex_in_direction(const BG_Hex *from_hex, Vector2i d) const;
     HashMap<HexDirections, BG_Hex *> get_hex_neighbors_fast(const BG_Hex *from_hex) const;
-    Dictionary get_hex_neighbors(const BG_Hex *from_hex) const;
+    Dictionary get_hex_neighbors_directions(const BG_Hex *from_hex) const;
+    Dictionary get_hex_neighbors_coords(const BG_Hex *from_hex, int cell_distance) const;
 
     BG_Hex *get_hex_by_coords(Vector2i coords) const;
     BG_Hex *get_hex_by_qr(Vector2i qr) const;

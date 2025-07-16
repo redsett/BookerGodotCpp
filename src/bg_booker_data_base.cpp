@@ -437,6 +437,7 @@ void BG_UnitCaste::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_scale_max"), &BG_UnitCaste::get_scale_max);
 	ClassDB::bind_method(D_METHOD("get_scale_min_extreme"), &BG_UnitCaste::get_scale_min_extreme);
 	ClassDB::bind_method(D_METHOD("get_scale_max_extreme"), &BG_UnitCaste::get_scale_max_extreme);
+	ClassDB::bind_method(D_METHOD("get_travel_distance"), &BG_UnitCaste::get_travel_distance);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_UnitCaste::get_stats);
 	ClassDB::bind_method(D_METHOD("get_starting_item_ids"), &BG_UnitCaste::get_starting_item_ids);
 	ClassDB::bind_method(D_METHOD("get_element_availability_ids"), &BG_UnitCaste::get_element_availability_ids);
@@ -1157,6 +1158,13 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_unit_caste->scale_max = Vector2(float(scale_limits_entry["max_x"]), float(scale_limits_entry["max_y"]));
 					new_unit_caste->scale_min_extreme = Vector2(float(scale_limits_entry["extreme_min_x"]), float(scale_limits_entry["extreme_min_y"]));
 					new_unit_caste->scale_max_extreme = Vector2(float(scale_limits_entry["extreme_max_x"]), float(scale_limits_entry["extreme_max_y"]));
+				}
+
+				const Array misc_stats_lines = Array(entry["misc_stats"]);
+				for (int y = 0; y < misc_stats_lines.size(); y++)
+				{
+					const Dictionary misc_stats_entry = misc_stats_lines[y];
+					new_unit_caste->travel_distance = int(misc_stats_entry["travel_distance"]);
 				}
 
 				const Array damage_type_lines = Array(entry["base_damage_type_stats"]);

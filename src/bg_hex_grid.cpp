@@ -107,7 +107,8 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_center_of_hex_location"), &BG_HexGrid::get_center_of_hex_location);
 	ClassDB::bind_method(D_METHOD("get_hex_direction_vec", "direction"), &BG_HexGrid::get_hex_direction_vec);
 	ClassDB::bind_method(D_METHOD("get_hex_in_direction", "from_hex", "direction"), &BG_HexGrid::get_hex_in_direction);
-	ClassDB::bind_method(D_METHOD("get_hex_neighbors", "from_hex"), &BG_HexGrid::get_hex_neighbors);
+	ClassDB::bind_method(D_METHOD("get_hex_neighbors_directions", "from_hex"), &BG_HexGrid::get_hex_neighbors_directions);
+	ClassDB::bind_method(D_METHOD("get_hex_neighbors_coords", "from_hex", "cell_distance"), &BG_HexGrid::get_hex_neighbors_coords);
 	ClassDB::bind_method(D_METHOD("get_hex_by_coords", "coords"), &BG_HexGrid::get_hex_by_coords);
 	ClassDB::bind_method(D_METHOD("get_hex_by_qr", "qr"), &BG_HexGrid::get_hex_by_qr);
 	ClassDB::bind_method(D_METHOD("add_hex", "hex"), &BG_HexGrid::add_hex);
@@ -258,13 +259,50 @@ HashMap<BG_HexGrid::HexDirections, BG_Hex *> BG_HexGrid::get_hex_neighbors_fast(
     return result;
 }
 
-Dictionary BG_HexGrid::get_hex_neighbors(const BG_Hex *from_hex) const
+Dictionary BG_HexGrid::get_hex_neighbors_directions(const BG_Hex *from_hex) const
 {
     Dictionary result;
     const HashMap<BG_HexGrid::HexDirections, BG_Hex *> neighbors = get_hex_neighbors_fast(from_hex);
     for (const auto &pair : neighbors) {
         result[pair.key] = pair.value;
     }
+    return result;
+}
+
+Dictionary BG_HexGrid::get_hex_neighbors_coords(const BG_Hex *from_hex, int cell_distance) const
+{
+    if (cell_distance < 1 || from_hex == nullptr) return {};
+
+    Dictionary result;
+    const HashMap<BG_HexGrid::HexDirections, BG_Hex *> neighbors = get_hex_neighbors_fast(from_hex);
+    for (const auto &pair : neighbors) {
+        if (pair.value != nullptr) {
+            result[pair.value->get_coords()] = pair.value;
+        }
+    }
+
+    if (cell_distance > 1) {
+        for (uint8_t i = 1; i < cell_distance; ++i) {
+            const TypedArray<Vector2i> keys = result.keys();
+            for (uint16_t v = 0; v < keys.size(); ++v)
+            {
+                const BG_Hex *h = cast_to<BG_Hex>(result[keys[v]]);
+                result.merge(get_hex_neighbors_coords(h, 1));
+            }
+        }
+
+        
+        for (uint16_t k = 0; k < result.keys().size(); ++k)
+        {
+            const BG_Hex *h = cast_to<BG_Hex>(result[result.keys()[k]]);
+            if (h == from_hex) {
+                const Vector2i key = result.keys()[k];
+                result.erase(key);
+                break;
+            }
+        }
+    }
+
     return result;
 }
 

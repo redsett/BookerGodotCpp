@@ -90,6 +90,7 @@
     "queue": "cpp",
     "optional": "cpp",
     "xtr1common": "cpp",
-    "deque": "cpp"
+    "deque": "cpp",
+    "algorithm": "cpp"
   }
 }
