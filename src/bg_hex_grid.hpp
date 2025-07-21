@@ -128,9 +128,9 @@ public:
 ////
 //// BG_Hex
 ////
-class BG_Hex : public Object
+class BG_Hex : public Resource
 {
-	GDCLASS(BG_Hex, Object);
+	GDCLASS(BG_Hex, Resource);
 
 protected:
     static void _bind_methods();
@@ -144,6 +144,8 @@ public:
     int get_r() const { return r; }
     void set_r(int v) { r = v; }
 
+    Vector2i get_qr() const { return Vector2i(q, r); }
+    Vector3i get_full_qr() const { return Vector3i(q, r, s); }
     Vector2i get_coords() const { return Vector2i(r, q); }
     Vector3i get_full_coords() const { return Vector3i(r, q, s); }
 
@@ -156,15 +158,15 @@ public:
     Vector2 location;
     Vector2 get_location() const { return location; }
 
-    bool operator==(const BG_Hex &other) const {
-        return q == other.q && r == other.r && s == other.s;
+    bool operator==(const Ref<BG_Hex> other) const {
+        return q == other->q && r == other->r && s == other->s;
     }
 
-    int get_move_cost(const BG_Hex *to) const {
+    inline int get_move_cost(const Ref<BG_Hex> to) const {
         return 1;
     }
 
-    int get_hex_cost() const {
+    inline int get_hex_cost() const {
         if (get_empty()) return 0;
         return 1;
     }
@@ -183,7 +185,7 @@ protected:
     float x_offset_percent = 0.0;
     float y_offset_percent = 0.0;
 
-    Vector2i get_direction_difference(const BG_Hex *hex, Vector2i d) const;
+    Vector2i get_direction_difference(const Ref<BG_Hex> hex, Vector2i d) const;
 
 public:
     BG_HexGrid();
@@ -210,10 +212,28 @@ public:
     OffsetType offset_type = EVEN_R;
 	OffsetType get_offset_type() const { return offset_type; }
 	void set_offset_type(OffsetType v) { offset_type = v; }
-
+    
     TypedArray<BG_Hex> grid;
     TypedArray<BG_Hex> get_grid() const { return grid; };
+    
+    HashMap<Vector2i, Ref<BG_HexVisualData>> base_grid_visual_data;
+    Dictionary get_base_grid_visual_data() const {
+        Dictionary result;
+        for (const auto &pair : base_grid_visual_data) {
+            result[pair.key] = pair.value;
+        }
+        return result;
+    }
+	void set_base_grid_visual_data(Vector2i qr, Ref<BG_HexVisualData> v) {
+        base_grid_visual_data[qr] = v;
+    }
+    
+    TypedArray<BG_HexGameSaveData> game_data;
+    TypedArray<BG_HexGameSaveData> get_game_data() const { return game_data; };
+	void set_game_data(TypedArray<BG_HexGameSaveData> v) { game_data = v; }
 
+    int get_hex_cost(Vector2i qr) const;
+    
     float size_per_hex = 10.0;
     float get_size_per_hex() const { return size_per_hex; }
     void set_size_per_hex(float v) { size_per_hex = v; }
@@ -222,7 +242,7 @@ public:
     float get_offset_between_hexes() const { return offset_between_hexes; }
     void set_offset_between_hexes(float v) { offset_between_hexes = v; }
 
-    Vector2 get_center_of_hex_location(const BG_Hex *hex) const {
+    Vector2 get_center_of_hex_location(const Ref<BG_Hex> hex) const {
         const Vector2 half_size = Vector2(
             size_per_hex * 0.5,// * (1.0 - x_offset_percent), 
             size_per_hex * 0.5// * (1.0 - y_offset_percent)
@@ -230,20 +250,20 @@ public:
         return hex->get_location() + half_size;
     }
 
-    BG_Hex *get_hex_in_direction(const BG_Hex *from_hex, Vector2i d) const;
-    HashMap<HexDirections, BG_Hex *> get_hex_neighbors_fast(const BG_Hex *from_hex) const;
-    Dictionary get_hex_neighbors_directions(const BG_Hex *from_hex) const;
-    Dictionary get_hex_neighbors_coords(const BG_Hex *from_hex, int cell_distance) const;
+    Ref<BG_Hex> get_hex_in_direction(const Ref<BG_Hex> from_hex, Vector2i d) const;
+    inline HashMap<HexDirections, Ref<BG_Hex>> get_hex_neighbors_fast(const Ref<BG_Hex> from_hex) const;
+    Dictionary get_hex_neighbors_directions(const Ref<BG_Hex> from_hex) const;
+    Dictionary get_hex_neighbors_qr(const Ref<BG_Hex> from_hex, int cell_distance, bool do_pathing_checks) const;
 
-    BG_Hex *get_hex_by_coords(Vector2i coords) const;
-    BG_Hex *get_hex_by_qr(Vector2i qr) const;
+    Ref<BG_Hex> get_hex_by_coords(Vector2i coords) const;
+    Ref<BG_Hex> get_hex_by_qr(Vector2i qr) const;
 
-    void add_hex(const BG_Hex *hex);
+    void add_hex(const Ref<BG_Hex> hex);
     void add_row(int column_index, int initial_emptys, int count);
 
     void update_locations(float x_offset_percent, float y_offset_percent);
 
-    TypedArray<BG_Hex> find_path(BG_Hex *start, BG_Hex *goal);
+    TypedArray<BG_Hex> find_path(const Ref<BG_Hex> start, const Ref<BG_Hex> goal) const;
     bool comp_priority_item(Dictionary a, Dictionary b) const;
 };
 

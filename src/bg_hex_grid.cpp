@@ -87,6 +87,7 @@ void BG_Hex::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_q"), &BG_Hex::set_q);
 	ClassDB::bind_method(D_METHOD("get_r"), &BG_Hex::get_r);
 	ClassDB::bind_method(D_METHOD("set_r"), &BG_Hex::set_r);
+	ClassDB::bind_method(D_METHOD("get_qr"), &BG_Hex::get_qr);
 	ClassDB::bind_method(D_METHOD("get_empty"), &BG_Hex::get_empty);
 	ClassDB::bind_method(D_METHOD("set_empty"), &BG_Hex::set_empty);
 	ClassDB::bind_method(D_METHOD("get_location"), &BG_Hex::get_location);
@@ -100,6 +101,10 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_offset_type"), &BG_HexGrid::get_offset_type);
 	ClassDB::bind_method(D_METHOD("set_offset_type"), &BG_HexGrid::set_offset_type);
 	ClassDB::bind_method(D_METHOD("get_grid"), &BG_HexGrid::get_grid);
+	ClassDB::bind_method(D_METHOD("get_base_grid_visual_data"), &BG_HexGrid::get_base_grid_visual_data);
+	ClassDB::bind_method(D_METHOD("set_base_grid_visual_data", "qr", "data"), &BG_HexGrid::set_base_grid_visual_data);
+	ClassDB::bind_method(D_METHOD("get_game_data"), &BG_HexGrid::get_game_data);
+	ClassDB::bind_method(D_METHOD("set_game_data"), &BG_HexGrid::set_game_data);
 	ClassDB::bind_method(D_METHOD("get_size_per_hex"), &BG_HexGrid::get_size_per_hex);
 	ClassDB::bind_method(D_METHOD("set_size_per_hex"), &BG_HexGrid::set_size_per_hex);
 	ClassDB::bind_method(D_METHOD("get_offset_between_hexes"), &BG_HexGrid::get_offset_between_hexes);
@@ -108,7 +113,7 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_hex_direction_vec", "direction"), &BG_HexGrid::get_hex_direction_vec);
 	ClassDB::bind_method(D_METHOD("get_hex_in_direction", "from_hex", "direction"), &BG_HexGrid::get_hex_in_direction);
 	ClassDB::bind_method(D_METHOD("get_hex_neighbors_directions", "from_hex"), &BG_HexGrid::get_hex_neighbors_directions);
-	ClassDB::bind_method(D_METHOD("get_hex_neighbors_coords", "from_hex", "cell_distance"), &BG_HexGrid::get_hex_neighbors_coords);
+	ClassDB::bind_method(D_METHOD("get_hex_neighbors_qr", "from_hex", "cell_distance", "do_pathing_checks"), &BG_HexGrid::get_hex_neighbors_qr);
 	ClassDB::bind_method(D_METHOD("get_hex_by_coords", "coords"), &BG_HexGrid::get_hex_by_coords);
 	ClassDB::bind_method(D_METHOD("get_hex_by_qr", "qr"), &BG_HexGrid::get_hex_by_qr);
 	ClassDB::bind_method(D_METHOD("add_hex", "hex"), &BG_HexGrid::add_hex);
@@ -140,9 +145,9 @@ BG_HexGrid::BG_HexGrid()
     hex_directions[HexDirections::TOP_LEFT] = Vector2i(-1, -1);
 }
 
-Vector2i BG_HexGrid::get_direction_difference(const BG_Hex *hex, Vector2i d) const
+Vector2i BG_HexGrid::get_direction_difference(const Ref<BG_Hex> hex, Vector2i d) const
 {
-    if (hex == nullptr) return Vector2i(0, 0);
+    if (hex.is_null()) return Vector2i(0, 0);
     const bool column_is_odd = hex->q & 1; // Bitwise instead of modulo to support negative numbers.
     const bool row_is_odd = hex->r & 1; // Bitwise instead of modulo to support negative numbers.
     switch (offset_type) {
@@ -210,35 +215,35 @@ Vector2i BG_HexGrid::get_direction_difference(const BG_Hex *hex, Vector2i d) con
 }
 
 
-BG_Hex *BG_HexGrid::get_hex_by_coords(Vector2i coords) const
+Ref<BG_Hex> BG_HexGrid::get_hex_by_coords(Vector2i coords) const
 {
 	for (int i = 0; i < grid.size(); ++i)
 	{
-		BG_Hex *h = cast_to<BG_Hex>(grid[i]);
+		Ref<BG_Hex> h = grid[i];
         if (coords == h->get_coords())
             return h;
     }
     return nullptr;
 }
 
-BG_Hex *BG_HexGrid::get_hex_by_qr(Vector2i qr) const
+Ref<BG_Hex> BG_HexGrid::get_hex_by_qr(Vector2i qr) const
 {
 	for (int i = 0; i < grid.size(); ++i)
 	{
-		BG_Hex *h = cast_to<BG_Hex>(grid[i]);
-        if (qr == Vector2i(h->get_q(), h->get_r()))
+		Ref<BG_Hex> h = grid[i];
+        if (qr == h->get_qr())
             return h;
     }
     return nullptr;
 }
 
-BG_Hex *BG_HexGrid::get_hex_in_direction(const BG_Hex *from_hex, Vector2i d) const
+Ref<BG_Hex> BG_HexGrid::get_hex_in_direction(const Ref<BG_Hex> from_hex, Vector2i d) const
 {
     const Vector2i direction_diff = get_direction_difference(from_hex, d);
-    const Vector2i v = direction_diff + Vector2i(from_hex->r, from_hex->q);
+    const Vector2i v = direction_diff + from_hex->get_coords();
 	for (int i = 0; i < grid.size(); ++i)
 	{
-		BG_Hex *h = cast_to<BG_Hex>(grid[i]);
+		Ref<BG_Hex> h = grid[i];
         if (h->q == v.y && h->r == v.x) {
             // if (h->get_empty()) return nullptr;
             return h;
@@ -247,9 +252,9 @@ BG_Hex *BG_HexGrid::get_hex_in_direction(const BG_Hex *from_hex, Vector2i d) con
     return nullptr;
 }
 
-HashMap<BG_HexGrid::HexDirections, BG_Hex *> BG_HexGrid::get_hex_neighbors_fast(const BG_Hex *from_hex) const
+HashMap<BG_HexGrid::HexDirections, Ref<BG_Hex>> BG_HexGrid::get_hex_neighbors_fast(const Ref<BG_Hex> from_hex) const
 {
-    HashMap<HexDirections, BG_Hex *> result;
+    HashMap<HexDirections, Ref<BG_Hex>> result;
     result[BG_HexGrid::HexDirections::TOP] = get_hex_in_direction(from_hex, hex_directions[BG_HexGrid::HexDirections::TOP]);
     result[BG_HexGrid::HexDirections::RIGHT] = get_hex_in_direction(from_hex, hex_directions[BG_HexGrid::HexDirections::RIGHT]);
     result[BG_HexGrid::HexDirections::BOTTOM] = get_hex_in_direction(from_hex, hex_directions[BG_HexGrid::HexDirections::BOTTOM]);
@@ -259,25 +264,25 @@ HashMap<BG_HexGrid::HexDirections, BG_Hex *> BG_HexGrid::get_hex_neighbors_fast(
     return result;
 }
 
-Dictionary BG_HexGrid::get_hex_neighbors_directions(const BG_Hex *from_hex) const
+Dictionary BG_HexGrid::get_hex_neighbors_directions(const Ref<BG_Hex> from_hex) const
 {
     Dictionary result;
-    const HashMap<BG_HexGrid::HexDirections, BG_Hex *> neighbors = get_hex_neighbors_fast(from_hex);
+    const HashMap<BG_HexGrid::HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(from_hex);
     for (const auto &pair : neighbors) {
         result[pair.key] = pair.value;
     }
     return result;
 }
 
-Dictionary BG_HexGrid::get_hex_neighbors_coords(const BG_Hex *from_hex, int cell_distance) const
+Dictionary BG_HexGrid::get_hex_neighbors_qr(const Ref<BG_Hex> from_hex, int cell_distance, bool do_pathing_checks) const
 {
-    if (cell_distance < 1 || from_hex == nullptr) return {};
+    if (cell_distance < 1 || from_hex.is_null()) return {};
 
     Dictionary result;
-    const HashMap<BG_HexGrid::HexDirections, BG_Hex *> neighbors = get_hex_neighbors_fast(from_hex);
+    const HashMap<BG_HexGrid::HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(from_hex);
     for (const auto &pair : neighbors) {
         if (pair.value != nullptr) {
-            result[pair.value->get_coords()] = pair.value;
+            result[pair.value->get_qr()] = pair.value;
         }
     }
 
@@ -286,15 +291,15 @@ Dictionary BG_HexGrid::get_hex_neighbors_coords(const BG_Hex *from_hex, int cell
             const TypedArray<Vector2i> keys = result.keys();
             for (uint16_t v = 0; v < keys.size(); ++v)
             {
-                const BG_Hex *h = cast_to<BG_Hex>(result[keys[v]]);
-                result.merge(get_hex_neighbors_coords(h, 1));
+                const Ref<BG_Hex> h = result[keys[v]];
+                result.merge(get_hex_neighbors_qr(h, 1, false));
             }
         }
 
-        
+        // Remove from_hex from the result.
         for (uint16_t k = 0; k < result.keys().size(); ++k)
         {
-            const BG_Hex *h = cast_to<BG_Hex>(result[result.keys()[k]]);
+            const Ref<BG_Hex> h = result[result.keys()[k]];
             if (h == from_hex) {
                 const Vector2i key = result.keys()[k];
                 result.erase(key);
@@ -303,12 +308,31 @@ Dictionary BG_HexGrid::get_hex_neighbors_coords(const BG_Hex *from_hex, int cell
         }
     }
 
+    if (!do_pathing_checks) return result;
+
+    for (uint16_t i = result.keys().size(); i --> 0;) {
+        const Ref<BG_Hex> h = result[result.keys()[i]];
+        const TypedArray<BG_Hex> path = find_path(from_hex, h);
+        if (path.is_empty()) {
+            result.erase(result.keys()[i]);
+        }
+        else if (path.size() > cell_distance + 1) {
+            result.erase(result.keys()[i]);
+        }
+        else {
+            const Ref<BG_Hex> h_last = path.back();
+            if (h_last != h) {
+                result.erase(result.keys()[i]);
+            }
+        }
+    }
+
     return result;
 }
 
-void BG_HexGrid::add_hex(const BG_Hex *hex)
+void BG_HexGrid::add_hex(const Ref<BG_Hex> hex)
 {
-    if (hex == nullptr) return;
+    if (hex.is_null()) return;
     if (grid.is_empty()) {
         grid.append(hex);
         return;
@@ -316,7 +340,7 @@ void BG_HexGrid::add_hex(const BG_Hex *hex)
 
 	for (int i = 0; i < grid.size(); ++i)
 	{
-		const BG_Hex *h = cast_to<BG_Hex>(grid[i]);
+		const Ref<BG_Hex> h = grid[i];
         if (h->q > hex->q) {
             grid.insert(i, hex);
             return;
@@ -337,7 +361,7 @@ void BG_HexGrid::add_row(int column_index, int initial_emptys, int count)
 {
     for (int i = 0; i < count + initial_emptys; ++i)
     {
-        BG_Hex *new_hex = memnew(BG_Hex);
+        Ref<BG_Hex> new_hex = memnew(BG_Hex);
         new_hex->q = column_index;
         new_hex->r = i;
         new_hex->s = (-new_hex->q - new_hex->r);
@@ -353,7 +377,7 @@ void BG_HexGrid::update_locations(float p_x_offset_percent, float p_y_offset_per
     y_offset_percent = p_y_offset_percent;
 	for (int i = 0; i < grid.size(); ++i)
 	{
-		BG_Hex *h = cast_to<BG_Hex>(grid[i]);
+		Ref<BG_Hex> h = grid[i];
         const float x_s = size_per_hex * (1.0 - x_offset_percent);
         const float y_s = size_per_hex * (1.0 - y_offset_percent);
         h->location.x = (float(h->r) * x_s) + (float(h->r) * offset_between_hexes);
@@ -382,7 +406,7 @@ void BG_HexGrid::update_locations(float p_x_offset_percent, float p_y_offset_per
     }
 }
 
-static Dictionary make_priority_item(const BG_Hex *h, int priority)
+inline static Dictionary make_priority_item(const Ref<BG_Hex> h, int priority)
 {
     Dictionary result;
     result["h"] = h;
@@ -394,79 +418,108 @@ bool BG_HexGrid::comp_priority_item(Dictionary a, Dictionary b) const {
 	return int(a["p"]) < int(b["p"]);
 }
 
-Vector3i hex_subtract(const Vector3i &a, const Vector3i &b)
+inline Vector3i hex_subtract(const Vector3i &a, const Vector3i &b)
 {
     return Vector3i(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 
-int hex_length(const Vector3i &hex)
+inline int hex_length(const Vector3i &hex)
 {
     return int((abs(hex.x) + abs(hex.y) + abs(hex.z)) / 2);
 }
 
-int hex_distance(const Vector3i &a, const Vector3i &b)
+inline int hex_distance(const Vector3i &a, const Vector3i &b)
 {
     return hex_length(hex_subtract(a, b));
 }
 
-TypedArray<BG_Hex> BG_HexGrid::find_path(BG_Hex *start, BG_Hex *goal)
+inline int BG_HexGrid::get_hex_cost(Vector2i qr) const
+{
+    if (base_grid_visual_data.has(qr))
+    {
+        const Ref<BG_HexVisualData> h = base_grid_visual_data[qr];
+        if (h != nullptr) {
+            for (int i = 0; i < h->hex_asset_datas.size(); ++i) {
+                const Ref<BG_HexVisualAssetData> hvad = h->hex_asset_datas[i];
+                if (hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::WALL) {
+                    return 0;
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < game_data.size(); ++i)
+    {
+        const Ref<BG_HexGameSaveData> h = game_data[i];
+        if (h.is_null()) continue;
+        if (h->get_qr() != qr) continue;
+        return 0;
+    }
+
+    return 1;
+}
+
+TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> start, const Ref<BG_Hex> goal) const
 {
     TypedArray<Dictionary> frontier;
     frontier.append(make_priority_item(start, 0));
-    Dictionary came_from;
-    came_from[start->get_coords()] = nullptr;
-    HashMap<const BG_Hex *, int> cost_so_far;
+    HashMap<Vector2i, Vector2i> came_from;
+    came_from[start->get_qr()] = start->get_qr();
+    HashMap<const Ref<BG_Hex>, int> cost_so_far;
     cost_so_far[start] = 0;
 
-    const Callable callable = Callable(this, StringName("comp_priority_item"));
+    const Callable callable = Callable::create(this, StringName("comp_priority_item"));
 
     while (!frontier.is_empty()) {
         const Dictionary dict = frontier.pop_front();
-        const BG_Hex *current_hex = cast_to<BG_Hex>(dict["h"]);
+        const Ref<BG_Hex> current_hex = dict["h"];
         if (current_hex == goal) break;
-        const Vector2i current_coords = current_hex->get_coords();
+        const Vector2i current_qr = current_hex->get_qr();
         
-        const HashMap<HexDirections, BG_Hex *> neighbors = get_hex_neighbors_fast(current_hex);
+        const HashMap<HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(current_hex);
         for (const auto &pair : neighbors) {
-            const BG_Hex *next_hex = pair.value;
-            if (next_hex == nullptr || next_hex->get_empty()) continue;
-            int next_cost = current_hex->get_move_cost(next_hex);
-
+            const Ref<BG_Hex> next_hex = pair.value;
+            if (next_hex.is_null() || next_hex->get_empty()) continue;
+            // int next_cost = current_hex->get_move_cost(next_hex);
+            int next_cost = get_hex_cost(next_hex->get_qr());
+            
             if ((next_hex == goal) && (next_hex->get_hex_cost() == 0)) {
                 // Our goal is an obstacle, but we're next to it
                 // so our work here is done
-                came_from[next_hex->get_coords()] = current_coords;
+                came_from[next_hex->get_qr()] = current_qr;
                 frontier.clear();
                 break;
             }
+            if (next_cost == 0) continue;
+
             next_cost += cost_so_far[current_hex];
             if ((!cost_so_far.has(next_hex)) || (next_cost < cost_so_far[next_hex])) {
                 // New shortest path to that node
                 cost_so_far[next_hex] = next_cost;
-                const int distance = hex_distance(next_hex->get_full_coords(), goal->get_full_coords());
+                const int distance = hex_distance(next_hex->get_full_qr(), goal->get_full_qr());
                 const int priority = next_cost + distance;
                 // Insert into the frontier
                 const Dictionary item = make_priority_item(next_hex, priority);
                 const int idx = frontier.bsearch_custom(item, callable, true);
                 frontier.insert(idx, item);
-                came_from[next_hex->get_coords()] = current_coords;
+                came_from[next_hex->get_qr()] = current_qr;
             }
         }
     }
 
-    if (!came_from.has(goal->get_coords())) return {}; // No path found.
+    if (!came_from.has(goal->get_qr())) return {}; // No path found.
 
     // Follow the path back where we came_from
-    TypedArray<BG_Hex> path;
-    if (goal->get_hex_cost() != 0) {
+    TypedArray<BG_Hex> result;
+    if (get_hex_cost(goal->get_qr()) != 0) {
         // We only include the goal if it's traversable
-        path.append(goal);
+        result.append(goal);
     }
-    Vector2i current_coords = goal->get_coords();
-    while (current_coords != start->get_coords()) {
-        current_coords = came_from[current_coords];
-        const BG_Hex *hex = get_hex_by_coords(current_coords);
-        path.push_front(hex);
+    Vector2i current_qr = goal->get_qr();
+    while (current_qr != start->get_qr()) {
+        current_qr = came_from[current_qr];
+        const Ref<BG_Hex> hex = get_hex_by_qr(current_qr);
+        result.push_front(hex);
     }
-    return path;
+    return result;
 }
