@@ -144,12 +144,12 @@ public:
     int get_r() const { return r; }
     void set_r(int v) { r = v; }
 
+    int s = 0;
+
     Vector2i get_qr() const { return Vector2i(q, r); }
     Vector3i get_full_qr() const { return Vector3i(q, r, s); }
     Vector2i get_coords() const { return Vector2i(r, q); }
     Vector3i get_full_coords() const { return Vector3i(r, q, s); }
-
-    int s = 0;
     
     bool empty = false;
     bool get_empty() const { return empty; }
@@ -172,6 +172,23 @@ public:
     }
 };
 
+// // Node for A* algorithm
+// class BG_AStarNode : public RefCounted
+// {
+//     GDCLASS(BG_AStarNode, RefCounted);
+
+// public:
+//     Ref<BG_Hex> hex;
+//     int g_cost = 0; // Cost from start to this node
+//     int f_cost = 0; // g_cost + heuristic
+
+//     BG_AStarNode() : g_cost(0), f_cost(0) {}
+//     BG_AStarNode(const Ref<BG_Hex> h, int g, int f) : hex(h), g_cost(g), f_cost(f) {}
+
+// protected:
+//     static void _bind_methods() {}
+// };
+
 ////
 //// BG_HexGrid
 ////
@@ -186,6 +203,9 @@ protected:
     float y_offset_percent = 0.0;
 
     Vector2i get_direction_difference(const Ref<BG_Hex> hex, Vector2i d) const;
+
+    // TypedArray<BG_AStarNode> cached_astar_nodes;
+    // Ref<BG_AStarNode> get_cached_astar_node(const Ref<BG_Hex> h, int g, int f, int index);
 
 public:
     BG_HexGrid();
@@ -264,6 +284,7 @@ public:
     void update_locations(float x_offset_percent, float y_offset_percent);
 
     TypedArray<BG_Hex> find_path(const Ref<BG_Hex> start, const Ref<BG_Hex> goal) const;
+    TypedArray<BG_Hex> find_reachable_cells_in_distance(const Ref<BG_Hex> start, int distance) const;
     bool comp_priority_item(Dictionary a, Dictionary b) const;
 };
 

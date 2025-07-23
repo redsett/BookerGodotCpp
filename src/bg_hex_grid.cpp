@@ -279,6 +279,17 @@ Dictionary BG_HexGrid::get_hex_neighbors_qr(const Ref<BG_Hex> from_hex, int cell
     if (cell_distance < 1 || from_hex.is_null()) return {};
 
     Dictionary result;
+    if (do_pathing_checks)
+    {
+        TypedArray<BG_Hex> cells = find_reachable_cells_in_distance(from_hex, cell_distance);
+
+        for (uint16_t i = 0; i < cells.size(); ++i) {
+            const Ref<BG_Hex> h = cells[i];
+            result[h->get_qr()] = h;
+        }
+        return result;
+    }
+
     const HashMap<BG_HexGrid::HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(from_hex);
     for (const auto &pair : neighbors) {
         if (pair.value != nullptr) {
@@ -304,25 +315,6 @@ Dictionary BG_HexGrid::get_hex_neighbors_qr(const Ref<BG_Hex> from_hex, int cell
                 const Vector2i key = result.keys()[k];
                 result.erase(key);
                 break;
-            }
-        }
-    }
-
-    if (!do_pathing_checks) return result;
-
-    for (uint16_t i = result.keys().size(); i --> 0;) {
-        const Ref<BG_Hex> h = result[result.keys()[i]];
-        const TypedArray<BG_Hex> path = find_path(from_hex, h);
-        if (path.is_empty()) {
-            result.erase(result.keys()[i]);
-        }
-        else if (path.size() > cell_distance + 1) {
-            result.erase(result.keys()[i]);
-        }
-        else {
-            const Ref<BG_Hex> h_last = path.back();
-            if (h_last != h) {
-                result.erase(result.keys()[i]);
             }
         }
     }
@@ -418,19 +410,43 @@ bool BG_HexGrid::comp_priority_item(Dictionary a, Dictionary b) const {
 	return int(a["p"]) < int(b["p"]);
 }
 
-inline Vector3i hex_subtract(const Vector3i &a, const Vector3i &b)
+inline static Vector3i hex_subtract(const Vector3i &a, const Vector3i &b)
 {
     return Vector3i(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 
-inline int hex_length(const Vector3i &hex)
+inline static int hex_length(const Vector3i &hex)
 {
     return int((abs(hex.x) + abs(hex.y) + abs(hex.z)) / 2);
 }
 
-inline int hex_distance(const Vector3i &a, const Vector3i &b)
+inline static Vector3i offset_to_cube(const Vector3i &a, BG_HexGrid::OffsetType offset_type)
 {
-    return hex_length(hex_subtract(a, b));
+    int q, r, s;
+    if (offset_type == BG_HexGrid::OffsetType::ODD_R) {
+        q = a.x;
+        r = a.y - (a.x - (a.x & 1)) / 2;
+        s = -q - r;
+    } else if (offset_type == BG_HexGrid::OffsetType::EVEN_R) {
+        q = a.x;
+        r = a.y - (a.x + (a.x & 1)) / 2;
+        s = -q - r;
+    } else if (offset_type == BG_HexGrid::OffsetType::ODD_Q) {
+        q = a.x - (a.y - (a.y & 1)) / 2;
+        r = a.y;
+        s = -q - r;
+    } else {
+        q = a.x - (a.y + (a.y & 1)) / 2;
+        r = a.y;
+        s = -q - r;
+    }
+    return Vector3i(q, r, s);
+}
+
+inline static int hex_distance(const Vector3i &a, const Vector3i &b, BG_HexGrid::OffsetType offset_type)
+{
+    // return hex_length(hex_subtract(a, b));
+    return hex_length(hex_subtract(offset_to_cube(a, offset_type), offset_to_cube(b, offset_type) ));
 }
 
 inline int BG_HexGrid::get_hex_cost(Vector2i qr) const
@@ -459,67 +475,267 @@ inline int BG_HexGrid::get_hex_cost(Vector2i qr) const
     return 1;
 }
 
+static int heuristic(const Ref<BG_Hex> a, const Ref<BG_Hex> b) {
+    return (Math::abs(a->q - b->q) + Math::abs(a->r - b->r) + Math::abs(a->s - b->s)) / 2;
+}
+
+// TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> start, const Ref<BG_Hex> goal) const
+// {
+//     TypedArray<Dictionary> frontier;
+//     frontier.append(make_priority_item(start, 0));
+//     HashMap<Vector2i, Vector2i> came_from;
+//     came_from[start->get_qr()] = start->get_qr();
+//     HashMap<const Ref<BG_Hex>, int> cost_so_far;
+//     cost_so_far[start] = 0;
+
+//     const Callable callable = Callable::create(this, StringName("comp_priority_item"));
+
+//     while (!frontier.is_empty()) {
+//         const Dictionary dict = frontier.pop_front();
+//         const Ref<BG_Hex> current_hex = dict["h"];
+//         if (current_hex == goal) break;
+//         const Vector2i current_qr = current_hex->get_qr();
+        
+//         const HashMap<HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(current_hex);
+//         for (const auto &pair : neighbors) {
+//             const Ref<BG_Hex> next_hex = pair.value;
+//             if (next_hex.is_null() || next_hex->get_empty()) continue;
+//             // int next_cost = current_hex->get_move_cost(next_hex);
+//             int next_cost = get_hex_cost(next_hex->get_qr());
+            
+//             if ((next_hex == goal) && (next_hex->get_hex_cost() == 0)) {
+//                 // Our goal is an obstacle, but we're next to it
+//                 // so our work here is done
+//                 came_from[next_hex->get_qr()] = current_qr;
+//                 frontier.clear();
+//                 break;
+//             }
+//             if (next_cost == 0) continue;
+
+//             next_cost += cost_so_far[current_hex];
+//             if ((!cost_so_far.has(next_hex)) || (next_cost < cost_so_far[next_hex])) {
+//                 // New shortest path to that node
+//                 cost_so_far[next_hex] = next_cost;
+//                 const int distance = hex_distance(next_hex->get_full_qr(), goal->get_full_qr());
+//                 const int priority = next_cost + distance;
+//                 // Insert into the frontier
+//                 const Dictionary item = make_priority_item(next_hex, priority);
+//                 const int idx = frontier.bsearch_custom(item, callable, true);
+//                 frontier.insert(idx, item);
+//                 came_from[next_hex->get_qr()] = current_qr;
+//             }
+//         }
+//     }
+
+//     if (!came_from.has(goal->get_qr())) return {}; // No path found.
+
+//     // Follow the path back where we came_from
+//     TypedArray<BG_Hex> result;
+//     if (get_hex_cost(goal->get_qr()) != 0) {
+//         // We only include the goal if it's traversable
+//         result.append(goal);
+//     }
+//     Vector2i current_qr = goal->get_qr();
+//     while (current_qr != start->get_qr()) {
+//         current_qr = came_from[current_qr];
+//         const Ref<BG_Hex> hex = get_hex_by_qr(current_qr);
+//         result.push_front(hex);
+//     }
+//     return result;
+// }
+
+// Ref<BG_AStarNode> BG_HexGrid::get_cached_astar_node(const Ref<BG_Hex> h, int g, int f, int index)
+// {
+//     if ((cached_astar_nodes.size() - 1) < index) {
+//         cached_astar_nodes.append(memnew(BG_AStarNode(h, g, f)));
+//         return cached_astar_nodes[index];
+//     }
+//     Ref<BG_AStarNode> cached_node = cached_astar_nodes[index];
+//     cached_node->hex = h;
+//     cached_node->g_cost = g;
+//     cached_node->f_cost = f;
+//     return cached_node;
+// }
+
+// TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> start, const Ref<BG_Hex> goal)
+// {
+//     TypedArray<BG_AStarNode> open_list;
+//     HashMap<Ref<BG_Hex>, Ref<BG_Hex>> came_from;
+//     HashMap<Ref<BG_Hex>, int> g_score;
+//     HashMap<Ref<BG_Hex>, bool> in_open_list;
+//     TypedArray<BG_Hex> result;
+//     int astar_index = 0;
+
+//     g_score[start] = 0;
+//     open_list.append(get_cached_astar_node(start, 0, heuristic(start, goal), astar_index++));
+//     in_open_list[start] = true;
+
+//     while (!open_list.is_empty()) {
+//         // Find node with lowest f_cost
+//         Ref<BG_AStarNode> current;
+//         int min_f_cost = INT_MAX;
+//         int min_index = -1;
+//         for (int i = 0; i < open_list.size(); i++) {
+//             Ref<BG_AStarNode> node = open_list[i];
+//             if (node->f_cost < min_f_cost) {
+//                 min_f_cost = node->f_cost;
+//                 current = node;
+//                 min_index = i;
+//             }
+//         }
+//         if (min_index == -1) {
+//             UtilityFunctions::print("No valid node found in open_list");
+//             break;
+//         }
+//         open_list.remove_at(min_index);
+//         in_open_list[current->hex] = false;
+
+//         if (current->hex == goal) {
+//             // Reconstruct path
+//             Ref<BG_Hex> hex = goal;
+//             while (hex != start) {
+//                 result.append(hex);
+//                 hex = came_from[hex];
+//             }
+//             result.append(start);
+//             result.reverse();
+//             return result;
+//         }
+
+//         HashMap<BG_HexGrid::HexDirections, godot::Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(current->hex);
+//         // for (int i = 0; i < neighbors.size(); i++) {
+//         for (const auto &pair : neighbors) {
+//             const Ref<BG_Hex> neighbor = pair.value;
+//             if (neighbor == nullptr)
+//                 continue;
+//             if (in_open_list.has(neighbor) && in_open_list[neighbor]) {
+//                 continue; // Skip already processed nodes
+//             }
+
+//             int tentative_g = get_hex_cost(neighbor->get_qr());
+//             if (tentative_g == 0) continue;
+
+//             if (!g_score.has(neighbor) || tentative_g < g_score[neighbor]) {
+//                 came_from[neighbor] = current->hex;
+//                 g_score[neighbor] = tentative_g;
+//                 int f_score = tentative_g + heuristic(neighbor, goal);
+//                 if (!in_open_list.has(neighbor) || !in_open_list[neighbor]) {
+//                     open_list.append(get_cached_astar_node(neighbor, tentative_g, f_score, astar_index++));
+//                     in_open_list[neighbor] = true;
+//                 } else {
+//                     // Update existing node in open_list
+//                     for (int j = 0; j < open_list.size(); j++) {
+//                         Ref<BG_AStarNode> node = open_list[j];
+//                         if (node->hex == neighbor) {
+//                             node->g_cost = tentative_g;
+//                             node->f_cost = f_score;
+//                             break;
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+
+//     return result;
+// }
+
 TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> start, const Ref<BG_Hex> goal) const
 {
-    TypedArray<Dictionary> frontier;
-    frontier.append(make_priority_item(start, 0));
-    HashMap<Vector2i, Vector2i> came_from;
-    came_from[start->get_qr()] = start->get_qr();
-    HashMap<const Ref<BG_Hex>, int> cost_so_far;
-    cost_so_far[start] = 0;
+    TypedArray<BG_Hex> frontier;
+    // std::priority_queue<int, std::vector<int>, std::greater<int>> minHeap;
+    frontier.append(start);
+    HashMap<Ref<BG_Hex>, Ref<BG_Hex>> came_from;
+    came_from[start] = start;
 
-    const Callable callable = Callable::create(this, StringName("comp_priority_item"));
+    int index = 0;
+    while (index < frontier.size())
+    {
+        const Ref<BG_Hex> current_hex = frontier[index++];
+        if (current_hex == goal) break; // Early exit.
 
-    while (!frontier.is_empty()) {
-        const Dictionary dict = frontier.pop_front();
-        const Ref<BG_Hex> current_hex = dict["h"];
-        if (current_hex == goal) break;
-        const Vector2i current_qr = current_hex->get_qr();
-        
         const HashMap<HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(current_hex);
         for (const auto &pair : neighbors) {
             const Ref<BG_Hex> next_hex = pair.value;
-            if (next_hex.is_null() || next_hex->get_empty()) continue;
-            // int next_cost = current_hex->get_move_cost(next_hex);
-            int next_cost = get_hex_cost(next_hex->get_qr());
-            
-            if ((next_hex == goal) && (next_hex->get_hex_cost() == 0)) {
-                // Our goal is an obstacle, but we're next to it
-                // so our work here is done
-                came_from[next_hex->get_qr()] = current_qr;
-                frontier.clear();
-                break;
-            }
-            if (next_cost == 0) continue;
 
-            next_cost += cost_so_far[current_hex];
-            if ((!cost_so_far.has(next_hex)) || (next_cost < cost_so_far[next_hex])) {
-                // New shortest path to that node
-                cost_so_far[next_hex] = next_cost;
-                const int distance = hex_distance(next_hex->get_full_qr(), goal->get_full_qr());
-                const int priority = next_cost + distance;
-                // Insert into the frontier
-                const Dictionary item = make_priority_item(next_hex, priority);
-                const int idx = frontier.bsearch_custom(item, callable, true);
-                frontier.insert(idx, item);
-                came_from[next_hex->get_qr()] = current_qr;
+            if (!next_hex.is_valid()) continue;
+            const int hex_cost = get_hex_cost(next_hex->get_qr());
+            if (hex_cost == 0) {
+                if (next_hex == goal) {
+                    return {};
+                }
+                continue;
+            }
+
+            if (!came_from.has(next_hex)) {
+                const int priority = heuristic(goal, next_hex);
+                frontier.append(next_hex);
+                came_from[next_hex] = current_hex;
             }
         }
     }
 
-    if (!came_from.has(goal->get_qr())) return {}; // No path found.
-
-    // Follow the path back where we came_from
     TypedArray<BG_Hex> result;
-    if (get_hex_cost(goal->get_qr()) != 0) {
-        // We only include the goal if it's traversable
-        result.append(goal);
+    Ref<BG_Hex> current = goal;
+    while (current != start)
+    {
+        result.append(current);
+        current = came_from[current];
     }
-    Vector2i current_qr = goal->get_qr();
-    while (current_qr != start->get_qr()) {
-        current_qr = came_from[current_qr];
-        const Ref<BG_Hex> hex = get_hex_by_qr(current_qr);
-        result.push_front(hex);
-    }
+    // result.append(start);
+    result.reverse();
+
     return result;
+}
+
+TypedArray<BG_Hex> BG_HexGrid::find_reachable_cells_in_distance(const Ref<BG_Hex> start, int distance) const
+{
+    TypedArray<BG_Hex> frontier;
+    frontier.append(start);
+    HashMap<Ref<BG_Hex>, Ref<BG_Hex>> came_from;
+    came_from[start] = start;
+
+    int index = 0;
+    while (index < frontier.size())
+    {
+        const Ref<BG_Hex> current_hex = frontier[index++];
+
+        const HashMap<HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(current_hex);
+        for (const auto &pair : neighbors) {
+            const Ref<BG_Hex> next_hex = pair.value;
+
+            if (!next_hex.is_valid()) continue;
+            const int hex_cost = get_hex_cost(next_hex->get_qr());
+            if (hex_cost == 0) continue;
+
+            const int d = hex_distance(next_hex->get_full_qr(), start->get_full_qr(), offset_type);
+            if (d > distance) continue;
+
+            if (!came_from.has(next_hex)) {
+                frontier.append(next_hex);
+                came_from[next_hex] = current_hex;
+            }
+        }
+    }
+    frontier.clear();
+
+
+    for (const auto &pair : came_from) {
+        Ref<BG_Hex> current_hex = pair.key;
+        const Ref<BG_Hex> came_from_hex = pair.value;
+
+        int cell_distance = 0;
+        while (current_hex != start) {
+            cell_distance++;
+            if (cell_distance > distance) break;
+            current_hex = came_from[current_hex];
+        }
+
+        if (cell_distance <= distance) {
+            frontier.append(pair.key);
+        }
+    }
+    if (frontier.has(start)) frontier.erase(start);
+
+    return frontier;
 }
