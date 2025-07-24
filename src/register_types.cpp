@@ -65,7 +65,6 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		ClassDB::register_class<BG_HexGameSaveData>();
 		ClassDB::register_class<BG_BattleBoardGameSaveData>();
 		ClassDB::register_class<BG_Hex>();
-		// ClassDB::register_class<BG_AStarNode>();
 		ClassDB::register_class<BG_HexGrid>();
 
 		// ClassDB::register_class<BG_AnimationMirrorDataMap>();

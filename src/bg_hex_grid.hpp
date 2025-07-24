@@ -94,6 +94,14 @@ public:
 		CITY,
 	};
 
+    static PackedStringArray get_game_asset_type_names() {
+        PackedStringArray result;
+        result.append("BAND");
+        result.append("JOB");
+        result.append("CITY");
+        return result;
+    }
+
     HexGameAssetTypes asset_type = BAND;
     HexGameAssetTypes get_asset_type() const { return asset_type; }
     void set_asset_type(HexGameAssetTypes v) { asset_type = v; }
@@ -172,23 +180,6 @@ public:
     }
 };
 
-// // Node for A* algorithm
-// class BG_AStarNode : public RefCounted
-// {
-//     GDCLASS(BG_AStarNode, RefCounted);
-
-// public:
-//     Ref<BG_Hex> hex;
-//     int g_cost = 0; // Cost from start to this node
-//     int f_cost = 0; // g_cost + heuristic
-
-//     BG_AStarNode() : g_cost(0), f_cost(0) {}
-//     BG_AStarNode(const Ref<BG_Hex> h, int g, int f) : hex(h), g_cost(g), f_cost(f) {}
-
-// protected:
-//     static void _bind_methods() {}
-// };
-
 ////
 //// BG_HexGrid
 ////
@@ -203,9 +194,6 @@ protected:
     float y_offset_percent = 0.0;
 
     Vector2i get_direction_difference(const Ref<BG_Hex> hex, Vector2i d) const;
-
-    // TypedArray<BG_AStarNode> cached_astar_nodes;
-    // Ref<BG_AStarNode> get_cached_astar_node(const Ref<BG_Hex> h, int g, int f, int index);
 
 public:
     BG_HexGrid();

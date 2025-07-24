@@ -51,6 +51,8 @@ void BG_HexVisualData::_bind_methods()
 ////
 void BG_HexGameSaveData::_bind_methods()
 {
+    ClassDB::bind_static_method("BG_HexGameSaveData", D_METHOD("get_game_asset_type_names"), &BG_HexGameSaveData::get_game_asset_type_names);
+
 	ClassDB::bind_method(D_METHOD("get_asset_type"), &BG_HexGameSaveData::get_asset_type);
 	ClassDB::bind_method(D_METHOD("set_asset_type"), &BG_HexGameSaveData::set_asset_type);
 	ClassDB::bind_method(D_METHOD("get_qr"), &BG_HexGameSaveData::get_qr);
@@ -410,16 +412,6 @@ bool BG_HexGrid::comp_priority_item(Dictionary a, Dictionary b) const {
 	return int(a["p"]) < int(b["p"]);
 }
 
-inline static Vector3i hex_subtract(const Vector3i &a, const Vector3i &b)
-{
-    return Vector3i(a.x - b.x, a.y - b.y, a.z - b.z);
-}
-
-inline static int hex_length(const Vector3i &hex)
-{
-    return int((abs(hex.x) + abs(hex.y) + abs(hex.z)) / 2);
-}
-
 inline static Vector3i offset_to_cube(const Vector3i &a, BG_HexGrid::OffsetType offset_type)
 {
     int q, r, s;
@@ -443,9 +435,18 @@ inline static Vector3i offset_to_cube(const Vector3i &a, BG_HexGrid::OffsetType 
     return Vector3i(q, r, s);
 }
 
+inline static Vector3i hex_subtract(const Vector3i &a, const Vector3i &b)
+{
+    return Vector3i(a.x - b.x, a.y - b.y, a.z - b.z);
+}
+
+inline static int hex_length(const Vector3i &hex)
+{
+    return int((abs(hex.x) + abs(hex.y) + abs(hex.z)) / 2);
+}
+
 inline static int hex_distance(const Vector3i &a, const Vector3i &b, BG_HexGrid::OffsetType offset_type)
 {
-    // return hex_length(hex_subtract(a, b));
     return hex_length(hex_subtract(offset_to_cube(a, offset_type), offset_to_cube(b, offset_type) ));
 }
 
@@ -544,102 +545,6 @@ static int heuristic(const Ref<BG_Hex> a, const Ref<BG_Hex> b) {
 //     return result;
 // }
 
-// Ref<BG_AStarNode> BG_HexGrid::get_cached_astar_node(const Ref<BG_Hex> h, int g, int f, int index)
-// {
-//     if ((cached_astar_nodes.size() - 1) < index) {
-//         cached_astar_nodes.append(memnew(BG_AStarNode(h, g, f)));
-//         return cached_astar_nodes[index];
-//     }
-//     Ref<BG_AStarNode> cached_node = cached_astar_nodes[index];
-//     cached_node->hex = h;
-//     cached_node->g_cost = g;
-//     cached_node->f_cost = f;
-//     return cached_node;
-// }
-
-// TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> start, const Ref<BG_Hex> goal)
-// {
-//     TypedArray<BG_AStarNode> open_list;
-//     HashMap<Ref<BG_Hex>, Ref<BG_Hex>> came_from;
-//     HashMap<Ref<BG_Hex>, int> g_score;
-//     HashMap<Ref<BG_Hex>, bool> in_open_list;
-//     TypedArray<BG_Hex> result;
-//     int astar_index = 0;
-
-//     g_score[start] = 0;
-//     open_list.append(get_cached_astar_node(start, 0, heuristic(start, goal), astar_index++));
-//     in_open_list[start] = true;
-
-//     while (!open_list.is_empty()) {
-//         // Find node with lowest f_cost
-//         Ref<BG_AStarNode> current;
-//         int min_f_cost = INT_MAX;
-//         int min_index = -1;
-//         for (int i = 0; i < open_list.size(); i++) {
-//             Ref<BG_AStarNode> node = open_list[i];
-//             if (node->f_cost < min_f_cost) {
-//                 min_f_cost = node->f_cost;
-//                 current = node;
-//                 min_index = i;
-//             }
-//         }
-//         if (min_index == -1) {
-//             UtilityFunctions::print("No valid node found in open_list");
-//             break;
-//         }
-//         open_list.remove_at(min_index);
-//         in_open_list[current->hex] = false;
-
-//         if (current->hex == goal) {
-//             // Reconstruct path
-//             Ref<BG_Hex> hex = goal;
-//             while (hex != start) {
-//                 result.append(hex);
-//                 hex = came_from[hex];
-//             }
-//             result.append(start);
-//             result.reverse();
-//             return result;
-//         }
-
-//         HashMap<BG_HexGrid::HexDirections, godot::Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(current->hex);
-//         // for (int i = 0; i < neighbors.size(); i++) {
-//         for (const auto &pair : neighbors) {
-//             const Ref<BG_Hex> neighbor = pair.value;
-//             if (neighbor == nullptr)
-//                 continue;
-//             if (in_open_list.has(neighbor) && in_open_list[neighbor]) {
-//                 continue; // Skip already processed nodes
-//             }
-
-//             int tentative_g = get_hex_cost(neighbor->get_qr());
-//             if (tentative_g == 0) continue;
-
-//             if (!g_score.has(neighbor) || tentative_g < g_score[neighbor]) {
-//                 came_from[neighbor] = current->hex;
-//                 g_score[neighbor] = tentative_g;
-//                 int f_score = tentative_g + heuristic(neighbor, goal);
-//                 if (!in_open_list.has(neighbor) || !in_open_list[neighbor]) {
-//                     open_list.append(get_cached_astar_node(neighbor, tentative_g, f_score, astar_index++));
-//                     in_open_list[neighbor] = true;
-//                 } else {
-//                     // Update existing node in open_list
-//                     for (int j = 0; j < open_list.size(); j++) {
-//                         Ref<BG_AStarNode> node = open_list[j];
-//                         if (node->hex == neighbor) {
-//                             node->g_cost = tentative_g;
-//                             node->f_cost = f_score;
-//                             break;
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-//     }
-
-//     return result;
-// }
-
 TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> start, const Ref<BG_Hex> goal) const
 {
     TypedArray<BG_Hex> frontier;
@@ -717,12 +622,10 @@ TypedArray<BG_Hex> BG_HexGrid::find_reachable_cells_in_distance(const Ref<BG_Hex
             }
         }
     }
+
     frontier.clear();
-
-
     for (const auto &pair : came_from) {
         Ref<BG_Hex> current_hex = pair.key;
-        const Ref<BG_Hex> came_from_hex = pair.value;
 
         int cell_distance = 0;
         while (current_hex != start) {
