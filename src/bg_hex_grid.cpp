@@ -552,6 +552,7 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> start, const Ref<BG_H
     frontier.append(start);
     HashMap<Ref<BG_Hex>, Ref<BG_Hex>> came_from;
     came_from[start] = start;
+    Ref<BG_Hex> result_goal = goal;
 
     int index = 0;
     while (index < frontier.size())
@@ -565,9 +566,11 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> start, const Ref<BG_H
 
             if (!next_hex.is_valid()) continue;
             const int hex_cost = get_hex_cost(next_hex->get_qr());
-            if (hex_cost == 0) {
-                if (next_hex == goal) {
-                    return {};
+            if (hex_cost == 0) { // Can't move into cell?
+                if (next_hex == goal) { // Is the cell the goal, if so, make the previous cell the goal.
+                    result_goal = current_hex;
+                    frontier.clear();
+                    break;
                 }
                 continue;
             }
@@ -581,7 +584,7 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> start, const Ref<BG_H
     }
 
     TypedArray<BG_Hex> result;
-    Ref<BG_Hex> current = goal;
+    Ref<BG_Hex> current = result_goal;
     while (current != start)
     {
         result.append(current);
