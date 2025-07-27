@@ -91,6 +91,12 @@
     "optional": "cpp",
     "xtr1common": "cpp",
     "deque": "cpp",
-    "algorithm": "cpp"
+    "algorithm": "cpp",
+    "compare": "cpp",
+    "memory": "cpp",
+    "ratio": "cpp",
+    "tuple": "cpp",
+    "utility": "cpp",
+    "xmemory": "cpp"
   }
 }

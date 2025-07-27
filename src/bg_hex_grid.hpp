@@ -106,9 +106,30 @@ public:
     HexGameAssetTypes get_asset_type() const { return asset_type; }
     void set_asset_type(HexGameAssetTypes v) { asset_type = v; }
 
+    int get_asset_type_cost() const {
+        if (asset_type == BG_HexGameSaveData::HexGameAssetTypes::BAND ||
+            asset_type == BG_HexGameSaveData::HexGameAssetTypes::JOB ||
+            asset_type == BG_HexGameSaveData::HexGameAssetTypes::CITY) {
+                return 0;
+        }
+        return 1;
+    }
+
+    bool can_move = false;
+    bool get_can_move() const { return can_move; }
+    void set_can_move(bool v) { can_move = v; }
+
     Vector2i qr = Vector2i();
     Vector2i get_qr() const { return qr; }
     void set_qr(Vector2i v) { qr = v; }
+
+    bool use_moved_from_qr = false;
+    bool get_use_moved_from_qr() const { return use_moved_from_qr; }
+    void set_use_moved_from_qr(bool v) { use_moved_from_qr = v; }
+
+    Vector2i moved_from_qr = Vector2i();
+    Vector2i get_moved_from_qr() const { return moved_from_qr; }
+    void set_moved_from_qr(Vector2i v) { moved_from_qr = v; }
 
     int unique_id_reference = 0;
     int get_unique_id_reference() const { return unique_id_reference; }
@@ -165,19 +186,6 @@ public:
 
     Vector2 location;
     Vector2 get_location() const { return location; }
-
-    bool operator==(const Ref<BG_Hex> other) const {
-        return q == other->q && r == other->r && s == other->s;
-    }
-
-    inline int get_move_cost(const Ref<BG_Hex> to) const {
-        return 1;
-    }
-
-    inline int get_hex_cost() const {
-        if (get_empty()) return 0;
-        return 1;
-    }
 };
 
 ////
@@ -239,8 +247,17 @@ public:
     TypedArray<BG_HexGameSaveData> game_data;
     TypedArray<BG_HexGameSaveData> get_game_data() const { return game_data; };
 	void set_game_data(TypedArray<BG_HexGameSaveData> v) { game_data = v; }
+    Ref<BG_HexGameSaveData> get_game_data_from_qr(Vector2i qr) const {
+        for (int i = 0; i < game_data.size(); ++i) {
+            const Ref<BG_HexGameSaveData> h = game_data[i];
+            if (h.is_null()) continue;
+            if (h->get_qr() != qr) continue;
+            return h;
+        }
+        return nullptr;
+    }
 
-    int get_hex_cost(Vector2i qr) const;
+    int get_hex_cost(const Ref<BG_Hex> from_hex, Vector2i qr, bool do_friendly_check) const;
     
     float size_per_hex = 10.0;
     float get_size_per_hex() const { return size_per_hex; }
@@ -261,7 +278,7 @@ public:
     Ref<BG_Hex> get_hex_in_direction(const Ref<BG_Hex> from_hex, Vector2i d) const;
     inline HashMap<HexDirections, Ref<BG_Hex>> get_hex_neighbors_fast(const Ref<BG_Hex> from_hex) const;
     Dictionary get_hex_neighbors_directions(const Ref<BG_Hex> from_hex) const;
-    Dictionary get_hex_neighbors_qr(const Ref<BG_Hex> from_hex, int cell_distance, bool do_pathing_checks) const;
+    Dictionary get_hex_neighbors_qr(const Ref<BG_Hex> instigator, const Ref<BG_Hex> from_hex, int cell_distance, bool do_pathing_checks) const;
 
     Ref<BG_Hex> get_hex_by_coords(Vector2i coords) const;
     Ref<BG_Hex> get_hex_by_qr(Vector2i qr) const;
@@ -271,8 +288,8 @@ public:
 
     void update_locations(float x_offset_percent, float y_offset_percent);
 
-    TypedArray<BG_Hex> find_path(const Ref<BG_Hex> start, const Ref<BG_Hex> goal) const;
-    TypedArray<BG_Hex> find_reachable_cells_in_distance(const Ref<BG_Hex> start, int distance) const;
+    TypedArray<BG_Hex> find_path(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, const Ref<BG_Hex> goal, bool include_start) const;
+    TypedArray<BG_Hex> find_reachable_cells_in_distance(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, int distance) const;
     bool comp_priority_item(Dictionary a, Dictionary b) const;
 };
 
