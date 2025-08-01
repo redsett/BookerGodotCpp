@@ -461,6 +461,7 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_id"), &BG_Monster::set_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_Monster::get_name);
 	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_Monster::get_max_health);
+	ClassDB::bind_method(D_METHOD("get_travel_distance"), &BG_Monster::get_travel_distance);
 	ClassDB::bind_method(D_METHOD("get_current_health"), &BG_Monster::get_current_health);
 	ClassDB::bind_method(D_METHOD("set_current_health"), &BG_Monster::set_current_health);
 	ClassDB::bind_method(D_METHOD("get_random_variation"), &BG_Monster::get_random_variation);
@@ -1288,7 +1289,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_monster_type->id = entry["id"];
 				new_monster_type->name = entry["name"];
 				new_monster_type->challenge_rating = float(entry["challenge_rating"]);
-				new_monster_type->max_health = int(entry["health"]);
 				new_monster_type->icon_path = entry["icon_path"];
 				new_monster_type->monster_type = int(entry["type"]);
 
@@ -1305,6 +1305,14 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_hue_shift_data->multiplier = float(hue_shifting_entry["multiplier"]);
 
 					new_monster_type->hue_shift_data.append(new_hue_shift_data);
+				}
+
+				const Array misc_stats_lines = Array(entry["misc_stats"]);
+				for (int y = 0; y < misc_stats_lines.size(); y++)
+				{
+					const Dictionary misc_stats_entry = misc_stats_lines[y];
+					new_monster_type->max_health = int(entry["health"]);
+					new_monster_type->travel_distance = int(misc_stats_entry["travel_distance"]);
 				}
 
 				// Stats

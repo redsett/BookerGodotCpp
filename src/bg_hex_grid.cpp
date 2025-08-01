@@ -577,6 +577,10 @@ static int heuristic(const Ref<BG_Hex> a, const Ref<BG_Hex> b) {
 
 TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, const Ref<BG_Hex> goal, bool include_start) const
 {
+    if (start == goal) {
+        return {start};
+    }
+
     TypedArray<BG_Hex> frontier;
     // std::priority_queue<int, std::vector<int>, std::greater<int>> minHeap;
     frontier.append(start);

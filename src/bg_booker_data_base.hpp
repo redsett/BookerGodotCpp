@@ -838,6 +838,9 @@ public:
 	int max_health = 0;
 	int get_max_health() const { return max_health; }
 
+	int travel_distance = 0;
+	int get_travel_distance() const { return travel_distance; }
+
 	int current_health = 0;
 	int get_current_health() const { return current_health; }
 	void set_current_health(int value) { current_health = value; }
