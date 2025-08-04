@@ -1307,11 +1307,12 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_monster_type->hue_shift_data.append(new_hue_shift_data);
 				}
 
+				// Misc Stats
 				const Array misc_stats_lines = Array(entry["misc_stats"]);
 				for (int y = 0; y < misc_stats_lines.size(); y++)
 				{
 					const Dictionary misc_stats_entry = misc_stats_lines[y];
-					new_monster_type->max_health = int(entry["health"]);
+					new_monster_type->max_health = int(misc_stats_entry["health"]);
 					new_monster_type->travel_distance = int(misc_stats_entry["travel_distance"]);
 				}
 

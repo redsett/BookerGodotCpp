@@ -56,6 +56,8 @@ void BG_HexGameSaveData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_asset_type"), &BG_HexGameSaveData::get_asset_type);
 	ClassDB::bind_method(D_METHOD("set_asset_type"), &BG_HexGameSaveData::set_asset_type);
 	ClassDB::bind_method(D_METHOD("get_asset_type_cost"), &BG_HexGameSaveData::get_asset_type_cost);
+	ClassDB::bind_method(D_METHOD("get_has_attacked"), &BG_HexGameSaveData::get_has_attacked);
+	ClassDB::bind_method(D_METHOD("set_has_attacked"), &BG_HexGameSaveData::set_has_attacked);
 	ClassDB::bind_method(D_METHOD("get_can_move"), &BG_HexGameSaveData::get_can_move);
 	ClassDB::bind_method(D_METHOD("set_can_move"), &BG_HexGameSaveData::set_can_move);
 	ClassDB::bind_method(D_METHOD("get_qr"), &BG_HexGameSaveData::get_qr);
@@ -68,6 +70,7 @@ void BG_HexGameSaveData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_unique_id_reference"), &BG_HexGameSaveData::set_unique_id_reference);
 
     ADD_PROPERTY(PropertyInfo(Variant::INT, "asset_type", PROPERTY_HINT_ENUM, "BAND:0,JOB:1,CITY:2"), "set_asset_type", "get_asset_type");
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "has_attacked"), "set_has_attacked", "get_has_attacked");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "can_move"), "set_can_move", "get_can_move");
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "qr"), "set_qr", "get_qr");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "use_moved_from_qr"), "set_use_moved_from_qr", "get_use_moved_from_qr");
@@ -578,7 +581,8 @@ static int heuristic(const Ref<BG_Hex> a, const Ref<BG_Hex> b) {
 TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, const Ref<BG_Hex> goal, bool include_start) const
 {
     if (start == goal) {
-        return {start};
+        if (include_start) return {start};
+        return {};
     }
 
     TypedArray<BG_Hex> frontier;

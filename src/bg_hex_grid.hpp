@@ -115,7 +115,11 @@ public:
         return 1;
     }
 
-    bool can_move = false;
+    bool has_attacked = false;
+    bool get_has_attacked() const { return has_attacked; }
+    void set_has_attacked(bool v) { has_attacked = v; }
+
+    bool can_move = true;
     bool get_can_move() const { return can_move; }
     void set_can_move(bool v) { can_move = v; }
 
