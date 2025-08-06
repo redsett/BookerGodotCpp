@@ -1055,6 +1055,9 @@ public:
 	float chance_of_no_drop = 0.0;
 	float get_chance_of_no_drop() const { return chance_of_no_drop; }
 
+	int combat_rounds_per_combat = 0;
+	int get_combat_rounds_per_combat() const { return combat_rounds_per_combat; }
+
 	TypedArray<BG_CityInfo> city_info;
 	TypedArray<BG_CityInfo> get_city_info() const { return city_info; }
 

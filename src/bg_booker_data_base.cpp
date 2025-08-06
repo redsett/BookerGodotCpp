@@ -630,6 +630,7 @@ void BG_Booker_Globals::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_starting_reputation"), &BG_Booker_Globals::get_starting_reputation);
 	ClassDB::bind_method(D_METHOD("get_chance_of_no_drop"), &BG_Booker_Globals::get_chance_of_no_drop);
+	ClassDB::bind_method(D_METHOD("get_combat_rounds_per_combat"), &BG_Booker_Globals::get_combat_rounds_per_combat);
 	ClassDB::bind_method(D_METHOD("get_city_info"), &BG_Booker_Globals::get_city_info);
 	ClassDB::bind_method(D_METHOD("get_act_stats"), &BG_Booker_Globals::get_act_stats);
 	ClassDB::bind_method(D_METHOD("get_challenge_rating_guide"), &BG_Booker_Globals::get_challenge_rating_guide);
@@ -760,6 +761,9 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					const Dictionary jobs_distribution_per_act_entry = jobs_distribution_per_act_array[0];
 					new_act_stats->total_job_count = int(jobs_distribution_per_act_entry["job_count"]);
 					new_act_stats->job_handout_curve_path = jobs_distribution_per_act_entry["curve"];
+
+					if (globals->combat_rounds_per_combat == 0)
+						globals->combat_rounds_per_combat = int(job_globals_entry["combat_rounds_per_combat"]);
 
 					globals->act_stats.append(new_act_stats);
 				}
