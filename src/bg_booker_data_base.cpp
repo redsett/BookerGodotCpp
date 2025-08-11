@@ -510,6 +510,7 @@ void BG_BandInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_band_size_min_max"), &BG_BandInfo::get_band_size_min_max);
 	ClassDB::bind_method(D_METHOD("get_num_bands_for_hire"), &BG_BandInfo::get_num_bands_for_hire);
 	ClassDB::bind_method(D_METHOD("get_unit_castes"), &BG_BandInfo::get_unit_castes);
+	ClassDB::bind_method(D_METHOD("get_rest_recovery_speed"), &BG_BandInfo::get_rest_recovery_speed);
 }
 
 ////
@@ -1056,6 +1057,8 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			const Dictionary lines = Array(bands_sheet["lines"])[0];
 			if (lines.has("num_bands_for_hire"))
 				band_info->num_bands_for_hire = lines["num_bands_for_hire"];
+			if (lines.has("rest_recovery_speed"))
+				band_info->rest_recovery_speed = lines["rest_recovery_speed"];
 
 			if (lines.has("names"))
 			{

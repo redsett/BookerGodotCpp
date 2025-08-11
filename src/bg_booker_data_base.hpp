@@ -904,6 +904,9 @@ public:
 
 	TypedArray<BG_UnitCaste> unit_castes;
 	TypedArray<BG_UnitCaste> get_unit_castes() const { return unit_castes; }
+
+	float rest_recovery_speed = 0.0;
+	float get_rest_recovery_speed() const { return rest_recovery_speed; }
 };
 
 ////
