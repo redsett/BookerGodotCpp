@@ -408,6 +408,10 @@ void BG_Band::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_name"), &BG_Band::set_name);
 	ClassDB::bind_method(D_METHOD("get_resting"), &BG_Band::get_resting);
 	ClassDB::bind_method(D_METHOD("set_resting"), &BG_Band::set_resting);
+	ClassDB::bind_method(D_METHOD("get_has_done_combat_this_turn"), &BG_Band::get_has_done_combat_this_turn);
+	ClassDB::bind_method(D_METHOD("set_has_done_combat_this_turn"), &BG_Band::set_has_done_combat_this_turn);
+	ClassDB::bind_method(D_METHOD("get_knocked_out_turns"), &BG_Band::get_knocked_out_turns);
+	ClassDB::bind_method(D_METHOD("set_knocked_out_turns"), &BG_Band::set_knocked_out_turns);
 	ClassDB::bind_method(D_METHOD("get_band_members"), &BG_Band::get_band_members);
 	ClassDB::bind_method(D_METHOD("set_band_members"), &BG_Band::set_band_members);
 	ClassDB::bind_method(D_METHOD("get_current_unique_job_id"), &BG_Band::get_current_unique_job_id);
@@ -419,6 +423,8 @@ void BG_Band::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "unique_id"), "set_unique_id", "get_unique_id");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "resting"), "set_resting", "get_resting");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "has_done_combat_this_turn"), "set_has_done_combat_this_turn", "get_has_done_combat_this_turn");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "knocked_out_turns"), "set_knocked_out_turns", "get_knocked_out_turns");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "band_members"), "set_band_members", "get_band_members");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_unique_job_id"), "set_current_unique_job_id", "get_current_unique_job_id");
 }
@@ -511,6 +517,7 @@ void BG_BandInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_num_bands_for_hire"), &BG_BandInfo::get_num_bands_for_hire);
 	ClassDB::bind_method(D_METHOD("get_unit_castes"), &BG_BandInfo::get_unit_castes);
 	ClassDB::bind_method(D_METHOD("get_rest_recovery_speed"), &BG_BandInfo::get_rest_recovery_speed);
+	ClassDB::bind_method(D_METHOD("get_knocked_out_turns"), &BG_BandInfo::get_knocked_out_turns);
 }
 
 ////
@@ -1059,6 +1066,8 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				band_info->num_bands_for_hire = lines["num_bands_for_hire"];
 			if (lines.has("rest_recovery_speed"))
 				band_info->rest_recovery_speed = lines["rest_recovery_speed"];
+			if (lines.has("knocked_out_turns"))
+				band_info->knocked_out_turns = lines["knocked_out_turns"];
 
 			if (lines.has("names"))
 			{

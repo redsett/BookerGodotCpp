@@ -786,6 +786,14 @@ public:
 	bool get_resting() const { return resting; }
 	void set_resting(bool value) { resting = value; }
 
+	bool has_done_combat_this_turn = false;
+	bool get_has_done_combat_this_turn() const { return has_done_combat_this_turn; }
+	void set_has_done_combat_this_turn(bool value) { has_done_combat_this_turn = value; }
+
+	int knocked_out_turns = false;
+	int get_knocked_out_turns() const { return knocked_out_turns; }
+	void set_knocked_out_turns(int value) { knocked_out_turns = value; }
+
 	TypedArray<BG_BandMember> band_members;
 	TypedArray<BG_BandMember> get_band_members() const { return band_members; }
 	void set_band_members(TypedArray<BG_BandMember> value) { band_members = value; }
@@ -907,6 +915,10 @@ public:
 
 	float rest_recovery_speed = 0.0;
 	float get_rest_recovery_speed() const { return rest_recovery_speed; }
+
+	int knocked_out_turns = 0;
+	int get_knocked_out_turns() const { return knocked_out_turns; }
+
 };
 
 ////
