@@ -26,6 +26,8 @@ public:
 		MONSTER_SPAWN,
         WALL,
         SECTION,
+        TOWN,
+        RESOURCE,
 	};
 
     static PackedStringArray get_hex_type_names() {
@@ -35,6 +37,8 @@ public:
         result.append("MONSTER_SPAWN");
         result.append("WALL");
         result.append("SECTION");
+        result.append("TOWN");
+        result.append("RESOURCE");
         return result;
     }
 
@@ -53,6 +57,10 @@ public:
     int section_index = 0;
     int get_section_index() const { return section_index; }
     void set_section_index(int v) { section_index = v; }
+
+    int seed = 0;
+    int get_seed() const { return seed; }
+    void set_seed(int v) { seed = v; }
 };
 
 VARIANT_ENUM_CAST(BG_HexVisualAssetData::HexVisualAssetTypes);
@@ -92,6 +100,8 @@ public:
         BAND,
 		JOB,
 		CITY,
+		TOWN,
+		RESOURCE,
 	};
 
     static PackedStringArray get_game_asset_type_names() {
@@ -99,6 +109,8 @@ public:
         result.append("BAND");
         result.append("JOB");
         result.append("CITY");
+        result.append("TOWN");
+        result.append("RESOURCE");
         return result;
     }
 
@@ -109,7 +121,9 @@ public:
     int get_asset_type_cost() const {
         if (asset_type == BG_HexGameSaveData::HexGameAssetTypes::BAND ||
             asset_type == BG_HexGameSaveData::HexGameAssetTypes::JOB ||
-            asset_type == BG_HexGameSaveData::HexGameAssetTypes::CITY) {
+            asset_type == BG_HexGameSaveData::HexGameAssetTypes::CITY ||
+            asset_type == BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
+            asset_type == BG_HexGameSaveData::HexGameAssetTypes::RESOURCE) {
                 return 0;
         }
         return 1;

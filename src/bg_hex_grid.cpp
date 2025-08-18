@@ -19,17 +19,24 @@ void BG_HexVisualAssetData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_scale_multiplier"), &BG_HexVisualAssetData::set_scale_multiplier);
 	ClassDB::bind_method(D_METHOD("get_section_index"), &BG_HexVisualAssetData::get_section_index);
 	ClassDB::bind_method(D_METHOD("set_section_index"), &BG_HexVisualAssetData::set_section_index);
+	ClassDB::bind_method(D_METHOD("get_seed"), &BG_HexVisualAssetData::get_seed);
+	ClassDB::bind_method(D_METHOD("set_seed"), &BG_HexVisualAssetData::set_seed);
 
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "hex_type", PROPERTY_HINT_ENUM, "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3,SECTION:4"), "set_hex_type", "get_hex_type");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "hex_type", PROPERTY_HINT_ENUM, 
+        "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3,SECTION:4,TOWN:5,RESOURCE:6"), 
+        "set_hex_type", "get_hex_type");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "rotation"), "set_rotation", "get_rotation");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "scale_multiplier"), "set_scale_multiplier", "get_scale_multiplier");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "section_index"), "set_section_index", "get_section_index");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "seed"), "set_seed", "get_seed");
 
 	BIND_ENUM_CONSTANT(CITY);
 	BIND_ENUM_CONSTANT(REST);
 	BIND_ENUM_CONSTANT(MONSTER_SPAWN);
 	BIND_ENUM_CONSTANT(WALL);
 	BIND_ENUM_CONSTANT(SECTION);
+	BIND_ENUM_CONSTANT(TOWN);
+	BIND_ENUM_CONSTANT(RESOURCE);
 }
 
 ////
@@ -69,7 +76,7 @@ void BG_HexGameSaveData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_unique_id_reference"), &BG_HexGameSaveData::get_unique_id_reference);
 	ClassDB::bind_method(D_METHOD("set_unique_id_reference"), &BG_HexGameSaveData::set_unique_id_reference);
 
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "asset_type", PROPERTY_HINT_ENUM, "BAND:0,JOB:1,CITY:2"), "set_asset_type", "get_asset_type");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "asset_type", PROPERTY_HINT_ENUM, "BAND:0,JOB:1,CITY:2,TOWN:3,RESOURCE:4"), "set_asset_type", "get_asset_type");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "has_attacked"), "set_has_attacked", "get_has_attacked");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "can_move"), "set_can_move", "get_can_move");
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "qr"), "set_qr", "get_qr");
@@ -80,6 +87,8 @@ void BG_HexGameSaveData::_bind_methods()
     BIND_ENUM_CONSTANT(BAND);
     BIND_ENUM_CONSTANT(JOB);
     BIND_ENUM_CONSTANT(CITY);
+    BIND_ENUM_CONSTANT(TOWN);
+    BIND_ENUM_CONSTANT(RESOURCE);
 }
 
 ////
@@ -473,7 +482,9 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, b
         if (h.is_valid()) {
             for (int i = 0; i < h->hex_asset_datas.size(); ++i) {
                 const Ref<BG_HexVisualAssetData> hvad = h->hex_asset_datas[i];
-                if (hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::WALL) {
+                if (hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::WALL || 
+                    hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::CITY || 
+                    hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::TOWN) {
                     return 0;
                 }
             }
