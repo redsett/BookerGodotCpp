@@ -635,6 +635,24 @@ public:
 };
 
 ////
+//// BG_EventResourceDetails
+////
+class BG_EventResourceDetails : public Object
+{
+	GDCLASS(BG_EventResourceDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	int maelstrite_amount_of_drops_during_range;
+	int get_maelstrite_amount_of_drops_during_range() const { return maelstrite_amount_of_drops_during_range; }
+
+	int maelstrite_total_amount_by_end_of_weeks;
+	int get_maelstrite_total_amount_by_end_of_weeks() const { return maelstrite_total_amount_by_end_of_weeks; }
+};
+
+////
 //// BG_JobDetails
 ////
 class BG_JobDetails : public Object
@@ -645,14 +663,26 @@ protected:
 	static void _bind_methods();
 
 public:
+	enum BattleBoardEventTypes : int32_t {
+		JOB,
+		RESOURCE,
+		EVENT,
+	};
+
 	StringName id;
 	StringName get_id() const { return id; }
+
+	BattleBoardEventTypes battle_board_event_type = JOB;
+	BattleBoardEventTypes get_battle_board_event_type() const { return battle_board_event_type; }
 
 	int weeks_before_expire = 0;
 	int get_weeks_before_expire() const { return weeks_before_expire; }
 
 	TypedArray<BG_JobMonsterDetails> monster_details;
 	TypedArray<BG_JobMonsterDetails> get_monster_details() const { return monster_details; }
+
+	BG_EventResourceDetails *event_resource_details;
+	BG_EventResourceDetails *get_event_resource_details() const { return event_resource_details; }
 
 	bool is_unique = false;
 	bool get_is_unique() const { return is_unique; }
@@ -663,6 +693,7 @@ public:
 	TypedArray<BG_JobDistributionForAct> distribution_per_act;
 	TypedArray<BG_JobDistributionForAct> get_distribution_per_act() const { return distribution_per_act; }
 };
+VARIANT_ENUM_CAST(BG_JobDetails::BattleBoardEventTypes);
 
 ////
 //// BG_UnitCaste

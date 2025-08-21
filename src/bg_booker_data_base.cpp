@@ -550,6 +550,15 @@ void BG_JobDistributionForAct::_bind_methods()
 }
 
 ////
+//// BG_EventResourceDetails
+////
+void BG_EventResourceDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_maelstrite_amount_of_drops_during_range"), &BG_EventResourceDetails::get_maelstrite_amount_of_drops_during_range);
+	ClassDB::bind_method(D_METHOD("get_maelstrite_total_amount_by_end_of_weeks"), &BG_EventResourceDetails::get_maelstrite_total_amount_by_end_of_weeks);
+}
+
+////
 //// BG_JobMonsterDetails
 ////
 void BG_JobMonsterDetails::_bind_methods()
@@ -566,11 +575,17 @@ void BG_JobMonsterDetails::_bind_methods()
 void BG_JobDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_JobDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_battle_board_event_type"), &BG_JobDetails::get_battle_board_event_type);
 	ClassDB::bind_method(D_METHOD("get_weeks_before_expire"), &BG_JobDetails::get_weeks_before_expire);
 	ClassDB::bind_method(D_METHOD("get_monster_details"), &BG_JobDetails::get_monster_details);
+	ClassDB::bind_method(D_METHOD("get_event_resource_details"), &BG_JobDetails::get_event_resource_details);
 	ClassDB::bind_method(D_METHOD("get_is_unique"), &BG_JobDetails::get_is_unique);
 	ClassDB::bind_method(D_METHOD("get_is_boss"), &BG_JobDetails::get_is_boss);
 	ClassDB::bind_method(D_METHOD("get_distribution_per_act"), &BG_JobDetails::get_distribution_per_act);
+
+	BIND_ENUM_CONSTANT(JOB);
+	BIND_ENUM_CONSTANT(RESOURCE);
+	BIND_ENUM_CONSTANT(EVENT);
 }
 
 ////
@@ -1424,10 +1439,10 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 	}
 
 	/////
-	///// Jobs
+	///// Battle Board Events
 	/////
 	{
-		const Dictionary jobs_sheet = BG_JsonUtils::GetCBDSheet(data, "jobs");
+		const Dictionary jobs_sheet = BG_JsonUtils::GetCBDSheet(data, "battle_board_events");
 		if (jobs_sheet.has("lines"))
 		{
 			jobs.clear();
@@ -1440,6 +1455,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 
 				BG_JobDetails *new_job_class = memnew(BG_JobDetails);
 				new_job_class->id = entry["id"];
+				new_job_class->battle_board_event_type = BG_JobDetails::BattleBoardEventTypes(int(entry["type"]));
 				new_job_class->weeks_before_expire = int(entry["weeks_before_expire"]);
 				new_job_class->is_unique = bool(entry["is_unique"]);
 				new_job_class->is_boss = bool(entry["is_boss"]);
@@ -1528,6 +1544,18 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					}
 
 					new_job_class->monster_details.append(new_job_monster_details_class);
+				}
+
+				const Array resources_lines = Array(entry["resources"]);
+				for (int y = 0; y < resources_lines.size(); y++)
+				{
+					const Dictionary resources_entry = resources_lines[y];
+
+					BG_EventResourceDetails *new_resources_class = memnew(BG_EventResourceDetails);
+					new_resources_class->maelstrite_amount_of_drops_during_range = int(resources_entry["maelstrite_amount_of_drops_during_range"]);
+					new_resources_class->maelstrite_total_amount_by_end_of_weeks = int(resources_entry["maelstrite_total_amount_by_end_of_weeks"]);
+
+					new_job_class->event_resource_details = new_resources_class;
 				}
 
 				const Array distribution_per_act_lines = Array(entry["distribution_per_act"]);
