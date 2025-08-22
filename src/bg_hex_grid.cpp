@@ -63,6 +63,8 @@ void BG_HexGameSaveData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_asset_type"), &BG_HexGameSaveData::get_asset_type);
 	ClassDB::bind_method(D_METHOD("set_asset_type"), &BG_HexGameSaveData::set_asset_type);
 	ClassDB::bind_method(D_METHOD("get_asset_type_cost"), &BG_HexGameSaveData::get_asset_type_cost);
+	ClassDB::bind_method(D_METHOD("get_is_newly_added_to_board"), &BG_HexGameSaveData::get_is_newly_added_to_board);
+	ClassDB::bind_method(D_METHOD("set_is_newly_added_to_board"), &BG_HexGameSaveData::set_is_newly_added_to_board);
 	ClassDB::bind_method(D_METHOD("get_has_attacked"), &BG_HexGameSaveData::get_has_attacked);
 	ClassDB::bind_method(D_METHOD("set_has_attacked"), &BG_HexGameSaveData::set_has_attacked);
 	ClassDB::bind_method(D_METHOD("get_can_move"), &BG_HexGameSaveData::get_can_move);
@@ -77,6 +79,7 @@ void BG_HexGameSaveData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_unique_id_reference"), &BG_HexGameSaveData::set_unique_id_reference);
 
     ADD_PROPERTY(PropertyInfo(Variant::INT, "asset_type", PROPERTY_HINT_ENUM, "BAND:0,JOB:1,CITY:2,TOWN:3,RESOURCE:4"), "set_asset_type", "get_asset_type");
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_newly_added_to_board"), "set_is_newly_added_to_board", "get_is_newly_added_to_board");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "has_attacked"), "set_has_attacked", "get_has_attacked");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "can_move"), "set_can_move", "get_can_move");
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "qr"), "set_qr", "get_qr");

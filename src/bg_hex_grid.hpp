@@ -129,6 +129,10 @@ public:
         return 1;
     }
 
+    bool is_newly_added_to_board = true;
+    bool get_is_newly_added_to_board() const { return is_newly_added_to_board; }
+    void set_is_newly_added_to_board(bool v) { is_newly_added_to_board = v; }
+
     bool has_attacked = false;
     bool get_has_attacked() const { return has_attacked; }
     void set_has_attacked(bool v) { has_attacked = v; }
