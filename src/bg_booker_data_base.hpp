@@ -1058,6 +1058,36 @@ public:
 };
 
 ////
+//// BG_TurretInfo
+////
+class BG_TurretInfo : public Object
+{
+	GDCLASS(BG_TurretInfo, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	StringName nice_name;
+	StringName get_nice_name() const { return nice_name; }
+
+	StringName icon_path;
+	StringName get_icon_path() const { return icon_path; }
+	
+	StringName destroyed_icon_path;
+	StringName get_destroyed_icon_path() const { return destroyed_icon_path; }
+	
+	int max_health = 0;
+	int get_max_health() const { return max_health; }
+
+	TypedArray<StringName> equipment_ids;
+	TypedArray<StringName> get_equipment_ids() const { return equipment_ids; }
+};
+
+////
 //// BG_CityInfo
 ////
 class BG_CityInfo : public Object
@@ -1074,11 +1104,17 @@ public:
 	StringName icon_path;
 	StringName get_icon_path() const { return icon_path; }
 
-	int max_health;
+	int max_health = 0;
 	int get_max_health() const { return max_health; }
 
 	TypedArray<StringName> equipment_ids;
 	TypedArray<StringName> get_equipment_ids() const { return equipment_ids; }
+
+	TypedArray<BG_TurretInfo> barracades;
+	TypedArray<BG_TurretInfo> get_barracades() const { return barracades; }
+
+	TypedArray<BG_TurretInfo> turrets;
+	TypedArray<BG_TurretInfo> get_turrets() const { return turrets; }
 };
 
 ////

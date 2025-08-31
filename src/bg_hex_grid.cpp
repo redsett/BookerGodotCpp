@@ -21,14 +21,17 @@ void BG_HexVisualAssetData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_section_index"), &BG_HexVisualAssetData::set_section_index);
 	ClassDB::bind_method(D_METHOD("get_seed"), &BG_HexVisualAssetData::get_seed);
 	ClassDB::bind_method(D_METHOD("set_seed"), &BG_HexVisualAssetData::set_seed);
+	ClassDB::bind_method(D_METHOD("get_asset_health_normalized_percent"), &BG_HexVisualAssetData::get_asset_health_normalized_percent);
+	ClassDB::bind_method(D_METHOD("set_asset_health_normalized_percent"), &BG_HexVisualAssetData::set_asset_health_normalized_percent);
 
     ADD_PROPERTY(PropertyInfo(Variant::INT, "hex_type", PROPERTY_HINT_ENUM, 
-        "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3,SECTION:4,TOWN:5,RESOURCE:6"), 
+        "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3,SECTION:4,TOWN:5,RESOURCE:6,BAND_SPAWN:7,BARRICADE:8,TURRET:9,NO_STOP_CELL:10,MISC_VISUAL_1:11"), 
         "set_hex_type", "get_hex_type");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "rotation"), "set_rotation", "get_rotation");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "scale_multiplier"), "set_scale_multiplier", "get_scale_multiplier");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "section_index"), "set_section_index", "get_section_index");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "seed"), "set_seed", "get_seed");
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "asset_health_normalized_percent"), "set_asset_health_normalized_percent", "get_asset_health_normalized_percent");
 
 	BIND_ENUM_CONSTANT(CITY);
 	BIND_ENUM_CONSTANT(REST);
@@ -37,6 +40,11 @@ void BG_HexVisualAssetData::_bind_methods()
 	BIND_ENUM_CONSTANT(SECTION);
 	BIND_ENUM_CONSTANT(TOWN);
 	BIND_ENUM_CONSTANT(RESOURCE);
+	BIND_ENUM_CONSTANT(BAND_SPAWN);
+	BIND_ENUM_CONSTANT(BARRICADE);
+	BIND_ENUM_CONSTANT(TURRET);
+	BIND_ENUM_CONSTANT(NO_STOP_CELL);
+	BIND_ENUM_CONSTANT(MISC_VISUAL_1);
 }
 
 ////
@@ -77,8 +85,12 @@ void BG_HexGameSaveData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_moved_from_qr"), &BG_HexGameSaveData::set_moved_from_qr);
 	ClassDB::bind_method(D_METHOD("get_unique_id_reference"), &BG_HexGameSaveData::get_unique_id_reference);
 	ClassDB::bind_method(D_METHOD("set_unique_id_reference"), &BG_HexGameSaveData::set_unique_id_reference);
+	ClassDB::bind_method(D_METHOD("get_is_destroyed"), &BG_HexGameSaveData::get_is_destroyed);
+	ClassDB::bind_method(D_METHOD("set_is_destroyed"), &BG_HexGameSaveData::set_is_destroyed);
+	ClassDB::bind_method(D_METHOD("get_asset_health_normalized_percent"), &BG_HexGameSaveData::get_asset_health_normalized_percent);
+	ClassDB::bind_method(D_METHOD("set_asset_health_normalized_percent"), &BG_HexGameSaveData::set_asset_health_normalized_percent);
 
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "asset_type", PROPERTY_HINT_ENUM, "BAND:0,JOB:1,CITY:2,TOWN:3,RESOURCE:4"), "set_asset_type", "get_asset_type");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "asset_type", PROPERTY_HINT_ENUM, "BAND:0,JOB:1,CITY:2,TOWN:3,RESOURCE:4,BARRICADE:5,TURRET:6"), "set_asset_type", "get_asset_type");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_newly_added_to_board"), "set_is_newly_added_to_board", "get_is_newly_added_to_board");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "has_attacked"), "set_has_attacked", "get_has_attacked");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "can_move"), "set_can_move", "get_can_move");
@@ -86,12 +98,16 @@ void BG_HexGameSaveData::_bind_methods()
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "use_moved_from_qr"), "set_use_moved_from_qr", "get_use_moved_from_qr");
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "moved_from_qr"), "set_moved_from_qr", "get_moved_from_qr");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "unique_id_reference"), "set_unique_id_reference", "get_unique_id_reference");
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_destroyed"), "set_is_destroyed", "get_is_destroyed");
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "asset_health_normalized_percent"), "set_asset_health_normalized_percent", "get_asset_health_normalized_percent");
 
     BIND_ENUM_CONSTANT(BAND);
     BIND_ENUM_CONSTANT(JOB);
     BIND_ENUM_CONSTANT(CITY);
     BIND_ENUM_CONSTANT(TOWN);
     BIND_ENUM_CONSTANT(RESOURCE);
+    BIND_ENUM_CONSTANT(BARRICADE);
+    BIND_ENUM_CONSTANT(TURRET);
 }
 
 ////
@@ -148,6 +164,7 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("add_hex", "hex"), &BG_HexGrid::add_hex);
 	ClassDB::bind_method(D_METHOD("add_row", "column_index", "initial_emptys", "count"), &BG_HexGrid::add_row);
 	ClassDB::bind_method(D_METHOD("update_locations", "x_offset_percent", "y_offset_percent"), &BG_HexGrid::update_locations);
+	ClassDB::bind_method(D_METHOD("get_nearest_job_attackable", "from_job_hex", "attackable_types"), &BG_HexGrid::get_nearest_job_attackable);
 	ClassDB::bind_method(D_METHOD("find_path", "instigator", "start", "goal", "include_start"), &BG_HexGrid::find_path);
 	ClassDB::bind_method(D_METHOD("comp_priority_item"), &BG_HexGrid::comp_priority_item);
 
@@ -243,7 +260,6 @@ Vector2i BG_HexGrid::get_direction_difference(const Ref<BG_Hex> hex, Vector2i d)
     return d;
 }
 
-
 Ref<BG_Hex> BG_HexGrid::get_hex_by_coords(Vector2i coords) const
 {
 	for (int i = 0; i < grid.size(); ++i)
@@ -257,9 +273,8 @@ Ref<BG_Hex> BG_HexGrid::get_hex_by_coords(Vector2i coords) const
 
 Ref<BG_Hex> BG_HexGrid::get_hex_by_qr(Vector2i qr) const
 {
-	for (int i = 0; i < grid.size(); ++i)
-	{
-		Ref<BG_Hex> h = grid[i];
+	for (int i = 0; i < grid.size(); ++i) {
+		const Ref<BG_Hex> h = grid[i];
         if (qr == h->get_qr())
             return h;
     }
@@ -477,43 +492,77 @@ inline static int hex_distance(const Vector3i &a, const Vector3i &b, BG_HexGrid:
     return hex_length(hex_subtract(offset_to_cube(a, offset_type), offset_to_cube(b, offset_type) ));
 }
 
-inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, bool do_friendly_check) const
+inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, bool do_pass_through_check) const
 {
+    const Ref<BG_HexGameSaveData> hgsd = get_game_data_from_qr(qr);
+    const Ref<BG_HexGameSaveData> instigator_hgsd = instigator.is_valid() ? get_game_data_from_qr(instigator->get_qr()) : nullptr;
+    const bool is_band = instigator_hgsd.is_valid() ? instigator_hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::BAND : false;
+    const bool is_job = instigator_hgsd.is_valid() ? instigator_hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::JOB : false;
+
     if (base_grid_visual_data.has(qr))
     {
         const Ref<BG_HexVisualData> h = base_grid_visual_data[qr];
         if (h.is_valid()) {
             for (int i = 0; i < h->hex_asset_datas.size(); ++i) {
                 const Ref<BG_HexVisualAssetData> hvad = h->hex_asset_datas[i];
-                if (hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::WALL || 
-                    hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::CITY || 
-                    hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::TOWN) {
+                if (hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::CITY || 
+                    hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::WALL) {
                     return 0;
+                }
+
+                // If this asset can be destroyed, then allow a job to pass through it if it is destroyed. Otherwise always allow bands to pass through it.
+                if (is_job) {
+                    if (hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::TOWN || 
+                        hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::BARRICADE || 
+                        hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::TURRET) {
+                        if (do_pass_through_check && hgsd.is_valid() && hgsd->get_asset_type_cost() == 0) {
+                            if (hgsd->is_destroyed) return 1;
+                        }
+                        return 0;
+                    }
+                }
+
+                if (!do_pass_through_check) {
+                    if (hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::BARRICADE || 
+                        hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::TURRET || 
+                        hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::TOWN || 
+                        hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::NO_STOP_CELL) {
+                        return 0;
+                    }
                 }
             }
         }
     }
+
+    if (!do_pass_through_check) return 1;
     
-    const Ref<BG_HexGameSaveData> instigator_hgsd = (do_friendly_check && instigator.is_valid()) ? get_game_data_from_qr(instigator->get_qr()) : nullptr;
-    const Ref<BG_HexGameSaveData> hgsd = get_game_data_from_qr(qr);
-    if (!hgsd.is_null() && hgsd->get_asset_type_cost() == 0) {
-        // Friendly check.
+    if (hgsd.is_valid() && hgsd->get_asset_type_cost() == 0) {
+        // Pass through check.
         if (instigator_hgsd.is_valid()) {
             // Band
-            if (instigator_hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::BAND) {
+            if (is_band) {
 
-                if (hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::BAND ||
+                if (hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::BAND || // Allow these if band is moving.
+                    hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
+                    hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::BARRICADE ||
+                    hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::TURRET ||
                     hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::CITY) {
+                    // Do nothing.
                 } else {
                     return 0;
                 }
             // Job
-            } else if (instigator_hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::JOB) {
+            } else if (is_job) {
 
-                if (hgsd->asset_type != BG_HexGameSaveData::HexGameAssetTypes::JOB) {
+                if (hgsd->asset_type != BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
+                    hgsd->asset_type != BG_HexGameSaveData::HexGameAssetTypes::BARRICADE ||
+                    hgsd->asset_type != BG_HexGameSaveData::HexGameAssetTypes::TURRET) {
+                    if (!hgsd->is_destroyed) {
+                        return 0;
+                    }
+                } else if (hgsd->asset_type != BG_HexGameSaveData::HexGameAssetTypes::JOB) {
                     return 0;
                 }
-
             }
         } else {
             return 0;
@@ -527,70 +576,33 @@ static int heuristic(const Ref<BG_Hex> a, const Ref<BG_Hex> b) {
     return (Math::abs(a->q - b->q) + Math::abs(a->r - b->r) + Math::abs(a->s - b->s)) / 2;
 }
 
-// TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> start, const Ref<BG_Hex> goal) const
-// {
-//     TypedArray<Dictionary> frontier;
-//     frontier.append(make_priority_item(start, 0));
-//     HashMap<Vector2i, Vector2i> came_from;
-//     came_from[start->get_qr()] = start->get_qr();
-//     HashMap<const Ref<BG_Hex>, int> cost_so_far;
-//     cost_so_far[start] = 0;
+Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_job_attackable(const Ref<BG_Hex> from_job_hex, const TypedArray<int> attackable_types) const
+{
+    if (from_job_hex.is_null()) return nullptr;
 
-//     const Callable callable = Callable::create(this, StringName("comp_priority_item"));
+    Array attackable_types_converted;
+    for (int i = 0; i < attackable_types.size(); i++) {
+        attackable_types_converted.append( static_cast<BG_HexGameSaveData::HexGameAssetTypes>(attackable_types[i].operator int()) );
+    }
 
-//     while (!frontier.is_empty()) {
-//         const Dictionary dict = frontier.pop_front();
-//         const Ref<BG_Hex> current_hex = dict["h"];
-//         if (current_hex == goal) break;
-//         const Vector2i current_qr = current_hex->get_qr();
-        
-//         const HashMap<HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(current_hex);
-//         for (const auto &pair : neighbors) {
-//             const Ref<BG_Hex> next_hex = pair.value;
-//             if (next_hex.is_null() || next_hex->get_empty()) continue;
-//             // int next_cost = current_hex->get_move_cost(next_hex);
-//             int next_cost = get_hex_cost(next_hex->get_qr());
-            
-//             if ((next_hex == goal) && (next_hex->get_hex_cost() == 0)) {
-//                 // Our goal is an obstacle, but we're next to it
-//                 // so our work here is done
-//                 came_from[next_hex->get_qr()] = current_qr;
-//                 frontier.clear();
-//                 break;
-//             }
-//             if (next_cost == 0) continue;
+    Ref<BG_HexGameSaveData> result;
+    int nearest_distance = 999999;
 
-//             next_cost += cost_so_far[current_hex];
-//             if ((!cost_so_far.has(next_hex)) || (next_cost < cost_so_far[next_hex])) {
-//                 // New shortest path to that node
-//                 cost_so_far[next_hex] = next_cost;
-//                 const int distance = hex_distance(next_hex->get_full_qr(), goal->get_full_qr());
-//                 const int priority = next_cost + distance;
-//                 // Insert into the frontier
-//                 const Dictionary item = make_priority_item(next_hex, priority);
-//                 const int idx = frontier.bsearch_custom(item, callable, true);
-//                 frontier.insert(idx, item);
-//                 came_from[next_hex->get_qr()] = current_qr;
-//             }
-//         }
-//     }
+    for (uint32_t i = 1; i < game_data.size(); ++i) {
+        const Ref<BG_HexGameSaveData> data = game_data[i];
+        if (data.is_null()) continue;
 
-//     if (!came_from.has(goal->get_qr())) return {}; // No path found.
+        if (attackable_types_converted.has(data->asset_type)) {
+            const int d = hex_distance(from_job_hex->get_full_qr(), get_hex_by_qr(data->get_qr())->get_full_qr(), offset_type);
+            if (d < nearest_distance) {
+                nearest_distance = d;
+                result = data;
+            }
+        }
+    }
 
-//     // Follow the path back where we came_from
-//     TypedArray<BG_Hex> result;
-//     if (get_hex_cost(goal->get_qr()) != 0) {
-//         // We only include the goal if it's traversable
-//         result.append(goal);
-//     }
-//     Vector2i current_qr = goal->get_qr();
-//     while (current_qr != start->get_qr()) {
-//         current_qr = came_from[current_qr];
-//         const Ref<BG_Hex> hex = get_hex_by_qr(current_qr);
-//         result.push_front(hex);
-//     }
-//     return result;
-// }
+    return result;
+}
 
 TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, const Ref<BG_Hex> goal, bool include_start) const
 {
@@ -617,7 +629,7 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> instigator, const Ref
             const Ref<BG_Hex> next_hex = pair.value;
 
             if (!next_hex.is_valid()) continue;
-            const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ next_hex->get_qr(), /* do_friendly_check */ true);
+            const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ next_hex->get_qr(), /* do_pass_through_check */ true);
             if (hex_cost == 0) { // Can't move into cell?
                 if (next_hex == goal) { // Is the cell the goal, if so, make the previous cell the goal.
                     result_goal = current_hex;
@@ -638,13 +650,17 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> instigator, const Ref
     TypedArray<BG_Hex> result;
     Ref<BG_Hex> current = result_goal;
     while (current != start) {
+        if (!came_from.has(current)) {
+            if (include_start) return {start};
+            return {};
+        }
         result.append(current);
         current = came_from[current];
     }
 
     // Since we allow building paths through friendlies, let's ensure that the path doesn't end on a friendly.
     if (!result.is_empty()) {
-        while (get_hex_cost(/* from_hex */ nullptr, /* qr */ Ref<BG_Hex>(result[0])->get_qr(), /* do_friendly_check */ false) == 0) {
+        while (get_hex_cost(/* from_hex */ nullptr, /* qr */ Ref<BG_Hex>(result[0])->get_qr(), /* do_pass_through_check */ false) == 0) {
             result.remove_at(0);
             if (result.is_empty()) break;
         }
@@ -674,7 +690,7 @@ TypedArray<BG_Hex> BG_HexGrid::find_reachable_cells_in_distance(const Ref<BG_Hex
             const Ref<BG_Hex> next_hex = pair.value;
 
             if (!next_hex.is_valid()) continue;
-            const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ next_hex->get_qr(), /* do_friendly_check */ true);
+            const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ next_hex->get_qr(), /* do_pass_through_check */ true);
             if (hex_cost == 0) continue;
 
             const int d = hex_distance(next_hex->get_full_qr(), start->get_full_qr(), offset_type);
@@ -707,7 +723,7 @@ TypedArray<BG_Hex> BG_HexGrid::find_reachable_cells_in_distance(const Ref<BG_Hex
     // Remove cells that are blocked. This would be the case for a cell with a friendly unit.
     for (int i = (frontier.size() - 1); i >= 0; --i) {
         const Ref<BG_Hex> h = frontier[i];
-        const int hex_cost = get_hex_cost(/* from_hex */ nullptr, /* qr */ h->get_qr(), /* do_friendly_check */ false);
+        const int hex_cost = get_hex_cost(/* from_hex */ nullptr, /* qr */ h->get_qr(), /* do_pass_through_check */ false);
         if (hex_cost == 0) {
             frontier.remove_at(i);
         }

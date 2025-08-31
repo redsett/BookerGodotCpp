@@ -636,6 +636,19 @@ void BG_BookerSkillTreeSlotDetails::_bind_methods()
 }
 
 ////
+//// BG_TurretInfo
+////
+void BG_TurretInfo::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_TurretInfo::get_id);
+	ClassDB::bind_method(D_METHOD("get_nice_name"), &BG_TurretInfo::get_nice_name);
+	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_TurretInfo::get_icon_path);
+	ClassDB::bind_method(D_METHOD("get_destroyed_icon_path"), &BG_TurretInfo::get_destroyed_icon_path);
+	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_TurretInfo::get_max_health);
+	ClassDB::bind_method(D_METHOD("get_equipment_ids"), &BG_TurretInfo::get_equipment_ids);
+}
+
+////
 //// BG_CityInfo
 ////
 void BG_CityInfo::_bind_methods()
@@ -644,6 +657,8 @@ void BG_CityInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_CityInfo::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_CityInfo::get_max_health);
 	ClassDB::bind_method(D_METHOD("get_equipment_ids"), &BG_CityInfo::get_equipment_ids);
+	ClassDB::bind_method(D_METHOD("get_barracades"), &BG_CityInfo::get_barracades);
+	ClassDB::bind_method(D_METHOD("get_turrets"), &BG_CityInfo::get_turrets);
 }
 
 ////
@@ -904,6 +919,52 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				{
 					const Dictionary equipment_entry = equipment_lines[y];
 					new_city_info->equipment_ids.append(equipment_entry["equipment"]);
+				}
+				
+				// Barracades
+				const Array barracades_lines = Array(entry["barracades"]);
+				for (int x = 0; x < barracades_lines.size(); x++)
+				{
+					const Dictionary barracades_entry = barracades_lines[x];
+
+					BG_TurretInfo *new_turret_info = memnew(BG_TurretInfo);
+					new_turret_info->nice_name = barracades_entry["name"];
+					new_turret_info->icon_path = barracades_entry["icon_path"];
+					new_turret_info->destroyed_icon_path = barracades_entry["destroyed_icon_path"];
+					new_turret_info->max_health = int(barracades_entry["health"]);
+
+					// Equipment
+					const Array barracades_equipment_lines = Array(barracades_entry["equipment"]);
+					for (int y = 0; y < barracades_equipment_lines.size(); y++)
+					{
+						const Dictionary equipment_entry = barracades_equipment_lines[y];
+						new_turret_info->equipment_ids.append(equipment_entry["equipment"]);
+					}
+					
+					new_city_info->barracades.append(new_turret_info);
+				}
+
+				// Turrets
+				const Array turrets_lines = Array(entry["turrets"]);
+				for (int x = 0; x < turrets_lines.size(); x++)
+				{
+					const Dictionary turrets_entry = turrets_lines[x];
+
+					BG_TurretInfo *new_turret_info = memnew(BG_TurretInfo);
+					new_turret_info->nice_name = turrets_entry["name"];
+					new_turret_info->icon_path = turrets_entry["icon_path"];
+					new_turret_info->destroyed_icon_path = turrets_entry["destroyed_icon_path"];
+					new_turret_info->max_health = int(turrets_entry["health"]);
+
+					// Equipment
+					const Array turrets_equipment_lines = Array(turrets_entry["equipment"]);
+					for (int y = 0; y < turrets_equipment_lines.size(); y++)
+					{
+						const Dictionary equipment_entry = turrets_equipment_lines[y];
+						new_turret_info->equipment_ids.append(equipment_entry["equipment"]);
+					}
+					
+					new_city_info->turrets.append(new_turret_info);
 				}
 				
 				globals->city_info.append(new_city_info);

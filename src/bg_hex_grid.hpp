@@ -28,6 +28,11 @@ public:
         SECTION,
         TOWN,
         RESOURCE,
+        BAND_SPAWN,
+        BARRICADE,
+        TURRET,
+        NO_STOP_CELL,
+        MISC_VISUAL_1,
 	};
 
     static PackedStringArray get_hex_type_names() {
@@ -39,6 +44,11 @@ public:
         result.append("SECTION");
         result.append("TOWN");
         result.append("RESOURCE");
+        result.append("BAND_SPAWN");
+        result.append("BARRICADE");
+        result.append("TURRET");
+        result.append("NO_STOP_CELL");
+        result.append("MISC_VISUAL_1");
         return result;
     }
 
@@ -61,6 +71,10 @@ public:
     int seed = 0;
     int get_seed() const { return seed; }
     void set_seed(int v) { seed = v; }
+
+    float asset_health_normalized_percent = 1.0;
+    float get_asset_health_normalized_percent() const { return asset_health_normalized_percent; }
+    void set_asset_health_normalized_percent(float v) { asset_health_normalized_percent = v; }
 };
 
 VARIANT_ENUM_CAST(BG_HexVisualAssetData::HexVisualAssetTypes);
@@ -102,6 +116,8 @@ public:
 		CITY,
 		TOWN,
 		RESOURCE,
+		BARRICADE,
+		TURRET,
 	};
 
     static PackedStringArray get_game_asset_type_names() {
@@ -111,6 +127,8 @@ public:
         result.append("CITY");
         result.append("TOWN");
         result.append("RESOURCE");
+        result.append("BARRICADE");
+        result.append("TURRET");
         return result;
     }
 
@@ -123,6 +141,8 @@ public:
             asset_type == BG_HexGameSaveData::HexGameAssetTypes::JOB ||
             asset_type == BG_HexGameSaveData::HexGameAssetTypes::CITY ||
             asset_type == BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
+            asset_type == BG_HexGameSaveData::HexGameAssetTypes::BARRICADE ||
+            asset_type == BG_HexGameSaveData::HexGameAssetTypes::TURRET ||
             asset_type == BG_HexGameSaveData::HexGameAssetTypes::RESOURCE) {
                 return 0;
         }
@@ -156,6 +176,14 @@ public:
     int unique_id_reference = 0;
     int get_unique_id_reference() const { return unique_id_reference; }
     void set_unique_id_reference(int v) { unique_id_reference = v; }
+
+    bool is_destroyed = false;
+    bool get_is_destroyed() const { return is_destroyed; }
+    void set_is_destroyed(bool v) { is_destroyed = v; }
+
+    float asset_health_normalized_percent = 1.0;
+    float get_asset_health_normalized_percent() const { return asset_health_normalized_percent; }
+    void set_asset_health_normalized_percent(float v) { asset_health_normalized_percent = v; }
 };
 
 VARIANT_ENUM_CAST(BG_HexGameSaveData::HexGameAssetTypes);
@@ -279,7 +307,7 @@ public:
         return nullptr;
     }
 
-    int get_hex_cost(const Ref<BG_Hex> from_hex, Vector2i qr, bool do_friendly_check) const;
+    int get_hex_cost(const Ref<BG_Hex> from_hex, Vector2i qr, bool do_pass_through_check) const;
     
     float size_per_hex = 10.0;
     float get_size_per_hex() const { return size_per_hex; }
@@ -309,6 +337,8 @@ public:
     void add_row(int column_index, int initial_emptys, int count);
 
     void update_locations(float x_offset_percent, float y_offset_percent);
+
+    Ref<BG_HexGameSaveData> get_nearest_job_attackable(const Ref<BG_Hex> from_job_hex, const TypedArray<int> attackable_types) const;
 
     TypedArray<BG_Hex> find_path(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, const Ref<BG_Hex> goal, bool include_start) const;
     TypedArray<BG_Hex> find_reachable_cells_in_distance(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, int distance) const;
