@@ -384,6 +384,8 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_equipment"), &BG_BandMember::set_equipment);
 	ClassDB::bind_method(D_METHOD("get_is_city_asset"), &BG_BandMember::get_is_city_asset);
 	ClassDB::bind_method(D_METHOD("set_is_city_asset"), &BG_BandMember::set_is_city_asset);
+	ClassDB::bind_method(D_METHOD("get_turret_info"), &BG_BandMember::get_turret_info);
+	ClassDB::bind_method(D_METHOD("set_turret_info"), &BG_BandMember::set_turret_info);
 	ClassDB::bind_method(D_METHOD("get_element_upgrades"), &BG_BandMember::get_element_upgrades);
 	ClassDB::bind_method(D_METHOD("set_element_upgrades"), &BG_BandMember::set_element_upgrades);
 
@@ -659,6 +661,7 @@ void BG_CityInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_equipment_ids"), &BG_CityInfo::get_equipment_ids);
 	ClassDB::bind_method(D_METHOD("get_barracades"), &BG_CityInfo::get_barracades);
 	ClassDB::bind_method(D_METHOD("get_turrets"), &BG_CityInfo::get_turrets);
+	ClassDB::bind_method(D_METHOD("get_towns"), &BG_CityInfo::get_towns);
 }
 
 ////
@@ -932,7 +935,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_turret_info->icon_path = barracades_entry["icon_path"];
 					new_turret_info->destroyed_icon_path = barracades_entry["destroyed_icon_path"];
 					new_turret_info->max_health = int(barracades_entry["health"]);
-
+					
 					// Equipment
 					const Array barracades_equipment_lines = Array(barracades_entry["equipment"]);
 					for (int y = 0; y < barracades_equipment_lines.size(); y++)
@@ -941,30 +944,18 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 						new_turret_info->equipment_ids.append(equipment_entry["equipment"]);
 					}
 					
-					new_city_info->barracades.append(new_turret_info);
-				}
-
-				// Turrets
-				const Array turrets_lines = Array(entry["turrets"]);
-				for (int x = 0; x < turrets_lines.size(); x++)
-				{
-					const Dictionary turrets_entry = turrets_lines[x];
-
-					BG_TurretInfo *new_turret_info = memnew(BG_TurretInfo);
-					new_turret_info->nice_name = turrets_entry["name"];
-					new_turret_info->icon_path = turrets_entry["icon_path"];
-					new_turret_info->destroyed_icon_path = turrets_entry["destroyed_icon_path"];
-					new_turret_info->max_health = int(turrets_entry["health"]);
-
-					// Equipment
-					const Array turrets_equipment_lines = Array(turrets_entry["equipment"]);
-					for (int y = 0; y < turrets_equipment_lines.size(); y++)
-					{
-						const Dictionary equipment_entry = turrets_equipment_lines[y];
-						new_turret_info->equipment_ids.append(equipment_entry["equipment"]);
+					const int turret_type = int(barracades_entry["type"]);
+					switch (turret_type) {
+						case 0:
+							new_city_info->barracades.append(new_turret_info);
+							break;
+						case 1:
+							new_city_info->turrets.append(new_turret_info);
+							break;
+						case 2:
+							new_city_info->towns.append(new_turret_info);
+							break;
 					}
-					
-					new_city_info->turrets.append(new_turret_info);
 				}
 				
 				globals->city_info.append(new_city_info);

@@ -23,6 +23,8 @@ void BG_HexVisualAssetData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_seed"), &BG_HexVisualAssetData::set_seed);
 	ClassDB::bind_method(D_METHOD("get_asset_health_normalized_percent"), &BG_HexVisualAssetData::get_asset_health_normalized_percent);
 	ClassDB::bind_method(D_METHOD("set_asset_health_normalized_percent"), &BG_HexVisualAssetData::set_asset_health_normalized_percent);
+	ClassDB::bind_method(D_METHOD("get_force_disable_targeting"), &BG_HexVisualAssetData::get_force_disable_targeting);
+	ClassDB::bind_method(D_METHOD("set_force_disable_targeting"), &BG_HexVisualAssetData::set_force_disable_targeting);
 
     ADD_PROPERTY(PropertyInfo(Variant::INT, "hex_type", PROPERTY_HINT_ENUM, 
         "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3,SECTION:4,TOWN:5,RESOURCE:6,BAND_SPAWN:7,BARRICADE:8,TURRET:9,NO_STOP_CELL:10,MISC_VISUAL_1:11"), 
@@ -32,6 +34,7 @@ void BG_HexVisualAssetData::_bind_methods()
     ADD_PROPERTY(PropertyInfo(Variant::INT, "section_index"), "set_section_index", "get_section_index");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "seed"), "set_seed", "get_seed");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "asset_health_normalized_percent"), "set_asset_health_normalized_percent", "get_asset_health_normalized_percent");
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "force_disable_targeting"), "set_force_disable_targeting", "get_force_disable_targeting");
 
 	BIND_ENUM_CONSTANT(CITY);
 	BIND_ENUM_CONSTANT(REST);
@@ -329,6 +332,7 @@ Dictionary BG_HexGrid::get_hex_neighbors_qr(const Ref<BG_Hex> instigator, const 
 
         for (uint16_t i = 0; i < cells.size(); ++i) {
             const Ref<BG_Hex> h = cells[i];
+            if (h->get_empty()) continue;
             result[h->get_qr()] = h;
         }
         return result;
@@ -533,12 +537,10 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, b
             }
         }
     }
-
-    if (!do_pass_through_check) return 1;
     
     if (hgsd.is_valid() && hgsd->get_asset_type_cost() == 0) {
         // Pass through check.
-        if (instigator_hgsd.is_valid()) {
+        if (do_pass_through_check && instigator_hgsd.is_valid()) {
             // Band
             if (is_band) {
 
@@ -592,12 +594,38 @@ Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_job_attackable(const Ref<BG_Hex>
         const Ref<BG_HexGameSaveData> data = game_data[i];
         if (data.is_null()) continue;
 
-        if (attackable_types_converted.has(data->asset_type)) {
-            const int d = hex_distance(from_job_hex->get_full_qr(), get_hex_by_qr(data->get_qr())->get_full_qr(), offset_type);
-            if (d < nearest_distance) {
-                nearest_distance = d;
-                result = data;
-            }
+        if (data->get_is_destroyed() || !attackable_types_converted.has(data->asset_type)) continue;
+
+        const int d = hex_distance(from_job_hex->get_full_qr(), get_hex_by_qr(data->get_qr())->get_full_qr(), offset_type);
+        if (d < nearest_distance) {
+            nearest_distance = d;
+            result = data;
+        }
+    }
+
+    return result;
+}
+
+Ref<BG_Hex> BG_HexGrid::get_nearest_empty_cell_neighoring_target(const Ref<BG_Hex> instigator, const Ref<BG_Hex> target) const
+{
+    if (instigator.is_null()) return nullptr;
+    if (target.is_null()) return nullptr;
+
+    Ref<BG_Hex> result;
+    int nearest_distance = 999999;
+
+    const HashMap<HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(target);
+    for (const auto &pair : neighbors) {
+        const Ref<BG_Hex> hex = pair.value;
+
+        if (!hex.is_valid()) continue;
+        const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ hex->get_qr(), /* do_pass_through_check */ false);
+        if (hex_cost == 0) continue; // Can't move into cell?
+
+        const int d = hex_distance(instigator->get_full_qr(), get_hex_by_qr(hex->get_qr())->get_full_qr(), offset_type);
+        if (d < nearest_distance) {
+            nearest_distance = d;
+            result = hex;
         }
     }
 
@@ -606,9 +634,20 @@ Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_job_attackable(const Ref<BG_Hex>
 
 TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, const Ref<BG_Hex> goal, bool include_start) const
 {
+    if (start.is_null()) return {};
+    if (goal.is_null()) return {};
     if (start == goal) {
         if (include_start) return {start};
         return {};
+    }
+
+    // If the goal is not a empty cell, then find a neighoring one that is empty.
+    const int goal_hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ goal->get_qr(), /* do_pass_through_check */ false);
+    if (goal_hex_cost == 0) {
+        Ref<BG_Hex> better_goal_cell = get_nearest_empty_cell_neighoring_target(start, goal);
+        if (better_goal_cell.is_valid()) {
+            return find_path(instigator, start, better_goal_cell, include_start);
+        }
     }
 
     TypedArray<BG_Hex> frontier;
@@ -632,6 +671,22 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> instigator, const Ref
             const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ next_hex->get_qr(), /* do_pass_through_check */ true);
             if (hex_cost == 0) { // Can't move into cell?
                 if (next_hex == goal) { // Is the cell the goal, if so, make the previous cell the goal.
+
+                    // Ensure the whole path isn't just walk throughs without any landings.
+                    bool has_valid_cell = false;
+                    Ref<BG_Hex> current_pass_through_check_hex = current_hex;
+                    int pass_through_count = 0;
+                    while (current_pass_through_check_hex != start) {
+                        pass_through_count++;
+                        if (get_hex_cost(/* from_hex */ nullptr, /* qr */ current_pass_through_check_hex->get_qr(), /* do_pass_through_check */ false) != 0) {
+                            has_valid_cell = true;
+                            break;
+                        }
+                        current_pass_through_check_hex = came_from[current_pass_through_check_hex];
+                    }
+                    if (!has_valid_cell && pass_through_count > 0) continue;
+
+                    // We have a valid path to the goal, so bail out.
                     result_goal = current_hex;
                     frontier.clear();
                     break;

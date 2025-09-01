@@ -75,6 +75,10 @@ public:
     float asset_health_normalized_percent = 1.0;
     float get_asset_health_normalized_percent() const { return asset_health_normalized_percent; }
     void set_asset_health_normalized_percent(float v) { asset_health_normalized_percent = v; }
+
+    bool force_disable_targeting = false;
+    bool get_force_disable_targeting() const { return force_disable_targeting; }
+    void set_force_disable_targeting(bool v) { force_disable_targeting = v; }
 };
 
 VARIANT_ENUM_CAST(BG_HexVisualAssetData::HexVisualAssetTypes);
@@ -339,6 +343,7 @@ public:
     void update_locations(float x_offset_percent, float y_offset_percent);
 
     Ref<BG_HexGameSaveData> get_nearest_job_attackable(const Ref<BG_Hex> from_job_hex, const TypedArray<int> attackable_types) const;
+    Ref<BG_Hex> get_nearest_empty_cell_neighoring_target(const Ref<BG_Hex> instigator, const Ref<BG_Hex> target) const;
 
     TypedArray<BG_Hex> find_path(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, const Ref<BG_Hex> goal, bool include_start) const;
     TypedArray<BG_Hex> find_reachable_cells_in_distance(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, int distance) const;

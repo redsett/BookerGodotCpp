@@ -789,6 +789,10 @@ public:
 	bool get_is_city_asset() const { return is_city_asset; }
 	void set_is_city_asset(bool v) { is_city_asset = v; }
 
+	class BG_TurretInfo *turret_info = nullptr;
+	BG_TurretInfo *get_turret_info() const { return turret_info; }
+	void set_turret_info(BG_TurretInfo *v) { turret_info = v; }
+
 	Dictionary element_upgrades; //<StringName, int>
 	Dictionary get_element_upgrades() const { return element_upgrades; }
 	void set_element_upgrades(Dictionary v) { element_upgrades = v; }
@@ -1115,6 +1119,9 @@ public:
 
 	TypedArray<BG_TurretInfo> turrets;
 	TypedArray<BG_TurretInfo> get_turrets() const { return turrets; }
+
+	TypedArray<BG_TurretInfo> towns;
+	TypedArray<BG_TurretInfo> get_towns() const { return towns; }
 };
 
 ////
