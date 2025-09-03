@@ -662,6 +662,7 @@ void BG_CityInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_barracades"), &BG_CityInfo::get_barracades);
 	ClassDB::bind_method(D_METHOD("get_turrets"), &BG_CityInfo::get_turrets);
 	ClassDB::bind_method(D_METHOD("get_towns"), &BG_CityInfo::get_towns);
+	ClassDB::bind_method(D_METHOD("get_misc_attributes"), &BG_CityInfo::get_misc_attributes);
 }
 
 ////
@@ -956,6 +957,25 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 							new_city_info->towns.append(new_turret_info);
 							break;
 					}
+				}
+
+				// Misc Attributes
+				const Array misc_attributes_lines = Array(entry["misc_attributes"]);
+				for (int y = 0; y < misc_attributes_lines.size(); y++)
+				{
+					const Dictionary misc_attributes_entry = misc_attributes_lines[y];
+
+					String name = misc_attributes_entry["name"];
+					String value1 = misc_attributes_entry["value_1"];
+					String value2 = misc_attributes_entry["value_2"];
+
+					Array values;
+					if (!value1.is_empty())
+						values.append(value1);
+					if (!value2.is_empty())
+						values.append(value2);
+
+					new_city_info->misc_attributes[name] = values;
 				}
 				
 				globals->city_info.append(new_city_info);

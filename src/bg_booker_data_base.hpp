@@ -1122,6 +1122,9 @@ public:
 
 	TypedArray<BG_TurretInfo> towns;
 	TypedArray<BG_TurretInfo> get_towns() const { return towns; }
+
+	Dictionary misc_attributes;
+	Dictionary get_misc_attributes() const { return misc_attributes; }
 };
 
 ////
