@@ -1318,7 +1318,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 
 				BG_MailData *new_mail_data = memnew(BG_MailData);
 				new_mail_data->id = entry["id"];
-				new_mail_data->act = int(entry["act"]) + 1;
+				new_mail_data->act = int(entry["act"]);
 				new_mail_data->week = int(entry["week"]);
 
 				mail_data.append(new_mail_data);
