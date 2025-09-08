@@ -147,6 +147,7 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_offset_type"), &BG_HexGrid::get_offset_type);
 	ClassDB::bind_method(D_METHOD("set_offset_type"), &BG_HexGrid::set_offset_type);
 	ClassDB::bind_method(D_METHOD("get_grid"), &BG_HexGrid::get_grid);
+	ClassDB::bind_method(D_METHOD("clear_grid"), &BG_HexGrid::clear_grid);
 	ClassDB::bind_method(D_METHOD("get_base_grid_visual_data"), &BG_HexGrid::get_base_grid_visual_data);
 	ClassDB::bind_method(D_METHOD("set_base_grid_visual_data", "qr", "data"), &BG_HexGrid::set_base_grid_visual_data);
 	ClassDB::bind_method(D_METHOD("get_game_data"), &BG_HexGrid::get_game_data);
@@ -192,6 +193,12 @@ BG_HexGrid::BG_HexGrid()
     hex_directions[HexDirections::BOTTOM_LEFT] = Vector2i(-1, 1);
     hex_directions[HexDirections::LEFT] = Vector2i(-1, 0);
     hex_directions[HexDirections::TOP_LEFT] = Vector2i(-1, -1);
+}
+
+void BG_HexGrid::clear_grid()
+{
+    grid.clear();
+    grid_map.clear();
 }
 
 Vector2i BG_HexGrid::get_direction_difference(const Ref<BG_Hex> hex, Vector2i d) const
@@ -276,12 +283,7 @@ Ref<BG_Hex> BG_HexGrid::get_hex_by_coords(Vector2i coords) const
 
 Ref<BG_Hex> BG_HexGrid::get_hex_by_qr(Vector2i qr) const
 {
-	for (int i = 0; i < grid.size(); ++i) {
-		const Ref<BG_Hex> h = grid[i];
-        if (qr == h->get_qr())
-            return h;
-    }
-    return nullptr;
+    return grid_map[qr];
 }
 
 Ref<BG_Hex> BG_HexGrid::get_hex_in_direction(const Ref<BG_Hex> from_hex, Vector2i d) const
@@ -372,6 +374,8 @@ Dictionary BG_HexGrid::get_hex_neighbors_qr(const Ref<BG_Hex> instigator, const 
 
 void BG_HexGrid::add_hex(const Ref<BG_Hex> hex)
 {
+    grid_map[hex->get_qr()] = hex;
+
     if (hex.is_null()) return;
     if (grid.is_empty()) {
         grid.append(hex);
@@ -407,6 +411,7 @@ void BG_HexGrid::add_row(int column_index, int initial_emptys, int count)
         new_hex->s = (-new_hex->q - new_hex->r);
         new_hex->empty = i < initial_emptys;
         // add_hex(new_hex);
+        grid_map[new_hex->get_qr()] = new_hex;
         grid.append(new_hex);
     }
 }
@@ -507,6 +512,10 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, b
     {
         const Ref<BG_HexVisualData> h = base_grid_visual_data[qr];
         if (h.is_valid()) {
+            {
+                const Ref<BG_Hex> hex = get_hex_by_qr(qr);
+                if (hex.is_null() || hex->get_empty()) return false;
+            }
             for (int i = 0; i < h->hex_asset_datas.size(); ++i) {
                 const Ref<BG_HexVisualAssetData> hvad = h->hex_asset_datas[i];
                 if (hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::CITY || 

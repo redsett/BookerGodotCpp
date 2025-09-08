@@ -283,8 +283,10 @@ public:
 	OffsetType get_offset_type() const { return offset_type; }
 	void set_offset_type(OffsetType v) { offset_type = v; }
     
+    HashMap<Vector2i, Ref<BG_Hex>> grid_map;
     TypedArray<BG_Hex> grid;
     TypedArray<BG_Hex> get_grid() const { return grid; };
+    void clear_grid();
     
     HashMap<Vector2i, Ref<BG_HexVisualData>> base_grid_visual_data;
     Dictionary get_base_grid_visual_data() const {
