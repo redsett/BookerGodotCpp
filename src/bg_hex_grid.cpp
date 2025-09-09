@@ -508,14 +508,13 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, b
     const bool is_band = instigator_hgsd.is_valid() ? instigator_hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::BAND : false;
     const bool is_job = instigator_hgsd.is_valid() ? instigator_hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::JOB : false;
 
+    const Ref<BG_Hex> hex = get_hex_by_qr(qr);
+    if (hex.is_null() || hex->get_empty()) return false;
+
     if (base_grid_visual_data.has(qr))
     {
         const Ref<BG_HexVisualData> h = base_grid_visual_data[qr];
         if (h.is_valid()) {
-            {
-                const Ref<BG_Hex> hex = get_hex_by_qr(qr);
-                if (hex.is_null() || hex->get_empty()) return false;
-            }
             for (int i = 0; i < h->hex_asset_datas.size(); ++i) {
                 const Ref<BG_HexVisualAssetData> hvad = h->hex_asset_datas[i];
                 if (hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::CITY || 
