@@ -1108,6 +1108,9 @@ public:
 	StringName icon_path;
 	StringName get_icon_path() const { return icon_path; }
 
+	StringName scene_path;
+	StringName get_scene_path() const { return scene_path; }
+
 	int max_health = 0;
 	int get_max_health() const { return max_health; }
 

@@ -657,6 +657,7 @@ void BG_CityInfo::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_nice_name"), &BG_CityInfo::get_nice_name);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_CityInfo::get_icon_path);
+	ClassDB::bind_method(D_METHOD("get_scene_path"), &BG_CityInfo::get_scene_path);
 	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_CityInfo::get_max_health);
 	ClassDB::bind_method(D_METHOD("get_equipment_ids"), &BG_CityInfo::get_equipment_ids);
 	ClassDB::bind_method(D_METHOD("get_barracades"), &BG_CityInfo::get_barracades);
@@ -915,6 +916,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				BG_CityInfo *new_city_info = memnew(BG_CityInfo);
 				new_city_info->nice_name = entry["name"];
 				new_city_info->icon_path = entry["icon_path"];
+				new_city_info->scene_path = entry["scene_path"];
 				new_city_info->max_health = int(entry["health"]);
 
 				// Equipment

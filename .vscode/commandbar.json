@@ -38,6 +38,15 @@
 			"alignment": "right",
 			"skipTerminateQuickPick": false,
 			"priority": -1
+		},
+		{
+			"text": "🦴 2Der",
+			"color": "orange",
+			"commandType":"palette",
+			"command": "workbench.action.tasks.runTask|2Der",
+			"alignment": "right",
+			"skipTerminateQuickPick": false,
+			"priority": -1
 		}
 	]
 }
