@@ -701,12 +701,12 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> instigator, const Ref
                         break;
                     }
                     previous_pass_through_count++;
-                    if (previous_pass_through_count == travel_distance) break; // Early out, already failed.
+                    if (previous_pass_through_count == (travel_distance - 1)) break; // Early out, already failed.
                     current_previous_pass_through_check_hex = came_from[current_previous_pass_through_check_hex];
                 }
             }
 
-            const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ next_hex->get_qr(), /* do_pass_through_check */ travel_distance > previous_pass_through_count);
+            const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ next_hex->get_qr(), /* do_pass_through_check */ (travel_distance - 1) > previous_pass_through_count);
 
             if (hex_cost == 0) { // Can't move into cell?
                 if (next_hex == goal) { // Is the cell the goal, if so, make the previous cell the goal.
