@@ -421,6 +421,7 @@ void BG_Band::_bind_methods()
 
 	ClassDB::bind_method(D_METHOD("has_job"), &BG_Band::has_job);
 	ClassDB::bind_method(D_METHOD("clear_job"), &BG_Band::clear_job);
+	ClassDB::bind_method(D_METHOD("is_band_alive"), &BG_Band::is_band_alive);
 
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "unique_id"), "set_unique_id", "get_unique_id");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
@@ -429,6 +430,21 @@ void BG_Band::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "knocked_out_turns"), "set_knocked_out_turns", "get_knocked_out_turns");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "band_members"), "set_band_members", "get_band_members");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_unique_job_id"), "set_current_unique_job_id", "get_current_unique_job_id");
+}
+
+bool BG_Band::is_band_alive() const
+{
+	if (get_knocked_out_turns() > 1)
+		return false;
+	
+	for (uint32_t i = 0; i < get_band_members().size(); ++i) {
+		const Ref<BG_BandMember> band_member = get_band_members()[i];
+		if (band_member.is_null()) continue;
+		if (band_member->get_current_health() > 0) {
+			return true;
+		}
+	}
+	return false;
 }
 
 ////

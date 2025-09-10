@@ -825,7 +825,7 @@ public:
 	bool get_has_done_combat_this_turn() const { return has_done_combat_this_turn; }
 	void set_has_done_combat_this_turn(bool value) { has_done_combat_this_turn = value; }
 
-	int knocked_out_turns = false;
+	int knocked_out_turns = 0;
 	int get_knocked_out_turns() const { return knocked_out_turns; }
 	void set_knocked_out_turns(int value) { knocked_out_turns = value; }
 
@@ -840,6 +840,8 @@ public:
 	bool has_job() const { return current_unique_job_id != -1; };
 
 	void clear_job() { current_unique_job_id = -1; };
+
+	bool is_band_alive() const;
 };
 
 ////

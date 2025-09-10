@@ -1,4 +1,5 @@
 #include "bg_hex_grid.hpp"
+
 #include <queue>
 
 #include <godot_cpp/variant/variant.hpp>
@@ -168,8 +169,8 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("add_hex", "hex"), &BG_HexGrid::add_hex);
 	ClassDB::bind_method(D_METHOD("add_row", "column_index", "initial_emptys", "count"), &BG_HexGrid::add_row);
 	ClassDB::bind_method(D_METHOD("update_locations", "x_offset_percent", "y_offset_percent"), &BG_HexGrid::update_locations);
-	ClassDB::bind_method(D_METHOD("get_nearest_job_attackable", "from_job_hex", "attackable_types"), &BG_HexGrid::get_nearest_job_attackable);
-	ClassDB::bind_method(D_METHOD("find_path", "instigator", "start", "goal", "include_start"), &BG_HexGrid::find_path);
+	ClassDB::bind_method(D_METHOD("get_nearest_job_attackable", "from_job_hex", "attackable_types", "bands"), &BG_HexGrid::get_nearest_job_attackable);
+	ClassDB::bind_method(D_METHOD("find_path", "instigator", "start", "goal", "include_start", "travel_distance"), &BG_HexGrid::find_path);
 	ClassDB::bind_method(D_METHOD("comp_priority_item"), &BG_HexGrid::comp_priority_item);
 
 	BIND_ENUM_CONSTANT(ODD_R);
@@ -342,7 +343,7 @@ Dictionary BG_HexGrid::get_hex_neighbors_qr(const Ref<BG_Hex> instigator, const 
 
     const HashMap<BG_HexGrid::HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(from_hex);
     for (const auto &pair : neighbors) {
-        if (pair.value != nullptr) {
+        if (pair.value.is_valid() && !pair.value->get_empty()) {
             result[pair.value->get_qr()] = pair.value;
         }
     }
@@ -586,7 +587,7 @@ static int heuristic(const Ref<BG_Hex> a, const Ref<BG_Hex> b) {
     return (Math::abs(a->q - b->q) + Math::abs(a->r - b->r) + Math::abs(a->s - b->s)) / 2;
 }
 
-Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_job_attackable(const Ref<BG_Hex> from_job_hex, const TypedArray<int> attackable_types) const
+Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_job_attackable(const Ref<BG_Hex> from_job_hex, const TypedArray<int> attackable_types, const TypedArray<BG_Band> bands) const
 {
     if (from_job_hex.is_null()) return nullptr;
 
@@ -598,11 +599,26 @@ Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_job_attackable(const Ref<BG_Hex>
     Ref<BG_HexGameSaveData> result;
     int nearest_distance = 999999;
 
-    for (uint32_t i = 1; i < game_data.size(); ++i) {
+    for (uint32_t i = 0; i < game_data.size(); ++i) {
         const Ref<BG_HexGameSaveData> data = game_data[i];
         if (data.is_null()) continue;
 
         if (data->get_is_destroyed() || !attackable_types_converted.has(data->asset_type)) continue;
+
+        // If the asset is a band, then ensure the band is still alive.
+        if (data->asset_type == BG_HexGameSaveData::HexGameAssetTypes::BAND) {
+            bool band_alive = false;
+            for (uint32_t y = 0; y < bands.size(); ++y) {
+                const Ref<BG_Band> band = bands[y];
+                if (band.is_null()) continue;
+                if (band->get_unique_id() != data->get_unique_id_reference()) continue;
+                band_alive = band->is_band_alive();
+                break;
+            }
+            if (!band_alive) {
+                continue;
+            }
+        }
 
         const int d = hex_distance(from_job_hex->get_full_qr(), get_hex_by_qr(data->get_qr())->get_full_qr(), offset_type);
         if (d < nearest_distance) {
@@ -640,7 +656,7 @@ Ref<BG_Hex> BG_HexGrid::get_nearest_empty_cell_neighoring_target(const Ref<BG_He
     return result;
 }
 
-TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, const Ref<BG_Hex> goal, bool include_start) const
+TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, const Ref<BG_Hex> goal, bool include_start, int travel_distance) const
 {
     if (start.is_null()) return {};
     if (goal.is_null()) return {};
@@ -654,7 +670,7 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> instigator, const Ref
     if (goal_hex_cost == 0) {
         Ref<BG_Hex> better_goal_cell = get_nearest_empty_cell_neighoring_target(start, goal);
         if (better_goal_cell.is_valid()) {
-            return find_path(instigator, start, better_goal_cell, include_start);
+            return find_path(instigator, start, better_goal_cell, include_start, travel_distance);
         }
     }
 
@@ -674,9 +690,24 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> instigator, const Ref
         const HashMap<HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(current_hex);
         for (const auto &pair : neighbors) {
             const Ref<BG_Hex> next_hex = pair.value;
-
             if (!next_hex.is_valid()) continue;
-            const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ next_hex->get_qr(), /* do_pass_through_check */ true);
+
+            // Check to see if we're trying to go through too many pass through cells. Which leads to a unit failing to move, since they can't actually land on the cells.
+            int previous_pass_through_count = 0;
+            {
+                Ref<BG_Hex> current_previous_pass_through_check_hex = current_hex;
+                while (current_previous_pass_through_check_hex != start) {
+                    if (get_hex_cost(/* from_hex */ instigator, /* qr */ current_previous_pass_through_check_hex->get_qr(), /* do_pass_through_check */ false) != 0) {
+                        break;
+                    }
+                    previous_pass_through_count++;
+                    if (previous_pass_through_count == travel_distance) break; // Early out, already failed.
+                    current_previous_pass_through_check_hex = came_from[current_previous_pass_through_check_hex];
+                }
+            }
+
+            const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ next_hex->get_qr(), /* do_pass_through_check */ travel_distance > previous_pass_through_count);
+
             if (hex_cost == 0) { // Can't move into cell?
                 if (next_hex == goal) { // Is the cell the goal, if so, make the previous cell the goal.
 
