@@ -5,7 +5,7 @@
       "name": "Test in Editor",
       "type": "lldb",
       "request": "launch",
-      "program": "D:/Personal/Godot/Godot_v4.4-stable_win64.exe/Godot_v4.4-stable_win64.exe",
+      "program": "D:/Personal/Godot/Godot_v4.5-stable_win64.exe/Godot_v4.5-stable_win64.exe",
       "args": [
         "-e",
         "--path",
@@ -19,7 +19,7 @@
       "name": "Test runtime",
       "type": "cppvsdbg",
       "request": "launch",
-      "program": "D:/Personal/Godot/Godot_v4.4-stable_win64.exe/Godot_v4.4-stable_win64.exe",
+      "program": "D:/Personal/Godot/Godot_v4.5-stable_win64.exe/Godot_v4.5-stable_win64.exe",
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/../Booker",
       "environment": [],
