@@ -11,6 +11,36 @@
 using namespace godot;
 
 ////
+//// BG_TwoDer_DataEntry
+////
+class BG_TwoDer_DataEntry : public Object
+{
+	GDCLASS(BG_TwoDer_DataEntry, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	StringName data_path;
+	StringName get_data_path() const { return data_path; }
+
+	StringName asset_name;
+	StringName get_asset_name() const { return asset_name; }
+
+	StringName prop_name;
+	StringName get_prop_name() const { return prop_name; }
+
+	StringName anim_name;
+	StringName get_anim_name() const { return anim_name; }
+
+	StringName camera_name;
+	StringName get_camera_name() const { return camera_name; }
+};
+
+////
 //// BG_LocalizeEntryData
 ////
 class BG_LocalizeEntryData : public Object
@@ -1082,10 +1112,16 @@ public:
 
 	StringName icon_path;
 	StringName get_icon_path() const { return icon_path; }
+
+	TypedArray<StringName> twoder_icons;
+	TypedArray<StringName> get_twoder_icons() const { return twoder_icons; }
 	
 	StringName destroyed_icon_path;
 	StringName get_destroyed_icon_path() const { return destroyed_icon_path; }
 	
+	TypedArray<StringName> twoder_destroyed_icons;
+	TypedArray<StringName> get_twoder_destroyed_icons() const { return twoder_destroyed_icons; }
+
 	int max_health = 0;
 	int get_max_health() const { return max_health; }
 
@@ -1295,6 +1331,17 @@ public:
 
 	TypedArray<BG_MailData> mail_data;
 	TypedArray<BG_MailData> get_mail_data() const { return mail_data; }
+	
+	TypedArray<BG_TwoDer_DataEntry> two_der_data_entries;
+	TypedArray<BG_TwoDer_DataEntry> get_two_der_data_entries() const { return two_der_data_entries; }
+	BG_TwoDer_DataEntry *get_two_der_data_from_id(StringName id) const {
+		for (int i = 0; i < two_der_data_entries.size(); i++) {
+			BG_TwoDer_DataEntry *data = cast_to<BG_TwoDer_DataEntry>(two_der_data_entries[i]);
+			if (data == nullptr) continue;
+			if (data->get_id() == id) return data;
+		}
+		return nullptr;
+	}
 
 	bool revert_localization_to_english = true;
 	void set_revert_localization_to_english(bool revert) { revert_localization_to_english = revert; }

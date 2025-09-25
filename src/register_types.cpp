@@ -26,6 +26,7 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
 	{
 		ClassDB::register_class<BG_AnimatedAtlasTextureRect>();
+		ClassDB::register_class<BG_TwoDer_DataEntry>();
 		ClassDB::register_class<BG_LocalizeEntryData>();
 		ClassDB::register_class<BG_MailData>();
 		ClassDB::register_class<BG_MarketplaceData>();

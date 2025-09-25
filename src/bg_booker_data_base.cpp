@@ -84,6 +84,19 @@ static fraction_struct get_fract(double input)
 }
 
 ////
+//// BG_TwoDer_DataEntry
+////
+void BG_TwoDer_DataEntry::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_TwoDer_DataEntry::get_id);
+	ClassDB::bind_method(D_METHOD("get_data_path"), &BG_TwoDer_DataEntry::get_data_path);
+	ClassDB::bind_method(D_METHOD("get_asset_name"), &BG_TwoDer_DataEntry::get_asset_name);
+	ClassDB::bind_method(D_METHOD("get_prop_name"), &BG_TwoDer_DataEntry::get_prop_name);
+	ClassDB::bind_method(D_METHOD("get_anim_name"), &BG_TwoDer_DataEntry::get_anim_name);
+	ClassDB::bind_method(D_METHOD("get_camera_name"), &BG_TwoDer_DataEntry::get_camera_name);
+}
+
+////
 //// BG_LocalizeEntryData
 ////
 void BG_LocalizeEntryData::_bind_methods()
@@ -661,7 +674,9 @@ void BG_TurretInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_TurretInfo::get_id);
 	ClassDB::bind_method(D_METHOD("get_nice_name"), &BG_TurretInfo::get_nice_name);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_TurretInfo::get_icon_path);
+	ClassDB::bind_method(D_METHOD("get_twoder_icons"), &BG_TurretInfo::get_twoder_icons);
 	ClassDB::bind_method(D_METHOD("get_destroyed_icon_path"), &BG_TurretInfo::get_destroyed_icon_path);
+	ClassDB::bind_method(D_METHOD("get_twoder_destroyed_icons"), &BG_TurretInfo::get_twoder_destroyed_icons);
 	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_TurretInfo::get_max_health);
 	ClassDB::bind_method(D_METHOD("get_equipment_ids"), &BG_TurretInfo::get_equipment_ids);
 }
@@ -747,6 +762,8 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_market_place_data"), &BG_Booker_DB::get_market_place_data);
 	ClassDB::bind_method(D_METHOD("get_monster_types"), &BG_Booker_DB::get_monster_types);
 	ClassDB::bind_method(D_METHOD("get_mail_data"), &BG_Booker_DB::get_mail_data);
+	ClassDB::bind_method(D_METHOD("get_two_der_data_entries"), &BG_Booker_DB::get_two_der_data_entries);
+	ClassDB::bind_method(D_METHOD("get_two_der_data_from_id", "id"), &BG_Booker_DB::get_two_der_data_from_id);
 	ClassDB::bind_method(D_METHOD("set_revert_localization_to_english"), &BG_Booker_DB::set_revert_localization_to_english);
 	ClassDB::bind_method(D_METHOD("get_localize_data", "sheet_name", "key", "language"), &BG_Booker_DB::get_localize_data);
 	ClassDB::bind_method(D_METHOD("get_localize_string", "sheet_name", "key", "language", "ignore_code_data"), &BG_Booker_DB::get_localize_string);
@@ -954,6 +971,22 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_turret_info->icon_path = barracades_entry["icon_path"];
 					new_turret_info->destroyed_icon_path = barracades_entry["destroyed_icon_path"];
 					new_turret_info->max_health = int(barracades_entry["health"]);
+
+					// 2der Icons
+					const Array twoder_icons_lines = Array(barracades_entry["2der_icons"]);
+					for (int y = 0; y < twoder_icons_lines.size(); y++)
+					{
+						const Dictionary twoder_icons_entry = twoder_icons_lines[y];
+						new_turret_info->twoder_icons.append(twoder_icons_entry["reference"]);
+					}
+
+					// 2der Destroyed Icons
+					const Array twoder_destroyed_icons_lines = Array(barracades_entry["2der_destroyed_icons"]);
+					for (int y = 0; y < twoder_destroyed_icons_lines.size(); y++)
+					{
+						const Dictionary twoder_icons_entry = twoder_destroyed_icons_lines[y];
+						new_turret_info->twoder_destroyed_icons.append(twoder_icons_entry["reference"]);
+					}
 					
 					// Equipment
 					const Array barracades_equipment_lines = Array(barracades_entry["equipment"]);
@@ -1978,6 +2011,29 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				}
 
 				equipment_animation_details.append(new_anim_details_class);
+			}
+		}
+	}
+
+	/////
+	///// 2der
+	/////
+	{
+		const Dictionary twoder_sheet = BG_JsonUtils::GetCBDSheet(data, "two_der");
+		if (twoder_sheet.has("lines"))
+		{
+			two_der_data_entries.clear();
+			const Array lines = Array(twoder_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++) {
+				const Dictionary entry = lines[i];
+				BG_TwoDer_DataEntry *new_twoder_class = memnew(BG_TwoDer_DataEntry);
+				new_twoder_class->id = entry["id"];
+				new_twoder_class->data_path = entry["data_path"];
+				new_twoder_class->asset_name = entry["asset_name"];
+				new_twoder_class->prop_name = entry["prop_name"];
+				new_twoder_class->anim_name = entry["anim_name"];
+				new_twoder_class->camera_name = entry["camera_name"];
+				two_der_data_entries.append(new_twoder_class);
 			}
 		}
 	}

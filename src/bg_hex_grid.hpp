@@ -74,6 +74,10 @@ public:
     int get_seed() const { return seed; }
     void set_seed(int v) { seed = v; }
 
+    int seed2 = 0;
+    int get_seed2() const { return seed2; }
+    void set_seed2(int v) { seed2 = v; }
+
     float asset_health_normalized_percent = 1.0;
     float get_asset_health_normalized_percent() const { return asset_health_normalized_percent; }
     void set_asset_health_normalized_percent(float v) { asset_health_normalized_percent = v; }
