@@ -8,6 +8,8 @@
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
 
+#include <bg_reactive.hpp>
+
 using namespace godot;
 
 ////
@@ -787,6 +789,13 @@ protected:
 	static void _bind_methods();
 
 public:
+	// void _init() {
+	// 	if (equipment.is_null()) {
+	// 		BG_ReactiveArray *new_array = memnew(BG_ReactiveArray);
+	// 		equipment = Ref(new_array);
+	// 	}
+	// }
+
 	StringName name;
 	StringName get_name() const { return name; }
 	void set_name(StringName value) { name = value; }
@@ -810,6 +819,10 @@ public:
 	StringName caste_id;
 	StringName get_caste_id() const { return caste_id; }
 	void set_caste_id(StringName value) { caste_id = value; }
+
+	// Ref<BG_ReactiveArray> equipment;
+	// Ref<BG_ReactiveArray> get_equipment() const { return equipment; }
+	// void set_equipment(Ref<BG_ReactiveArray> value) { equipment = value; }
 
 	TypedArray<BG_Item> equipment;
 	TypedArray<BG_Item> get_equipment() const { return equipment; }

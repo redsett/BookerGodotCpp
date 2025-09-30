@@ -9,6 +9,7 @@
 #include "bg_booker_data_base.hpp"
 #include "bg_focus_layers.hpp"
 #include "bg_hex_grid.hpp"
+#include "bg_reactive.hpp"
 #include "bg_animated_atlas_texture_rect.hpp"
 // #include "bg_animation_mirror.hpp"
 
@@ -25,6 +26,11 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 	// }
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
 	{
+		ClassDB::register_class<BG_Reactive>();
+		ClassDB::register_class<BG_ReactiveObject>();
+		ClassDB::register_class<BG_ReactiveInt>();
+		ClassDB::register_class<BG_ReactiveString>();
+		ClassDB::register_class<BG_ReactiveArray>();
 		ClassDB::register_class<BG_AnimatedAtlasTextureRect>();
 		ClassDB::register_class<BG_TwoDer_DataEntry>();
 		ClassDB::register_class<BG_LocalizeEntryData>();
