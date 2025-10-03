@@ -101,6 +101,8 @@ public:
 		value[i] = v;
 		emit_reactive_changed();
 	}
+	bool has(Variant v) const { return value.has(v); }
+	int find(Variant v) const { return value.find(v); }
 
 	void append(Variant v) {
 		value.append(v);

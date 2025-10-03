@@ -131,6 +131,10 @@ void BG_ReactiveArray::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_value", "value"), &BG_ReactiveArray::set_value);
 
 	ClassDB::bind_method(D_METHOD("get_at"), &BG_ReactiveArray::get_at);
+	ClassDB::bind_method(D_METHOD("set_at", "index", "value"), &BG_ReactiveArray::set_at);
+	ClassDB::bind_method(D_METHOD("has"), &BG_ReactiveArray::has);
+	ClassDB::bind_method(D_METHOD("find"), &BG_ReactiveArray::find);
+
 	ClassDB::bind_method(D_METHOD("append"), &BG_ReactiveArray::append);
 	ClassDB::bind_method(D_METHOD("append_array"), &BG_ReactiveArray::append_array);
 	ClassDB::bind_method(D_METHOD("assign"), &BG_ReactiveArray::assign);
