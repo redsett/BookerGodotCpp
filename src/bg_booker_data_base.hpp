@@ -40,6 +40,12 @@ public:
 
 	StringName camera_name;
 	StringName get_camera_name() const { return camera_name; }
+
+	float anim_speed_mult = 1.0;
+	float get_anim_speed_mult() const { return anim_speed_mult; }
+
+	float scale_multiplier = 1.0;
+	float get_scale_multiplier() const { return scale_multiplier; }
 };
 
 ////

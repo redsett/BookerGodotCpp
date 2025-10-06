@@ -94,6 +94,8 @@ void BG_TwoDer_DataEntry::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_prop_name"), &BG_TwoDer_DataEntry::get_prop_name);
 	ClassDB::bind_method(D_METHOD("get_anim_name"), &BG_TwoDer_DataEntry::get_anim_name);
 	ClassDB::bind_method(D_METHOD("get_camera_name"), &BG_TwoDer_DataEntry::get_camera_name);
+	ClassDB::bind_method(D_METHOD("get_anim_speed_mult"), &BG_TwoDer_DataEntry::get_anim_speed_mult);
+	ClassDB::bind_method(D_METHOD("get_scale_multiplier"), &BG_TwoDer_DataEntry::get_scale_multiplier);
 }
 
 ////
@@ -2033,6 +2035,8 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_twoder_class->prop_name = entry["prop_name"];
 				new_twoder_class->anim_name = entry["anim_name"];
 				new_twoder_class->camera_name = entry["camera_name"];
+				new_twoder_class->anim_speed_mult = float(entry["anim_speed_mult"]);
+				new_twoder_class->scale_multiplier = float(entry["scale_multiplier"]);
 				two_der_data_entries.append(new_twoder_class);
 			}
 		}
