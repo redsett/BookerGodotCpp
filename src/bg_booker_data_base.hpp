@@ -1141,6 +1141,12 @@ public:
 	TypedArray<StringName> twoder_destroyed_icons;
 	TypedArray<StringName> get_twoder_destroyed_icons() const { return twoder_destroyed_icons; }
 
+	StringName destroyed_vfx_path;
+	StringName get_destroyed_vfx_path() const { return destroyed_vfx_path; }
+
+	StringName destroyed_sfx_id;
+	StringName get_destroyed_sfx_id() const { return destroyed_sfx_id; }
+
 	int max_health = 0;
 	int get_max_health() const { return max_health; }
 

@@ -94,6 +94,8 @@ void BG_HexGameSaveData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_unique_id_reference"), &BG_HexGameSaveData::set_unique_id_reference);
 	ClassDB::bind_method(D_METHOD("get_is_destroyed"), &BG_HexGameSaveData::get_is_destroyed);
 	ClassDB::bind_method(D_METHOD("set_is_destroyed"), &BG_HexGameSaveData::set_is_destroyed);
+	ClassDB::bind_method(D_METHOD("get_has_played_destroyed_vfx"), &BG_HexGameSaveData::get_has_played_destroyed_vfx);
+	ClassDB::bind_method(D_METHOD("set_has_played_destroyed_vfx"), &BG_HexGameSaveData::set_has_played_destroyed_vfx);
 	ClassDB::bind_method(D_METHOD("get_asset_health_normalized_percent"), &BG_HexGameSaveData::get_asset_health_normalized_percent);
 	ClassDB::bind_method(D_METHOD("set_asset_health_normalized_percent"), &BG_HexGameSaveData::set_asset_health_normalized_percent);
 
@@ -106,6 +108,7 @@ void BG_HexGameSaveData::_bind_methods()
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "moved_from_qr"), "set_moved_from_qr", "get_moved_from_qr");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "unique_id_reference"), "set_unique_id_reference", "get_unique_id_reference");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_destroyed"), "set_is_destroyed", "get_is_destroyed");
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "has_played_destroyed_vfx"), "set_has_played_destroyed_vfx", "get_has_played_destroyed_vfx");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "asset_health_normalized_percent"), "set_asset_health_normalized_percent", "get_asset_health_normalized_percent");
 
     BIND_ENUM_CONSTANT(BAND);

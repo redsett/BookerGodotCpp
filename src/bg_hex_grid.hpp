@@ -191,6 +191,10 @@ public:
     bool get_is_destroyed() const { return is_destroyed; }
     void set_is_destroyed(bool v) { is_destroyed = v; }
 
+    bool has_played_destroyed_vfx = false;
+    bool get_has_played_destroyed_vfx() const { return has_played_destroyed_vfx; }
+    void set_has_played_destroyed_vfx(bool v) { has_played_destroyed_vfx = v; }
+
     float asset_health_normalized_percent = 1.0;
     float get_asset_health_normalized_percent() const { return asset_health_normalized_percent; }
     void set_asset_health_normalized_percent(float v) { asset_health_normalized_percent = v; }

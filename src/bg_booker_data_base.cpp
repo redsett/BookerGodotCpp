@@ -679,6 +679,8 @@ void BG_TurretInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_twoder_icons"), &BG_TurretInfo::get_twoder_icons);
 	ClassDB::bind_method(D_METHOD("get_destroyed_icon_path"), &BG_TurretInfo::get_destroyed_icon_path);
 	ClassDB::bind_method(D_METHOD("get_twoder_destroyed_icons"), &BG_TurretInfo::get_twoder_destroyed_icons);
+	ClassDB::bind_method(D_METHOD("get_destroyed_vfx_path"), &BG_TurretInfo::get_destroyed_vfx_path);
+	ClassDB::bind_method(D_METHOD("get_destroyed_sfx_id"), &BG_TurretInfo::get_destroyed_sfx_id);
 	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_TurretInfo::get_max_health);
 	ClassDB::bind_method(D_METHOD("get_equipment_ids"), &BG_TurretInfo::get_equipment_ids);
 }
@@ -973,6 +975,8 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_turret_info->icon_path = barracades_entry["icon_path"];
 					new_turret_info->destroyed_icon_path = barracades_entry["destroyed_icon_path"];
 					new_turret_info->max_health = int(barracades_entry["health"]);
+					new_turret_info->destroyed_vfx_path = barracades_entry["vfx"];
+					new_turret_info->destroyed_sfx_id = barracades_entry["sfx"];
 
 					// 2der Icons
 					const Array twoder_icons_lines = Array(barracades_entry["2der_icons"]);
