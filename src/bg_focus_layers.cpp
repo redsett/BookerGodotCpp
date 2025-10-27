@@ -217,6 +217,8 @@ void BG_Focus_Layers::_focus_active_control()
     Control *control_to_focus = _get_active_control();
     if (!BG_Focus_Layer_Properties::bg_is_instance_valid(control_to_focus))
         return;
+    // if (control_to_focus->get_focus_mode() == Control::FOCUS_NONE)
+    //     return;
     
     control_to_focus->grab_focus();
     if (!_is_using_gamepad)

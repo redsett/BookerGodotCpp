@@ -580,6 +580,8 @@ void BG_JobDistributionForAct::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_act"), &BG_JobDistributionForAct::get_act);
 	ClassDB::bind_method(D_METHOD("get_min_week"), &BG_JobDistributionForAct::get_min_week);
 	ClassDB::bind_method(D_METHOD("get_max_week"), &BG_JobDistributionForAct::get_max_week);
+	ClassDB::bind_method(D_METHOD("get_min_job_spawn_count"), &BG_JobDistributionForAct::get_min_job_spawn_count);
+	ClassDB::bind_method(D_METHOD("get_max_job_spawn_count"), &BG_JobDistributionForAct::get_max_job_spawn_count);
 }
 
 ////
@@ -1696,6 +1698,8 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_job_distribution_for_act_class->act = int(distribution_per_act_entry["act"]);
 					new_job_distribution_for_act_class->min_week = int(distribution_per_act_entry["min_week"]);
 					new_job_distribution_for_act_class->max_week = int(distribution_per_act_entry["max_week"]);
+					new_job_distribution_for_act_class->min_job_spawn_count = int(distribution_per_act_entry["min_job_spawn_count"]);
+					new_job_distribution_for_act_class->max_job_spawn_count = int(distribution_per_act_entry["max_job_spawn_count"]);
 
 					new_job_class->distribution_per_act.append(new_job_distribution_for_act_class);
 				}

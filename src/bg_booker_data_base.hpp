@@ -646,6 +646,12 @@ public:
 
 	int max_week;
 	int get_max_week() const { return max_week; }
+	
+	int min_job_spawn_count;
+	int get_min_job_spawn_count() const { return min_job_spawn_count; }
+
+	int max_job_spawn_count;
+	int get_max_job_spawn_count() const { return max_job_spawn_count; }
 };
 
 ////
