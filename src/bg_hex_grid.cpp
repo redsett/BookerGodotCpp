@@ -166,6 +166,7 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_offset_between_hexes"), &BG_HexGrid::get_offset_between_hexes);
 	ClassDB::bind_method(D_METHOD("set_offset_between_hexes"), &BG_HexGrid::set_offset_between_hexes);
 	ClassDB::bind_method(D_METHOD("get_center_of_hex_location"), &BG_HexGrid::get_center_of_hex_location);
+	ClassDB::bind_method(D_METHOD("get_disance_between_hexes", "from_hex", "to_hex"), &BG_HexGrid::get_disance_between_hexes);
 	ClassDB::bind_method(D_METHOD("get_hex_direction_vec", "direction"), &BG_HexGrid::get_hex_direction_vec);
 	ClassDB::bind_method(D_METHOD("get_hex_in_direction", "from_hex", "direction"), &BG_HexGrid::get_hex_in_direction);
 	ClassDB::bind_method(D_METHOD("get_hex_neighbors_directions", "from_hex"), &BG_HexGrid::get_hex_neighbors_directions);
@@ -176,6 +177,7 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("add_row", "column_index", "initial_emptys", "count"), &BG_HexGrid::add_row);
 	ClassDB::bind_method(D_METHOD("update_locations", "x_offset_percent", "y_offset_percent"), &BG_HexGrid::update_locations);
 	ClassDB::bind_method(D_METHOD("get_nearest_job_attackable", "from_job_hex", "attackable_types", "bands"), &BG_HexGrid::get_nearest_job_attackable);
+	ClassDB::bind_method(D_METHOD("get_nearest_empty_cell", "instigator", "target", "cells_to_check"), &BG_HexGrid::get_nearest_empty_cell);
 	ClassDB::bind_method(D_METHOD("find_path", "instigator", "start", "goal", "include_start", "travel_distance"), &BG_HexGrid::find_path);
 	ClassDB::bind_method(D_METHOD("comp_priority_item"), &BG_HexGrid::comp_priority_item);
 
@@ -200,6 +202,48 @@ BG_HexGrid::BG_HexGrid()
     hex_directions[HexDirections::BOTTOM_LEFT] = Vector2i(-1, 1);
     hex_directions[HexDirections::LEFT] = Vector2i(-1, 0);
     hex_directions[HexDirections::TOP_LEFT] = Vector2i(-1, -1);
+}
+
+inline static Vector3i offset_to_cube(const Vector3i &a, BG_HexGrid::OffsetType offset_type)
+{
+    int q, r, s;
+    if (offset_type == BG_HexGrid::OffsetType::ODD_R) {
+        q = a.x;
+        r = a.y - (a.x - (a.x & 1)) / 2;
+        s = -q - r;
+    } else if (offset_type == BG_HexGrid::OffsetType::EVEN_R) {
+        q = a.x;
+        r = a.y - (a.x + (a.x & 1)) / 2;
+        s = -q - r;
+    } else if (offset_type == BG_HexGrid::OffsetType::ODD_Q) {
+        q = a.x - (a.y - (a.y & 1)) / 2;
+        r = a.y;
+        s = -q - r;
+    } else {
+        q = a.x - (a.y + (a.y & 1)) / 2;
+        r = a.y;
+        s = -q - r;
+    }
+    return Vector3i(q, r, s);
+}
+
+inline static Vector3i hex_subtract(const Vector3i &a, const Vector3i &b)
+{
+    return Vector3i(a.x - b.x, a.y - b.y, a.z - b.z);
+}
+
+inline static int hex_length(const Vector3i &hex)
+{
+    return int((abs(hex.x) + abs(hex.y) + abs(hex.z)) / 2);
+}
+
+inline static int hex_distance(const Vector3i &a, const Vector3i &b, BG_HexGrid::OffsetType offset_type)
+{
+    return hex_length(hex_subtract(offset_to_cube(a, offset_type), offset_to_cube(b, offset_type) ));
+}
+
+static int heuristic(const Ref<BG_Hex> a, const Ref<BG_Hex> b) {
+    return (Math::abs(a->q - b->q) + Math::abs(a->r - b->r) + Math::abs(a->s - b->s)) / 2;
 }
 
 void BG_HexGrid::clear_grid()
@@ -291,6 +335,12 @@ Ref<BG_Hex> BG_HexGrid::get_hex_by_coords(Vector2i coords) const
 Ref<BG_Hex> BG_HexGrid::get_hex_by_qr(Vector2i qr) const
 {
     return grid_map[qr];
+}
+
+int BG_HexGrid::get_disance_between_hexes(const Ref<BG_Hex> from_hex, const Ref<BG_Hex> to_hex)
+{
+    if (from_hex.is_null() || to_hex.is_null()) return 0;
+    return hex_distance(from_hex->get_full_qr(), to_hex->get_full_qr(), offset_type);
 }
 
 Ref<BG_Hex> BG_HexGrid::get_hex_in_direction(const Ref<BG_Hex> from_hex, Vector2i d) const
@@ -470,44 +520,6 @@ bool BG_HexGrid::comp_priority_item(Dictionary a, Dictionary b) const {
 	return int(a["p"]) < int(b["p"]);
 }
 
-inline static Vector3i offset_to_cube(const Vector3i &a, BG_HexGrid::OffsetType offset_type)
-{
-    int q, r, s;
-    if (offset_type == BG_HexGrid::OffsetType::ODD_R) {
-        q = a.x;
-        r = a.y - (a.x - (a.x & 1)) / 2;
-        s = -q - r;
-    } else if (offset_type == BG_HexGrid::OffsetType::EVEN_R) {
-        q = a.x;
-        r = a.y - (a.x + (a.x & 1)) / 2;
-        s = -q - r;
-    } else if (offset_type == BG_HexGrid::OffsetType::ODD_Q) {
-        q = a.x - (a.y - (a.y & 1)) / 2;
-        r = a.y;
-        s = -q - r;
-    } else {
-        q = a.x - (a.y + (a.y & 1)) / 2;
-        r = a.y;
-        s = -q - r;
-    }
-    return Vector3i(q, r, s);
-}
-
-inline static Vector3i hex_subtract(const Vector3i &a, const Vector3i &b)
-{
-    return Vector3i(a.x - b.x, a.y - b.y, a.z - b.z);
-}
-
-inline static int hex_length(const Vector3i &hex)
-{
-    return int((abs(hex.x) + abs(hex.y) + abs(hex.z)) / 2);
-}
-
-inline static int hex_distance(const Vector3i &a, const Vector3i &b, BG_HexGrid::OffsetType offset_type)
-{
-    return hex_length(hex_subtract(offset_to_cube(a, offset_type), offset_to_cube(b, offset_type) ));
-}
-
 inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, bool do_pass_through_check) const
 {
     const Ref<BG_HexGameSaveData> hgsd = get_game_data_from_qr(qr);
@@ -589,10 +601,6 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, b
     return 1;
 }
 
-static int heuristic(const Ref<BG_Hex> a, const Ref<BG_Hex> b) {
-    return (Math::abs(a->q - b->q) + Math::abs(a->r - b->r) + Math::abs(a->s - b->s)) / 2;
-}
-
 Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_job_attackable(const Ref<BG_Hex> from_job_hex, const TypedArray<int> attackable_types, const TypedArray<BG_Band> bands) const
 {
     if (from_job_hex.is_null()) return nullptr;
@@ -638,23 +646,37 @@ Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_job_attackable(const Ref<BG_Hex>
 
 Ref<BG_Hex> BG_HexGrid::get_nearest_empty_cell_neighoring_target(const Ref<BG_Hex> instigator, const Ref<BG_Hex> target) const
 {
+    const HashMap<HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(target);
+    
+    TypedArray<BG_Hex> cells_to_check;
+    for (const auto &pair : neighbors) {
+        const Ref<BG_Hex> hex = pair.value;
+        cells_to_check.append(hex);
+    }
+
+    return get_nearest_empty_cell(instigator, target, cells_to_check);
+}
+
+Ref<BG_Hex> BG_HexGrid::get_nearest_empty_cell(const Ref<BG_Hex> instigator, const Ref<BG_Hex> target, const TypedArray<BG_Hex> cells_to_check) const
+{
     if (instigator.is_null()) return nullptr;
     if (target.is_null()) return nullptr;
 
     Ref<BG_Hex> result;
     int nearest_distance = 999999;
 
-    const HashMap<HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(target);
-    for (const auto &pair : neighbors) {
-        const Ref<BG_Hex> hex = pair.value;
+    for (uint32_t i = 0; i < cells_to_check.size(); ++i) {
+        const Ref<BG_Hex> hex = cells_to_check[i];
 
         if (!hex.is_valid()) continue;
         const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ hex->get_qr(), /* do_pass_through_check */ false);
         if (hex_cost == 0) continue; // Can't move into cell?
 
-        const int d = hex_distance(instigator->get_full_qr(), get_hex_by_qr(hex->get_qr())->get_full_qr(), offset_type);
-        if (d < nearest_distance) {
-            nearest_distance = d;
+        const int d1 = hex_distance(instigator->get_full_qr(), get_hex_by_qr(hex->get_qr())->get_full_qr(), offset_type);
+        const int d2 = hex_distance(target->get_full_qr(), get_hex_by_qr(hex->get_qr())->get_full_qr(), offset_type) * 100; // Weight getting to the target more.
+        const int dist = d1 + d2;
+        if (dist < nearest_distance) {
+            nearest_distance = dist;
             result = hex;
         }
     }

@@ -341,6 +341,8 @@ public:
         return hex->get_location() + half_size;
     }
 
+    int get_disance_between_hexes(const Ref<BG_Hex> from_hex, const Ref<BG_Hex> to_hex);
+
     Ref<BG_Hex> get_hex_in_direction(const Ref<BG_Hex> from_hex, Vector2i d) const;
     inline HashMap<HexDirections, Ref<BG_Hex>> get_hex_neighbors_fast(const Ref<BG_Hex> from_hex) const;
     Dictionary get_hex_neighbors_directions(const Ref<BG_Hex> from_hex) const;
@@ -356,6 +358,7 @@ public:
 
     Ref<BG_HexGameSaveData> get_nearest_job_attackable(const Ref<BG_Hex> from_job_hex, const TypedArray<int> attackable_types, const TypedArray<BG_Band> bands) const;
     Ref<BG_Hex> get_nearest_empty_cell_neighoring_target(const Ref<BG_Hex> instigator, const Ref<BG_Hex> target) const;
+    Ref<BG_Hex> get_nearest_empty_cell(const Ref<BG_Hex> instigator, const Ref<BG_Hex> target, const TypedArray<BG_Hex> cells_to_check) const;
 
     TypedArray<BG_Hex> find_path(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, const Ref<BG_Hex> goal, bool include_start, int travel_distance) const;
     TypedArray<BG_Hex> find_reachable_cells_in_distance(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, int distance) const;
