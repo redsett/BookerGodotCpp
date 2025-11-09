@@ -109,6 +109,15 @@ void BG_LocalizeEntryData::_bind_methods()
 }
 
 ////
+//// BG_ResourceTypeDetails
+////
+void BG_ResourceTypeDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_ResourceTypeDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_ResourceTypeDetails::get_icon_path);
+}
+
+////
 //// BG_MailData
 ////
 void BG_MailData::_bind_methods()
@@ -754,6 +763,7 @@ void BG_Booker_DB::_bind_methods()
 
 	ClassDB::bind_method(D_METHOD("get_modding_path"), &BG_Booker_DB::get_modding_path);
 	ClassDB::bind_method(D_METHOD("get_globals"), &BG_Booker_DB::get_globals);
+	ClassDB::bind_method(D_METHOD("get_resource_type_details_by_id", "resource_id"), &BG_Booker_DB::get_resource_type_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_audio_data"), &BG_Booker_DB::get_audio_data);
 	ClassDB::bind_method(D_METHOD("get_booker_skill_tree_details"), &BG_Booker_DB::get_booker_skill_tree_details);
 	ClassDB::bind_method(D_METHOD("get_jobs"), &BG_Booker_DB::get_jobs);
@@ -2026,6 +2036,27 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 	}
 
 	/////
+	///// Resource Types
+	/////
+	{
+		const Dictionary resource_types_sheet = BG_JsonUtils::GetCBDSheet(data, "resource_types");
+		if (resource_types_sheet.has("lines"))
+		{
+			resource_type_details.clear();
+			const Array lines = Array(resource_types_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
+			{
+				const Dictionary entry = lines[i];
+				BG_ResourceTypeDetails *new_resource_type_class = memnew(BG_ResourceTypeDetails);
+				new_resource_type_class->id = entry["id"];
+				new_resource_type_class->icon_path = entry["icon_path"];
+
+				resource_type_details[new_resource_type_class->id] = new_resource_type_class;
+			}
+		}
+	}
+
+	/////
 	///// 2der
 	/////
 	{
@@ -2076,7 +2107,7 @@ BG_Booker_DB::~BG_Booker_DB()
 
 TypedArray<BG_LocalizeEntryData> BG_Booker_DB::get_localize_data(const StringName sheet_name, const StringName key, const StringName language)
 {
-	// Check if we already have it.
+	// Check if we already cached it.
 	if (localize_data.has(sheet_name)) {
 		if (localize_data[sheet_name].has(key)) {
 			return localize_data[sheet_name][key];

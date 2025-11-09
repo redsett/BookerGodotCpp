@@ -70,6 +70,24 @@ public:
 };
 
 ////
+//// BG_ResourceTypeDetails
+////
+class BG_ResourceTypeDetails : public Object
+{
+	GDCLASS(BG_ResourceTypeDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	StringName icon_path;
+	StringName get_icon_path() const { return icon_path; }
+};
+
+////
 //// BG_MailData
 ////
 class BG_MailData : public Object
@@ -1320,6 +1338,14 @@ public:
 
 	BG_Booker_Globals *globals = nullptr;
 	BG_Booker_Globals *get_globals() const { return globals; }
+
+	HashMap<StringName, BG_ResourceTypeDetails *> resource_type_details;
+	BG_ResourceTypeDetails *get_resource_type_details_by_id(StringName resource_id) const {
+		if (resource_type_details.has(resource_id)) {
+			return resource_type_details[resource_id];
+		}
+		return nullptr;
+	}
 
 	TypedArray<BG_AudioData> audio_data;
 	TypedArray<BG_AudioData> get_audio_data() const { return audio_data; }
