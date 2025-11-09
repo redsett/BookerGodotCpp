@@ -70,6 +70,90 @@ public:
 };
 
 ////
+//// BG_RewardItem
+////
+class BG_RewardItem : public Object
+{
+	GDCLASS(BG_RewardItem, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	TypedArray<StringName> rarity_availabilities;
+	TypedArray<StringName> get_rarity_availabilities() const { return rarity_availabilities; }
+
+	float drop_weight = 0.0;
+	float get_drop_weight() const { return drop_weight; }
+};
+
+////
+//// BG_ObjectiveTimeline
+////
+class BG_ObjectiveTimeline : public Object
+{
+	GDCLASS(BG_ObjectiveTimeline, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	int act;
+	int get_act() const { return act; }
+
+	int min_week;
+	int get_min_week() const { return min_week; }
+
+	int max_week;
+	int get_max_week() const { return max_week; }
+};
+
+////
+//// BG_ObjectiveDetails
+////
+class BG_ObjectiveDetails : public Object
+{
+	GDCLASS(BG_ObjectiveDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	bool is_main_objective;
+	bool get_is_main_objective() const { return is_main_objective; }
+
+	bool is_scripted;
+	bool get_is_scripted() const { return is_scripted; }
+
+	BG_ObjectiveTimeline *timeline;
+	BG_ObjectiveTimeline *get_timeline() const { return timeline; }
+
+	String script_path;
+	String get_script_path() const { return script_path; }
+
+	int reputation_drop;
+	int get_reputation_drop() const { return reputation_drop; }
+
+	int maelstrite_drop;
+	int get_maelstrite_drop() const { return maelstrite_drop; }
+
+	TypedArray<BG_RewardItem> drops;
+	TypedArray<BG_RewardItem> get_drops() { return drops; }
+
+	int beast_part_drop_count;
+	int get_beast_part_drop_count() const { return beast_part_drop_count; }
+
+	int equipment_drop_count;
+	int get_equipment_drop_count() const { return equipment_drop_count; }
+};
+
+////
 //// BG_ResourceTypeDetails
 ////
 class BG_ResourceTypeDetails : public Object
@@ -605,27 +689,6 @@ public:
 };
 
 VARIANT_ENUM_CAST(BG_ItemDetails::ItemType);
-
-////
-//// BG_RewardItem
-////
-class BG_RewardItem : public Object
-{
-	GDCLASS(BG_RewardItem, Object);
-
-protected:
-	static void _bind_methods();
-
-public:
-	StringName id;
-	StringName get_id() const { return id; }
-
-	TypedArray<StringName> rarity_availabilities;
-	TypedArray<StringName> get_rarity_availabilities() const { return rarity_availabilities; }
-
-	float drop_weight = 0.0;
-	float get_drop_weight() const { return drop_weight; }
-};
 
 ////
 //// BG_ItemDropPool
@@ -1338,6 +1401,9 @@ public:
 
 	BG_Booker_Globals *globals = nullptr;
 	BG_Booker_Globals *get_globals() const { return globals; }
+
+	TypedArray<BG_ObjectiveDetails> objectives;
+	TypedArray<BG_ObjectiveDetails> get_objectives() const { return objectives; }
 
 	HashMap<StringName, BG_ResourceTypeDetails *> resource_type_details;
 	BG_ResourceTypeDetails *get_resource_type_details_by_id(StringName resource_id) const {

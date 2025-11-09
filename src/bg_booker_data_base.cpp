@@ -109,6 +109,33 @@ void BG_LocalizeEntryData::_bind_methods()
 }
 
 ////
+//// BG_ObjectiveTimeline
+////
+void BG_ObjectiveTimeline::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_act"), &BG_ObjectiveTimeline::get_act);
+	ClassDB::bind_method(D_METHOD("get_min_week"), &BG_ObjectiveTimeline::get_min_week);
+	ClassDB::bind_method(D_METHOD("get_max_week"), &BG_ObjectiveTimeline::get_max_week);
+}
+
+////
+//// BG_ObjectiveDetails
+////
+void BG_ObjectiveDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_ObjectiveDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_is_main_objective"), &BG_ObjectiveDetails::get_is_main_objective);
+	ClassDB::bind_method(D_METHOD("get_is_scripted"), &BG_ObjectiveDetails::get_is_scripted);
+	ClassDB::bind_method(D_METHOD("get_timeline"), &BG_ObjectiveDetails::get_timeline);
+	ClassDB::bind_method(D_METHOD("get_script_path"), &BG_ObjectiveDetails::get_script_path);
+	ClassDB::bind_method(D_METHOD("get_reputation_drop"), &BG_ObjectiveDetails::get_reputation_drop);
+	ClassDB::bind_method(D_METHOD("get_maelstrite_drop"), &BG_ObjectiveDetails::get_maelstrite_drop);
+	ClassDB::bind_method(D_METHOD("get_drops"), &BG_ObjectiveDetails::get_drops);
+	ClassDB::bind_method(D_METHOD("get_beast_part_drop_count"), &BG_ObjectiveDetails::get_beast_part_drop_count);
+	ClassDB::bind_method(D_METHOD("get_equipment_drop_count"), &BG_ObjectiveDetails::get_equipment_drop_count);
+}
+
+////
 //// BG_ResourceTypeDetails
 ////
 void BG_ResourceTypeDetails::_bind_methods()
@@ -763,6 +790,7 @@ void BG_Booker_DB::_bind_methods()
 
 	ClassDB::bind_method(D_METHOD("get_modding_path"), &BG_Booker_DB::get_modding_path);
 	ClassDB::bind_method(D_METHOD("get_globals"), &BG_Booker_DB::get_globals);
+	ClassDB::bind_method(D_METHOD("get_objectives"), &BG_Booker_DB::get_objectives);
 	ClassDB::bind_method(D_METHOD("get_resource_type_details_by_id", "resource_id"), &BG_Booker_DB::get_resource_type_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_audio_data"), &BG_Booker_DB::get_audio_data);
 	ClassDB::bind_method(D_METHOD("get_booker_skill_tree_details"), &BG_Booker_DB::get_booker_skill_tree_details);
@@ -1647,39 +1675,38 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 						}
 
 						const StringName item_drop_pool_id = drops_entry["item_drop_pool"];
-						if (!item_drop_pool_id.is_empty())
+						if (item_drop_pool_id.is_empty()) continue;
+
+						for (int pool_index = 0; pool_index < item_drop_pools.size(); pool_index++)
 						{
-							for (int pool_index = 0; pool_index < item_drop_pools.size(); pool_index++)
+							const BG_ItemDropPool *pool = cast_to<BG_ItemDropPool>(item_drop_pools[pool_index]);
+							if (pool == nullptr || String(pool->id) != String(item_drop_pool_id))
+								continue;
+							
+							for (int item_index = 0; item_index < pool->item_drops.size(); item_index++)
 							{
-								const BG_ItemDropPool *pool = cast_to<BG_ItemDropPool>(item_drop_pools[pool_index]);
-								if (pool == nullptr || String(pool->id) != String(drops_entry["item_drop_pool"]))
-									continue;
-								
-								for (int item_index = 0; item_index < pool->item_drops.size(); item_index++)
+								const BG_RewardItem *reward_item = cast_to<BG_RewardItem>(pool->item_drops[item_index]);
+								if (reward_item == nullptr) continue;
+
+								BG_RewardItem *new_job_reward_item_class = memnew(BG_RewardItem);
+								new_job_reward_item_class->id = reward_item->id;
+								new_job_reward_item_class->drop_weight = float(drops_entry["drop_weight"]) * reward_item->drop_weight;
+
+								const Array forced_rarity_availabilities_lines = Array(drops_entry["forced_rarity_availabilities"]);
+								if (forced_rarity_availabilities_lines.size() > 0)
 								{
-									const BG_RewardItem *reward_item = cast_to<BG_RewardItem>(pool->item_drops[item_index]);
-									if (reward_item == nullptr) continue;
-
-									BG_RewardItem *new_job_reward_item_class = memnew(BG_RewardItem);
-									new_job_reward_item_class->id = reward_item->id;
-									new_job_reward_item_class->drop_weight = float(drops_entry["drop_weight"]) * reward_item->drop_weight;
-
-									const Array forced_rarity_availabilities_lines = Array(drops_entry["forced_rarity_availabilities"]);
-									if (forced_rarity_availabilities_lines.size() > 0)
+									for (int f = 0; f < forced_rarity_availabilities_lines.size(); f++)
 									{
-										for (int f = 0; f < forced_rarity_availabilities_lines.size(); f++)
-										{
-											const Dictionary forced_rarity_availabilities_entry = forced_rarity_availabilities_lines[f];
-											new_job_reward_item_class->rarity_availabilities.append(forced_rarity_availabilities_entry["rarity_id"]);
-										}
+										const Dictionary forced_rarity_availabilities_entry = forced_rarity_availabilities_lines[f];
+										new_job_reward_item_class->rarity_availabilities.append(forced_rarity_availabilities_entry["rarity_id"]);
 									}
-									else
-										new_job_reward_item_class->rarity_availabilities = reward_item->rarity_availabilities.duplicate();
-
-									new_job_monster_details_class->drops.append(new_job_reward_item_class);
 								}
-								break;
+								else
+									new_job_reward_item_class->rarity_availabilities = reward_item->rarity_availabilities.duplicate();
+
+								new_job_monster_details_class->drops.append(new_job_reward_item_class);
 							}
+							break;
 						}
 
 					}
@@ -2031,6 +2058,93 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				}
 
 				equipment_animation_details.append(new_anim_details_class);
+			}
+		}
+	}
+
+	/////
+	///// Objectives
+	/////
+	{
+		const Dictionary objectives_sheet = BG_JsonUtils::GetCBDSheet(data, "objectives");
+		if (objectives_sheet.has("lines"))
+		{
+			objectives.clear();
+			const Array lines = Array(objectives_sheet["lines"]);
+			for (int i = 0; i < lines.size(); i++)
+			{
+				const Dictionary entry = lines[i];
+				if (bool(entry["disabled"]))
+					continue;
+				
+				BG_ObjectiveDetails *new_objective_class = memnew(BG_ObjectiveDetails);
+				new_objective_class->id = entry["id"];
+				new_objective_class->is_main_objective = bool(entry["is_main_objective"]);
+				new_objective_class->is_scripted = bool(entry["is_scripted"]);
+				new_objective_class->script_path = entry["script_path"];
+
+				// Timeline Attributes
+				const Array timeline_lines = Array(entry["timeline"]);
+				for (int y = 0; y < timeline_lines.size(); y++)
+				{
+					const Dictionary timeline_entry = timeline_lines[y];
+					BG_ObjectiveTimeline *new_objective_timeline_class = memnew(BG_ObjectiveTimeline);
+					new_objective_timeline_class->act = int(timeline_entry["act"]);
+					new_objective_timeline_class->min_week = int(timeline_entry["min_week"]);
+					new_objective_timeline_class->max_week = int(timeline_entry["max_week"]);
+
+					new_objective_class->timeline = new_objective_timeline_class;
+					break;
+				}
+
+				// Rewards
+				const Array reward_lines = Array(entry["rewards"]);
+				for (int y = 0; y < reward_lines.size(); y++)
+				{
+					const Dictionary reward_entry = reward_lines[y];
+
+					new_objective_class->reputation_drop = int(reward_entry["reputation"]);
+					new_objective_class->maelstrite_drop = int(reward_entry["maelstrite"]);
+					new_objective_class->beast_part_drop_count = int(reward_entry["beast_part_drop_count"]);
+					new_objective_class->equipment_drop_count = int(reward_entry["equipment_drop_count"]);
+
+					const StringName item_drop_pool_id = reward_entry["item_drop_pool"];
+					if (item_drop_pool_id.is_empty()) continue;
+
+					for (int pool_index = 0; pool_index < item_drop_pools.size(); pool_index++)
+					{
+						const BG_ItemDropPool *pool = cast_to<BG_ItemDropPool>(item_drop_pools[pool_index]);
+						if (pool == nullptr || String(pool->id) != String(item_drop_pool_id))
+							continue;
+						
+						for (int item_index = 0; item_index < pool->item_drops.size(); item_index++)
+						{
+							const BG_RewardItem *reward_item = cast_to<BG_RewardItem>(pool->item_drops[item_index]);
+							if (reward_item == nullptr) continue;
+
+							BG_RewardItem *new_job_reward_item_class = memnew(BG_RewardItem);
+							new_job_reward_item_class->id = reward_item->id;
+							new_job_reward_item_class->drop_weight = reward_item->drop_weight;
+
+							const Array forced_rarity_availabilities_lines = Array(reward_entry["forced_rarity_availabilities"]);
+							if (forced_rarity_availabilities_lines.size() > 0)
+							{
+								for (int f = 0; f < forced_rarity_availabilities_lines.size(); f++)
+								{
+									const Dictionary forced_rarity_availabilities_entry = forced_rarity_availabilities_lines[f];
+									new_job_reward_item_class->rarity_availabilities.append(forced_rarity_availabilities_entry["rarity_id"]);
+								}
+							}
+							else
+								new_job_reward_item_class->rarity_availabilities = reward_item->rarity_availabilities.duplicate();
+
+							new_objective_class->drops.append(new_job_reward_item_class);
+						}
+						break;
+					}
+				}
+
+				objectives.append(new_objective_class);
 			}
 		}
 	}
