@@ -133,6 +133,7 @@ void BG_ObjectiveDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_drops"), &BG_ObjectiveDetails::get_drops);
 	ClassDB::bind_method(D_METHOD("get_beast_part_drop_count"), &BG_ObjectiveDetails::get_beast_part_drop_count);
 	ClassDB::bind_method(D_METHOD("get_equipment_drop_count"), &BG_ObjectiveDetails::get_equipment_drop_count);
+	ClassDB::bind_method(D_METHOD("get_misc_attributes"), &BG_ObjectiveDetails::get_misc_attributes);
 }
 
 ////
@@ -365,6 +366,8 @@ void BG_Item::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_grafts"), &BG_Item::set_grafts);
 	ClassDB::bind_method(D_METHOD("get_forced_damage_element"), &BG_Item::get_forced_damage_element);
 	ClassDB::bind_method(D_METHOD("set_forced_damage_element"), &BG_Item::set_forced_damage_element);
+	ClassDB::bind_method(D_METHOD("get_nested_items"), &BG_Item::get_nested_items);
+	ClassDB::bind_method(D_METHOD("set_nested_items"), &BG_Item::set_nested_items);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
@@ -382,6 +385,7 @@ void BG_Item::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "rarity_id"), "set_rarity_id", "get_rarity_id");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "grafts"), "set_grafts", "get_grafts");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "forced_damage_element"), "set_forced_damage_element", "get_forced_damage_element");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "nested_items"), "set_nested_items", "get_nested_items");
 }
 
 ////
@@ -728,6 +732,7 @@ void BG_TurretInfo::_bind_methods()
 ////
 void BG_CityInfo::_bind_methods()
 {
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_CityInfo::get_id);
 	ClassDB::bind_method(D_METHOD("get_nice_name"), &BG_CityInfo::get_nice_name);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_CityInfo::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_scene_path"), &BG_CityInfo::get_scene_path);
@@ -991,6 +996,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				const Dictionary entry = lines[i];
 
 				BG_CityInfo *new_city_info = memnew(BG_CityInfo);
+				new_city_info->id = entry["id"];
 				new_city_info->nice_name = entry["name"];
 				new_city_info->icon_path = entry["icon_path"];
 				new_city_info->scene_path = entry["scene_path"];
@@ -2142,6 +2148,25 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 						}
 						break;
 					}
+				}
+
+				// Misc Attributes
+				const Array misc_attributes_lines = Array(entry["misc_attributes"]);
+				for (int y = 0; y < misc_attributes_lines.size(); y++)
+				{
+					const Dictionary misc_attributes_entry = misc_attributes_lines[y];
+
+					String name = misc_attributes_entry["name"];
+					String value1 = misc_attributes_entry["value_1"];
+					String value2 = misc_attributes_entry["value_2"];
+
+					Array values;
+					if (!value1.is_empty())
+						values.append(value1);
+					if (!value2.is_empty())
+						values.append(value2);
+
+					new_objective_class->misc_attributes[name] = values;
 				}
 
 				objectives.append(new_objective_class);

@@ -151,6 +151,9 @@ public:
 
 	int equipment_drop_count;
 	int get_equipment_drop_count() const { return equipment_drop_count; }
+
+	Dictionary misc_attributes;
+	Dictionary get_misc_attributes() const { return misc_attributes; }
 };
 
 ////
@@ -616,6 +619,10 @@ public:
 	StringName forced_damage_element;
 	StringName get_forced_damage_element() const { return forced_damage_element; }
 	void set_forced_damage_element(StringName v) { forced_damage_element = v; }
+
+	TypedArray<BG_Item> nested_items;
+	TypedArray<BG_Item> get_nested_items() const { return nested_items; }
+	void set_nested_items(TypedArray<BG_Item> value) { nested_items = value; }
 };
 
 ////
@@ -1252,6 +1259,9 @@ protected:
 	static void _bind_methods();
 
 public:
+	StringName id;
+	StringName get_id() const { return id; }
+
 	StringName nice_name;
 	StringName get_nice_name() const { return nice_name; }
 
