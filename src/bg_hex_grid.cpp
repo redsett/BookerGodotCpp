@@ -528,7 +528,12 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, b
     const bool is_job = instigator_hgsd.is_valid() ? instigator_hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::JOB : false;
 
     const Ref<BG_Hex> hex = get_hex_by_qr(qr);
-    if (hex.is_null() || hex->get_empty()) return false;
+    if (hex.is_null() || hex->get_empty()) return 0;
+
+    // If the instigator is on this cell, then it's good.
+    if (instigator_hgsd.is_valid() && instigator == hex) {
+        return 1;
+    }
 
     if (base_grid_visual_data.has(qr))
     {
@@ -662,6 +667,12 @@ Ref<BG_Hex> BG_HexGrid::get_nearest_empty_cell(const Ref<BG_Hex> instigator, con
     if (instigator.is_null()) return nullptr;
     if (target.is_null()) return nullptr;
 
+    { // Bail out early if we're already next to the target cell and we can't move to it.
+        const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ target->get_qr(), /* do_pass_through_check */ false);
+        const int d = hex_distance(instigator->get_full_qr(), get_hex_by_qr(target->get_qr())->get_full_qr(), offset_type);
+        if (d == 1 && hex_cost == 0) return instigator;
+    }
+
     Ref<BG_Hex> result;
     int nearest_distance = 999999;
 
@@ -782,7 +793,8 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> instigator, const Ref
 
     // Since we allow building paths through friendlies, let's ensure that the path doesn't end on a friendly.
     if (!result.is_empty()) {
-        while (get_hex_cost(/* from_hex */ nullptr, /* qr */ Ref<BG_Hex>(result[0])->get_qr(), /* do_pass_through_check */ false) == 0) {
+        while (get_hex_cost(/* from_hex */ nullptr, /* qr */ Ref<BG_Hex>(result[0])->get_qr(), /* do_pass_through_check */ false) == 0 && 
+                Ref<BG_Hex>(result[0]) != instigator) {
             result.remove_at(0);
             if (result.is_empty()) break;
         }
