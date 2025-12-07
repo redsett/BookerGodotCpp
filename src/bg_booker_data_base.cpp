@@ -408,7 +408,7 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_caste_ids"), &BG_ItemDetails::get_caste_ids);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_ItemDetails::get_stats);
 	ClassDB::bind_method(D_METHOD("get_animation_attach_socket"), &BG_ItemDetails::get_animation_attach_socket);
-	ClassDB::bind_method(D_METHOD("get_effect_ids"), &BG_ItemDetails::get_effect_ids);
+	ClassDB::bind_method(D_METHOD("get_effects"), &BG_ItemDetails::get_effects);
 	ClassDB::bind_method(D_METHOD("get_sell_value_tier"), &BG_ItemDetails::get_sell_value_tier);
 	ClassDB::bind_method(D_METHOD("get_fame_value_tier"), &BG_ItemDetails::get_fame_value_tier);
 	ClassDB::bind_method(D_METHOD("get_durability_value_tier"), &BG_ItemDetails::get_durability_value_tier);
@@ -1864,7 +1864,15 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					for (int y = 0; y < effect_lines.size(); y++)
 					{
 						const Dictionary effect_entry = effect_lines[y];
-						new_item_class->effect_ids.append(effect_entry["effect"]);
+						TypedArray<StringName> effect_ids;
+
+						const Array effects_lines = Array(effect_entry["effects"]);
+						for (int x = 0; x < effects_lines.size(); x++)
+						{
+							const Dictionary effects_entry = effects_lines[x];
+							effect_ids.append(StringName(effects_entry["effect"]));
+						}
+						new_item_class->effects[StringName(effect_entry["rarity"])] = effect_ids;
 					}
 
 					items.append(new_item_class);
@@ -1947,7 +1955,15 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					for (int y = 0; y < effect_lines.size(); y++)
 					{
 						const Dictionary effect_entry = effect_lines[y];
-						new_item_class->effect_ids.append(effect_entry["effect"]);
+						TypedArray<StringName> effect_ids;
+
+						const Array effects_lines = Array(effect_entry["effects"]);
+						for (int x = 0; x < effects_lines.size(); x++)
+						{
+							const Dictionary effects_entry = effects_lines[x];
+							effect_ids.append(StringName(effects_entry["effect"]));
+						}
+						new_item_class->effects[StringName(effect_entry["rarity"])] = effect_ids;
 					}
 					items.append(new_item_class);
 				}
@@ -1975,7 +1991,15 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					for (int y = 0; y < effect_lines.size(); y++)
 					{
 						const Dictionary effect_entry = effect_lines[y];
-						new_item_class->effect_ids.append(effect_entry["effect"]);
+						TypedArray<StringName> effect_ids;
+
+						const Array effects_lines = Array(effect_entry["effects"]);
+						for (int x = 0; x < effects_lines.size(); x++)
+						{
+							const Dictionary effects_entry = effects_lines[x];
+							effect_ids.append(StringName(effects_entry["effect"]));
+						}
+						new_item_class->effects[StringName(effect_entry["rarity"])] = effect_ids;
 					}
 					items.append(new_item_class);
 				}

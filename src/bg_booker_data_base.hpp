@@ -682,8 +682,8 @@ public:
 	int animation_attach_socket = 0;
 	int get_animation_attach_socket() const { return animation_attach_socket; }
 
-	TypedArray<StringName> effect_ids;
-	TypedArray<StringName> get_effect_ids() const { return effect_ids; }
+	Dictionary effects;
+	Dictionary get_effects() const { return effects; }
 
 	int sell_value_tier = 0;
 	int get_sell_value_tier() const { return sell_value_tier; }
