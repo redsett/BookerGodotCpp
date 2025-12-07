@@ -676,13 +676,13 @@ public:
 	TypedArray<StringName> caste_ids;
 	TypedArray<StringName> get_caste_ids() const { return caste_ids; }
 
-	TypedArray<BG_UnitStat> stats;
-	TypedArray<BG_UnitStat> get_stats() const { return stats; }
+	Dictionary stats; // StringName(rarity id): TypedArray<BG_UnitStat>
+	Dictionary get_stats() const { return stats; }
 
 	int animation_attach_socket = 0;
 	int get_animation_attach_socket() const { return animation_attach_socket; }
 
-	Dictionary effects;
+	Dictionary effects; // StringName(rarity id): TypedArray<StringName>(effect ids)
 	Dictionary get_effects() const { return effects; }
 
 	int sell_value_tier = 0;

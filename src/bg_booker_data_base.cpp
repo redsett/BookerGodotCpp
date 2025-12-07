@@ -1848,15 +1848,23 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					for (int y = 0; y < stats_lines.size(); y++)
 					{
 						const Dictionary stat_entry = stats_lines[y];
+						TypedArray<BG_UnitStat> rarity_stats;
 
-						BG_UnitStat *new_stat = memnew(BG_UnitStat);
-						new_stat->id = stat_entry["stat"];
-						new_stat->resistant_value_text = stat_entry["resistant_value"];
-						new_stat->resistant_value_min_max = BG_UnitStat::string_to_resistant_value_min_max(stat_entry["resistant_value"]);
-						new_stat->dice_string = stat_entry["damage_dice"];
-						new_stat->dice_options = BG_Dice::string_to_dice_options(new_stat->dice_string);
+						const Array stat_lines = Array(stat_entry["stats"]);
+						for (int x = 0; x < stat_lines.size(); x++)
+						{
+							const Dictionary stats_entry = stat_lines[x];
 
-						new_item_class->stats.append(new_stat);
+							BG_UnitStat *new_stat = memnew(BG_UnitStat);
+							new_stat->id = stats_entry["stat"];
+							new_stat->resistant_value_text = stats_entry["resistant_value"];
+							new_stat->resistant_value_min_max = BG_UnitStat::string_to_resistant_value_min_max(stats_entry["resistant_value"]);
+							new_stat->dice_string = stats_entry["damage_dice"];
+							new_stat->dice_options = BG_Dice::string_to_dice_options(new_stat->dice_string);
+	
+							rarity_stats.append(new_stat);
+						}
+						new_item_class->stats[StringName(stat_entry["rarity"])] = rarity_stats;
 					}
 
 					// Effects
@@ -1940,14 +1948,23 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					for (int y = 0; y < stats_lines.size(); y++)
 					{
 						const Dictionary stat_entry = stats_lines[y];
+						TypedArray<BG_UnitStat> rarity_stats;
 
-						BG_UnitStat *new_stat = memnew(BG_UnitStat);
-						new_stat->id = stat_entry["stat"];
-						new_stat->bonus_percentage = float(stat_entry["offensive_bonus"]);
-						new_stat->defensive_value = int(stat_entry["defensive_value"]);
-						new_stat->set_dice(BG_Dice::string_to_dice(stat_entry["damage_dice"]));
+						const Array stat_lines = Array(stat_entry["stats"]);
+						for (int x = 0; x < stat_lines.size(); x++)
+						{
+							const Dictionary stats_entry = stat_lines[x];
 
-						new_item_class->stats.append(new_stat);
+							BG_UnitStat *new_stat = memnew(BG_UnitStat);
+							new_stat->id = stats_entry["stat"];
+							new_stat->resistant_value_text = stats_entry["resistant_value"];
+							new_stat->resistant_value_min_max = BG_UnitStat::string_to_resistant_value_min_max(stats_entry["resistant_value"]);
+							new_stat->dice_string = stats_entry["damage_dice"];
+							new_stat->dice_options = BG_Dice::string_to_dice_options(new_stat->dice_string);
+	
+							rarity_stats.append(new_stat);
+						}
+						new_item_class->stats[StringName(stat_entry["rarity"])] = rarity_stats;
 					}
 
 					// Effects
