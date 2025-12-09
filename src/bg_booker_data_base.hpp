@@ -4,6 +4,7 @@
 #include <godot_cpp/classes/ref.hpp>
 #include <godot_cpp/classes/random_number_generator.hpp>
 #include <godot_cpp/classes/resource.hpp>
+#include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
@@ -912,6 +913,14 @@ public:
 	int get_random_variation() const { return random_variation; }
 	void set_random_variation(int v) { random_variation = v; }
 
+	bool is_band_leader = false;
+	bool get_is_band_leader() const { return is_band_leader; }
+	void set_is_band_leader(bool v) { is_band_leader = v; }
+
+	int fame = 0;
+	int get_fame() const { return fame; }
+	void set_fame(int v) { fame = v; }
+
 	Vector3 scale;
 	Vector3 get_scale() const { return scale; }
 	void set_scale(Vector3 value) { scale = value; }
@@ -939,6 +948,63 @@ public:
 	Dictionary element_upgrades; //<StringName, int>
 	Dictionary get_element_upgrades() const { return element_upgrades; }
 	void set_element_upgrades(Dictionary v) { element_upgrades = v; }
+};
+
+////
+//// BG_Formation
+////
+class BG_Formation : public Resource
+{
+	GDCLASS(BG_Formation, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	String id;
+	String get_id() const { return id; }
+	void set_id(String value) {
+		id = value;
+		if (!Engine::get_singleton()->is_editor_hint()) {
+			return;
+		}
+
+		Array new_formation;
+
+		if (id.contains("\n")) {
+			PackedStringArray split_id = id.split("\n");
+			for (int i = 0; i < split_id.size(); ++i) {
+				TypedArray<int> this_line;
+				String s = split_id[i];
+				for (int x = 0; x < s.length(); ++x) {
+					String character = String::chr(s[x]);
+					this_line.append(character == "1" ? 1 : 0);
+				}
+				new_formation.append(this_line);
+			}
+		}
+		set_formation(new_formation);
+	}
+
+	Array formation;
+	Array get_formation() const { return formation; }
+	void set_formation(Array value) { formation = value; }
+};
+
+////
+//// BG_DefaultFormations
+////
+class BG_DefaultFormations : public Resource
+{
+	GDCLASS(BG_DefaultFormations, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	TypedArray<BG_Formation> formations;
+	Array get_formations() const { return formations; }
+	void set_formations(Array value) { formations = value; }
 };
 
 ////
@@ -980,11 +1046,39 @@ public:
 	int get_current_unique_job_id() const { return current_unique_job_id; }
 	void set_current_unique_job_id(int value) { current_unique_job_id = value; }
 
+	Ref<BG_Formation> band_formation;
+	Ref<BG_Formation> get_band_formation() const { return band_formation; }
+	void set_band_formation(Ref<BG_Formation> value) { band_formation = value; }	
+
 	bool has_job() const { return current_unique_job_id != -1; };
 
 	void clear_job() { current_unique_job_id = -1; };
 
 	bool is_band_alive() const;
+
+	Ref<BG_BandMember> get_band_leader() const {
+		for (int i = 0; i < band_members.size(); ++i) {
+			Ref<BG_BandMember> bm = band_members[i];
+			if (!bm.is_valid()) continue;
+			if (bm->get_is_band_leader()) return bm;
+		}
+
+		// There should always be a band leader. So let's just make a random band member the leader.
+		Ref<BG_BandMember> bm = band_members.pick_random();
+		if (!bm.is_valid()) return nullptr;
+		bm->set_is_band_leader(true);
+		return bm;
+	}
+
+	void set_band_leader(Ref<BG_BandMember> p_band_member) {
+		if (!p_band_member.is_valid()) return;
+		for (int i = 0; i < band_members.size(); ++i) {
+			Ref<BG_BandMember> bm = band_members[i];
+			if (!bm.is_valid()) continue;
+			bm->set_is_band_leader(false);
+		}
+		p_band_member->set_is_band_leader(true);
+	}
 };
 
 ////

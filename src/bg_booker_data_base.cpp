@@ -431,6 +431,10 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_slot_index"), &BG_BandMember::set_slot_index);
 	ClassDB::bind_method(D_METHOD("get_random_variation"), &BG_BandMember::get_random_variation);
 	ClassDB::bind_method(D_METHOD("set_random_variation"), &BG_BandMember::set_random_variation);
+	ClassDB::bind_method(D_METHOD("get_is_band_leader"), &BG_BandMember::get_is_band_leader);
+	ClassDB::bind_method(D_METHOD("set_is_band_leader"), &BG_BandMember::set_is_band_leader);
+	ClassDB::bind_method(D_METHOD("get_fame"), &BG_BandMember::get_fame);
+	ClassDB::bind_method(D_METHOD("set_fame"), &BG_BandMember::set_fame);
 	ClassDB::bind_method(D_METHOD("get_scale"), &BG_BandMember::get_scale);
 	ClassDB::bind_method(D_METHOD("set_scale"), &BG_BandMember::set_scale);
 	ClassDB::bind_method(D_METHOD("get_caste_id"), &BG_BandMember::get_caste_id);
@@ -448,10 +452,37 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "slot_index"), "set_slot_index", "get_slot_index");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_band_leader"), "set_is_band_leader", "get_is_band_leader");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "fame"), "set_fame", "get_fame");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "scale"), "set_scale", "get_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "caste_id"), "set_caste_id", "get_caste_id");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipment"), "set_equipment", "get_equipment");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "element_upgrades"), "set_element_upgrades", "get_element_upgrades");
+}
+
+////
+//// BG_Formation
+////
+void BG_Formation::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_Formation::get_id);
+	ClassDB::bind_method(D_METHOD("set_id"), &BG_Formation::set_id);
+	ClassDB::bind_method(D_METHOD("get_formation"), &BG_Formation::get_formation);
+	ClassDB::bind_method(D_METHOD("set_formation"), &BG_Formation::set_formation);
+
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "id", PROPERTY_HINT_MULTILINE_TEXT), "set_id", "get_id");
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "formation"), "set_formation", "get_formation");
+}
+
+////
+//// BG_DefaultFormations
+////
+void BG_DefaultFormations::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_formations"), &BG_DefaultFormations::get_formations);
+	ClassDB::bind_method(D_METHOD("set_formations"), &BG_DefaultFormations::set_formations);
+
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "formations"), "set_formations", "get_formations");
 }
 
 ////
@@ -473,10 +504,14 @@ void BG_Band::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_band_members"), &BG_Band::set_band_members);
 	ClassDB::bind_method(D_METHOD("get_current_unique_job_id"), &BG_Band::get_current_unique_job_id);
 	ClassDB::bind_method(D_METHOD("set_current_unique_job_id"), &BG_Band::set_current_unique_job_id);
+	ClassDB::bind_method(D_METHOD("get_band_formation"), &BG_Band::get_band_formation);
+	ClassDB::bind_method(D_METHOD("set_band_formation"), &BG_Band::set_band_formation);
 
 	ClassDB::bind_method(D_METHOD("has_job"), &BG_Band::has_job);
 	ClassDB::bind_method(D_METHOD("clear_job"), &BG_Band::clear_job);
 	ClassDB::bind_method(D_METHOD("is_band_alive"), &BG_Band::is_band_alive);
+	ClassDB::bind_method(D_METHOD("get_band_leader"), &BG_Band::get_band_leader);
+	ClassDB::bind_method(D_METHOD("set_band_leader", "band_member"), &BG_Band::set_band_leader);
 
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "unique_id"), "set_unique_id", "get_unique_id");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
@@ -485,6 +520,7 @@ void BG_Band::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "knocked_out_turns"), "set_knocked_out_turns", "get_knocked_out_turns");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "band_members"), "set_band_members", "get_band_members");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_unique_job_id"), "set_current_unique_job_id", "get_current_unique_job_id");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "band_formation"), "set_band_formation", "get_band_formation");
 }
 
 bool BG_Band::is_band_alive() const
