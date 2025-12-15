@@ -1046,9 +1046,9 @@ public:
 	int get_current_unique_job_id() const { return current_unique_job_id; }
 	void set_current_unique_job_id(int value) { current_unique_job_id = value; }
 
-	Ref<BG_Formation> band_formation;
-	Ref<BG_Formation> get_band_formation() const { return band_formation; }
-	void set_band_formation(Ref<BG_Formation> value) { band_formation = value; }	
+	Dictionary band_formation; // BG_BandMember : int(cell index)
+	Dictionary get_band_formation() const { return band_formation; }
+	void set_band_formation(Dictionary value) { band_formation = value; }	
 
 	bool has_job() const { return current_unique_job_id != -1; };
 

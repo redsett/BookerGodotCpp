@@ -520,7 +520,7 @@ void BG_Band::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "knocked_out_turns"), "set_knocked_out_turns", "get_knocked_out_turns");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "band_members"), "set_band_members", "get_band_members");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_unique_job_id"), "set_current_unique_job_id", "get_current_unique_job_id");
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "band_formation"), "set_band_formation", "get_band_formation");
+	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "band_formation"), "set_band_formation", "get_band_formation");
 }
 
 bool BG_Band::is_band_alive() const
