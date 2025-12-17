@@ -643,6 +643,16 @@ public:
 		CONSUMABLE
 	};
 
+	enum AttackTargetType : int32_t {
+		SINGLE_FRONT,
+		SINGLE_BACK,
+		ALL_FRONT_ROW,
+		ALL_BACK_ROW,
+		ALL_RANDOM_ROW,
+		ALL_RANDOM_COLUMN,
+		ALL
+	};
+
 	StringName id;
 	StringName get_id() const { return id; }
 
@@ -651,6 +661,9 @@ public:
 
 	ItemType slot_type = GEAR;
 	ItemType get_slot_type() const { return slot_type; }
+	
+	AttackTargetType attack_target_type = SINGLE_FRONT;
+	AttackTargetType get_attack_target_type() const { return attack_target_type; }
 
 	bool is_gear() const { return slot_type == GEAR; }
 	bool is_beast_part() const { return slot_type == BEAST_PART; }
@@ -697,6 +710,7 @@ public:
 };
 
 VARIANT_ENUM_CAST(BG_ItemDetails::ItemType);
+VARIANT_ENUM_CAST(BG_ItemDetails::AttackTargetType);
 
 ////
 //// BG_ItemDropPool
@@ -1116,6 +1130,12 @@ public:
 
 	StringName name;
 	StringName get_name() const { return name; }
+
+	BG_ItemDetails::AttackTargetType attack_target_type = BG_ItemDetails::SINGLE_FRONT;
+	BG_ItemDetails::AttackTargetType get_attack_target_type() const { return attack_target_type; }
+
+	int preferred_row = 0;
+	int get_preferred_row() const { return preferred_row; }
 
 	int max_health = 0;
 	int get_max_health() const { return max_health; }

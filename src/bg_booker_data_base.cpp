@@ -396,6 +396,7 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_ItemDetails::get_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_ItemDetails::get_name);
 	ClassDB::bind_method(D_METHOD("get_slot_type"), &BG_ItemDetails::get_slot_type);
+	ClassDB::bind_method(D_METHOD("get_attack_target_type"), &BG_ItemDetails::get_attack_target_type);
 	ClassDB::bind_method(D_METHOD("is_gear"), &BG_ItemDetails::is_gear);
 	ClassDB::bind_method(D_METHOD("is_beast_part"), &BG_ItemDetails::is_beast_part);
 	ClassDB::bind_method(D_METHOD("is_consumable"), &BG_ItemDetails::is_consumable);
@@ -416,6 +417,14 @@ void BG_ItemDetails::_bind_methods()
 	BIND_ENUM_CONSTANT(GEAR);
 	BIND_ENUM_CONSTANT(BEAST_PART);
 	BIND_ENUM_CONSTANT(CONSUMABLE);
+
+	BIND_ENUM_CONSTANT(SINGLE_FRONT);
+	BIND_ENUM_CONSTANT(SINGLE_BACK);
+	BIND_ENUM_CONSTANT(ALL_FRONT_ROW);
+	BIND_ENUM_CONSTANT(ALL_BACK_ROW);
+	BIND_ENUM_CONSTANT(ALL_RANDOM_ROW);
+	BIND_ENUM_CONSTANT(ALL_RANDOM_COLUMN);
+	BIND_ENUM_CONSTANT(ALL);
 }
 
 ////
@@ -575,6 +584,8 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_Monster::get_id);
 	ClassDB::bind_method(D_METHOD("set_id"), &BG_Monster::set_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_Monster::get_name);
+	ClassDB::bind_method(D_METHOD("get_attack_target_type"), &BG_Monster::get_attack_target_type);
+	ClassDB::bind_method(D_METHOD("get_preferred_row"), &BG_Monster::get_preferred_row);
 	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_Monster::get_max_health);
 	ClassDB::bind_method(D_METHOD("get_travel_distance"), &BG_Monster::get_travel_distance);
 	ClassDB::bind_method(D_METHOD("get_current_health"), &BG_Monster::get_current_health);
@@ -1556,6 +1567,8 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					const Dictionary misc_stats_entry = misc_stats_lines[y];
 					new_monster_type->max_health = int(misc_stats_entry["health"]);
 					new_monster_type->travel_distance = int(misc_stats_entry["travel_distance"]);
+					new_monster_type->preferred_row = int(misc_stats_entry["preferred_row"]);
+					new_monster_type->attack_target_type = static_cast<BG_ItemDetails::AttackTargetType>(int(misc_stats_entry["attack_target_type"]));
 				}
 
 				// Stats
@@ -1897,6 +1910,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 							new_stat->resistant_value_min_max = BG_UnitStat::string_to_resistant_value_min_max(stats_entry["resistant_value"]);
 							new_stat->dice_string = stats_entry["damage_dice"];
 							new_stat->dice_options = BG_Dice::string_to_dice_options(new_stat->dice_string);
+							new_item_class->attack_target_type = static_cast<BG_ItemDetails::AttackTargetType>(int(stats_entry["attack_target_type"]));
 	
 							rarity_stats.append(new_stat);
 						}
