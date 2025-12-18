@@ -1910,10 +1910,10 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 							new_stat->resistant_value_min_max = BG_UnitStat::string_to_resistant_value_min_max(stats_entry["resistant_value"]);
 							new_stat->dice_string = stats_entry["damage_dice"];
 							new_stat->dice_options = BG_Dice::string_to_dice_options(new_stat->dice_string);
-							new_item_class->attack_target_type = static_cast<BG_ItemDetails::AttackTargetType>(int(stats_entry["attack_target_type"]));
-	
 							rarity_stats.append(new_stat);
 						}
+
+						new_item_class->attack_target_type = static_cast<BG_ItemDetails::AttackTargetType>(int(stat_entry["attack_target_type"]));
 						new_item_class->stats[StringName(stat_entry["rarity"])] = rarity_stats;
 					}
 
