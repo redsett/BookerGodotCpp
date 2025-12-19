@@ -1166,6 +1166,9 @@ public:
 	StringName icon_path;
 	StringName get_icon_path() const { return icon_path; }
 
+	StringName model_path;
+	StringName get_model_path() const { return model_path; }
+
 	TypedArray<StringName> effect_ids;
 	TypedArray<StringName> get_effect_ids() const { return effect_ids; }
 

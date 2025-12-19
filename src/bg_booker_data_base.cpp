@@ -598,6 +598,7 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_element_availability_ids"), &BG_Monster::get_element_availability_ids);
 
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_Monster::get_icon_path);
+	ClassDB::bind_method(D_METHOD("get_model_path"), &BG_Monster::get_model_path);
 	ClassDB::bind_method(D_METHOD("get_effect_ids"), &BG_Monster::get_effect_ids);
 	ClassDB::bind_method(D_METHOD("get_hue_shift_data"), &BG_Monster::get_hue_shift_data);
 	ClassDB::bind_method(D_METHOD("get_challenge_rating_fraction_string"), &BG_Monster::get_challenge_rating_fraction_string);
@@ -1560,6 +1561,15 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_monster_type->hue_shift_data.append(new_hue_shift_data);
 				}
 
+				// Model Info
+				const Array model_lines = Array(entry["model"]);
+				for (int y = 0; y < model_lines.size(); y++)
+				{
+					const Dictionary model_entry = model_lines[y];
+
+					new_monster_type->model_path = StringName(model_entry["path"]);
+				}
+
 				// Misc Stats
 				const Array misc_stats_lines = Array(entry["misc_stats"]);
 				for (int y = 0; y < misc_stats_lines.size(); y++)
@@ -2132,7 +2142,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 	}
 
 	/////
-	///// Equipment Animation Details
+	///// Animations
 	/////
 	{
 		const Dictionary animation_sheet = BG_JsonUtils::GetCBDSheet(data, "animations");
