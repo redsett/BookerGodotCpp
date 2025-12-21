@@ -955,6 +955,10 @@ public:
 	bool get_is_city_asset() const { return is_city_asset; }
 	void set_is_city_asset(bool v) { is_city_asset = v; }
 
+	Ref<class BG_Band> band;
+	Ref<BG_Band> get_band() const { return band; }
+	void set_band(Ref<BG_Band> value) { band = value; }
+
 	class BG_TurretInfo *turret_info = nullptr;
 	BG_TurretInfo *get_turret_info() const { return turret_info; }
 	void set_turret_info(BG_TurretInfo *v) { turret_info = v; }
@@ -1174,6 +1178,10 @@ public:
 
 	TypedArray<BG_HueShiftData> hue_shift_data;
 	TypedArray<BG_HueShiftData> get_hue_shift_data() const { return hue_shift_data; };
+
+	Ref<Resource> job;
+	Ref<Resource> get_job() const { return job; };
+	void set_job(Ref<Resource> value) { job = value; };
 
 	String get_challenge_rating_fraction_string() const;
 };

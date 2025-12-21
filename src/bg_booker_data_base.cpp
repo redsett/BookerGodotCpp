@@ -452,6 +452,8 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_equipment"), &BG_BandMember::set_equipment);
 	ClassDB::bind_method(D_METHOD("get_is_city_asset"), &BG_BandMember::get_is_city_asset);
 	ClassDB::bind_method(D_METHOD("set_is_city_asset"), &BG_BandMember::set_is_city_asset);
+	ClassDB::bind_method(D_METHOD("get_band"), &BG_BandMember::get_band);
+	ClassDB::bind_method(D_METHOD("set_band"), &BG_BandMember::set_band);
 	ClassDB::bind_method(D_METHOD("get_turret_info"), &BG_BandMember::get_turret_info);
 	ClassDB::bind_method(D_METHOD("set_turret_info"), &BG_BandMember::set_turret_info);
 	ClassDB::bind_method(D_METHOD("get_element_upgrades"), &BG_BandMember::get_element_upgrades);
@@ -466,6 +468,7 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "scale"), "set_scale", "get_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "caste_id"), "set_caste_id", "get_caste_id");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipment"), "set_equipment", "get_equipment");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "band"), "set_band", "get_band");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "element_upgrades"), "set_element_upgrades", "get_element_upgrades");
 }
 
@@ -596,6 +599,8 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_monster_type"), &BG_Monster::get_monster_type);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_Monster::get_stats);
 	ClassDB::bind_method(D_METHOD("get_element_availability_ids"), &BG_Monster::get_element_availability_ids);
+	ClassDB::bind_method(D_METHOD("get_job"), &BG_Monster::get_job);
+	ClassDB::bind_method(D_METHOD("set_job"), &BG_Monster::set_job);
 
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_Monster::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_model_path"), &BG_Monster::get_model_path);
@@ -606,6 +611,7 @@ void BG_Monster::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "job"), "set_job", "get_job");
 }
 
 String BG_Monster::get_challenge_rating_fraction_string() const
