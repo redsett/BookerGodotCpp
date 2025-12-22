@@ -605,6 +605,7 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_Monster::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_model_path"), &BG_Monster::get_model_path);
 	ClassDB::bind_method(D_METHOD("get_effect_ids"), &BG_Monster::get_effect_ids);
+	ClassDB::bind_method(D_METHOD("get_out_of_combat_effect_ids"), &BG_Monster::get_out_of_combat_effect_ids);
 	ClassDB::bind_method(D_METHOD("get_hue_shift_data"), &BG_Monster::get_hue_shift_data);
 	ClassDB::bind_method(D_METHOD("get_challenge_rating_fraction_string"), &BG_Monster::get_challenge_rating_fraction_string);
 
@@ -1617,7 +1618,10 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				for (int y = 0; y < effect_lines.size(); y++)
 				{
 					const Dictionary effect_entry = effect_lines[y];
-					new_monster_type->effect_ids.append(effect_entry["effect"]);
+					if (effect_entry.has("effect"))
+						new_monster_type->effect_ids.append(effect_entry["effect"]);
+					if (effect_entry.has("out_of_combat_effect"))
+						new_monster_type->out_of_combat_effect_ids.append(effect_entry["out_of_combat_effect"]);
 				}
 
 				monster_types.append(new_monster_type);

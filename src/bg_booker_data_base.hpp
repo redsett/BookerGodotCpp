@@ -1176,6 +1176,9 @@ public:
 	TypedArray<StringName> effect_ids;
 	TypedArray<StringName> get_effect_ids() const { return effect_ids; }
 
+	TypedArray<StringName> out_of_combat_effect_ids;
+	TypedArray<StringName> get_out_of_combat_effect_ids() const { return out_of_combat_effect_ids; }
+
 	TypedArray<BG_HueShiftData> hue_shift_data;
 	TypedArray<BG_HueShiftData> get_hue_shift_data() const { return hue_shift_data; };
 
