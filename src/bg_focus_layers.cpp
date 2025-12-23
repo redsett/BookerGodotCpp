@@ -425,9 +425,16 @@ void BG_Focus_Layers::input_type_updated(bool using_gamepad)
             _get_active_control()->release_focus();
     }
 
-    Button *btn = _get_active_back_button();
-    if (BG_Focus_Layer_Properties::bg_is_instance_valid(btn))
-        btn->set_visible(!_is_using_gamepad);
+    for (int i = 0; i < _focus_layers.size(); i++)
+    {
+        BG_Focus_Layer_Properties *prop = cast_to<BG_Focus_Layer_Properties>(_focus_layers[i]);
+        if (BG_Focus_Layer_Properties::bg_is_instance_valid(prop)) {
+            Button *btn = prop->get_back_button();
+            if (BG_Focus_Layer_Properties::bg_is_instance_valid(btn)) {
+                btn->set_visible(!_is_using_gamepad);
+            }
+        }
+    }
 }
 
 void BG_Focus_Layers::press_back_button() const
