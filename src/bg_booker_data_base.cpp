@@ -458,6 +458,8 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_turret_info"), &BG_BandMember::set_turret_info);
 	ClassDB::bind_method(D_METHOD("get_element_upgrades"), &BG_BandMember::get_element_upgrades);
 	ClassDB::bind_method(D_METHOD("set_element_upgrades"), &BG_BandMember::set_element_upgrades);
+	ClassDB::bind_method(D_METHOD("get_consumable_upgrades"), &BG_BandMember::get_consumable_upgrades);
+	ClassDB::bind_method(D_METHOD("set_consumable_upgrades"), &BG_BandMember::set_consumable_upgrades);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
@@ -469,6 +471,7 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "caste_id"), "set_caste_id", "get_caste_id");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipment"), "set_equipment", "get_equipment");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "element_upgrades"), "set_element_upgrades", "get_element_upgrades");
+	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "consumable_upgrades"), "set_consumable_upgrades", "get_consumable_upgrades");
 }
 
 ////

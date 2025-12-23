@@ -966,6 +966,10 @@ public:
 	Dictionary element_upgrades; //<StringName, int>
 	Dictionary get_element_upgrades() const { return element_upgrades; }
 	void set_element_upgrades(Dictionary v) { element_upgrades = v; }
+
+	Dictionary consumable_upgrades; //<StringName(consumable_id), int(how_many)>
+	Dictionary get_consumable_upgrades() const { return consumable_upgrades; }
+	void set_consumable_upgrades(Dictionary v) { consumable_upgrades = v; }
 };
 
 ////
