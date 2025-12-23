@@ -1118,6 +1118,42 @@ public:
 };
 
 ////
+//// BG_Job
+////
+class BG_Job : public Resource
+{
+	GDCLASS(BG_Job, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName job_id;
+	StringName get_job_id() const { return job_id; }
+	void set_job_id(StringName value) { job_id = value; }
+
+	int unique_job_id = 0;
+	int get_unique_job_id() const { return unique_job_id; }
+	void set_unique_job_id(int value) { unique_job_id = value; }
+	
+	int random_seed = 0;
+	int get_random_seed() const { return random_seed; }
+	void set_random_seed(int value) { random_seed = value; }
+
+	int weeks_remaining_unless_removed = 0;
+	int get_weeks_remaining_unless_removed() const { return weeks_remaining_unless_removed; }
+	void set_weeks_remaining_unless_removed(int value) { weeks_remaining_unless_removed = value; }
+	
+	TypedArray<class BG_Monster> monsters;
+	TypedArray<BG_Monster> get_monsters() const { return monsters; }
+	void set_monsters(TypedArray<BG_Monster> value) { monsters = value; }
+
+	Dictionary formation; // BG_Monster : int(cell index)
+	Dictionary get_formation() const { return formation; }
+	void set_formation(Dictionary value) { formation = value; }	
+};
+
+////
 //// BG_Monster
 ////
 class BG_Monster : public Resource
@@ -1182,9 +1218,9 @@ public:
 	TypedArray<BG_HueShiftData> hue_shift_data;
 	TypedArray<BG_HueShiftData> get_hue_shift_data() const { return hue_shift_data; };
 
-	Ref<Resource> job;
-	Ref<Resource> get_job() const { return job; };
-	void set_job(Ref<Resource> value) { job = value; };
+	Ref<BG_Job> job;
+	Ref<BG_Job> get_job() const { return job; };
+	void set_job(Ref<BG_Job> value) { job = value; };
 
 	String get_challenge_rating_fraction_string() const;
 };

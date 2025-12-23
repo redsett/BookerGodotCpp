@@ -468,7 +468,6 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "scale"), "set_scale", "get_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "caste_id"), "set_caste_id", "get_caste_id");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipment"), "set_equipment", "get_equipment");
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "band"), "set_band", "get_band");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "element_upgrades"), "set_element_upgrades", "get_element_upgrades");
 }
 
@@ -580,6 +579,32 @@ void BG_BandNameInfo::_bind_methods()
 }
 
 ////
+//// BG_Job
+////
+void BG_Job::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_job_id"), &BG_Job::get_job_id);
+	ClassDB::bind_method(D_METHOD("set_job_id"), &BG_Job::set_job_id);
+	ClassDB::bind_method(D_METHOD("get_unique_job_id"), &BG_Job::get_unique_job_id);
+	ClassDB::bind_method(D_METHOD("set_unique_job_id"), &BG_Job::set_unique_job_id);
+	ClassDB::bind_method(D_METHOD("get_random_seed"), &BG_Job::get_random_seed);
+	ClassDB::bind_method(D_METHOD("set_random_seed"), &BG_Job::set_random_seed);
+	ClassDB::bind_method(D_METHOD("get_weeks_remaining_unless_removed"), &BG_Job::get_weeks_remaining_unless_removed);
+	ClassDB::bind_method(D_METHOD("set_weeks_remaining_unless_removed"), &BG_Job::set_weeks_remaining_unless_removed);
+	ClassDB::bind_method(D_METHOD("get_monsters"), &BG_Job::get_monsters);
+	ClassDB::bind_method(D_METHOD("set_monsters"), &BG_Job::set_monsters);
+	ClassDB::bind_method(D_METHOD("get_formation"), &BG_Job::get_formation);
+	ClassDB::bind_method(D_METHOD("set_formation"), &BG_Job::set_formation);
+
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "job_id"), "set_job_id", "get_job_id");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "unique_job_id"), "set_unique_job_id", "get_unique_job_id");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_seed"), "set_random_seed", "get_random_seed");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "weeks_remaining_unless_removed"), "set_weeks_remaining_unless_removed", "get_weeks_remaining_unless_removed");
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "monsters"), "set_monsters", "get_monsters");
+	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "formation"), "set_formation", "get_formation");
+}
+
+////
 //// BG_Monster
 ////
 void BG_Monster::_bind_methods()
@@ -612,7 +637,6 @@ void BG_Monster::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "job"), "set_job", "get_job");
 }
 
 String BG_Monster::get_challenge_rating_fraction_string() const
