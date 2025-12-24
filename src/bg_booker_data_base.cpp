@@ -1728,7 +1728,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_job_class->id = entry["id"];
 				new_job_class->battle_board_event_type = BG_JobDetails::BattleBoardEventTypes(int(entry["type"]));
 				new_job_class->weeks_before_expire = int(entry["weeks_before_expire"]);
-				new_job_class->is_unique = bool(entry["is_unique"]);
+				new_job_class->is_unique = bool(entry["unique"]);
 				new_job_class->is_boss = bool(entry["is_boss"]);
 
 				const Array monsters_lines = Array(entry["monsters"]);
