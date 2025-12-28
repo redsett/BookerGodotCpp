@@ -378,6 +378,10 @@ public:
 	float get_multiplier() const { return multiplier; }
 	void set_multiplier(float value) { multiplier = value; }
 
+	bool use_raw_numbers = false;
+	bool get_use_raw_numbers() const { return use_raw_numbers; }
+	void set_use_raw_numbers(bool value) { use_raw_numbers = value; }
+
 	static int calculate_dice(const TypedArray<BG_Dice> dice, RandomNumberGenerator *random_num_generator = nullptr);
 	static int get_dice_max_roll(const TypedArray<BG_Dice> dice);
 	static int get_dice_average_roll(const TypedArray<BG_Dice> dice);
@@ -661,9 +665,6 @@ public:
 
 	ItemType slot_type = GEAR;
 	ItemType get_slot_type() const { return slot_type; }
-	
-	AttackTargetType attack_target_type = SINGLE_FRONT;
-	AttackTargetType get_attack_target_type() const { return attack_target_type; }
 
 	bool is_gear() const { return slot_type == GEAR; }
 	bool is_beast_part() const { return slot_type == BEAST_PART; }
@@ -1175,9 +1176,6 @@ public:
 	StringName name;
 	StringName get_name() const { return name; }
 
-	BG_ItemDetails::AttackTargetType attack_target_type = BG_ItemDetails::SINGLE_FRONT;
-	BG_ItemDetails::AttackTargetType get_attack_target_type() const { return attack_target_type; }
-
 	int preferred_row = 0;
 	int get_preferred_row() const { return preferred_row; }
 
@@ -1480,6 +1478,12 @@ public:
 
 	int combat_rounds_per_combat = 0;
 	int get_combat_rounds_per_combat() const { return combat_rounds_per_combat; }
+	
+	int max_resistance_soft_cap = 0;
+	int get_max_resistance_soft_cap() const { return max_resistance_soft_cap; }
+
+	int max_resistance_hard_cap = 0;
+	int get_max_resistance_hard_cap() const { return max_resistance_hard_cap; }
 
 	TypedArray<BG_CityInfo> city_info;
 	TypedArray<BG_CityInfo> get_city_info() const { return city_info; }

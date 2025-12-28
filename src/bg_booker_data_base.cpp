@@ -254,6 +254,8 @@ void BG_Dice::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_additive"), &BG_Dice::set_additive);
 	ClassDB::bind_method(D_METHOD("get_multiplier"), &BG_Dice::get_multiplier);
 	ClassDB::bind_method(D_METHOD("set_multiplier"), &BG_Dice::set_multiplier);
+	ClassDB::bind_method(D_METHOD("get_use_raw_numbers"), &BG_Dice::get_use_raw_numbers);
+	ClassDB::bind_method(D_METHOD("set_use_raw_numbers"), &BG_Dice::set_use_raw_numbers);
 }
 
 ////
@@ -396,7 +398,6 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_ItemDetails::get_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_ItemDetails::get_name);
 	ClassDB::bind_method(D_METHOD("get_slot_type"), &BG_ItemDetails::get_slot_type);
-	ClassDB::bind_method(D_METHOD("get_attack_target_type"), &BG_ItemDetails::get_attack_target_type);
 	ClassDB::bind_method(D_METHOD("is_gear"), &BG_ItemDetails::is_gear);
 	ClassDB::bind_method(D_METHOD("is_beast_part"), &BG_ItemDetails::is_beast_part);
 	ClassDB::bind_method(D_METHOD("is_consumable"), &BG_ItemDetails::is_consumable);
@@ -615,7 +616,6 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_Monster::get_id);
 	ClassDB::bind_method(D_METHOD("set_id"), &BG_Monster::set_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_Monster::get_name);
-	ClassDB::bind_method(D_METHOD("get_attack_target_type"), &BG_Monster::get_attack_target_type);
 	ClassDB::bind_method(D_METHOD("get_preferred_row"), &BG_Monster::get_preferred_row);
 	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_Monster::get_max_health);
 	ClassDB::bind_method(D_METHOD("get_travel_distance"), &BG_Monster::get_travel_distance);
@@ -834,6 +834,8 @@ void BG_Booker_Globals::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_starting_reputation"), &BG_Booker_Globals::get_starting_reputation);
 	ClassDB::bind_method(D_METHOD("get_chance_of_no_drop"), &BG_Booker_Globals::get_chance_of_no_drop);
 	ClassDB::bind_method(D_METHOD("get_combat_rounds_per_combat"), &BG_Booker_Globals::get_combat_rounds_per_combat);
+	ClassDB::bind_method(D_METHOD("get_max_resistance_soft_cap"), &BG_Booker_Globals::get_max_resistance_soft_cap);
+	ClassDB::bind_method(D_METHOD("get_max_resistance_hard_cap"), &BG_Booker_Globals::get_max_resistance_hard_cap);
 	ClassDB::bind_method(D_METHOD("get_city_info"), &BG_Booker_Globals::get_city_info);
 	ClassDB::bind_method(D_METHOD("get_act_stats"), &BG_Booker_Globals::get_act_stats);
 	ClassDB::bind_method(D_METHOD("get_challenge_rating_guide"), &BG_Booker_Globals::get_challenge_rating_guide);
@@ -986,6 +988,17 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					globals->hit_good_timing_multiplier = float(values["hit_good_timing_multiplier"]);
 					globals->parry_perfect_timing_multiplier = float(values["parry_perfect_timing_multiplier"]);
 					globals->parry_good_timing_multiplier = float(values["parry_good_timing_multiplier"]);
+				}
+			}
+
+			if (lines.has("max_resistance"))
+			{
+				const Array max_resistance_array = Array(lines["max_resistance"]);
+				for (int i = 0; i < max_resistance_array.size(); i++)
+				{
+					const Dictionary values = max_resistance_array[i];
+					globals->max_resistance_soft_cap = int(values["max_resistance_soft_cap"]);
+					globals->max_resistance_hard_cap = int(values["max_resistance_hard_cap"]);
 				}
 			}
 
@@ -1612,7 +1625,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_monster_type->max_health = int(misc_stats_entry["health"]);
 					new_monster_type->travel_distance = int(misc_stats_entry["travel_distance"]);
 					new_monster_type->preferred_row = int(misc_stats_entry["preferred_row"]);
-					new_monster_type->attack_target_type = static_cast<BG_ItemDetails::AttackTargetType>(int(misc_stats_entry["attack_target_type"]));
 				}
 
 				// Stats
@@ -1960,7 +1972,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 							rarity_stats.append(new_stat);
 						}
 
-						new_item_class->attack_target_type = static_cast<BG_ItemDetails::AttackTargetType>(int(stat_entry["attack_target_type"]));
 						new_item_class->stats[StringName(stat_entry["rarity"])] = rarity_stats;
 					}
 
@@ -2666,17 +2677,26 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 		if (!BG_Focus_Layer_Properties::bg_is_instance_valid(dice[i]))
 			continue;
 		
-		for (int x = 0; x < die->get_roll_count(); x++)
-		{
-			minimum_damage += (float(1) * die->get_multiplier());
-			maximum_damage += (float(die->get_amount_of_sides()) * die->get_multiplier());
+		if (die->get_use_raw_numbers()) {
+			minimum_damage += (float(die->get_amount_of_sides()) * die->get_multiplier());
+			maximum_damage += (float(die->get_roll_count()) * die->get_multiplier());
+		} else {
+			for (int x = 0; x < die->get_roll_count(); x++)
+			{
+				minimum_damage += (float(1) * die->get_multiplier());
+				maximum_damage += (float(die->get_amount_of_sides()) * die->get_multiplier());
+			}
+			minimum_damage += (float(die->get_additive()) * die->get_multiplier());
+			maximum_damage += (float(die->get_additive()) * die->get_multiplier());
 		}
-		minimum_damage += (float(die->get_additive()) * die->get_multiplier());
-		maximum_damage += (float(die->get_additive()) * die->get_multiplier());
 	}
 
 	const int minimum_damage_int = int(Math::round(minimum_damage));
 	const int maximum_damage_int = int(Math::round(maximum_damage));
+	if (minimum_damage_int == maximum_damage_int)
+	{
+		return String::num_int64(minimum_damage_int);
+	}
 	return String::num_int64(minimum_damage_int) + "~" + String::num_int64(maximum_damage_int);
 }
 
@@ -2703,30 +2723,42 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 
 /* static */ Ref<BG_Dice> BG_Dice::string_to_dice(String string)
 {
-	if (string.is_empty())
-	{
+	if (string.is_empty()) {
 		return nullptr;
 	}
 	Ref<BG_Dice> result = memnew(BG_Dice);
-	result->set_roll_count(string.split("d")[0].to_int());
+	if (string.contains("d")) {
+		
+		result->set_roll_count(string.split("d")[0].to_int());
 
-	const String after_d = string.split("d")[1].replace(" ", ""); // I.e:   6 or 6+1 or 6-1
-	if (after_d.contains("+") || after_d.contains("-"))
-	{
-		if (after_d.contains("+"))
-		{
-			result->set_amount_of_sides(after_d.split("+")[0].to_int());
-			result->set_additive(after_d.split("+")[1].to_int());
+		const String after_d = string.split("d")[1].replace(" ", ""); // I.e:   6 or 6+1 or 6-1
+		if (after_d.contains("+") || after_d.contains("-")) {
+
+			if (after_d.contains("+")) {
+				result->set_amount_of_sides(after_d.split("+")[0].to_int());
+				result->set_additive(after_d.split("+")[1].to_int());
+			}
+			else {
+				result->set_amount_of_sides(after_d.split("-")[0].to_int());
+				result->set_additive(after_d.split("-")[1].to_int() * -1); // Negative the number since it's going to subtract.
+			}
 		}
-		else
-		{
-			result->set_amount_of_sides(after_d.split("-")[0].to_int());
-			result->set_additive(after_d.split("-")[1].to_int() * -1); // Negative the number since it's going to subtract.
+		// Not dice. Parse it like it's a base number instead.
+		else {
+			result->set_amount_of_sides(after_d.to_int());
 		}
 	}
-	else
-	{
-		result->set_amount_of_sides(after_d.to_int());
+	else {
+		result->set_use_raw_numbers(true);
+
+		static const String splitter = "-";
+		if (string.contains(splitter)) {
+			result->set_amount_of_sides(string.split(splitter)[0].to_int());
+			result->set_roll_count(string.split(splitter)[1].to_int());
+		} else {
+			result->set_amount_of_sides(string.to_int()); // I.e:    6
+			result->set_roll_count(string.to_int()); // I.e:    6
+		}
 	}
 	
 	return result;
@@ -2739,12 +2771,12 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 	{
 		return result;
 	}
-	if (!string.contains("["))
+	if (!string.contains("[") && !string.contains("|"))
 	{
 		result.append(BG_Dice::string_to_dice(string));
 		return result;
 	}
-	else
+	else if (string.contains("d"))
 	{
 		const String bracets_removed = string.split("[")[1].split("]")[0].replace(" ", ""); // [1d3-1d6] to 1d3-1d6
 		const String start_dice = bracets_removed.split("-")[0];
@@ -2786,6 +2818,82 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 			}
 		}
 	}
+	else // We're expecting raw numbers instead of dice. I.e    [6-8], meaning 6 through 8.
+	{
+		String bracets_removed = string;
+		if (string.contains("[")) {
+			bracets_removed = string.split("[")[1].split("]")[0].replace(" ", ""); // [6-8] to 6-8
+		}
+		const String left_side = bracets_removed.split("|")[0];
+		const String right_side = bracets_removed.split("|")[1];
+
+		static const String splitter = "-";
+		Vector2i left_side_min_max;
+		Vector2i right_side_min_max;
+		if (left_side.contains(splitter)) {
+			left_side_min_max = Vector2i(left_side.split(splitter)[0].to_int(), left_side.split(splitter)[1].to_int()); // 6-8 to Vector2(6, 8)
+		} else {
+			left_side_min_max = Vector2i(left_side.to_int(), left_side.to_int());
+		}
+		if (right_side.contains(splitter)) {
+			right_side_min_max = Vector2i(right_side.split(splitter)[0].to_int(), right_side.split(splitter)[1].to_int());
+		} else {
+			right_side_min_max = Vector2i(right_side.to_int(), right_side.to_int());
+		}
+
+		// Get how many variations we want to store. Since we don't want to store a variation for every single number.
+		static const int ideal_variations = 5;
+		int min_variation_count = 1;
+		int max_variation_count = 1;
+
+		// Get how many variations for the minimum.
+		const int min_difference = right_side_min_max.x - left_side_min_max.x;
+		if (min_difference > 0) {
+			int variation_count = ideal_variations + 1;
+			while (variation_count >= 1) {
+				variation_count -= 1;
+				const float split_amount = float(min_difference) / variation_count;
+				if (split_amount >= 1.0) {
+					min_variation_count = variation_count;
+					break;
+				}
+			}
+		}
+		const int min_split_amount = int(Math::round(float(min_difference) / float(min_variation_count)));
+
+		// Get how many variations for the maximum.
+		const int max_difference = right_side_min_max.y - left_side_min_max.y;
+		if (max_difference > 0) {
+			int variation_count = ideal_variations + 1;
+			while (variation_count >= 1) {
+				variation_count -= 1;
+				const float split_amount = float(max_difference) / variation_count;
+				if (split_amount >= 1.0) {
+					max_variation_count = variation_count;
+					break;
+				}
+			}
+		}
+		const int max_split_amount = int(Math::round(float(max_difference) / float(max_variation_count)));
+
+		const int best_variation_count = Math::max(min_variation_count, max_variation_count);
+		for (int i = 0; i < best_variation_count; ++i)
+		{
+			int min = 0;
+			int max = 0;
+			if (i > 0) {
+				min = int(Math::round(float(min_variation_count) / float(i)));
+				max = int(Math::round(float(max_variation_count) / float(i)));
+			}
+
+			Ref<BG_Dice> new_dice = memnew(BG_Dice);
+			new_dice->set_use_raw_numbers(true);
+			new_dice->set_amount_of_sides(left_side_min_max.x + (min * min_split_amount));
+			new_dice->set_roll_count(left_side_min_max.y + (max * max_split_amount));
+			result.append(new_dice);
+			// UtilityFunctions::prints(min, max, "min :", new_dice->amount_of_sides, "max :", new_dice->roll_count, float(max_variation_count) / float(i));
+		}
+	}
 	return result;
 }
 
@@ -2797,5 +2905,6 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 	result->amount_of_sides = dice->amount_of_sides;
 	result->additive = dice->additive;
 	result->multiplier = dice->multiplier;
+	result->use_raw_numbers = dice->use_raw_numbers;
 	return result;
 }
