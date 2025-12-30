@@ -126,6 +126,10 @@ void BG_ObjectiveDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_ObjectiveDetails::get_id);
 	ClassDB::bind_method(D_METHOD("get_is_main_objective"), &BG_ObjectiveDetails::get_is_main_objective);
 	ClassDB::bind_method(D_METHOD("get_is_scripted"), &BG_ObjectiveDetails::get_is_scripted);
+	ClassDB::bind_method(D_METHOD("get_objective_repeatable_type"), &BG_ObjectiveDetails::get_objective_repeatable_type);
+	ClassDB::bind_method(D_METHOD("get_is_auto_complete"), &BG_ObjectiveDetails::get_is_auto_complete);
+	ClassDB::bind_method(D_METHOD("get_is_turn_in"), &BG_ObjectiveDetails::get_is_turn_in);
+	ClassDB::bind_method(D_METHOD("get_is_event"), &BG_ObjectiveDetails::get_is_event);
 	ClassDB::bind_method(D_METHOD("get_timeline"), &BG_ObjectiveDetails::get_timeline);
 	ClassDB::bind_method(D_METHOD("get_script_path"), &BG_ObjectiveDetails::get_script_path);
 	ClassDB::bind_method(D_METHOD("get_reputation_drop"), &BG_ObjectiveDetails::get_reputation_drop);
@@ -134,6 +138,10 @@ void BG_ObjectiveDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_beast_part_drop_count"), &BG_ObjectiveDetails::get_beast_part_drop_count);
 	ClassDB::bind_method(D_METHOD("get_equipment_drop_count"), &BG_ObjectiveDetails::get_equipment_drop_count);
 	ClassDB::bind_method(D_METHOD("get_misc_attributes"), &BG_ObjectiveDetails::get_misc_attributes);
+
+	BIND_ENUM_CONSTANT(UNIQUE);
+	BIND_ENUM_CONSTANT(REPEATABLE_UNIQUE);
+	BIND_ENUM_CONSTANT(REPEATABLE);
 }
 
 ////
@@ -2236,6 +2244,10 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_objective_class->id = entry["id"];
 				new_objective_class->is_main_objective = bool(entry["is_main_objective"]);
 				new_objective_class->is_scripted = bool(entry["is_scripted"]);
+				new_objective_class->objective_repeatable_type = static_cast<BG_ObjectiveDetails::ObjectiveRepeatableType>(int(entry["repeatable_type"]));
+				new_objective_class->is_auto_complete = bool(entry["is_auto_complete"]);
+				new_objective_class->is_turn_in = bool(entry["is_turn_in"]);
+				new_objective_class->is_event = bool(entry["is_event"]);
 				new_objective_class->script_path = entry["script_path"];
 
 				// Timeline Attributes

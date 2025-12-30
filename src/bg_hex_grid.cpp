@@ -98,6 +98,12 @@ void BG_HexGameSaveData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_has_played_destroyed_vfx"), &BG_HexGameSaveData::set_has_played_destroyed_vfx);
 	ClassDB::bind_method(D_METHOD("get_asset_health_normalized_percent"), &BG_HexGameSaveData::get_asset_health_normalized_percent);
 	ClassDB::bind_method(D_METHOD("set_asset_health_normalized_percent"), &BG_HexGameSaveData::set_asset_health_normalized_percent);
+	ClassDB::bind_method(D_METHOD("get_objective_unique_id_reference"), &BG_HexGameSaveData::get_objective_unique_id_reference);
+	ClassDB::bind_method(D_METHOD("set_objective_unique_id_reference"), &BG_HexGameSaveData::set_objective_unique_id_reference);
+	ClassDB::bind_method(D_METHOD("get_is_newly_added_objective"), &BG_HexGameSaveData::get_is_newly_added_objective);
+	ClassDB::bind_method(D_METHOD("set_is_newly_added_objective"), &BG_HexGameSaveData::set_is_newly_added_objective);
+	ClassDB::bind_method(D_METHOD("get_week_of_last_active_objective"), &BG_HexGameSaveData::get_week_of_last_active_objective);
+	ClassDB::bind_method(D_METHOD("set_week_of_last_active_objective"), &BG_HexGameSaveData::set_week_of_last_active_objective);
 
     ADD_PROPERTY(PropertyInfo(Variant::INT, "asset_type", PROPERTY_HINT_ENUM, "BAND:0,JOB:1,CITY:2,TOWN:3,RESOURCE:4,BARRICADE:5,TURRET:6"), "set_asset_type", "get_asset_type");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_newly_added_to_board"), "set_is_newly_added_to_board", "get_is_newly_added_to_board");
@@ -110,6 +116,8 @@ void BG_HexGameSaveData::_bind_methods()
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_destroyed"), "set_is_destroyed", "get_is_destroyed");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "has_played_destroyed_vfx"), "set_has_played_destroyed_vfx", "get_has_played_destroyed_vfx");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "asset_health_normalized_percent"), "set_asset_health_normalized_percent", "get_asset_health_normalized_percent");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "objective_unique_id_reference"), "set_objective_unique_id_reference", "get_objective_unique_id_reference");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "week_of_last_active_objective"), "set_week_of_last_active_objective", "get_week_of_last_active_objective");
 
     BIND_ENUM_CONSTANT(BAND);
     BIND_ENUM_CONSTANT(JOB);

@@ -198,6 +198,19 @@ public:
     float asset_health_normalized_percent = 1.0;
     float get_asset_health_normalized_percent() const { return asset_health_normalized_percent; }
     void set_asset_health_normalized_percent(float v) { asset_health_normalized_percent = v; }
+
+    // Objectives
+    int objective_unique_id_reference = 0;
+    int get_objective_unique_id_reference() const { return objective_unique_id_reference; }
+    void set_objective_unique_id_reference(int v) { objective_unique_id_reference = v; }
+
+    bool is_newly_added_objective = false; // Not saved.
+    bool get_is_newly_added_objective() const { return is_newly_added_objective; }
+    void set_is_newly_added_objective(bool v) { is_newly_added_objective = v; }
+
+    int week_of_last_active_objective = 0;
+    int get_week_of_last_active_objective() const { return week_of_last_active_objective; }
+    void set_week_of_last_active_objective(int v) { week_of_last_active_objective = v; } 
 };
 
 VARIANT_ENUM_CAST(BG_HexGameSaveData::HexGameAssetTypes);

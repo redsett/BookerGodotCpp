@@ -123,6 +123,12 @@ protected:
 	static void _bind_methods();
 
 public:
+	enum ObjectiveRepeatableType : int32_t {
+		UNIQUE,
+		REPEATABLE_UNIQUE,
+		REPEATABLE
+	};
+
 	StringName id;
 	StringName get_id() const { return id; }
 
@@ -131,6 +137,18 @@ public:
 
 	bool is_scripted;
 	bool get_is_scripted() const { return is_scripted; }
+
+	ObjectiveRepeatableType objective_repeatable_type = ObjectiveRepeatableType::UNIQUE;
+	ObjectiveRepeatableType get_objective_repeatable_type() const { return objective_repeatable_type; }
+
+	bool is_auto_complete;
+	bool get_is_auto_complete() const { return is_auto_complete; }
+
+	bool is_turn_in;
+	bool get_is_turn_in() const { return is_turn_in; }
+
+	bool is_event;
+	bool get_is_event() const { return is_event; }
 
 	BG_ObjectiveTimeline *timeline;
 	BG_ObjectiveTimeline *get_timeline() const { return timeline; }
@@ -156,6 +174,7 @@ public:
 	Dictionary misc_attributes;
 	Dictionary get_misc_attributes() const { return misc_attributes; }
 };
+VARIANT_ENUM_CAST(BG_ObjectiveDetails::ObjectiveRepeatableType);
 
 ////
 //// BG_ResourceTypeDetails
