@@ -132,6 +132,9 @@ public:
 	StringName id;
 	StringName get_id() const { return id; }
 
+	StringName localization_key;
+	StringName get_localization_key() const { return localization_key; }
+
 	bool is_main_objective;
 	bool get_is_main_objective() const { return is_main_objective; }
 
@@ -152,6 +155,9 @@ public:
 
 	BG_ObjectiveTimeline *timeline;
 	BG_ObjectiveTimeline *get_timeline() const { return timeline; }
+
+	int expires_in;
+	int get_expires_in() const { return expires_in; }
 
 	String script_path;
 	String get_script_path() const { return script_path; }

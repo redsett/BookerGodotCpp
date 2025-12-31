@@ -124,6 +124,7 @@ void BG_ObjectiveTimeline::_bind_methods()
 void BG_ObjectiveDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_ObjectiveDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_localization_key"), &BG_ObjectiveDetails::get_localization_key);
 	ClassDB::bind_method(D_METHOD("get_is_main_objective"), &BG_ObjectiveDetails::get_is_main_objective);
 	ClassDB::bind_method(D_METHOD("get_is_scripted"), &BG_ObjectiveDetails::get_is_scripted);
 	ClassDB::bind_method(D_METHOD("get_objective_repeatable_type"), &BG_ObjectiveDetails::get_objective_repeatable_type);
@@ -131,6 +132,7 @@ void BG_ObjectiveDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_is_turn_in"), &BG_ObjectiveDetails::get_is_turn_in);
 	ClassDB::bind_method(D_METHOD("get_is_event"), &BG_ObjectiveDetails::get_is_event);
 	ClassDB::bind_method(D_METHOD("get_timeline"), &BG_ObjectiveDetails::get_timeline);
+	ClassDB::bind_method(D_METHOD("get_expires_in"), &BG_ObjectiveDetails::get_expires_in);
 	ClassDB::bind_method(D_METHOD("get_script_path"), &BG_ObjectiveDetails::get_script_path);
 	ClassDB::bind_method(D_METHOD("get_reputation_drop"), &BG_ObjectiveDetails::get_reputation_drop);
 	ClassDB::bind_method(D_METHOD("get_maelstrite_drop"), &BG_ObjectiveDetails::get_maelstrite_drop);
@@ -2242,10 +2244,15 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				
 				BG_ObjectiveDetails *new_objective_class = memnew(BG_ObjectiveDetails);
 				new_objective_class->id = entry["id"];
+				new_objective_class->localization_key = entry["localization_key"];
+				if (new_objective_class->localization_key.is_empty()) {
+					new_objective_class->localization_key = new_objective_class->id;
+				}
 				new_objective_class->is_main_objective = bool(entry["is_main_objective"]);
 				new_objective_class->is_scripted = bool(entry["is_scripted"]);
 				new_objective_class->objective_repeatable_type = static_cast<BG_ObjectiveDetails::ObjectiveRepeatableType>(int(entry["repeatable_type"]));
 				new_objective_class->is_auto_complete = bool(entry["is_auto_complete"]);
+				new_objective_class->expires_in = int(entry["expires_in"]);
 				new_objective_class->is_turn_in = bool(entry["is_turn_in"]);
 				new_objective_class->is_event = bool(entry["is_event"]);
 				new_objective_class->script_path = entry["script_path"];
