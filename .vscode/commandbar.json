@@ -4,13 +4,13 @@
 	"skipErrorMessage": true,
 	"commands": [
 		{
-			"text": "🍊 Play",
+			"text": "📦 Compile",
 			"color": "orange",
 			"commandType":"palette",
-			"command": "workbench.action.tasks.runTask|Play",
+			"command": "workbench.action.tasks.runTask|Compile",
 			"alignment": "right",
 			"skipTerminateQuickPick": false,
-			"priority": -10
+			"priority": -20
 		},
 		{
 			"text": "☕ Open Editor",
@@ -19,34 +19,52 @@
 			"command": "workbench.action.tasks.runTask|Open Editor",
 			"alignment": "right",
 			"skipTerminateQuickPick": false,
-			"priority": -11
+			"priority": -19
 		},
 		{
-			"text": "📦 Compile",
-			"color": "yellow",
-			"commandType":"palette",
-			"command": "workbench.action.tasks.runTask|Compile",
-			"alignment": "right",
-			"skipTerminateQuickPick": false,
-			"priority": -20
-		},
-		{
-			"text": "🥮 CDB",
+			"text": "🍊 Play",
 			"color": "orange",
 			"commandType":"palette",
-			"command": "workbench.action.tasks.runTask|CDB",
+			"command": "workbench.action.tasks.runTask|Play",
 			"alignment": "right",
 			"skipTerminateQuickPick": false,
-			"priority": -1
+			"priority": -18
 		},
 		{
 			"text": "🦴 2Der",
-			"color": "orange",
+			"color": "white",
 			"commandType":"palette",
 			"command": "workbench.action.tasks.runTask|2Der",
 			"alignment": "right",
 			"skipTerminateQuickPick": false,
-			"priority": -1
+			"priority": -17
+		},
+		{
+			"text": "🥮 CDB",
+			"color": "yellow",
+			"commandType":"palette",
+			"command": "workbench.action.tasks.runTask|CDB",
+			"alignment": "right",
+			"skipTerminateQuickPick": false,
+			"priority": -16
+		},
+		{
+			"text": "⬡ DBer Editor",
+			"color": "black",
+			"commandType":"palette",
+			"command": "workbench.action.tasks.runTask|DBer Editor",
+			"alignment": "right",
+			"skipTerminateQuickPick": false,
+			"priority": -15
+		},
+		{
+			"text": "⬢ DBer",
+			"color": "black",
+			"commandType":"palette",
+			"command": "workbench.action.tasks.runTask|DBer",
+			"alignment": "right",
+			"skipTerminateQuickPick": false,
+			"priority": -14
 		}
 	]
 }

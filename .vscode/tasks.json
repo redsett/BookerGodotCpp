@@ -34,6 +34,20 @@
             "command": "${workspaceFolder}/local_bats/start_2der.bat",
             "presentation": {"echo": true, "reveal": "always", "focus": false, "panel": "shared", "showReuseMessage": false, "clear": true},
             "group": {"kind": "build", "isDefault": false},
+        },
+        {
+            "label": "DBer",
+            "type": "shell",
+            "command": "${workspaceFolder}/local_bats/start_dber.bat",
+            "presentation": {"echo": true, "reveal": "always", "focus": false, "panel": "shared", "showReuseMessage": false, "clear": true},
+            "group": {"kind": "build", "isDefault": false},
+        },
+        {
+            "label": "DBer Editor",
+            "type": "shell",
+            "command": "${workspaceFolder}/local_bats/start_dber_editor.bat",
+            "presentation": {"echo": true, "reveal": "always", "focus": false, "panel": "shared", "showReuseMessage": false, "clear": true},
+            "group": {"kind": "build", "isDefault": false},
         }
     ],
     "version": "2.0.0"
