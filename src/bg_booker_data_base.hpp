@@ -326,6 +326,54 @@ public:
 };
 
 ////
+//// BG_BaseStat
+////
+class BG_BaseStat : public Object
+{
+	GDCLASS(BG_BaseStat, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	int unique_id = -1;
+	int get_unique_id() const { return unique_id; }
+
+	bool is_base_value = false;
+	bool get_is_base_value() const { return is_base_value; }
+
+	float value;
+	float get_value() const { return value; }
+
+	int parent_stat_unique_id = -1;
+	// int get_parent_stat_unique_id() const { return parent_stat_unique_id; }
+
+	BG_BaseStat *parent_stat_reference = nullptr;
+	BG_BaseStat *get_parent_stat_reference() const { return parent_stat_reference; }
+
+	StringName stat_id_name;
+	StringName get_stat_id_name() const { return stat_id_name; }
+};
+
+////
+//// BG_ContentStat
+////
+class BG_ContentStat : public Object
+{
+	GDCLASS(BG_ContentStat, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	BG_BaseStat *stat_reference = nullptr;
+	BG_BaseStat *get_stat_reference() const { return stat_reference; }
+
+	float value;
+	float get_value() const { return value; }
+};
+
+////
 //// BG_EffectRarityDetails
 ////
 class BG_EffectRarityDetails : public Object
@@ -732,7 +780,24 @@ public:
 	int get_fame_value_tier() const { return fame_value_tier; }
 
 	int durability_value_tier = 0;
-	int get_durability_value_tier() const { return durability_value_tier; }	
+	int get_durability_value_tier() const { return durability_value_tier; }
+	
+	
+	// New DBer Data
+	bool use_dber_data = false;
+	bool get_use_dber_data() const { return use_dber_data; }
+	
+	float effectiveness = 0.0;
+	float get_effectiveness() const { return effectiveness; }
+
+	TypedArray<BG_ContentStat> item_effectiveness_stats;
+	TypedArray<BG_ContentStat> get_item_effectiveness_stats() const { return item_effectiveness_stats; }
+
+	bool use_stat_requirements = false;
+	bool get_use_stat_requirements() const { return use_stat_requirements; }
+
+	TypedArray<BG_ContentStat> item_stat_requirements;
+	TypedArray<BG_ContentStat> get_item_stat_requirements() const { return item_stat_requirements; }	
 };
 
 VARIANT_ENUM_CAST(BG_ItemDetails::ItemType);
@@ -1495,6 +1560,9 @@ public:
 	BG_Booker_Globals() {};
 	~BG_Booker_Globals() {};
 
+	Dictionary global_curves;
+	Dictionary get_global_curves() const { return global_curves; }
+
 	int starting_reputation = 0;
 	int get_starting_reputation() const { return starting_reputation; }
 
@@ -1610,7 +1678,10 @@ public:
 	BG_Booker_Globals *get_globals() const { return globals; }
 
 	TypedArray<BG_ObjectiveDetails> objectives;
-	TypedArray<BG_ObjectiveDetails> get_objectives() const { return objectives; }
+	TypedArray<BG_ObjectiveDetails> get_objectives() const { return objectives; }	
+
+	TypedArray<BG_BaseStat> base_stats;
+	TypedArray<BG_BaseStat> get_base_stats() const { return base_stats; }
 
 	HashMap<StringName, BG_ResourceTypeDetails *> resource_type_details;
 	BG_ResourceTypeDetails *get_resource_type_details_by_id(StringName resource_id) const {
@@ -1684,7 +1755,16 @@ public:
 	static String get_job_challenge_rating(const TypedArray<BG_Monster> monsters);
 
 private:
-	Dictionary data;
-
 	void try_parse_data(const String &file_path);
+	void try_pause_bder_data(const String &file_path);
+
+	BG_BaseStat *get_stat_from_unique_id(int unique_id) const {
+		for (int i = 0; i < base_stats.size(); i++) {
+			BG_BaseStat *stat = cast_to<BG_BaseStat>(base_stats[i]);
+			if (stat == nullptr) continue;
+
+			if (stat->unique_id == unique_id) return stat;
+		}
+		return nullptr;
+	}
 };

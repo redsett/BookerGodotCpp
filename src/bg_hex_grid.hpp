@@ -35,6 +35,7 @@ public:
         TURRET,
         NO_STOP_CELL,
         MISC_VISUAL_1,
+        COMBAT_ENVIRONMENT,
 	};
 
     static PackedStringArray get_hex_type_names() {
@@ -51,6 +52,7 @@ public:
         result.append("TURRET");
         result.append("NO_STOP_CELL");
         result.append("MISC_VISUAL_1");
+        result.append("COMBAT_ENVIRONMENT");
         return result;
     }
 
@@ -77,6 +79,10 @@ public:
     int seed2 = 0;
     int get_seed2() const { return seed2; }
     void set_seed2(int v) { seed2 = v; }
+
+    int combat_environment_seed = 0;
+    int get_combat_environment_seed() const { return combat_environment_seed; }
+    void set_combat_environment_seed(int v) { combat_environment_seed = v; }
 
     float asset_health_normalized_percent = 1.0;
     float get_asset_health_normalized_percent() const { return asset_health_normalized_percent; }

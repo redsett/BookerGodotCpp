@@ -220,6 +220,28 @@ void BG_HueShiftData::_bind_methods()
 }
 
 ////
+//// BG_BaseStat
+////
+void BG_BaseStat::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_unique_id"), &BG_BaseStat::get_unique_id);
+	ClassDB::bind_method(D_METHOD("get_is_base_value"), &BG_BaseStat::get_is_base_value);
+	ClassDB::bind_method(D_METHOD("get_value"), &BG_BaseStat::get_value);
+	// ClassDB::bind_method(D_METHOD("get_parent_stat_unique_id"), &BG_BaseStat::get_parent_stat_unique_id);
+	ClassDB::bind_method(D_METHOD("get_parent_stat_reference"), &BG_BaseStat::get_parent_stat_reference);
+	ClassDB::bind_method(D_METHOD("get_stat_id_name"), &BG_BaseStat::get_stat_id_name);
+}
+
+////
+//// BG_ContentStat
+////
+void BG_ContentStat::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_stat_reference"), &BG_ContentStat::get_stat_reference);
+	ClassDB::bind_method(D_METHOD("get_value"), &BG_ContentStat::get_value);
+}
+
+////
 //// BG_EffectRarityDetails
 ////
 void BG_EffectRarityDetails::_bind_methods()
@@ -424,6 +446,12 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_sell_value_tier"), &BG_ItemDetails::get_sell_value_tier);
 	ClassDB::bind_method(D_METHOD("get_fame_value_tier"), &BG_ItemDetails::get_fame_value_tier);
 	ClassDB::bind_method(D_METHOD("get_durability_value_tier"), &BG_ItemDetails::get_durability_value_tier);
+
+	ClassDB::bind_method(D_METHOD("get_use_dber_data"), &BG_ItemDetails::get_use_dber_data);
+	ClassDB::bind_method(D_METHOD("get_item_effectiveness_stats"), &BG_ItemDetails::get_item_effectiveness_stats);
+	ClassDB::bind_method(D_METHOD("get_effectiveness"), &BG_ItemDetails::get_effectiveness);
+	ClassDB::bind_method(D_METHOD("get_use_stat_requirements"), &BG_ItemDetails::get_use_stat_requirements);
+	ClassDB::bind_method(D_METHOD("get_item_stat_requirements"), &BG_ItemDetails::get_item_stat_requirements);
 
 	BIND_ENUM_CONSTANT(GEAR);
 	BIND_ENUM_CONSTANT(BEAST_PART);
@@ -841,6 +869,7 @@ void BG_CityInfo::_bind_methods()
 ////
 void BG_Booker_Globals::_bind_methods()
 {
+	ClassDB::bind_method(D_METHOD("get_global_curves"), &BG_Booker_Globals::get_global_curves);
 	ClassDB::bind_method(D_METHOD("get_starting_reputation"), &BG_Booker_Globals::get_starting_reputation);
 	ClassDB::bind_method(D_METHOD("get_chance_of_no_drop"), &BG_Booker_Globals::get_chance_of_no_drop);
 	ClassDB::bind_method(D_METHOD("get_combat_rounds_per_combat"), &BG_Booker_Globals::get_combat_rounds_per_combat);
@@ -889,6 +918,7 @@ void BG_Booker_DB::_bind_methods()
 
 	ClassDB::bind_method(D_METHOD("get_modding_path"), &BG_Booker_DB::get_modding_path);
 	ClassDB::bind_method(D_METHOD("get_globals"), &BG_Booker_DB::get_globals);
+	ClassDB::bind_method(D_METHOD("get_base_stats"), &BG_Booker_DB::get_base_stats);
 	ClassDB::bind_method(D_METHOD("get_objectives"), &BG_Booker_DB::get_objectives);
 	ClassDB::bind_method(D_METHOD("get_resource_type_details_by_id", "resource_id"), &BG_Booker_DB::get_resource_type_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_audio_data"), &BG_Booker_DB::get_audio_data);
@@ -935,6 +965,21 @@ void BG_Booker_DB::refresh_data()
 		UtilityFunctions::print("Log - Using modding booker data.");
 		try_parse_data(modding_data_path);
 	}
+
+	//
+	// Parse Booker DBer data.
+	//
+	const String booker_dber_data_file_name = "booker_dber_data.json";
+	const String modding_dber_data_path = modding_path + booker_dber_data_file_name;
+
+	try_pause_bder_data("res://" + booker_dber_data_file_name);
+
+	// If the mod data exists, then let it override any data that it has.
+	if (FileAccess::file_exists(modding_dber_data_path))
+	{
+		UtilityFunctions::print("Log - Using modding booker data.");
+		try_parse_data(modding_dber_data_path);
+	}
 }
 
 /* static */ void BG_Booker_DB::timer_test(Callable callable)
@@ -945,7 +990,7 @@ void BG_Booker_DB::refresh_data()
 
 void BG_Booker_DB::try_parse_data(const String &file_path)
 {
-	data = BG_JsonUtils::ParseJsonFile(file_path);
+	const Dictionary data = BG_JsonUtils::ParseJsonFile(file_path);
 
 	//UtilityFunctions::print(BG_JsonUtils::GetCBDSheet(data, "globals"));
 
@@ -2387,6 +2432,116 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			}
 		}
 	}
+}
+
+void BG_Booker_DB::try_pause_bder_data(const String &file_path)
+{
+	const Dictionary data = BG_JsonUtils::ParseJsonFile(file_path);
+	// UtilityFunctions::print(data["all_base_stats"]);
+
+	auto ensure_clean_path = [](const String& path) -> StringName {
+		return StringName(path.trim_prefix("/"));
+	};
+
+	{ // Global Curves
+		globals->global_curves.clear();
+
+		const Array lines = Array(data["global_curves"]);
+		for (int i = 0; i < lines.size(); i++) {
+			const Dictionary entry = lines[i];
+			const Dictionary curve_data = entry["curve_data"];
+			globals->global_curves[StringName(curve_data["param_name"])] = ensure_clean_path(curve_data["path"]);
+		}
+	}
+
+	{ // Base Stats
+		base_stats.clear();
+
+		const Array lines = Array(data["all_base_stats"]);
+		for (int i = 0; i < lines.size(); i++) {
+			const Dictionary entry = lines[i];
+			BG_BaseStat *new_class = memnew(BG_BaseStat);
+			new_class->unique_id = int(entry["unique_id"]);
+			new_class->is_base_value = bool(entry["is_base_value"]);
+			new_class->parent_stat_unique_id = int(entry["parent_stat_id"]);
+			new_class->value = float(entry["value"]);
+			new_class->stat_id_name = StringName(entry["stat_id_name"]);
+			base_stats.append(new_class);
+		}
+
+		// Set a reference to each of their parent stats.
+		for (int i = 0; i < base_stats.size(); i++) {
+			BG_BaseStat *stat = cast_to<BG_BaseStat>(base_stats[i]);
+			if (stat == nullptr || stat->parent_stat_unique_id < 0) continue;
+
+			stat->parent_stat_reference = get_stat_from_unique_id(stat->parent_stat_unique_id);
+		}
+	}
+
+	{ // Content
+		const Array lines = Array(data["all_content"]);
+		for (int i = 0; i < lines.size(); i++) {
+			const Dictionary entry = lines[i];
+			const StringName content_id = StringName(entry["id"]);
+			
+			// For now, we're going to append this info to an existing entry from the old Booker DB entry. So let's get that old entry.
+			BG_ItemDetails *item_details = nullptr;
+			for (int x = 0; x < items.size(); x++) {
+				BG_ItemDetails *item_dets = cast_to<BG_ItemDetails>(items[x]);
+				if (item_dets->id == content_id) {
+					item_details = item_dets;
+					break;
+				}
+			}
+			if (item_details == nullptr) {
+				UtilityFunctions::print("Could not find data for id : " + String(content_id));
+				continue;
+			}
+
+			item_details->use_dber_data = true;
+			item_details->effectiveness = float(entry["effectiveness"]);
+			item_details->use_stat_requirements = bool(entry["use_stat_requirements"]);
+
+			// Item Effectiveness Stats
+			const Array item_effectiveness_stats_lines = Array(entry["item_effectiveness_stats"]);
+			for (int x = 0; x < item_effectiveness_stats_lines.size(); x++) {
+				const Dictionary item_effectiveness_stat_entry = item_effectiveness_stats_lines[x];
+				
+				const float value = float(item_effectiveness_stat_entry["value"]);
+				if (value == 0.0) continue; // No need to store empty values.
+
+				BG_ContentStat *new_class = memnew(BG_ContentStat);
+				new_class->value = value;
+
+				// Store a reference to its relative stat.
+				const int unique_id = int(item_effectiveness_stat_entry["stat_unique_id"]);
+				new_class->stat_reference = get_stat_from_unique_id(unique_id);
+
+				item_details->item_effectiveness_stats.append(new_class);
+			}
+
+			// Item Stat Requirements
+			if (item_details->use_stat_requirements) {
+				const Array item_stat_requirement_lines = Array(entry["item_stat_requirements"]);
+				for (int x = 0; x < item_stat_requirement_lines.size(); x++) {
+					const Dictionary item_stat_requirement_entry = item_stat_requirement_lines[x];
+
+					const float value = float(item_stat_requirement_entry["value"]);
+					if (value == 0.0) continue; // No need to store empty values.
+
+					BG_ContentStat *new_class = memnew(BG_ContentStat);
+					new_class->value = value;
+
+					// Store a reference to its relative stat.
+					const int unique_id = int(item_stat_requirement_entry["stat_unique_id"]);
+					new_class->stat_reference = get_stat_from_unique_id(unique_id);
+
+					item_details->item_stat_requirements.append(new_class);
+				}
+			}
+		}
+	}
+
 }
 
 BG_Booker_DB::BG_Booker_DB()
