@@ -670,6 +670,10 @@ public:
 	float get_current_fame() const { return current_fame; }
 	void set_current_fame(float v) { current_fame = v; }
 
+	int level = 1;
+	int get_level() const { return level; }
+	void set_level(int v) { level = v; }
+
 	int weeks_left_to_finish_graft = 0;
 	int get_weeks_left_to_finish_graft() const { return weeks_left_to_finish_graft; }
 	void set_weeks_left_to_finish_graft(int v) { weeks_left_to_finish_graft = v; }
@@ -797,7 +801,10 @@ public:
 	bool get_use_stat_requirements() const { return use_stat_requirements; }
 
 	TypedArray<BG_ContentStat> item_stat_requirements;
-	TypedArray<BG_ContentStat> get_item_stat_requirements() const { return item_stat_requirements; }	
+	TypedArray<BG_ContentStat> get_item_stat_requirements() const { return item_stat_requirements; }
+
+	Vector2 level_range = Vector2(1, 1);
+	Vector2 get_level_range() const { return level_range; }
 };
 
 VARIANT_ENUM_CAST(BG_ItemDetails::ItemType);
@@ -1022,9 +1029,13 @@ public:
 	bool get_is_band_leader() const { return is_band_leader; }
 	void set_is_band_leader(bool v) { is_band_leader = v; }
 
-	int fame = 0;
-	int get_fame() const { return fame; }
-	void set_fame(int v) { fame = v; }
+	int level = 1;
+	int get_level() const { return level; }
+	void set_level(int v) { level = v; }
+
+	float experience = 0.0;
+	float get_experience() const { return experience; }
+	void set_experience(float v) { experience = v; }
 
 	Vector3 scale;
 	Vector3 get_scale() const { return scale; }
@@ -1285,6 +1296,10 @@ public:
 
 	float challenge_rating = 0.0f;
 	float get_challenge_rating() const { return challenge_rating; }
+	
+	int level = 1;
+	int get_level() const { return level; }
+	void set_level(int v) { level = v; }
 
 	int monster_type = 0;
 	int get_monster_type() const { return monster_type; }
@@ -1315,6 +1330,20 @@ public:
 	void set_job(Ref<BG_Job> value) { job = value; };
 
 	String get_challenge_rating_fraction_string() const;
+
+
+	// New DBer Data
+	bool use_dber_data = false;
+	bool get_use_dber_data() const { return use_dber_data; }
+	
+	float effectiveness = 0.0;
+	float get_effectiveness() const { return effectiveness; }
+
+	TypedArray<BG_ContentStat> effectiveness_stats;
+	TypedArray<BG_ContentStat> get_effectiveness_stats() const { return effectiveness_stats; }
+
+	Vector2 level_range = Vector2(1, 1);
+	Vector2 get_level_range() const { return level_range; }
 };
 
 ////

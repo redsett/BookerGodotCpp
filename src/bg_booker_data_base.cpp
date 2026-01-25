@@ -386,6 +386,8 @@ void BG_Item::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_current_durability"), &BG_Item::set_current_durability);
 	ClassDB::bind_method(D_METHOD("get_current_fame"), &BG_Item::get_current_fame);
 	ClassDB::bind_method(D_METHOD("set_current_fame"), &BG_Item::set_current_fame);
+	ClassDB::bind_method(D_METHOD("get_level"), &BG_Item::get_level);
+	ClassDB::bind_method(D_METHOD("set_level"), &BG_Item::set_level);
 	ClassDB::bind_method(D_METHOD("get_weeks_left_to_finish_graft"), &BG_Item::get_weeks_left_to_finish_graft);
 	ClassDB::bind_method(D_METHOD("set_weeks_left_to_finish_graft"), &BG_Item::set_weeks_left_to_finish_graft);
 	ClassDB::bind_method(D_METHOD("get_number_of_jobs_participated_in"), &BG_Item::get_number_of_jobs_participated_in);
@@ -412,6 +414,7 @@ void BG_Item::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_equipped"), "set_is_equipped", "get_is_equipped");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_durability"), "set_current_durability", "get_current_durability");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_fame"), "set_current_fame", "get_current_fame");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "weeks_left_to_finish_graft"), "set_weeks_left_to_finish_graft", "get_weeks_left_to_finish_graft");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "number_of_jobs_participated_in"), "set_number_of_jobs_participated_in", "get_number_of_jobs_participated_in");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "consecutive_number_of_jobs_participated_in"), "set_consecutive_number_of_jobs_participated_in", "get_consecutive_number_of_jobs_participated_in");
@@ -452,6 +455,7 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_effectiveness"), &BG_ItemDetails::get_effectiveness);
 	ClassDB::bind_method(D_METHOD("get_use_stat_requirements"), &BG_ItemDetails::get_use_stat_requirements);
 	ClassDB::bind_method(D_METHOD("get_item_stat_requirements"), &BG_ItemDetails::get_item_stat_requirements);
+	ClassDB::bind_method(D_METHOD("get_level_range"), &BG_ItemDetails::get_level_range);
 
 	BIND_ENUM_CONSTANT(GEAR);
 	BIND_ENUM_CONSTANT(BEAST_PART);
@@ -481,8 +485,10 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_random_variation"), &BG_BandMember::set_random_variation);
 	ClassDB::bind_method(D_METHOD("get_is_band_leader"), &BG_BandMember::get_is_band_leader);
 	ClassDB::bind_method(D_METHOD("set_is_band_leader"), &BG_BandMember::set_is_band_leader);
-	ClassDB::bind_method(D_METHOD("get_fame"), &BG_BandMember::get_fame);
-	ClassDB::bind_method(D_METHOD("set_fame"), &BG_BandMember::set_fame);
+	ClassDB::bind_method(D_METHOD("get_level"), &BG_BandMember::get_level);
+	ClassDB::bind_method(D_METHOD("set_level"), &BG_BandMember::set_level);
+	ClassDB::bind_method(D_METHOD("get_experience"), &BG_BandMember::get_experience);
+	ClassDB::bind_method(D_METHOD("set_experience"), &BG_BandMember::set_experience);
 	ClassDB::bind_method(D_METHOD("get_scale"), &BG_BandMember::get_scale);
 	ClassDB::bind_method(D_METHOD("set_scale"), &BG_BandMember::set_scale);
 	ClassDB::bind_method(D_METHOD("get_caste_id"), &BG_BandMember::get_caste_id);
@@ -505,7 +511,8 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "slot_index"), "set_slot_index", "get_slot_index");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_band_leader"), "set_is_band_leader", "get_is_band_leader");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "fame"), "set_fame", "get_fame");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "experience"), "set_experience", "get_experience");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "scale"), "set_scale", "get_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "caste_id"), "set_caste_id", "get_caste_id");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipment"), "set_equipment", "get_equipment");
@@ -662,22 +669,30 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_random_variation"), &BG_Monster::get_random_variation);
 	ClassDB::bind_method(D_METHOD("set_random_variation"), &BG_Monster::set_random_variation);
 	ClassDB::bind_method(D_METHOD("get_challenge_rating"), &BG_Monster::get_challenge_rating);
+	ClassDB::bind_method(D_METHOD("get_level"), &BG_Monster::get_level);
+	ClassDB::bind_method(D_METHOD("set_level"), &BG_Monster::set_level);
 	ClassDB::bind_method(D_METHOD("get_monster_type"), &BG_Monster::get_monster_type);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_Monster::get_stats);
 	ClassDB::bind_method(D_METHOD("get_element_availability_ids"), &BG_Monster::get_element_availability_ids);
 	ClassDB::bind_method(D_METHOD("get_job"), &BG_Monster::get_job);
 	ClassDB::bind_method(D_METHOD("set_job"), &BG_Monster::set_job);
-
+	
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_Monster::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_model_path"), &BG_Monster::get_model_path);
 	ClassDB::bind_method(D_METHOD("get_effect_ids"), &BG_Monster::get_effect_ids);
 	ClassDB::bind_method(D_METHOD("get_out_of_combat_effect_ids"), &BG_Monster::get_out_of_combat_effect_ids);
 	ClassDB::bind_method(D_METHOD("get_hue_shift_data"), &BG_Monster::get_hue_shift_data);
 	ClassDB::bind_method(D_METHOD("get_challenge_rating_fraction_string"), &BG_Monster::get_challenge_rating_fraction_string);
-
+	
+	ClassDB::bind_method(D_METHOD("get_use_dber_data"), &BG_Monster::get_use_dber_data);
+	ClassDB::bind_method(D_METHOD("get_effectiveness"), &BG_Monster::get_effectiveness);
+	ClassDB::bind_method(D_METHOD("get_effectiveness_stats"), &BG_Monster::get_effectiveness_stats);
+	ClassDB::bind_method(D_METHOD("get_level_range"), &BG_Monster::get_level_range);
+	
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
 }
 
 String BG_Monster::get_challenge_rating_fraction_string() const
@@ -2439,9 +2454,37 @@ void BG_Booker_DB::try_pause_bder_data(const String &file_path)
 	const Dictionary data = BG_JsonUtils::ParseJsonFile(file_path);
 	// UtilityFunctions::print(data["all_base_stats"]);
 
+	auto get_find_data_by_param_name = [](const String& param_name, const Array& array_to_parse) -> Dictionary {
+		for (int i = 0; i < array_to_parse.size(); i++) {
+			const Dictionary entry = array_to_parse[i];
+			const String para_name = entry["param_name"];
+			if (param_name == para_name) {
+				return entry;
+			}
+		}
+		return {};
+	};
+
 	auto ensure_clean_path = [](const String& path) -> StringName {
 		return StringName(path.trim_prefix("/"));
 	};
+
+	HashMap<String, TypedArray<StringName>> global_enums;
+	{ // Global Enums
+		const Array lines = Array(data["global_enums"]);
+		for (int i = 0; i < lines.size(); i++) {
+			const Dictionary entry = lines[i];
+			TypedArray<StringName> enums;
+			
+			const Array value_line = Array(entry["values"]);
+			for (int y = 0; y < value_line.size(); y++) {
+				const StringName v = StringName(value_line[y]);
+				enums.append(v);
+			}
+
+			global_enums[entry["enum_name"]] = enums;
+		}
+	}
 
 	{ // Global Curves
 		globals->global_curves.clear();
@@ -2483,63 +2526,130 @@ void BG_Booker_DB::try_pause_bder_data(const String &file_path)
 		for (int i = 0; i < lines.size(); i++) {
 			const Dictionary entry = lines[i];
 			const StringName content_id = StringName(entry["id"]);
+
+			const Array misc_params = entry["misc_params"];
+			const int content_type = int(get_find_data_by_param_name("content_type", misc_params)["value"]);
 			
-			// For now, we're going to append this info to an existing entry from the old Booker DB entry. So let's get that old entry.
-			BG_ItemDetails *item_details = nullptr;
-			for (int x = 0; x < items.size(); x++) {
-				BG_ItemDetails *item_dets = cast_to<BG_ItemDetails>(items[x]);
-				if (item_dets->id == content_id) {
-					item_details = item_dets;
-					break;
+			//
+			// Equipment
+			//
+			if (content_type == 0) {
+				// For now, we're going to append this info to an existing entry from the old Booker DB entry. So let's get that old entry.
+				BG_ItemDetails *item_details = nullptr;
+				for (int x = 0; x < items.size(); x++) {
+					BG_ItemDetails *item_dets = cast_to<BG_ItemDetails>(items[x]);
+					if (item_dets->id == content_id) {
+						item_details = item_dets;
+						break;
+					}
 				}
-			}
-			if (item_details == nullptr) {
-				UtilityFunctions::print("Could not find data for id : " + String(content_id));
-				continue;
-			}
+				if (item_details == nullptr) {
+					UtilityFunctions::print("Could not find data for id : " + String(content_id));
+					continue;
+				}
 
-			item_details->use_dber_data = true;
-			item_details->effectiveness = float(entry["effectiveness"]);
-			item_details->use_stat_requirements = bool(entry["use_stat_requirements"]);
+				item_details->use_dber_data = true;
+				item_details->effectiveness = float(entry["effectiveness"]);
+				item_details->use_stat_requirements = bool(entry["use_stat_requirements"]);
+				item_details->icon_path = ensure_clean_path(get_find_data_by_param_name("icon", misc_params)["path"]);
+				item_details->mesh_path = ensure_clean_path(get_find_data_by_param_name("mesh_scene_path", misc_params)["path"]);
+				item_details->animation_attach_socket= int(get_find_data_by_param_name("anim_attach_socket", misc_params)["value"]) + 1;
+				const Dictionary level_range = get_find_data_by_param_name("level_range", misc_params);
+				item_details->level_range = Vector2(int(level_range["value_x"]), int(level_range["value_y"]));
 
-			// Item Effectiveness Stats
-			const Array item_effectiveness_stats_lines = Array(entry["item_effectiveness_stats"]);
-			for (int x = 0; x < item_effectiveness_stats_lines.size(); x++) {
-				const Dictionary item_effectiveness_stat_entry = item_effectiveness_stats_lines[x];
-				
-				const float value = float(item_effectiveness_stat_entry["value"]);
-				if (value == 0.0) continue; // No need to store empty values.
+				// Available Castes
+				item_details->caste_ids.clear();
+				const Array available_castes = Array(get_find_data_by_param_name("available_castes", misc_params)["array_values"]);
+				for (int x = 0; x < available_castes.size(); x++) {
+					const Array aa = available_castes[x];
+					const Dictionary e = aa[0];
+					const StringName caste_id = global_enums["caste_types"][int(e["value"])];
+					item_details->caste_ids.append(caste_id);
+				}
 
-				BG_ContentStat *new_class = memnew(BG_ContentStat);
-				new_class->value = value;
-
-				// Store a reference to its relative stat.
-				const int unique_id = int(item_effectiveness_stat_entry["stat_unique_id"]);
-				new_class->stat_reference = get_stat_from_unique_id(unique_id);
-
-				item_details->item_effectiveness_stats.append(new_class);
-			}
-
-			// Item Stat Requirements
-			if (item_details->use_stat_requirements) {
-				const Array item_stat_requirement_lines = Array(entry["item_stat_requirements"]);
-				for (int x = 0; x < item_stat_requirement_lines.size(); x++) {
-					const Dictionary item_stat_requirement_entry = item_stat_requirement_lines[x];
-
-					const float value = float(item_stat_requirement_entry["value"]);
+				// Item Effectiveness Stats
+				const Array item_effectiveness_stats_lines = Array(entry["item_effectiveness_stats"]);
+				for (int x = 0; x < item_effectiveness_stats_lines.size(); x++) {
+					const Dictionary item_effectiveness_stat_entry = item_effectiveness_stats_lines[x];
+					
+					const float value = float(item_effectiveness_stat_entry["value"]);
 					if (value == 0.0) continue; // No need to store empty values.
 
 					BG_ContentStat *new_class = memnew(BG_ContentStat);
 					new_class->value = value;
 
 					// Store a reference to its relative stat.
-					const int unique_id = int(item_stat_requirement_entry["stat_unique_id"]);
+					const int unique_id = int(item_effectiveness_stat_entry["stat_unique_id"]);
 					new_class->stat_reference = get_stat_from_unique_id(unique_id);
 
-					item_details->item_stat_requirements.append(new_class);
+					item_details->item_effectiveness_stats.append(new_class);
+				}
+
+				// Item Stat Requirements
+				if (item_details->use_stat_requirements) {
+					const Array item_stat_requirement_lines = Array(entry["item_stat_requirements"]);
+					for (int x = 0; x < item_stat_requirement_lines.size(); x++) {
+						const Dictionary item_stat_requirement_entry = item_stat_requirement_lines[x];
+
+						const float value = float(item_stat_requirement_entry["value"]);
+						if (value == 0.0) continue; // No need to store empty values.
+
+						BG_ContentStat *new_class = memnew(BG_ContentStat);
+						new_class->value = value;
+
+						// Store a reference to its relative stat.
+						const int unique_id = int(item_stat_requirement_entry["stat_unique_id"]);
+						new_class->stat_reference = get_stat_from_unique_id(unique_id);
+
+						item_details->item_stat_requirements.append(new_class);
+					}
+				}
+			}
+
+			//
+			// Monsters
+			//
+			if (content_type == 1) {
+				// For now, we're going to append this info to an existing entry from the old Booker DB entry. So let's get that old entry.
+				BG_Monster *monster_details = nullptr;
+				for (int x = 0; x < monster_types.size(); x++) {
+					BG_Monster *monster_dets = cast_to<BG_Monster>(monster_types[x]);
+					if (monster_dets->id == content_id) {
+						monster_details = monster_dets;
+						break;
+					}
+				}
+				if (monster_details == nullptr) {
+					UtilityFunctions::print("Could not find data for id : " + String(content_id));
+					continue;
+				}
+
+				monster_details->use_dber_data = true;
+				monster_details->effectiveness = float(entry["effectiveness"]);
+				const Dictionary level_range = get_find_data_by_param_name("level_range", misc_params);
+				monster_details->level_range = Vector2(int(level_range["value_x"]), int(level_range["value_y"]));
+				monster_details->icon_path = ensure_clean_path(get_find_data_by_param_name("icon", misc_params)["path"]);
+
+				// Effectiveness Stats
+				const Array effectiveness_stats_lines = Array(entry["effectiveness_stats"]);
+				for (int x = 0; x < effectiveness_stats_lines.size(); x++) {
+					const Dictionary effectiveness_stat_entry = effectiveness_stats_lines[x];
+					
+					const float value = float(effectiveness_stat_entry["value"]);
+					if (value == 0.0) continue; // No need to store empty values.
+
+					BG_ContentStat *new_class = memnew(BG_ContentStat);
+					new_class->value = value;
+
+					// Store a reference to its relative stat.
+					const int unique_id = int(effectiveness_stat_entry["stat_unique_id"]);
+					new_class->stat_reference = get_stat_from_unique_id(unique_id);
+
+					monster_details->effectiveness_stats.append(new_class);
 				}
 			}
 		}
+
 	}
 
 }
