@@ -237,8 +237,37 @@ void BG_BaseStat::_bind_methods()
 ////
 void BG_ContentStat::_bind_methods()
 {
+	ClassDB::bind_static_method("BG_ContentStat", D_METHOD("get_total_stat_value", "stat"), &BG_ContentStat::get_total_stat_value);
+
 	ClassDB::bind_method(D_METHOD("get_stat_reference"), &BG_ContentStat::get_stat_reference);
 	ClassDB::bind_method(D_METHOD("get_value"), &BG_ContentStat::get_value);
+	ClassDB::bind_method(D_METHOD("get_randomize_damage_type"), &BG_ContentStat::get_randomize_damage_type);
+	ClassDB::bind_method(D_METHOD("get_randomize_resistance_type"), &BG_ContentStat::get_randomize_resistance_type);
+}
+
+/* static */ float BG_ContentStat::get_total_stat_value(const BG_BaseStat *stat)
+{
+	if (stat == nullptr) return 0.0;
+	if (stat->get_is_base_value())
+		return stat->get_value();
+	
+	float result = 0.0;
+	float multiplier = 1.0;
+	multiplier *= stat->get_value();
+	
+	const BG_BaseStat *current_stat = stat;
+	while (current_stat->get_parent_stat_reference() != nullptr) {
+		current_stat = current_stat->get_parent_stat_reference();
+		
+		if (current_stat->get_is_base_value())
+			result += current_stat->get_value();
+		else
+			multiplier *= current_stat->get_value();
+	}
+	
+	float amount_to_mult = 1.0 / multiplier;
+	result *= amount_to_mult;
+	return result;
 }
 
 ////
@@ -955,6 +984,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_revert_localization_to_english"), &BG_Booker_DB::set_revert_localization_to_english);
 	ClassDB::bind_method(D_METHOD("get_localize_data", "sheet_name", "key", "language"), &BG_Booker_DB::get_localize_data);
 	ClassDB::bind_method(D_METHOD("get_localize_string", "sheet_name", "key", "language", "ignore_code_data"), &BG_Booker_DB::get_localize_string);
+	ClassDB::bind_method(D_METHOD("get_stat_from_stat_id_name", "stat_id_name"), &BG_Booker_DB::get_stat_from_stat_id_name);
 }
 
 BG_Booker_DB *BG_Booker_DB::get_singleton()
@@ -2567,6 +2597,9 @@ void BG_Booker_DB::try_pause_bder_data(const String &file_path)
 					item_details->caste_ids.append(caste_id);
 				}
 
+				const bool randomize_damage_type = bool(entry["randomize_damage_type"]);
+				const bool randomize_resistance_type = bool(entry["randomize_resistance_type"]);
+
 				// Item Effectiveness Stats
 				const Array item_effectiveness_stats_lines = Array(entry["item_effectiveness_stats"]);
 				for (int x = 0; x < item_effectiveness_stats_lines.size(); x++) {
@@ -2581,6 +2614,9 @@ void BG_Booker_DB::try_pause_bder_data(const String &file_path)
 					// Store a reference to its relative stat.
 					const int unique_id = int(item_effectiveness_stat_entry["stat_unique_id"]);
 					new_class->stat_reference = get_stat_from_unique_id(unique_id);
+
+					new_class->randomize_damage_type = randomize_damage_type;
+					new_class->randomize_resistance_type = randomize_resistance_type;
 
 					item_details->item_effectiveness_stats.append(new_class);
 				}

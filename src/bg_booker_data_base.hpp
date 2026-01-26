@@ -369,8 +369,16 @@ public:
 	BG_BaseStat *stat_reference = nullptr;
 	BG_BaseStat *get_stat_reference() const { return stat_reference; }
 
-	float value;
+	float value = 0.0;
 	float get_value() const { return value; }
+	
+	bool randomize_damage_type = false;
+	bool get_randomize_damage_type() const { return randomize_damage_type; }
+
+	bool randomize_resistance_type = false;
+	bool get_randomize_resistance_type() const { return randomize_resistance_type; }
+
+	static float get_total_stat_value(const BG_BaseStat *stat);
 };
 
 ////
@@ -1782,6 +1790,16 @@ public:
 
 	static float get_job_challenge_rating_value(const TypedArray<BG_Monster> monsters);
 	static String get_job_challenge_rating(const TypedArray<BG_Monster> monsters);
+
+	BG_BaseStat *get_stat_from_stat_id_name(StringName stat_id_name) const {
+		for (int i = 0; i < base_stats.size(); i++) {
+			BG_BaseStat *stat = cast_to<BG_BaseStat>(base_stats[i]);
+			if (stat == nullptr) continue;
+
+			if (stat->stat_id_name == stat_id_name) return stat;
+		}
+		return nullptr;
+	}
 
 private:
 	void try_parse_data(const String &file_path);
