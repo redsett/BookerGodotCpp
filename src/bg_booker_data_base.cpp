@@ -1352,7 +1352,9 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_booker_skill_tree_slot_details_class->skill_name = entry["skill_name"];
 				new_booker_skill_tree_slot_details_class->skill_description = entry["skill_description"];
 				new_booker_skill_tree_slot_details_class->required_rep = int(entry["required_rep"]);
-				new_booker_skill_tree_slot_details_class->parent_skill_id = entry["parent_skill"];
+				if (entry.has("parent_skill")) {
+					new_booker_skill_tree_slot_details_class->parent_skill_id = entry["parent_skill"];
+				}
 
 				// Value Attributes
 				const Array value_attribute_lines = Array(entry["value_attributes"]);
@@ -1429,7 +1431,9 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_stat_types->nice_name = entry["name"];
 				new_stat_types->icon_path = entry["icon_path"];
 				new_stat_types->is_damage_type = bool(entry["is_damage_type"]);
-				new_stat_types->weak_to_element = entry["weak_to_element"];
+				if (entry.has("weak_to_element")) {
+					new_stat_types->weak_to_element = entry["weak_to_element"];
+				}
 				new_stat_types->widget_color = convert_int_to_color(int(entry["widget_color"]));
 				new_stat_types->text_color = convert_int_to_color(int(entry["text_color"]));
 				new_stat_types->in_world_color = convert_int_to_color(int(entry["in_world_color"]));
@@ -1798,6 +1802,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					for (int it = 0; it < item_types.size(); it++)
 					{
 						const String item_type = item_types[it];
+						if (!drops_entry.has(item_type)) continue;
 						const StringName item_type_id = drops_entry[item_type];
 						if (item_type_id.is_empty()) continue;
 						
@@ -1871,6 +1876,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 						for (int it = 0; it < item_types.size(); it++)
 						{
 							const String item_type = item_types[it];
+							if (!drops_entry.has(item_type)) continue;
 							const StringName item_type_id = drops_entry[item_type];
 							if (item_type_id.is_empty()) continue;
 							
@@ -1888,6 +1894,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 							new_job_monster_details_class->drops.append(new_job_reward_item_class);
 						}
 
+						if (!drops_entry.has("item_drop_pool")) continue;
 						const StringName item_drop_pool_id = drops_entry["item_drop_pool"];
 						if (item_drop_pool_id.is_empty()) continue;
 
@@ -2248,7 +2255,9 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_effect_class->id = entry["id"];
 				new_effect_class->nice_name = entry["name"];
 				new_effect_class->use_owning_item_icon = bool(entry["use_owning_item_icon"]);
-				new_effect_class->status_icon_path = entry["status_icon"];
+				if (entry.has("status_icon")) {
+					new_effect_class->status_icon_path = entry["status_icon"];
+				}
 
 				// Rarities
 				const Array rarity_lines = Array(entry["details_per_rarity"]);
@@ -2309,7 +2318,9 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				for (int y = 0; y < equipment_id_lines.size(); y++)
 				{
 					const Dictionary equipment_id_entry = equipment_id_lines[y];
-					new_anim_details_class->equipment_ids.append(equipment_id_entry["equipment_id"]);
+					if (equipment_id_entry.has("equipment_id")) {
+						new_anim_details_class->equipment_ids.append(equipment_id_entry["equipment_id"]);
+					}
 				}
 
 				equipment_animation_details.append(new_anim_details_class);
@@ -2372,6 +2383,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_objective_class->beast_part_drop_count = int(reward_entry["beast_part_drop_count"]);
 					new_objective_class->equipment_drop_count = int(reward_entry["equipment_drop_count"]);
 
+					if (!reward_entry.has("item_drop_pool")) continue;
 					const StringName item_drop_pool_id = reward_entry["item_drop_pool"];
 					if (item_drop_pool_id.is_empty()) continue;
 
