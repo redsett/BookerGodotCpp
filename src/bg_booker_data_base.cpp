@@ -382,6 +382,59 @@ void BG_UnitStat::_bind_methods()
 }
 
 ////
+//// BG_AnimationDetails
+////
+void BG_AnimationDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_caste_or_monster_id"), &BG_AnimationDetails::get_caste_or_monster_id);
+	ClassDB::bind_method(D_METHOD("get_anim_type"), &BG_AnimationDetails::get_anim_type);
+	ClassDB::bind_method(D_METHOD("get_anim_name"), &BG_AnimationDetails::get_anim_name);
+
+	ClassDB::bind_static_method("BG_AnimationDetails", D_METHOD("get_all_anim_details_of_id", "from", "id"), &BG_AnimationDetails::get_all_anim_details_of_id);
+	ClassDB::bind_static_method("BG_AnimationDetails", D_METHOD("get_anim_details", "from", "id", "anim_type"), &BG_AnimationDetails::get_anim_details);
+
+	BIND_ENUM_CONSTANT(IDLE);
+	BIND_ENUM_CONSTANT(COMBAT_IDLE);
+	BIND_ENUM_CONSTANT(ATTACK1);
+	BIND_ENUM_CONSTANT(ATTACK2);
+	BIND_ENUM_CONSTANT(ATTACK3);
+	BIND_ENUM_CONSTANT(UNIQUE_SKILL1);
+	BIND_ENUM_CONSTANT(RUN);
+	BIND_ENUM_CONSTANT(GUARD);
+	BIND_ENUM_CONSTANT(EVADE);
+	BIND_ENUM_CONSTANT(TAKING_DAMAGE);
+	BIND_ENUM_CONSTANT(AT_LOW_HP);
+	BIND_ENUM_CONSTANT(DEATH);
+	BIND_ENUM_CONSTANT(TRIUMPH);
+	BIND_ENUM_CONSTANT(FLOURISH);
+}
+
+/* static */ TypedArray<BG_AnimationDetails> BG_AnimationDetails::get_all_anim_details_of_id(TypedArray<BG_AnimationDetails> from, StringName id)
+{
+	TypedArray<BG_AnimationDetails> result;
+	for (int i = 0; i < from.size(); ++i) {
+		BG_AnimationDetails *anim_dets = cast_to<BG_AnimationDetails>(from[i]);
+		if (anim_dets == nullptr) continue;
+		if (anim_dets->get_caste_or_monster_id() == id) {
+			result.append(anim_dets);
+		}
+	}
+	return result;
+}
+
+/* static */ BG_AnimationDetails *BG_AnimationDetails::get_anim_details(TypedArray<BG_AnimationDetails> from, StringName id, AnimationType anim_type)
+{
+	for (int i = 0; i < from.size(); ++i) {
+		BG_AnimationDetails *anim_dets = cast_to<BG_AnimationDetails>(from[i]);
+		if (anim_dets->get_caste_or_monster_id() != id) continue;
+		if (anim_dets->get_anim_type() == anim_type) {
+			return anim_dets;
+		}
+	}
+	return nullptr;
+}
+
+////
 //// BG_ItemSlotType
 ////
 void BG_ItemSlotType::_bind_methods()
@@ -485,6 +538,7 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_use_stat_requirements"), &BG_ItemDetails::get_use_stat_requirements);
 	ClassDB::bind_method(D_METHOD("get_item_stat_requirements"), &BG_ItemDetails::get_item_stat_requirements);
 	ClassDB::bind_method(D_METHOD("get_level_range"), &BG_ItemDetails::get_level_range);
+	ClassDB::bind_method(D_METHOD("get_item_animations"), &BG_ItemDetails::get_item_animations);
 
 	BIND_ENUM_CONSTANT(GEAR);
 	BIND_ENUM_CONSTANT(BEAST_PART);
@@ -717,6 +771,7 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_effectiveness"), &BG_Monster::get_effectiveness);
 	ClassDB::bind_method(D_METHOD("get_effectiveness_stats"), &BG_Monster::get_effectiveness_stats);
 	ClassDB::bind_method(D_METHOD("get_level_range"), &BG_Monster::get_level_range);
+	ClassDB::bind_method(D_METHOD("get_animations"), &BG_Monster::get_animations);
 	
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
@@ -1017,7 +1072,7 @@ void BG_Booker_DB::refresh_data()
 	const String booker_dber_data_file_name = "booker_dber_data.json";
 	const String modding_dber_data_path = modding_path + booker_dber_data_file_name;
 
-	try_pause_bder_data("res://" + booker_dber_data_file_name);
+	try_parse_bder_data("res://" + booker_dber_data_file_name);
 
 	// If the mod data exists, then let it override any data that it has.
 	if (FileAccess::file_exists(modding_dber_data_path))
@@ -2491,13 +2546,13 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 	}
 }
 
-void BG_Booker_DB::try_pause_bder_data(const String &file_path)
+void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 {
 	const Dictionary data = BG_JsonUtils::ParseJsonFile(file_path);
 	// UtilityFunctions::print(data["all_base_stats"]);
 
 	auto get_find_data_by_param_name = [](const String& param_name, const Array& array_to_parse) -> Dictionary {
-		for (int i = 0; i < array_to_parse.size(); i++) {
+		for (int i = 0; i < array_to_parse.size(); ++i) {
 			const Dictionary entry = array_to_parse[i];
 			const String para_name = entry["param_name"];
 			if (param_name == para_name) {
@@ -2514,12 +2569,12 @@ void BG_Booker_DB::try_pause_bder_data(const String &file_path)
 	HashMap<String, TypedArray<StringName>> global_enums;
 	{ // Global Enums
 		const Array lines = Array(data["global_enums"]);
-		for (int i = 0; i < lines.size(); i++) {
+		for (int i = 0; i < lines.size(); ++i) {
 			const Dictionary entry = lines[i];
 			TypedArray<StringName> enums;
 			
 			const Array value_line = Array(entry["values"]);
-			for (int y = 0; y < value_line.size(); y++) {
+			for (int y = 0; y < value_line.size(); ++y) {
 				const StringName v = StringName(value_line[y]);
 				enums.append(v);
 			}
@@ -2532,7 +2587,7 @@ void BG_Booker_DB::try_pause_bder_data(const String &file_path)
 		globals->global_curves.clear();
 
 		const Array lines = Array(data["global_curves"]);
-		for (int i = 0; i < lines.size(); i++) {
+		for (int i = 0; i < lines.size(); ++i) {
 			const Dictionary entry = lines[i];
 			const Dictionary curve_data = entry["curve_data"];
 			globals->global_curves[StringName(curve_data["param_name"])] = ensure_clean_path(curve_data["path"]);
@@ -2543,7 +2598,7 @@ void BG_Booker_DB::try_pause_bder_data(const String &file_path)
 		base_stats.clear();
 
 		const Array lines = Array(data["all_base_stats"]);
-		for (int i = 0; i < lines.size(); i++) {
+		for (int i = 0; i < lines.size(); ++i) {
 			const Dictionary entry = lines[i];
 			BG_BaseStat *new_class = memnew(BG_BaseStat);
 			new_class->unique_id = int(entry["unique_id"]);
@@ -2555,7 +2610,7 @@ void BG_Booker_DB::try_pause_bder_data(const String &file_path)
 		}
 
 		// Set a reference to each of their parent stats.
-		for (int i = 0; i < base_stats.size(); i++) {
+		for (int i = 0; i < base_stats.size(); ++i) {
 			BG_BaseStat *stat = cast_to<BG_BaseStat>(base_stats[i]);
 			if (stat == nullptr || stat->parent_stat_unique_id < 0) continue;
 
@@ -2565,7 +2620,7 @@ void BG_Booker_DB::try_pause_bder_data(const String &file_path)
 
 	{ // Content
 		const Array lines = Array(data["all_content"]);
-		for (int i = 0; i < lines.size(); i++) {
+		for (int i = 0; i < lines.size(); ++i) {
 			const Dictionary entry = lines[i];
 			const StringName content_id = StringName(entry["id"]);
 
@@ -2578,7 +2633,7 @@ void BG_Booker_DB::try_pause_bder_data(const String &file_path)
 			if (content_type == 0) {
 				// For now, we're going to append this info to an existing entry from the old Booker DB entry. So let's get that old entry.
 				BG_ItemDetails *item_details = nullptr;
-				for (int x = 0; x < items.size(); x++) {
+				for (int x = 0; x < items.size(); ++x) {
 					BG_ItemDetails *item_dets = cast_to<BG_ItemDetails>(items[x]);
 					if (item_dets->id == content_id) {
 						item_details = item_dets;
@@ -2599,14 +2654,33 @@ void BG_Booker_DB::try_pause_bder_data(const String &file_path)
 				const Dictionary level_range = get_find_data_by_param_name("level_range", misc_params);
 				item_details->level_range = Vector2(int(level_range["value_x"]), int(level_range["value_y"]));
 
-				// Available Castes
-				item_details->caste_ids.clear();
-				const Array available_castes = Array(get_find_data_by_param_name("available_castes", misc_params)["array_values"]);
-				for (int x = 0; x < available_castes.size(); x++) {
-					const Array aa = available_castes[x];
-					const Dictionary e = aa[0];
-					const StringName caste_id = global_enums["caste_types"][int(e["value"])];
-					item_details->caste_ids.append(caste_id);
+				{ // Available Castes
+					item_details->caste_ids.clear();
+					const Array available_castes = Array(get_find_data_by_param_name("available_castes", misc_params)["array_values"]);
+					for (int x = 0; x < available_castes.size(); ++x) {
+						const Array aa = available_castes[x];
+						const Dictionary e = aa[0];
+						const StringName caste_id = global_enums["caste_types"][int(e["value"])];
+						item_details->caste_ids.append(caste_id);
+					}
+				}
+
+				{ // Item Animations
+					item_details->item_animations.clear();
+					const Array item_animations = Array(get_find_data_by_param_name("animations", misc_params)["array_values"]);
+					for (int x = 0; x < item_animations.size(); ++x) {
+						const Array aa = item_animations[x];
+						
+						BG_AnimationDetails *new_class = memnew(BG_AnimationDetails);
+						const Dictionary caste_dict = aa[0];
+						new_class->caste_or_monster_id = global_enums["caste_types"][int(caste_dict["value"])];
+						const Dictionary anim_type_dict = aa[1];
+						new_class->anim_type = static_cast<BG_AnimationDetails::AnimationType>(int(anim_type_dict["value"]));
+						const Dictionary anim_name_dict = aa[2];
+						new_class->anim_name = StringName(anim_name_dict["value"]);
+
+						item_details->item_animations.append(new_class);
+					}
 				}
 
 				const bool randomize_damage_type = bool(entry["randomize_damage_type"]);
@@ -2614,7 +2688,7 @@ void BG_Booker_DB::try_pause_bder_data(const String &file_path)
 
 				// Item Effectiveness Stats
 				const Array item_effectiveness_stats_lines = Array(entry["item_effectiveness_stats"]);
-				for (int x = 0; x < item_effectiveness_stats_lines.size(); x++) {
+				for (int x = 0; x < item_effectiveness_stats_lines.size(); ++x) {
 					const Dictionary item_effectiveness_stat_entry = item_effectiveness_stats_lines[x];
 					
 					const float value = float(item_effectiveness_stat_entry["value"]);
@@ -2636,7 +2710,7 @@ void BG_Booker_DB::try_pause_bder_data(const String &file_path)
 				// Item Stat Requirements
 				if (item_details->use_stat_requirements) {
 					const Array item_stat_requirement_lines = Array(entry["item_stat_requirements"]);
-					for (int x = 0; x < item_stat_requirement_lines.size(); x++) {
+					for (int x = 0; x < item_stat_requirement_lines.size(); ++x) {
 						const Dictionary item_stat_requirement_entry = item_stat_requirement_lines[x];
 
 						const float value = float(item_stat_requirement_entry["value"]);
@@ -2660,7 +2734,7 @@ void BG_Booker_DB::try_pause_bder_data(const String &file_path)
 			if (content_type == 1) {
 				// For now, we're going to append this info to an existing entry from the old Booker DB entry. So let's get that old entry.
 				BG_Monster *monster_details = nullptr;
-				for (int x = 0; x < monster_types.size(); x++) {
+				for (int x = 0; x < monster_types.size(); ++x) {
 					BG_Monster *monster_dets = cast_to<BG_Monster>(monster_types[x]);
 					if (monster_dets->id == content_id) {
 						monster_details = monster_dets;
@@ -2674,13 +2748,14 @@ void BG_Booker_DB::try_pause_bder_data(const String &file_path)
 
 				monster_details->use_dber_data = true;
 				monster_details->effectiveness = float(entry["effectiveness"]);
+				monster_details->icon_path = ensure_clean_path(get_find_data_by_param_name("icon", misc_params)["path"]);
+				monster_details->model_path = ensure_clean_path(get_find_data_by_param_name("mesh_scene_path", misc_params)["path"]);
 				const Dictionary level_range = get_find_data_by_param_name("level_range", misc_params);
 				monster_details->level_range = Vector2(int(level_range["value_x"]), int(level_range["value_y"]));
-				monster_details->icon_path = ensure_clean_path(get_find_data_by_param_name("icon", misc_params)["path"]);
 
 				// Effectiveness Stats
 				const Array effectiveness_stats_lines = Array(entry["effectiveness_stats"]);
-				for (int x = 0; x < effectiveness_stats_lines.size(); x++) {
+				for (int x = 0; x < effectiveness_stats_lines.size(); ++x) {
 					const Dictionary effectiveness_stat_entry = effectiveness_stats_lines[x];
 					
 					const float value = float(effectiveness_stat_entry["value"]);
@@ -2694,6 +2769,24 @@ void BG_Booker_DB::try_pause_bder_data(const String &file_path)
 					new_class->stat_reference = get_stat_from_unique_id(unique_id);
 
 					monster_details->effectiveness_stats.append(new_class);
+				}
+
+				{ // Animations
+					monster_details->animations.clear();
+					const Array animations = Array(get_find_data_by_param_name("animations", misc_params)["array_values"]);
+					for (int x = 0; x < animations.size(); ++x) {
+						const Array aa = animations[x];
+						
+						BG_AnimationDetails *new_class = memnew(BG_AnimationDetails);
+						const Dictionary caste_dict = aa[0];
+						new_class->caste_or_monster_id = global_enums["caste_types"][int(caste_dict["value"])];
+						const Dictionary anim_type_dict = aa[1];
+						new_class->anim_type = static_cast<BG_AnimationDetails::AnimationType>(int(anim_type_dict["value"]));
+						const Dictionary anim_name_dict = aa[2];
+						new_class->anim_name = StringName(anim_name_dict["value"]);
+
+						monster_details->animations.append(new_class);
+					}
 				}
 			}
 		}

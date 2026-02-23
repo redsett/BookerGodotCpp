@@ -608,6 +608,49 @@ public:
 };
 
 ////
+//// BG_AnimationDetails
+////
+class BG_AnimationDetails : public Object
+{
+	GDCLASS(BG_AnimationDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	enum AnimationType : int32_t {
+		IDLE,
+		COMBAT_IDLE,
+		ATTACK1,
+		ATTACK2,
+		ATTACK3,
+		UNIQUE_SKILL1,
+		RUN,
+		GUARD,
+		EVADE,
+		TAKING_DAMAGE,
+		AT_LOW_HP,
+		DEATH,
+		TRIUMPH,
+		FLOURISH
+	};
+
+	StringName caste_or_monster_id;
+	StringName get_caste_or_monster_id() const { return caste_or_monster_id; }
+
+	AnimationType anim_type = AnimationType::IDLE;
+	AnimationType get_anim_type() const { return anim_type; }
+
+	StringName anim_name;
+	StringName get_anim_name() const { return anim_name; }
+
+	static TypedArray<BG_AnimationDetails> get_all_anim_details_of_id(TypedArray<BG_AnimationDetails> from, StringName id);
+	static BG_AnimationDetails *get_anim_details(TypedArray<BG_AnimationDetails> from, StringName id, AnimationType anim_type);
+};
+
+VARIANT_ENUM_CAST(BG_AnimationDetails::AnimationType);
+
+////
 //// BG_ItemSlotType
 ////
 class BG_ItemSlotType : public Object
@@ -813,6 +856,9 @@ public:
 
 	Vector2 level_range = Vector2(1, 1);
 	Vector2 get_level_range() const { return level_range; }
+
+	TypedArray<BG_AnimationDetails> item_animations;
+	TypedArray<BG_AnimationDetails> get_item_animations() const { return item_animations; }
 };
 
 VARIANT_ENUM_CAST(BG_ItemDetails::ItemType);
@@ -1352,6 +1398,9 @@ public:
 
 	Vector2 level_range = Vector2(1, 1);
 	Vector2 get_level_range() const { return level_range; }
+
+	TypedArray<BG_AnimationDetails> animations;
+	TypedArray<BG_AnimationDetails> get_animations() const { return animations; }
 };
 
 ////
@@ -1803,7 +1852,7 @@ public:
 
 private:
 	void try_parse_data(const String &file_path);
-	void try_pause_bder_data(const String &file_path);
+	void try_parse_bder_data(const String &file_path);
 
 	BG_BaseStat *get_stat_from_unique_id(int unique_id) const {
 		for (int i = 0; i < base_stats.size(); i++) {
