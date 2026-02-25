@@ -632,7 +632,21 @@ public:
 		AT_LOW_HP,
 		DEATH,
 		TRIUMPH,
-		FLOURISH
+		FLOURISH,
+		TRAVERSE_TO_INTRO,
+		TRAVERSE_TO_LOOP,
+		TRAVERSE_TO_OUTRO,
+		TRAVERSE_BACK_INTRO,
+		TRAVERSE_BACK_LOOP,
+		TRAVERSE_BACK_OUTRO
+	};
+
+	enum AnimationTraverseType : int32_t {
+		TRAVERSE_TYPE_NONE,
+		TRAVERSE_TYPE_RUN,
+		TRAVERSE_TYPE_RUN_INTRO_LOOP_OUTRO,
+		TRAVERSE_TYPE_HOP,
+		TRAVERSE_TYPE_HOP_INTRO_LOOP_OUTRO
 	};
 
 	StringName caste_or_monster_id;
@@ -643,12 +657,22 @@ public:
 
 	StringName anim_name;
 	StringName get_anim_name() const { return anim_name; }
+	
+	AnimationTraverseType traverse_to = AnimationTraverseType::TRAVERSE_TYPE_NONE;
+	AnimationTraverseType get_traverse_to() const { return traverse_to; }
+
+	AnimationTraverseType traverse_back = AnimationTraverseType::TRAVERSE_TYPE_NONE;
+	AnimationTraverseType get_traverse_back() const { return traverse_back; }
+
+	float anim_blend_time = 0.0;
+	float get_anim_blend_time() const { return anim_blend_time; }
 
 	static TypedArray<BG_AnimationDetails> get_all_anim_details_of_id(TypedArray<BG_AnimationDetails> from, StringName id);
 	static BG_AnimationDetails *get_anim_details(TypedArray<BG_AnimationDetails> from, StringName id, AnimationType anim_type);
 };
 
 VARIANT_ENUM_CAST(BG_AnimationDetails::AnimationType);
+VARIANT_ENUM_CAST(BG_AnimationDetails::AnimationTraverseType);
 
 ////
 //// BG_ItemSlotType

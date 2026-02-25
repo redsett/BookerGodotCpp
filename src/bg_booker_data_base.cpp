@@ -389,6 +389,9 @@ void BG_AnimationDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_caste_or_monster_id"), &BG_AnimationDetails::get_caste_or_monster_id);
 	ClassDB::bind_method(D_METHOD("get_anim_type"), &BG_AnimationDetails::get_anim_type);
 	ClassDB::bind_method(D_METHOD("get_anim_name"), &BG_AnimationDetails::get_anim_name);
+	ClassDB::bind_method(D_METHOD("get_anim_blend_time"), &BG_AnimationDetails::get_anim_blend_time);
+	ClassDB::bind_method(D_METHOD("get_traverse_to"), &BG_AnimationDetails::get_traverse_to);
+	ClassDB::bind_method(D_METHOD("get_traverse_back"), &BG_AnimationDetails::get_traverse_back);
 
 	ClassDB::bind_static_method("BG_AnimationDetails", D_METHOD("get_all_anim_details_of_id", "from", "id"), &BG_AnimationDetails::get_all_anim_details_of_id);
 	ClassDB::bind_static_method("BG_AnimationDetails", D_METHOD("get_anim_details", "from", "id", "anim_type"), &BG_AnimationDetails::get_anim_details);
@@ -407,6 +410,18 @@ void BG_AnimationDetails::_bind_methods()
 	BIND_ENUM_CONSTANT(DEATH);
 	BIND_ENUM_CONSTANT(TRIUMPH);
 	BIND_ENUM_CONSTANT(FLOURISH);
+	BIND_ENUM_CONSTANT(TRAVERSE_TO_INTRO);
+	BIND_ENUM_CONSTANT(TRAVERSE_TO_LOOP);
+	BIND_ENUM_CONSTANT(TRAVERSE_TO_OUTRO);
+	BIND_ENUM_CONSTANT(TRAVERSE_BACK_INTRO);
+	BIND_ENUM_CONSTANT(TRAVERSE_BACK_LOOP);
+	BIND_ENUM_CONSTANT(TRAVERSE_BACK_OUTRO);
+
+	BIND_ENUM_CONSTANT(TRAVERSE_TYPE_NONE);
+	BIND_ENUM_CONSTANT(TRAVERSE_TYPE_RUN);
+	BIND_ENUM_CONSTANT(TRAVERSE_TYPE_RUN_INTRO_LOOP_OUTRO);
+	BIND_ENUM_CONSTANT(TRAVERSE_TYPE_HOP);
+	BIND_ENUM_CONSTANT(TRAVERSE_TYPE_HOP_INTRO_LOOP_OUTRO);
 }
 
 /* static */ TypedArray<BG_AnimationDetails> BG_AnimationDetails::get_all_anim_details_of_id(TypedArray<BG_AnimationDetails> from, StringName id)
@@ -2674,10 +2689,25 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 						BG_AnimationDetails *new_class = memnew(BG_AnimationDetails);
 						const Dictionary caste_dict = aa[0];
 						new_class->caste_or_monster_id = global_enums["caste_types"][int(caste_dict["value"])];
+
 						const Dictionary anim_type_dict = aa[1];
 						new_class->anim_type = static_cast<BG_AnimationDetails::AnimationType>(int(anim_type_dict["value"]));
+
 						const Dictionary anim_name_dict = aa[2];
 						new_class->anim_name = StringName(anim_name_dict["value"]);
+
+						const Dictionary anim_blend_time_dict = aa[3];
+						new_class->anim_blend_time = float(anim_blend_time_dict["value"]);
+						
+						const Dictionary anim_traverse_types_dict = aa[4];
+						const Array anim_traverse_types_array = anim_traverse_types_dict["array_values"];
+						if (!anim_traverse_types_array.is_empty()) {
+							const Array anim_traverse_types = anim_traverse_types_array[0];
+							const Dictionary d1 = anim_traverse_types[0];
+							new_class->traverse_to = static_cast<BG_AnimationDetails::AnimationTraverseType>(int(d1["value"]));
+							const Dictionary d2 = anim_traverse_types[1];
+							new_class->traverse_back = static_cast<BG_AnimationDetails::AnimationTraverseType>(int(d2["value"]));
+						}
 
 						item_details->item_animations.append(new_class);
 					}
@@ -2780,10 +2810,25 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 						BG_AnimationDetails *new_class = memnew(BG_AnimationDetails);
 						const Dictionary caste_dict = aa[0];
 						new_class->caste_or_monster_id = global_enums["caste_types"][int(caste_dict["value"])];
+
 						const Dictionary anim_type_dict = aa[1];
 						new_class->anim_type = static_cast<BG_AnimationDetails::AnimationType>(int(anim_type_dict["value"]));
+
 						const Dictionary anim_name_dict = aa[2];
 						new_class->anim_name = StringName(anim_name_dict["value"]);
+
+						const Dictionary anim_blend_time_dict = aa[3];
+						new_class->anim_blend_time = float(anim_blend_time_dict["value"]);
+
+						const Dictionary anim_traverse_types_dict = aa[4];
+						const Array anim_traverse_types_array = anim_traverse_types_dict["array_values"];
+						if (!anim_traverse_types_array.is_empty()) {
+							const Array anim_traverse_types = anim_traverse_types_array[0];
+							const Dictionary d1 = anim_traverse_types[0];
+							new_class->traverse_to = static_cast<BG_AnimationDetails::AnimationTraverseType>(int(d1["value"]));
+							const Dictionary d2 = anim_traverse_types[1];
+							new_class->traverse_back = static_cast<BG_AnimationDetails::AnimationTraverseType>(int(d2["value"]));
+						}
 
 						monster_details->animations.append(new_class);
 					}
