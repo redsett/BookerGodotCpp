@@ -382,6 +382,15 @@ void BG_UnitStat::_bind_methods()
 }
 
 ////
+//// BG_AnimationTagDetails
+////
+void BG_AnimationTagDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_tag"), &BG_AnimationTagDetails::get_tag);
+	ClassDB::bind_method(D_METHOD("get_frame"), &BG_AnimationTagDetails::get_frame);
+}
+
+////
 //// BG_AnimationDetails
 ////
 void BG_AnimationDetails::_bind_methods()
@@ -389,9 +398,10 @@ void BG_AnimationDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_caste_or_monster_id"), &BG_AnimationDetails::get_caste_or_monster_id);
 	ClassDB::bind_method(D_METHOD("get_anim_type"), &BG_AnimationDetails::get_anim_type);
 	ClassDB::bind_method(D_METHOD("get_anim_name"), &BG_AnimationDetails::get_anim_name);
-	ClassDB::bind_method(D_METHOD("get_anim_blend_time"), &BG_AnimationDetails::get_anim_blend_time);
 	ClassDB::bind_method(D_METHOD("get_traverse_to"), &BG_AnimationDetails::get_traverse_to);
 	ClassDB::bind_method(D_METHOD("get_traverse_back"), &BG_AnimationDetails::get_traverse_back);
+	ClassDB::bind_method(D_METHOD("get_anim_blend_time"), &BG_AnimationDetails::get_anim_blend_time);
+	ClassDB::bind_method(D_METHOD("get_tags"), &BG_AnimationDetails::get_tags);
 
 	ClassDB::bind_static_method("BG_AnimationDetails", D_METHOD("get_all_anim_details_of_id", "from", "id"), &BG_AnimationDetails::get_all_anim_details_of_id);
 	ClassDB::bind_static_method("BG_AnimationDetails", D_METHOD("get_anim_details", "from", "id", "anim_type"), &BG_AnimationDetails::get_anim_details);
@@ -2624,14 +2634,63 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			base_stats.append(new_class);
 		}
 
-		// Set a reference to each of their parent stats.
-		for (int i = 0; i < base_stats.size(); ++i) {
-			BG_BaseStat *stat = cast_to<BG_BaseStat>(base_stats[i]);
-			if (stat == nullptr || stat->parent_stat_unique_id < 0) continue;
+		{ // Set a reference to each of their parent stats.
+			for (int i = 0; i < base_stats.size(); ++i) {
+				BG_BaseStat *stat = cast_to<BG_BaseStat>(base_stats[i]);
+				if (stat == nullptr || stat->parent_stat_unique_id < 0) continue;
 
-			stat->parent_stat_reference = get_stat_from_unique_id(stat->parent_stat_unique_id);
+				stat->parent_stat_reference = get_stat_from_unique_id(stat->parent_stat_unique_id);
+			}
 		}
 	}
+
+	auto get_animation_detail = [](const HashMap<String, TypedArray<StringName>> &global_enums, const Array &animations, int index) -> BG_AnimationDetails *{
+		const Array aa = animations[index];
+		
+		BG_AnimationDetails *new_class = memnew(BG_AnimationDetails);
+		const Dictionary caste_dict = aa[0];
+		new_class->caste_or_monster_id = global_enums["caste_types"][int(caste_dict["value"])];
+
+		const Dictionary anim_type_dict = aa[1];
+		new_class->anim_type = static_cast<BG_AnimationDetails::AnimationType>(int(anim_type_dict["value"]));
+
+		const Dictionary anim_name_dict = aa[2];
+		new_class->anim_name = StringName(anim_name_dict["value"]);
+
+		const Dictionary anim_blend_time_dict = aa[3];
+		new_class->anim_blend_time = float(anim_blend_time_dict["value"]);
+		
+		{ // Traverse Types
+			const Dictionary anim_traverse_types_dict = aa[4];
+			const Array anim_traverse_types_array = anim_traverse_types_dict["array_values"];
+			if (!anim_traverse_types_array.is_empty()) {
+				const Array anim_traverse_types = anim_traverse_types_array[0];
+				const Dictionary d1 = anim_traverse_types[0];
+				new_class->traverse_to = static_cast<BG_AnimationDetails::AnimationTraverseType>(int(d1["value"]));
+				const Dictionary d2 = anim_traverse_types[1];
+				new_class->traverse_back = static_cast<BG_AnimationDetails::AnimationTraverseType>(int(d2["value"]));
+			}
+		}
+
+		{ // Tags
+			const Dictionary anim_tags_dict = aa[5];
+			const Array anim_tags_array = anim_tags_dict["array_values"];
+			for (int i = 0; i < anim_tags_array.size(); ++i) {
+				const Array anim_tag_entry = anim_tags_array[i];
+
+				const Dictionary tag_dict = anim_tag_entry[0];
+				const Dictionary frame_dict = anim_tag_entry[1];
+
+				BG_AnimationTagDetails *new_tag_class = memnew(BG_AnimationTagDetails);
+				new_tag_class->tag = StringName(tag_dict["value"]);
+				new_tag_class->frame = int(frame_dict["value"]);
+
+				new_class->tags.append(new_tag_class);
+			}
+		}
+
+		return new_class;
+	};
 
 	{ // Content
 		const Array lines = Array(data["all_content"]);
@@ -2684,76 +2743,53 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 					item_details->item_animations.clear();
 					const Array item_animations = Array(get_find_data_by_param_name("animations", misc_params)["array_values"]);
 					for (int x = 0; x < item_animations.size(); ++x) {
-						const Array aa = item_animations[x];
-						
-						BG_AnimationDetails *new_class = memnew(BG_AnimationDetails);
-						const Dictionary caste_dict = aa[0];
-						new_class->caste_or_monster_id = global_enums["caste_types"][int(caste_dict["value"])];
-
-						const Dictionary anim_type_dict = aa[1];
-						new_class->anim_type = static_cast<BG_AnimationDetails::AnimationType>(int(anim_type_dict["value"]));
-
-						const Dictionary anim_name_dict = aa[2];
-						new_class->anim_name = StringName(anim_name_dict["value"]);
-
-						const Dictionary anim_blend_time_dict = aa[3];
-						new_class->anim_blend_time = float(anim_blend_time_dict["value"]);
-						
-						const Dictionary anim_traverse_types_dict = aa[4];
-						const Array anim_traverse_types_array = anim_traverse_types_dict["array_values"];
-						if (!anim_traverse_types_array.is_empty()) {
-							const Array anim_traverse_types = anim_traverse_types_array[0];
-							const Dictionary d1 = anim_traverse_types[0];
-							new_class->traverse_to = static_cast<BG_AnimationDetails::AnimationTraverseType>(int(d1["value"]));
-							const Dictionary d2 = anim_traverse_types[1];
-							new_class->traverse_back = static_cast<BG_AnimationDetails::AnimationTraverseType>(int(d2["value"]));
-						}
-
-						item_details->item_animations.append(new_class);
+						item_details->item_animations.append(get_animation_detail(global_enums, item_animations, x));
 					}
 				}
 
-				const bool randomize_damage_type = bool(entry["randomize_damage_type"]);
-				const bool randomize_resistance_type = bool(entry["randomize_resistance_type"]);
+				{ // Item Effectiveness Stats
+					const bool randomize_damage_type = bool(entry["randomize_damage_type"]);
+					const bool randomize_resistance_type = bool(entry["randomize_resistance_type"]);
 
-				// Item Effectiveness Stats
-				const Array item_effectiveness_stats_lines = Array(entry["item_effectiveness_stats"]);
-				for (int x = 0; x < item_effectiveness_stats_lines.size(); ++x) {
-					const Dictionary item_effectiveness_stat_entry = item_effectiveness_stats_lines[x];
-					
-					const float value = float(item_effectiveness_stat_entry["value"]);
-					if (value == 0.0) continue; // No need to store empty values.
-
-					BG_ContentStat *new_class = memnew(BG_ContentStat);
-					new_class->value = value;
-
-					// Store a reference to its relative stat.
-					const int unique_id = int(item_effectiveness_stat_entry["stat_unique_id"]);
-					new_class->stat_reference = get_stat_from_unique_id(unique_id);
-
-					new_class->randomize_damage_type = randomize_damage_type;
-					new_class->randomize_resistance_type = randomize_resistance_type;
-
-					item_details->item_effectiveness_stats.append(new_class);
-				}
-
-				// Item Stat Requirements
-				if (item_details->use_stat_requirements) {
-					const Array item_stat_requirement_lines = Array(entry["item_stat_requirements"]);
-					for (int x = 0; x < item_stat_requirement_lines.size(); ++x) {
-						const Dictionary item_stat_requirement_entry = item_stat_requirement_lines[x];
-
-						const float value = float(item_stat_requirement_entry["value"]);
+					const Array item_effectiveness_stats_lines = Array(entry["item_effectiveness_stats"]);
+					for (int x = 0; x < item_effectiveness_stats_lines.size(); ++x) {
+						const Dictionary item_effectiveness_stat_entry = item_effectiveness_stats_lines[x];
+						
+						const float value = float(item_effectiveness_stat_entry["value"]);
 						if (value == 0.0) continue; // No need to store empty values.
 
 						BG_ContentStat *new_class = memnew(BG_ContentStat);
 						new_class->value = value;
 
 						// Store a reference to its relative stat.
-						const int unique_id = int(item_stat_requirement_entry["stat_unique_id"]);
+						const int unique_id = int(item_effectiveness_stat_entry["stat_unique_id"]);
 						new_class->stat_reference = get_stat_from_unique_id(unique_id);
 
-						item_details->item_stat_requirements.append(new_class);
+						new_class->randomize_damage_type = randomize_damage_type;
+						new_class->randomize_resistance_type = randomize_resistance_type;
+
+						item_details->item_effectiveness_stats.append(new_class);
+					}
+				}
+
+				{ // Item Stat Requirements
+					if (item_details->use_stat_requirements) {
+						const Array item_stat_requirement_lines = Array(entry["item_stat_requirements"]);
+						for (int x = 0; x < item_stat_requirement_lines.size(); ++x) {
+							const Dictionary item_stat_requirement_entry = item_stat_requirement_lines[x];
+
+							const float value = float(item_stat_requirement_entry["value"]);
+							if (value == 0.0) continue; // No need to store empty values.
+
+							BG_ContentStat *new_class = memnew(BG_ContentStat);
+							new_class->value = value;
+
+							// Store a reference to its relative stat.
+							const int unique_id = int(item_stat_requirement_entry["stat_unique_id"]);
+							new_class->stat_reference = get_stat_from_unique_id(unique_id);
+
+							item_details->item_stat_requirements.append(new_class);
+						}
 					}
 				}
 			}
@@ -2783,54 +2819,30 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				const Dictionary level_range = get_find_data_by_param_name("level_range", misc_params);
 				monster_details->level_range = Vector2(int(level_range["value_x"]), int(level_range["value_y"]));
 
-				// Effectiveness Stats
-				const Array effectiveness_stats_lines = Array(entry["effectiveness_stats"]);
-				for (int x = 0; x < effectiveness_stats_lines.size(); ++x) {
-					const Dictionary effectiveness_stat_entry = effectiveness_stats_lines[x];
-					
-					const float value = float(effectiveness_stat_entry["value"]);
-					if (value == 0.0) continue; // No need to store empty values.
+				{ // Effectiveness Stats
+					const Array effectiveness_stats_lines = Array(entry["effectiveness_stats"]);
+					for (int x = 0; x < effectiveness_stats_lines.size(); ++x) {
+						const Dictionary effectiveness_stat_entry = effectiveness_stats_lines[x];
+						
+						const float value = float(effectiveness_stat_entry["value"]);
+						if (value == 0.0) continue; // No need to store empty values.
 
-					BG_ContentStat *new_class = memnew(BG_ContentStat);
-					new_class->value = value;
+						BG_ContentStat *new_class = memnew(BG_ContentStat);
+						new_class->value = value;
 
-					// Store a reference to its relative stat.
-					const int unique_id = int(effectiveness_stat_entry["stat_unique_id"]);
-					new_class->stat_reference = get_stat_from_unique_id(unique_id);
+						// Store a reference to its relative stat.
+						const int unique_id = int(effectiveness_stat_entry["stat_unique_id"]);
+						new_class->stat_reference = get_stat_from_unique_id(unique_id);
 
-					monster_details->effectiveness_stats.append(new_class);
+						monster_details->effectiveness_stats.append(new_class);
+					}
 				}
 
 				{ // Animations
 					monster_details->animations.clear();
 					const Array animations = Array(get_find_data_by_param_name("animations", misc_params)["array_values"]);
 					for (int x = 0; x < animations.size(); ++x) {
-						const Array aa = animations[x];
-						
-						BG_AnimationDetails *new_class = memnew(BG_AnimationDetails);
-						const Dictionary caste_dict = aa[0];
-						new_class->caste_or_monster_id = global_enums["caste_types"][int(caste_dict["value"])];
-
-						const Dictionary anim_type_dict = aa[1];
-						new_class->anim_type = static_cast<BG_AnimationDetails::AnimationType>(int(anim_type_dict["value"]));
-
-						const Dictionary anim_name_dict = aa[2];
-						new_class->anim_name = StringName(anim_name_dict["value"]);
-
-						const Dictionary anim_blend_time_dict = aa[3];
-						new_class->anim_blend_time = float(anim_blend_time_dict["value"]);
-
-						const Dictionary anim_traverse_types_dict = aa[4];
-						const Array anim_traverse_types_array = anim_traverse_types_dict["array_values"];
-						if (!anim_traverse_types_array.is_empty()) {
-							const Array anim_traverse_types = anim_traverse_types_array[0];
-							const Dictionary d1 = anim_traverse_types[0];
-							new_class->traverse_to = static_cast<BG_AnimationDetails::AnimationTraverseType>(int(d1["value"]));
-							const Dictionary d2 = anim_traverse_types[1];
-							new_class->traverse_back = static_cast<BG_AnimationDetails::AnimationTraverseType>(int(d2["value"]));
-						}
-
-						monster_details->animations.append(new_class);
+						monster_details->animations.append(get_animation_detail(global_enums, animations, x));
 					}
 				}
 			}

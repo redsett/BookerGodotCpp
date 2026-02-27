@@ -59,6 +59,7 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		ClassDB::register_class<BG_Band>();
 		ClassDB::register_class<BG_UnitStat>();
 		ClassDB::register_class<BG_UnitStatDetails>();
+		ClassDB::register_class<BG_AnimationTagDetails>();
 		ClassDB::register_class<BG_AnimationDetails>();
 		ClassDB::register_class<BG_Job>();
 		ClassDB::register_class<BG_Monster>();

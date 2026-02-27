@@ -608,6 +608,24 @@ public:
 };
 
 ////
+//// BG_AnimationTagDetails
+////
+class BG_AnimationTagDetails : public Object
+{
+	GDCLASS(BG_AnimationTagDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName tag;
+	StringName get_tag() const { return tag; }
+
+	int frame = 0;
+	int get_frame() const { return frame; }
+};
+
+////
 //// BG_AnimationDetails
 ////
 class BG_AnimationDetails : public Object
@@ -666,6 +684,9 @@ public:
 
 	float anim_blend_time = 0.0;
 	float get_anim_blend_time() const { return anim_blend_time; }
+	
+	TypedArray<BG_AnimationTagDetails> tags;
+	TypedArray<BG_AnimationTagDetails> get_tags() const { return tags; }
 
 	static TypedArray<BG_AnimationDetails> get_all_anim_details_of_id(TypedArray<BG_AnimationDetails> from, StringName id);
 	static BG_AnimationDetails *get_anim_details(TypedArray<BG_AnimationDetails> from, StringName id, AnimationType anim_type);
