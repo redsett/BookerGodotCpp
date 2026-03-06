@@ -9,7 +9,7 @@
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
 
-#include <bg_reactive.hpp>
+// #include <bg_reactive.hpp>
 
 using namespace godot;
 
