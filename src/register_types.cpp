@@ -41,6 +41,7 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		ClassDB::register_class<BG_MarketplaceData>();
 		ClassDB::register_class<BG_MarketplaceEntryData>();
 		ClassDB::register_class<BG_MarketplaceSaveData>();
+		ClassDB::register_class<BG_AudioDataDetails>();
 		ClassDB::register_class<BG_AudioData>();
 		ClassDB::register_class<BG_HueShiftData>();
 		ClassDB::register_class<BG_BaseStat>();

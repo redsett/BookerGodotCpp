@@ -199,13 +199,22 @@ void BG_MarketplaceSaveData::_bind_methods()
 }
 
 ////
+//// BG_AudioDataDetails
+////
+void BG_AudioDataDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_file_path"), &BG_AudioDataDetails::get_file_path);
+	ClassDB::bind_method(D_METHOD("get_volume_db_base_value"), &BG_AudioDataDetails::get_volume_db_base_value);
+	ClassDB::bind_method(D_METHOD("get_restrict_to_acts"), &BG_AudioDataDetails::get_restrict_to_acts);
+}
+
+////
 //// BG_AudioData
 ////
 void BG_AudioData::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_AudioData::get_id);
-	ClassDB::bind_method(D_METHOD("get_act_file_paths"), &BG_AudioData::get_act_file_paths);
-	ClassDB::bind_method(D_METHOD("get_act_volume_db_base_values"), &BG_AudioData::get_act_volume_db_base_values);
+	ClassDB::bind_method(D_METHOD("get_audio_details"), &BG_AudioData::get_audio_details);
 }
 
 ////
@@ -613,6 +622,7 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_element_upgrades"), &BG_BandMember::set_element_upgrades);
 	ClassDB::bind_method(D_METHOD("get_consumable_upgrades"), &BG_BandMember::get_consumable_upgrades);
 	ClassDB::bind_method(D_METHOD("set_consumable_upgrades"), &BG_BandMember::set_consumable_upgrades);
+	ClassDB::bind_method(D_METHOD("is_dead"), &BG_BandMember::is_dead);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
@@ -791,6 +801,7 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_out_of_combat_effect_ids"), &BG_Monster::get_out_of_combat_effect_ids);
 	ClassDB::bind_method(D_METHOD("get_hue_shift_data"), &BG_Monster::get_hue_shift_data);
 	ClassDB::bind_method(D_METHOD("get_challenge_rating_fraction_string"), &BG_Monster::get_challenge_rating_fraction_string);
+	ClassDB::bind_method(D_METHOD("is_dead"), &BG_Monster::is_dead);
 	
 	ClassDB::bind_method(D_METHOD("get_use_dber_data"), &BG_Monster::get_use_dber_data);
 	ClassDB::bind_method(D_METHOD("get_effectiveness"), &BG_Monster::get_effectiveness);
@@ -1046,6 +1057,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_objectives"), &BG_Booker_DB::get_objectives);
 	ClassDB::bind_method(D_METHOD("get_resource_type_details_by_id", "resource_id"), &BG_Booker_DB::get_resource_type_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_audio_data"), &BG_Booker_DB::get_audio_data);
+	ClassDB::bind_method(D_METHOD("get_audio_details", "id", "act"), &BG_Booker_DB::get_audio_details);
 	ClassDB::bind_method(D_METHOD("get_booker_skill_tree_details"), &BG_Booker_DB::get_booker_skill_tree_details);
 	ClassDB::bind_method(D_METHOD("get_jobs"), &BG_Booker_DB::get_jobs);
 	ClassDB::bind_method(D_METHOD("get_items"), &BG_Booker_DB::get_items);
@@ -1386,33 +1398,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 	}
 
 	/////
-	///// Audio
-	/////
-	{
-		const Dictionary audio_sheet = BG_JsonUtils::GetCBDSheet(data, "audio");
-		if (audio_sheet.has("lines"))
-		{
-			audio_data.clear();
-			const Array lines = Array(audio_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++)
-			{
-				const Dictionary entry = lines[i];
-				BG_AudioData *new_audio_class = memnew(BG_AudioData);
-				new_audio_class->id = entry["id"];
-
-				const Array per_act_lines = Array(entry["per_act"]);
-				for (int y = 0; y < per_act_lines.size(); y++)
-				{
-					const Dictionary per_act_entry = per_act_lines[y];
-					new_audio_class->act_file_paths.append(per_act_entry["path"]);
-					new_audio_class->act_volume_db_base_values.append(int(per_act_entry["volume_db"]));
-				}
-				audio_data.append(new_audio_class);
-			}
-		}
-	}
-
-	/////
 	///// Booker Skill Tree
 	/////
 	{
@@ -1519,76 +1504,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				new_stat_types->in_world_color = convert_int_to_color(int(entry["in_world_color"]));
 
 				stat_types.append(new_stat_types);
-			}
-		}
-	}
-
-	/////
-	///// Band Info
-	/////
-	{
-		const Dictionary bands_sheet = BG_JsonUtils::GetCBDSheet(data, "bands");
-		if (bands_sheet.has("lines"))
-		{
-			const Dictionary lines = Array(bands_sheet["lines"])[0];
-			if (lines.has("num_bands_for_hire"))
-				band_info->num_bands_for_hire = lines["num_bands_for_hire"];
-			if (lines.has("rest_recovery_speed"))
-				band_info->rest_recovery_speed = lines["rest_recovery_speed"];
-			if (lines.has("knocked_out_turns"))
-				band_info->knocked_out_turns = lines["knocked_out_turns"];
-
-			if (lines.has("names"))
-			{
-				band_info->band_names.clear();
-
-				const Array band_names_array = Array(lines["names"]);
-				for (int i = 0; i < band_names_array.size(); i++)
-				{
-					const Dictionary entry = band_names_array[i];
-					BG_BandNameInfo *new_band_name_info = memnew(BG_BandNameInfo);
-					new_band_name_info->band_name = entry["name"];
-					band_info->icon_paths.append(entry["icon_path"]);
-
-					const Array band_hiring_dialogue_choices_array = Array(entry["hiring_dialogue_choices"]);
-					for (int x = 0; x < band_hiring_dialogue_choices_array.size(); x++)
-					{
-						const Dictionary hiring_dialogue_choices_entry = band_hiring_dialogue_choices_array[x];
-						new_band_name_info->hiring_dialogue_choices.append(hiring_dialogue_choices_entry["entry"]);
-					}
-					band_info->band_names.append(new_band_name_info);
-				}
-			}
-
-			if (lines.has("first_names"))
-			{
-				band_info->first_names.clear();
-
-				const Array first_names_array = Array(lines["first_names"]);
-				for (int i = 0; i < first_names_array.size(); i++)
-				{
-					const Dictionary entry = first_names_array[i];
-					band_info->first_names.append(entry["name"]);
-				}
-			}
-
-			if (lines.has("last_names"))
-			{
-				band_info->last_names.clear();
-
-				const Array last_names_array = Array(lines["last_names"]);
-				for (int i = 0; i < last_names_array.size(); i++)
-				{
-					const Dictionary entry = last_names_array[i];
-					band_info->last_names.append(entry["name"]);
-				}
-			}
-
-			if (lines.has("band_sizes"))
-			{
-				const Array band_sizes_array = Array(lines["band_sizes"]);
-				const Dictionary entry = band_sizes_array[0];
-				band_info->band_size_min_max = Vector2(entry["band_size_min"], entry["band_size_max"]);
 			}
 		}
 	}
@@ -2587,6 +2502,17 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		return {};
 	};
 
+	auto get_sheet_by_name = [](const String& name, const Dictionary& d) -> Array {
+		const Array lines = Array(d["sheets"]);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Dictionary sheet = lines[i];
+			const String sheet_name = String(sheet["param_name"]);
+			if (name != sheet_name) continue;
+			return sheet["array_values"];
+		}
+		return {};
+	};
+
 	auto ensure_clean_path = [](const String& path) -> StringName {
 		return StringName(path.trim_prefix("/"));
 	};
@@ -2848,6 +2774,76 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			}
 		}
 
+	}
+
+	{ // Audio
+		const Array lines = get_sheet_by_name("Audio", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+			
+			BG_AudioData *new_class = memnew(BG_AudioData);
+			new_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			
+			const Dictionary entry_audios = get_find_data_by_param_name("audios", entry);
+			const Array entry_audios_values = entry_audios["array_values"];
+			for (int x = 0; x < entry_audios_values.size(); ++x) {
+				const Array audio_details_entry = entry_audios_values[x];
+
+				BG_AudioDataDetails *new_audio_details = memnew(BG_AudioDataDetails);
+				new_audio_details->file_path = ensure_clean_path(get_find_data_by_param_name("path", audio_details_entry)["path"]);
+				new_audio_details->volume_db_base_value = int(get_find_data_by_param_name("volume_db", audio_details_entry)["value"]);
+
+				const Dictionary restrict_to_cities_dict = get_find_data_by_param_name("restrict_to_cities", audio_details_entry);
+				const Array restrict_to_cities = restrict_to_cities_dict["array_values"];
+				for (int y = 0; y < restrict_to_cities.size(); ++y) {
+					const Array restrict_to_cities_entry = restrict_to_cities[y];
+					new_audio_details->restrict_to_acts.append(int(get_find_data_by_param_name("city", restrict_to_cities_entry)["value"]));
+				}
+
+				new_class->audio_details.append(new_audio_details);
+			}
+
+			audio_data.append(new_class);
+		}
+	}
+
+	{ // Bands
+		const Array lines = get_sheet_by_name("Bands", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+
+			band_info->num_bands_for_hire = int(get_find_data_by_param_name("num_bands_for_hire", entry)["value"]);
+			band_info->rest_recovery_speed = float(get_find_data_by_param_name("rest_recovery_speed", entry)["value"]);
+			band_info->knocked_out_turns = int(get_find_data_by_param_name("knocked_out_turns", entry)["value"]);
+			const Dictionary band_sizes_min_max = get_find_data_by_param_name("band_sizes_min_max", entry);
+			band_info->band_size_min_max = Vector2(float(band_sizes_min_max["value_x"]), float(band_sizes_min_max["value_y"]));
+
+			const Dictionary first_names = get_find_data_by_param_name("first_names", entry);
+			const Array first_names_array = first_names["array_values"];
+			for (int x = 0; x < first_names_array.size(); ++x) {
+				const Array first_names_entry = first_names_array[x];
+				band_info->first_names.append(StringName(get_find_data_by_param_name("name", first_names_entry)["value"]));
+			}
+			
+			const Dictionary last_names = get_find_data_by_param_name("last_names", entry);
+			const Array last_names_array = last_names["array_values"];
+			for (int x = 0; x < last_names_array.size(); ++x) {
+				const Array last_names_entry = last_names_array[x];
+				band_info->last_names.append(StringName(get_find_data_by_param_name("name", last_names_entry)["value"]));
+			}
+
+			const Dictionary bands = get_find_data_by_param_name("bands", entry);
+			const Array bands_array = bands["array_values"];
+			for (int x = 0; x < bands_array.size(); ++x) {
+				const Array bands_entry = bands_array[x];
+
+				BG_BandNameInfo *new_band_name_info = memnew(BG_BandNameInfo);
+				new_band_name_info->band_name = StringName(get_find_data_by_param_name("name", bands_entry)["value"]);
+				band_info->band_names.append(new_band_name_info);
+
+				band_info->icon_paths.append(ensure_clean_path(get_find_data_by_param_name("icon_path", bands_entry)["path"]));
+			}
+		}
 	}
 
 }

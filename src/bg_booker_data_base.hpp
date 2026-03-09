@@ -281,6 +281,28 @@ public:
 };
 
 ////
+//// BG_AudioDataDetails
+////
+class BG_AudioDataDetails : public Object
+{
+	GDCLASS(BG_AudioDataDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+
+	StringName file_path;
+	StringName get_file_path() const { return file_path; }
+
+	int volume_db_base_value;
+	int get_volume_db_base_value() const { return volume_db_base_value; }
+
+	TypedArray<int> restrict_to_acts;
+	TypedArray<int> get_restrict_to_acts() const { return restrict_to_acts; }
+};
+
+////
 //// BG_AudioData
 ////
 class BG_AudioData : public Object
@@ -294,11 +316,8 @@ public:
 	StringName id;
 	StringName get_id() const { return id; }
 
-	TypedArray<StringName> act_file_paths;
-	TypedArray<StringName> get_act_file_paths() const { return act_file_paths; }
-
-	TypedArray<int> act_volume_db_base_values;
-	TypedArray<int> get_act_volume_db_base_values() const { return act_volume_db_base_values; }
+	TypedArray<BG_AudioDataDetails> audio_details;
+	TypedArray<BG_AudioDataDetails> get_audio_details() const { return audio_details; }
 };
 
 ////
@@ -1171,6 +1190,8 @@ public:
 	Dictionary consumable_upgrades; //<StringName(consumable_id), int(how_many)>
 	Dictionary get_consumable_upgrades() const { return consumable_upgrades; }
 	void set_consumable_upgrades(Dictionary v) { consumable_upgrades = v; }
+
+	bool is_dead() { return current_health <= 0; }
 };
 
 ////
@@ -1429,6 +1450,8 @@ public:
 	void set_job(Ref<BG_Job> value) { job = value; };
 
 	String get_challenge_rating_fraction_string() const;
+
+	bool is_dead() { return current_health <= 0; }
 
 
 	// New DBer Data
@@ -1824,6 +1847,21 @@ public:
 
 	TypedArray<BG_AudioData> audio_data;
 	TypedArray<BG_AudioData> get_audio_data() const { return audio_data; }
+	TypedArray<BG_AudioDataDetails> get_audio_details(StringName id, int act) {
+		TypedArray<BG_AudioDataDetails> result;
+		for (int i = 0; i < audio_data.size(); ++i) {
+			BG_AudioData *ad = cast_to<BG_AudioData>(audio_data[i]);
+			if (ad->id != id) continue;
+			for (int x = 0; x < ad->audio_details.size(); ++x) {
+				BG_AudioDataDetails *audio_details = cast_to<BG_AudioDataDetails>(ad->audio_details[x]);
+				if (audio_details->restrict_to_acts.is_empty() || audio_details->restrict_to_acts.has(act)) {
+					result.append(audio_details);
+				}
+			}
+			break;
+		}
+		return result;
+	}
 
 	TypedArray<BG_BookerSkillTreeSlotDetails> booker_skill_tree_details;
 	TypedArray<BG_BookerSkillTreeSlotDetails> get_booker_skill_tree_details() const { return booker_skill_tree_details; }
@@ -1867,7 +1905,7 @@ public:
 	TypedArray<BG_TwoDer_DataEntry> two_der_data_entries;
 	TypedArray<BG_TwoDer_DataEntry> get_two_der_data_entries() const { return two_der_data_entries; }
 	BG_TwoDer_DataEntry *get_two_der_data_from_id(StringName id) const {
-		for (int i = 0; i < two_der_data_entries.size(); i++) {
+		for (int i = 0; i < two_der_data_entries.size(); ++i) {
 			BG_TwoDer_DataEntry *data = cast_to<BG_TwoDer_DataEntry>(two_der_data_entries[i]);
 			if (data == nullptr) continue;
 			if (data->get_id() == id) return data;
@@ -1886,7 +1924,7 @@ public:
 	static String get_job_challenge_rating(const TypedArray<BG_Monster> monsters);
 
 	BG_BaseStat *get_stat_from_stat_id_name(StringName stat_id_name) const {
-		for (int i = 0; i < base_stats.size(); i++) {
+		for (int i = 0; i < base_stats.size(); ++i) {
 			BG_BaseStat *stat = cast_to<BG_BaseStat>(base_stats[i]);
 			if (stat == nullptr) continue;
 
@@ -1900,7 +1938,7 @@ private:
 	void try_parse_bder_data(const String &file_path);
 
 	BG_BaseStat *get_stat_from_unique_id(int unique_id) const {
-		for (int i = 0; i < base_stats.size(); i++) {
+		for (int i = 0; i < base_stats.size(); ++i) {
 			BG_BaseStat *stat = cast_to<BG_BaseStat>(base_stats[i]);
 			if (stat == nullptr) continue;
 
