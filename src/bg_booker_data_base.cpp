@@ -762,6 +762,7 @@ void BG_Job::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_monsters"), &BG_Job::set_monsters);
 	ClassDB::bind_method(D_METHOD("get_formation"), &BG_Job::get_formation);
 	ClassDB::bind_method(D_METHOD("set_formation"), &BG_Job::set_formation);
+	ClassDB::bind_method(D_METHOD("try_set_all_monsters_to_stoned", "is_stoned"), &BG_Job::try_set_all_monsters_to_stoned);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "job_id"), "set_job_id", "get_job_id");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "unique_job_id"), "set_unique_job_id", "get_unique_job_id");
@@ -769,6 +770,14 @@ void BG_Job::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "weeks_remaining_unless_removed"), "set_weeks_remaining_unless_removed", "get_weeks_remaining_unless_removed");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "monsters"), "set_monsters", "get_monsters");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "formation"), "set_formation", "get_formation");
+}
+
+void BG_Job::try_set_all_monsters_to_stoned(bool stoned)
+{
+	for (int i = 0; i < monsters.size(); ++i) {
+		BG_Monster *m = cast_to<BG_Monster>(monsters[i]);
+		m->set_is_turned_to_stone(stoned);
+	}
 }
 
 ////
@@ -801,6 +810,9 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_out_of_combat_effect_ids"), &BG_Monster::get_out_of_combat_effect_ids);
 	ClassDB::bind_method(D_METHOD("get_hue_shift_data"), &BG_Monster::get_hue_shift_data);
 	ClassDB::bind_method(D_METHOD("get_challenge_rating_fraction_string"), &BG_Monster::get_challenge_rating_fraction_string);
+	ClassDB::bind_method(D_METHOD("get_can_be_turned_to_stone"), &BG_Monster::get_can_be_turned_to_stone);
+	ClassDB::bind_method(D_METHOD("get_is_turned_to_stone"), &BG_Monster::get_is_turned_to_stone);
+	ClassDB::bind_method(D_METHOD("set_is_turned_to_stone"), &BG_Monster::set_is_turned_to_stone);
 	ClassDB::bind_method(D_METHOD("is_dead"), &BG_Monster::is_dead);
 	
 	ClassDB::bind_method(D_METHOD("get_use_dber_data"), &BG_Monster::get_use_dber_data);
@@ -813,6 +825,17 @@ void BG_Monster::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_turned_to_stone"), "set_is_turned_to_stone", "get_is_turned_to_stone");
+}
+
+void BG_Monster::set_is_turned_to_stone(bool v) {
+	if (!can_be_turned_to_stone) {
+		v = false;
+	}
+	if (v != is_turned_to_stone) {
+		is_turned_to_stone = v;
+		BG_Booker_DB::get_singleton()->emit_signal("monster_stoned_changed", this, v);
+	}
 }
 
 String BG_Monster::get_challenge_rating_fraction_string() const
@@ -1037,6 +1060,10 @@ void BG_Booker_Globals::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_hit_good_timing_multiplier"), &BG_Booker_Globals::get_hit_good_timing_multiplier);
 	ClassDB::bind_method(D_METHOD("get_parry_perfect_timing_multiplier"), &BG_Booker_Globals::get_parry_perfect_timing_multiplier);
 	ClassDB::bind_method(D_METHOD("get_parry_good_timing_multiplier"), &BG_Booker_Globals::get_parry_good_timing_multiplier);
+
+	ClassDB::bind_method(D_METHOD("get_day_night_cycle_turns_per_day"), &BG_Booker_Globals::get_day_night_cycle_turns_per_day);
+	ClassDB::bind_method(D_METHOD("get_percentage_of_day_is_day_time"), &BG_Booker_Globals::get_percentage_of_day_is_day_time);
+	ClassDB::bind_method(D_METHOD("get_day_cycle_offset_per_act"), &BG_Booker_Globals::get_day_cycle_offset_per_act);
 }
 
 ////
@@ -1050,6 +1077,11 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_static_method("BG_Booker_DB", D_METHOD("timer_test"), &BG_Booker_DB::timer_test);
 	ClassDB::bind_static_method("BG_Booker_DB", D_METHOD("get_job_challenge_rating_value", "monsters"), &BG_Booker_DB::get_job_challenge_rating_value);
 	ClassDB::bind_static_method("BG_Booker_DB", D_METHOD("get_job_challenge_rating", "monsters"), &BG_Booker_DB::get_job_challenge_rating);
+
+    ADD_SIGNAL(MethodInfo("monster_stoned_changed",
+        PropertyInfo(Variant::OBJECT, "monster"),
+        PropertyInfo(Variant::BOOL, "is_stoned")
+    ));
 
 	ClassDB::bind_method(D_METHOD("get_modding_path"), &BG_Booker_DB::get_modding_path);
 	ClassDB::bind_method(D_METHOD("get_globals"), &BG_Booker_DB::get_globals);
@@ -1086,7 +1118,9 @@ BG_Booker_DB *BG_Booker_DB::get_singleton()
 
 void BG_Booker_DB::refresh_data()
 {
+	if (globals != nullptr) memfree(globals);
 	globals = memnew(BG_Booker_Globals);
+	if (band_info != nullptr) memfree(band_info);
 	band_info = memnew(BG_BandInfo);
 
 	const String booker_data_file_name = "bookerData.cdb";
@@ -1130,143 +1164,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 	const Dictionary data = BG_JsonUtils::ParseJsonFile(file_path);
 
 	//UtilityFunctions::print(BG_JsonUtils::GetCBDSheet(data, "globals"));
-
-	/////
-	///// Globals
-	/////
-	{
-		const Dictionary globals_sheet = BG_JsonUtils::GetCBDSheet(data, "globals");
-		if (globals_sheet.has("lines"))
-		{
-			const Dictionary lines = Array(globals_sheet["lines"])[0];
-			if (lines.has("starting_reputation"))
-				globals->starting_reputation = int(lines["starting_reputation"]);
-
-			if (lines.has("job_globals") && lines.has("weeks_per_act"))
-			{
-				globals->act_stats.clear();
-
-				const Array weeks_per_act_array = Array(lines["weeks_per_act"]);
-				const Array job_globals_array = Array(lines["job_globals"]);
-				for (int i = 0; i < weeks_per_act_array.size(); i++)
-				{
-					BG_ActStats *new_act_stats = memnew(BG_ActStats);
-
-					const Dictionary weeks_per_act = weeks_per_act_array[i];
-					new_act_stats->total_week_count = int(weeks_per_act["weeks_count"]);
-
-					
-					const Dictionary job_globals_entry = job_globals_array[i];
-					new_act_stats->battle_board_scene_path = job_globals_entry["battle_board_scene_path"];
-					const Array jobs_distribution_per_act_array = Array(job_globals_entry["jobs_distribution_per_act"]);
-					const Dictionary jobs_distribution_per_act_entry = jobs_distribution_per_act_array[0];
-					new_act_stats->total_job_count = int(jobs_distribution_per_act_entry["job_count"]);
-					new_act_stats->job_handout_curve_path = jobs_distribution_per_act_entry["curve"];
-
-					if (globals->combat_rounds_per_combat == 0)
-						globals->combat_rounds_per_combat = int(job_globals_entry["combat_rounds_per_combat"]);
-
-					globals->act_stats.append(new_act_stats);
-				}
-			}
-
-			if (lines.has("qte_values"))
-			{
-				const Array qte_values_array = Array(lines["qte_values"]);
-				for (int i = 0; i < qte_values_array.size(); i++)
-				{
-					const Dictionary values = qte_values_array[i];
-					globals->hit_perfect_timing_multiplier = float(values["hit_perfect_timing_multiplier"]);
-					globals->hit_good_timing_multiplier = float(values["hit_good_timing_multiplier"]);
-					globals->parry_perfect_timing_multiplier = float(values["parry_perfect_timing_multiplier"]);
-					globals->parry_good_timing_multiplier = float(values["parry_good_timing_multiplier"]);
-				}
-			}
-
-			if (lines.has("max_resistance"))
-			{
-				const Array max_resistance_array = Array(lines["max_resistance"]);
-				for (int i = 0; i < max_resistance_array.size(); i++)
-				{
-					const Dictionary values = max_resistance_array[i];
-					globals->max_resistance_soft_cap = int(values["max_resistance_soft_cap"]);
-					globals->max_resistance_hard_cap = int(values["max_resistance_hard_cap"]);
-				}
-			}
-
-			if (lines.has("monster_element_distribution"))
-			{
-				globals->monster_element_distribution.clear();
-
-				const Array monster_element_distribution_array = Array(lines["monster_element_distribution"]);
-				for (int i = 0; i < monster_element_distribution_array.size(); i++)
-				{
-					const Dictionary values = monster_element_distribution_array[i];
-					globals->monster_element_distribution.append(float(values["percentage"]));
-				}
-			}
-
-			if (lines.has("damage_resistance_modifiers"))
-			{
-				const Array damage_resistance_modifiers_array = Array(lines["damage_resistance_modifiers"]);
-				for (int i = 0; i < damage_resistance_modifiers_array.size(); i++)
-				{
-					const Dictionary values = damage_resistance_modifiers_array[i];
-					globals->percent_amount_to_add_on_same_element_per_damage_value = float(values["percent_amount_to_add_on_same_element_per_damage_value"]);
-					globals->percent_amount_to_subtract_on_weak_element_per_damage_value = float(values["percent_amount_to_subtract_on_weak_element_per_damage_value"]);
-				}
-			}
-
-			if (lines.has("item_teir_values"))
-			{
-				globals->sell_tier_values.clear();
-				globals->fame_tier_values.clear();
-				globals->durability_teir_values.clear();
-
-				const Array item_value_per_act_array = Array(lines["item_teir_values"]);
-				for (int i = 0; i < item_value_per_act_array.size(); i++)
-				{
-					const Dictionary values = item_value_per_act_array[i];
-					globals->sell_tier_values.append(int(values["sell_tier_values"]));
-					globals->fame_tier_values.append(int(values["fame_tier_values"]));
-					globals->durability_teir_values.append(int(values["durability_teir_values"]));
-				}
-			}
-
-			if (lines.has("item_teir_rarity_multipliers"))
-			{
-				globals->equipment_value_rarity_multiplier.clear();
-				globals->beast_part_value_rarity_multiplier.clear();
-				globals->extra_beast_part_value_rarity_multiplier_while_grafted.clear();
-				globals->equipment_durability_rarity_multiplier.clear();
-				globals->beast_part_durability_rarity_multiplier.clear();
-				globals->equipment_fame_rarity_multiplier.clear();
-				globals->beast_part_fame_rarity_multiplier.clear();
-
-				const Array item_rarity_multiplier_array = Array(lines["item_teir_rarity_multipliers"]);
-				for (int i = 0; i < item_rarity_multiplier_array.size(); i++)
-				{
-					const Dictionary values = item_rarity_multiplier_array[i];
-					globals->equipment_value_rarity_multiplier.append(float(values["equipment_value_rarity_multiplier"]));
-					globals->beast_part_value_rarity_multiplier.append(float(values["beast_part_value_rarity_multiplier"]));
-					globals->extra_beast_part_value_rarity_multiplier_while_grafted.append(float(values["extra_beast_part_value_rarity_multiplier_while_grafted"]));
-					globals->equipment_durability_rarity_multiplier.append(float(values["equipment_durability_rarity_multiplier"]));
-					globals->beast_part_durability_rarity_multiplier.append(float(values["beast_part_durability_rarity_multiplier"]));
-					globals->equipment_fame_rarity_multiplier.append(float(values["equipment_fame_rarity_multiplier"]));
-					globals->beast_part_fame_rarity_multiplier.append(float(values["beast_part_fame_rarity_multiplier"]));
-				}
-			}
-			
-			if (lines.has("inventory_sell_multiplier"))
-				globals->inventory_sell_multiplier = float(lines["inventory_sell_multiplier"]);
-
-			if (lines.has("item_passive_income_multiplier"))
-				globals->item_passive_income_multiplier = float(lines["item_passive_income_multiplier"]);
-			
-			if (lines.has("chance_of_no_drop"))
-				globals->chance_of_no_drop = float(lines["chance_of_no_drop"]);
-		}
-	}
 
 	/////
 	///// City Info
@@ -2744,6 +2641,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				monster_details->model_path = ensure_clean_path(get_find_data_by_param_name("mesh_scene_path", misc_params)["path"]);
 				const Dictionary level_range = get_find_data_by_param_name("level_range", misc_params);
 				monster_details->level_range = Vector2(int(level_range["value_x"]), int(level_range["value_y"]));
+				monster_details->can_be_turned_to_stone = bool(get_find_data_by_param_name("can_be_turned_to_stone", misc_params)["value"]);
 
 				{ // Effectiveness Stats
 					const Array effectiveness_stats_lines = Array(entry["effectiveness_stats"]);
@@ -2842,6 +2740,131 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				band_info->band_names.append(new_band_name_info);
 
 				band_info->icon_paths.append(ensure_clean_path(get_find_data_by_param_name("icon_path", bands_entry)["path"]));
+			}
+		}
+	}
+
+	{ // Misc Globals
+		const Array lines = get_sheet_by_name("Misc_Globals", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+
+			globals->starting_reputation = int(get_find_data_by_param_name("starting_reputation", entry)["value"]);
+			globals->inventory_sell_multiplier = float(get_find_data_by_param_name("inventory_sell_multiplier", entry)["value"]);
+			globals->item_passive_income_multiplier = float(get_find_data_by_param_name("item_passive_income_multiplier", entry)["value"]);
+			globals->chance_of_no_drop = float(get_find_data_by_param_name("chance_of_no_drop", entry)["value"]);
+
+			// Weeks per act & Job globals.
+			const Dictionary weeks_per_act = get_find_data_by_param_name("weeks_per_act", entry);
+			const Array weeks_per_act_array = weeks_per_act["array_values"];
+			const Dictionary job_globals = get_find_data_by_param_name("job_globals", entry);
+			const Array job_globals_array = job_globals["array_values"];
+			for (int x = 0; x < weeks_per_act_array.size(); ++x) {
+				const Array weeks_per_act_entry = weeks_per_act_array[x];
+				const Array job_globals_entry = job_globals_array[x];
+
+				BG_ActStats *new_act_stats = memnew(BG_ActStats);
+				new_act_stats->total_week_count = int(get_find_data_by_param_name("weeks_count", weeks_per_act_entry)["value"]);
+
+				new_act_stats->battle_board_scene_path = StringName(get_find_data_by_param_name("battle_board_scene_path", job_globals_entry)["path"]);
+				if (globals->combat_rounds_per_combat == 0)
+					globals->combat_rounds_per_combat = int(get_find_data_by_param_name("combat_rounds_per_combat", job_globals_entry)["value"]);
+
+				const Dictionary jobs_distribution_per_act = get_find_data_by_param_name("jobs_distribution_per_act", job_globals_entry);
+				const Array jobs_distribution_per_act_array = jobs_distribution_per_act["array_values"];
+				for (int y = 0; y < jobs_distribution_per_act_array.size(); ++y) {
+					const Array jobs_distribution_per_act_entry = jobs_distribution_per_act_array[y];
+
+					new_act_stats->total_job_count = int(get_find_data_by_param_name("job_count", jobs_distribution_per_act_entry)["value"]);
+					new_act_stats->job_handout_curve_path = StringName(get_find_data_by_param_name("curve", jobs_distribution_per_act_entry)["path"]);
+				}
+				globals->act_stats.append(new_act_stats);
+			}
+
+			// QTE Values
+			const Dictionary qte_values = get_find_data_by_param_name("qte_values", entry);
+			const Array qte_values_array = qte_values["array_values"];
+			for (int x = 0; x < qte_values_array.size(); ++x) {
+				const Array qte_values_entry = qte_values_array[x];
+
+				globals->hit_perfect_timing_multiplier = float(get_find_data_by_param_name("hit_perfect_timing_multiplier", qte_values_entry)["value"]);
+				globals->hit_good_timing_multiplier = float(get_find_data_by_param_name("hit_good_timing_multiplier", qte_values_entry)["value"]);
+				globals->parry_perfect_timing_multiplier = float(get_find_data_by_param_name("parry_perfect_timing_multiplier", qte_values_entry)["value"]);
+				globals->parry_good_timing_multiplier = float(get_find_data_by_param_name("parry_good_timing_multiplier", qte_values_entry)["value"]);
+			}
+
+			// Monster Element Distribution
+			const Dictionary monster_element_distribution = get_find_data_by_param_name("monster_element_distribution", entry);
+			const Array monster_element_distribution_array = monster_element_distribution["array_values"];
+			for (int x = 0; x < monster_element_distribution_array.size(); ++x) {
+				const Array monster_element_distribution_entry = monster_element_distribution_array[x];
+
+				globals->monster_element_distribution.append(float(get_find_data_by_param_name("percentage", monster_element_distribution_entry)["value"]));
+			}
+
+			// Max Resistance
+			const Dictionary max_resistance = get_find_data_by_param_name("max_resistance", entry);
+			const Array max_resistance_array = max_resistance["array_values"];
+			for (int x = 0; x < max_resistance_array.size(); ++x) {
+				const Array max_resistance_entry = max_resistance_array[x];
+
+				globals->max_resistance_soft_cap = int(get_find_data_by_param_name("max_resistance_soft_cap", max_resistance_entry)["value"]);
+				globals->max_resistance_hard_cap = int(get_find_data_by_param_name("max_resistance_hard_cap", max_resistance_entry)["value"]);
+			}
+
+			// Damage Resistance Modifiers
+			const Dictionary damage_resistance_modifiers = get_find_data_by_param_name("damage_resistance_modifiers", entry);
+			const Array damage_resistance_modifiers_array = damage_resistance_modifiers["array_values"];
+			for (int x = 0; x < damage_resistance_modifiers_array.size(); ++x) {
+				const Array damage_resistance_modifiers_entry = damage_resistance_modifiers_array[x];
+
+				globals->percent_amount_to_add_on_same_element_per_damage_value = float(get_find_data_by_param_name("percent_amount_to_add_on_same_element_per_damage_value", damage_resistance_modifiers_entry)["value"]);
+				globals->percent_amount_to_subtract_on_weak_element_per_damage_value = float(get_find_data_by_param_name("percent_amount_to_subtract_on_weak_element_per_damage_value", damage_resistance_modifiers_entry)["value"]);
+			}
+
+			// Item Teir Values
+			const Dictionary item_teir_values = get_find_data_by_param_name("item_teir_values", entry);
+			const Array item_teir_values_array = item_teir_values["array_values"];
+			for (int x = 0; x < item_teir_values_array.size(); ++x) {
+				const Array item_teir_values_entry = item_teir_values_array[x];
+
+				globals->sell_tier_values.append(int(get_find_data_by_param_name("sell_tier_values", item_teir_values_entry)["value"]));
+				globals->fame_tier_values.append(int(get_find_data_by_param_name("fame_tier_values", item_teir_values_entry)["value"]));
+				globals->durability_teir_values.append(int(get_find_data_by_param_name("durability_teir_values", item_teir_values_entry)["value"]));
+			}
+
+			// Item Teir Rarity Multipliers
+			const Dictionary item_teir_rarity_multipliers = get_find_data_by_param_name("item_teir_rarity_multipliers", entry);
+			const Array item_teir_rarity_multipliers_array = item_teir_rarity_multipliers["array_values"];
+			for (int x = 0; x < item_teir_rarity_multipliers_array.size(); ++x) {
+				const Array item_teir_rarity_multipliers_entry = item_teir_rarity_multipliers_array[x];
+
+				globals->equipment_value_rarity_multiplier.append(float(get_find_data_by_param_name("equipment_value_rarity_multiplier", item_teir_rarity_multipliers_entry)["value"]));
+				globals->beast_part_value_rarity_multiplier.append(float(get_find_data_by_param_name("beast_part_value_rarity_multiplier", item_teir_rarity_multipliers_entry)["value"]));
+				globals->extra_beast_part_value_rarity_multiplier_while_grafted.append(float(get_find_data_by_param_name("extra_beast_part_value_rarity_multiplier_while_grafted", item_teir_rarity_multipliers_entry)["value"]));
+				globals->equipment_durability_rarity_multiplier.append(float(get_find_data_by_param_name("equipment_durability_rarity_multiplier", item_teir_rarity_multipliers_entry)["value"]));
+				globals->beast_part_durability_rarity_multiplier.append(float(get_find_data_by_param_name("beast_part_durability_rarity_multiplier", item_teir_rarity_multipliers_entry)["value"]));
+				globals->equipment_fame_rarity_multiplier.append(float(get_find_data_by_param_name("equipment_fame_rarity_multiplier", item_teir_rarity_multipliers_entry)["value"]));
+				globals->beast_part_fame_rarity_multiplier.append(float(get_find_data_by_param_name("beast_part_fame_rarity_multiplier", item_teir_rarity_multipliers_entry)["value"]));
+			}
+
+			// Day Night Cycle
+			const Dictionary day_night_cycle = get_find_data_by_param_name("day_night_cycle", entry);
+			const Array day_night_cycle_array = day_night_cycle["array_values"];
+			for (int x = 0; x < day_night_cycle_array.size(); ++x) {
+				const Array day_night_cycle_entry = day_night_cycle_array[x];
+
+				globals->day_night_cycle_turns_per_day = int(get_find_data_by_param_name("turns_per_day", day_night_cycle_entry)["value"]);
+				// UtilityFunctions::print(globals->day_night_cycle_turns_per_day);
+				globals->percentage_of_day_is_day_time = float(get_find_data_by_param_name("percentage_of_day_is_day_time", day_night_cycle_entry)["value"]);
+
+				const Dictionary day_cycle_offset_per_act = get_find_data_by_param_name("day_cycle_offset_per_act", day_night_cycle_entry);
+				const Array day_cycle_offset_per_act_array = day_cycle_offset_per_act["array_values"];
+				for (int y = 0; y < day_cycle_offset_per_act_array.size(); ++y) {
+					const Array day_cycle_offset_per_act_entry = day_cycle_offset_per_act_array[y];
+
+					globals->day_cycle_offset_per_act.append(int(get_find_data_by_param_name("offset", day_cycle_offset_per_act_entry)["value"]));
+				}
 			}
 		}
 	}

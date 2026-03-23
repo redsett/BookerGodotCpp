@@ -1376,7 +1376,9 @@ public:
 
 	Dictionary formation; // BG_Monster : int(cell index)
 	Dictionary get_formation() const { return formation; }
-	void set_formation(Dictionary value) { formation = value; }	
+	void set_formation(Dictionary value) { formation = value; }
+
+	void try_set_all_monsters_to_stoned(bool stoned);
 };
 
 ////
@@ -1450,6 +1452,13 @@ public:
 	void set_job(Ref<BG_Job> value) { job = value; };
 
 	String get_challenge_rating_fraction_string() const;
+
+	bool can_be_turned_to_stone = true;
+	bool get_can_be_turned_to_stone() const { return can_be_turned_to_stone; }
+
+	bool is_turned_to_stone = false;
+	bool get_is_turned_to_stone() const { return is_turned_to_stone; }
+	void set_is_turned_to_stone(bool v);
 
 	bool is_dead() { return current_health <= 0; }
 
@@ -1801,6 +1810,16 @@ public:
 
 	float parry_good_timing_multiplier = 0.0;
 	float get_parry_good_timing_multiplier() const { return parry_good_timing_multiplier; }
+	
+	// Day Night Cycle
+	int day_night_cycle_turns_per_day = 0;
+	int get_day_night_cycle_turns_per_day() const { return day_night_cycle_turns_per_day; }
+
+	float percentage_of_day_is_day_time = 0.0;
+	float get_percentage_of_day_is_day_time() const { return percentage_of_day_is_day_time; }
+
+	TypedArray<int> day_cycle_offset_per_act;
+	TypedArray<int> get_day_cycle_offset_per_act() const { return day_cycle_offset_per_act; }
 };
 
 ////
