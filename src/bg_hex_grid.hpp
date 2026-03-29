@@ -371,6 +371,7 @@ public:
     Ref<BG_Hex> get_hex_by_qr(Vector2i qr) const;
 
     void add_hex(const Ref<BG_Hex> hex);
+    void add_hex_from_qr(Vector2i qr, bool is_empty);
     void add_row(int column_index, int initial_emptys, int count);
 
     void update_locations(float x_offset_percent, float y_offset_percent);

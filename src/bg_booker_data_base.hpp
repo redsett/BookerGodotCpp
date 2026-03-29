@@ -1047,6 +1047,9 @@ public:
 	BG_EventResourceDetails *event_resource_details;
 	BG_EventResourceDetails *get_event_resource_details() const { return event_resource_details; }
 
+	bool can_spawn_in_day_time = false;
+	bool get_can_spawn_in_day_time() const { return can_spawn_in_day_time; }
+
 	bool is_unique = false;
 	bool get_is_unique() const { return is_unique; }
 

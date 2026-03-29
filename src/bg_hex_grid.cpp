@@ -186,6 +186,7 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_hex_by_coords", "coords"), &BG_HexGrid::get_hex_by_coords);
 	ClassDB::bind_method(D_METHOD("get_hex_by_qr", "qr"), &BG_HexGrid::get_hex_by_qr);
 	ClassDB::bind_method(D_METHOD("add_hex", "hex"), &BG_HexGrid::add_hex);
+	ClassDB::bind_method(D_METHOD("add_hex_from_qr", "qr", "is_empty"), &BG_HexGrid::add_hex_from_qr);
 	ClassDB::bind_method(D_METHOD("add_row", "column_index", "initial_emptys", "count"), &BG_HexGrid::add_row);
 	ClassDB::bind_method(D_METHOD("update_locations", "x_offset_percent", "y_offset_percent"), &BG_HexGrid::update_locations);
 	ClassDB::bind_method(D_METHOD("get_nearest_job_attackable", "from_job_hex", "attackable_types", "bands"), &BG_HexGrid::get_nearest_job_attackable);
@@ -346,7 +347,7 @@ Ref<BG_Hex> BG_HexGrid::get_hex_by_coords(Vector2i coords) const
 
 Ref<BG_Hex> BG_HexGrid::get_hex_by_qr(Vector2i qr) const
 {
-    return grid_map[qr];
+    return grid_map.has(qr) ? grid_map[qr] : nullptr;
 }
 
 int BG_HexGrid::get_disance_between_hexes(const Ref<BG_Hex> from_hex, const Ref<BG_Hex> to_hex)
@@ -470,18 +471,26 @@ void BG_HexGrid::add_hex(const Ref<BG_Hex> hex)
     grid.append(hex);
 }
 
+void BG_HexGrid::add_hex_from_qr(Vector2i qr, bool is_empty)
+{
+    if (grid_map.has(qr)) {
+        UtilityFunctions::print("Grid already has QR:", qr, "Skipped");
+    }
+    Ref<BG_Hex> new_hex = memnew(BG_Hex);
+    new_hex->q = qr.x;
+    new_hex->r = qr.y;
+    new_hex->s = (-new_hex->q - new_hex->r);
+    new_hex->empty = is_empty;
+    // add_hex(new_hex);
+    grid_map[new_hex->get_qr()] = new_hex;
+    grid.append(new_hex);
+}
+
 void BG_HexGrid::add_row(int column_index, int initial_emptys, int count)
 {
     for (int i = 0; i < count + initial_emptys; ++i)
     {
-        Ref<BG_Hex> new_hex = memnew(BG_Hex);
-        new_hex->q = column_index;
-        new_hex->r = i;
-        new_hex->s = (-new_hex->q - new_hex->r);
-        new_hex->empty = i < initial_emptys;
-        // add_hex(new_hex);
-        grid_map[new_hex->get_qr()] = new_hex;
-        grid.append(new_hex);
+        add_hex_from_qr(Vector2i(column_index, i), i < initial_emptys);
     }
 }
 

@@ -5,7 +5,7 @@
       "name": "Test in Editor",
       "type": "lldb",
       "request": "launch",
-      "program": "D:/Personal/Godot/Godot_v4.6.1-stable_win64.exe/Godot_v4.6.1-stable_win64.exe",
+      "program": "E:/Personal/Godot/Godot_v4.6.1-stable_win64.exe/Godot_v4.6.1-stable_win64.exe",
       "args": [
         "-e",
         "--path",
@@ -19,7 +19,7 @@
       "name": "Test runtime",
       "type": "cppvsdbg",
       "request": "launch",
-      "program": "D:/Personal/Godot/Godot_v4.6.1-stable_win64.exe/Godot_v4.6.1-stable_win64.exe",
+      "program": "E:/Personal/Godot/Godot_v4.6.1-stable_win64.exe/Godot_v4.6.1-stable_win64.exe",
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/../Booker",
       "environment": [],
@@ -32,8 +32,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "d:/Personal/Godot/BookerGodotCpp/src",
-      "program": "d:/Personal/Godot/BookerGodotCpp/src/build/Debug/outDebug",
+      "cwd": "E:/Personal/Godot/BookerGodotCpp/src",
+      "program": "E:/Personal/Godot/BookerGodotCpp/src/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
