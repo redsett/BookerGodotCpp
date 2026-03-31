@@ -284,8 +284,6 @@ protected:
     float x_offset_percent = 0.0;
     float y_offset_percent = 0.0;
 
-    Vector2i get_direction_difference(const Ref<BG_Hex> hex, Vector2i d) const;
-
 public:
     BG_HexGrid();
     
@@ -304,6 +302,8 @@ public:
         LEFT,
         TOP_LEFT
 	};
+
+    Vector2i get_direction_difference(const Ref<BG_Hex> hex, Vector2i d) const;
     
     HashMap<HexDirections, Vector2i> hex_directions;
     Vector2i get_hex_direction_vec(HexDirections dir) const { return hex_directions[dir]; }

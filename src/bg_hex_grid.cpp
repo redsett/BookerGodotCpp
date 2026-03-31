@@ -163,6 +163,7 @@ void BG_Hex::_bind_methods()
 ////
 void BG_HexGrid::_bind_methods()
 {
+	ClassDB::bind_method(D_METHOD("get_direction_difference", "hex", "direction"), &BG_HexGrid::get_direction_difference);
 	ClassDB::bind_method(D_METHOD("get_offset_type"), &BG_HexGrid::get_offset_type);
 	ClassDB::bind_method(D_METHOD("set_offset_type"), &BG_HexGrid::set_offset_type);
 	ClassDB::bind_method(D_METHOD("get_grid"), &BG_HexGrid::get_grid);
