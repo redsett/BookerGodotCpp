@@ -134,6 +134,8 @@ public:
 		RESOURCE,
 		BARRICADE,
 		TURRET,
+        DUNGEON_ENTRANCE, // The entrance to a dungeon. Generally placed on the main battle board.
+        DUNGEON_EXIT, // Placed in the dungeon as a place where the user can exit the dungeon. Placing them at a DUNGEON_ENTRANCE.
 	};
 
     static PackedStringArray get_game_asset_type_names() {
@@ -145,6 +147,8 @@ public:
         result.append("RESOURCE");
         result.append("BARRICADE");
         result.append("TURRET");
+        result.append("DUNGEON_ENTRANCE");
+        result.append("DUNGEON_EXIT");
         return result;
     }
 
@@ -159,6 +163,8 @@ public:
             asset_type == BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
             asset_type == BG_HexGameSaveData::HexGameAssetTypes::BARRICADE ||
             asset_type == BG_HexGameSaveData::HexGameAssetTypes::TURRET ||
+            asset_type == BG_HexGameSaveData::HexGameAssetTypes::DUNGEON_ENTRANCE ||
+            asset_type == BG_HexGameSaveData::HexGameAssetTypes::DUNGEON_EXIT ||
             asset_type == BG_HexGameSaveData::HexGameAssetTypes::RESOURCE) {
                 return 0;
         }

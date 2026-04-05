@@ -1167,111 +1167,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 	//UtilityFunctions::print(BG_JsonUtils::GetCBDSheet(data, "globals"));
 
 	/////
-	///// City Info
-	/////
-	{
-		const Dictionary city_info_sheet = BG_JsonUtils::GetCBDSheet(data, "city_info");
-		if (city_info_sheet.has("lines"))
-		{
-			globals->city_info.clear();
-
-			const Array lines = Array(city_info_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++)
-			{
-				const Dictionary entry = lines[i];
-
-				BG_CityInfo *new_city_info = memnew(BG_CityInfo);
-				new_city_info->id = entry["id"];
-				new_city_info->nice_name = entry["name"];
-				new_city_info->icon_path = entry["icon_path"];
-				new_city_info->scene_path = entry["scene_path"];
-				new_city_info->max_health = int(entry["health"]);
-
-				// Equipment
-				const Array equipment_lines = Array(entry["equipment"]);
-				for (int y = 0; y < equipment_lines.size(); y++)
-				{
-					const Dictionary equipment_entry = equipment_lines[y];
-					new_city_info->equipment_ids.append(equipment_entry["equipment"]);
-				}
-				
-				// Barracades
-				const Array barracades_lines = Array(entry["barracades"]);
-				for (int x = 0; x < barracades_lines.size(); x++)
-				{
-					const Dictionary barracades_entry = barracades_lines[x];
-
-					BG_TurretInfo *new_turret_info = memnew(BG_TurretInfo);
-					new_turret_info->nice_name = barracades_entry["name"];
-					new_turret_info->icon_path = barracades_entry["icon_path"];
-					new_turret_info->destroyed_icon_path = barracades_entry["destroyed_icon_path"];
-					new_turret_info->max_health = int(barracades_entry["health"]);
-					new_turret_info->destroyed_vfx_path = barracades_entry["vfx"];
-					new_turret_info->destroyed_sfx_id = barracades_entry["sfx"];
-
-					// 2der Icons
-					const Array twoder_icons_lines = Array(barracades_entry["2der_icons"]);
-					for (int y = 0; y < twoder_icons_lines.size(); y++)
-					{
-						const Dictionary twoder_icons_entry = twoder_icons_lines[y];
-						new_turret_info->twoder_icons.append(twoder_icons_entry["reference"]);
-					}
-
-					// 2der Destroyed Icons
-					const Array twoder_destroyed_icons_lines = Array(barracades_entry["2der_destroyed_icons"]);
-					for (int y = 0; y < twoder_destroyed_icons_lines.size(); y++)
-					{
-						const Dictionary twoder_icons_entry = twoder_destroyed_icons_lines[y];
-						new_turret_info->twoder_destroyed_icons.append(twoder_icons_entry["reference"]);
-					}
-					
-					// Equipment
-					const Array barracades_equipment_lines = Array(barracades_entry["equipment"]);
-					for (int y = 0; y < barracades_equipment_lines.size(); y++)
-					{
-						const Dictionary equipment_entry = barracades_equipment_lines[y];
-						new_turret_info->equipment_ids.append(equipment_entry["equipment"]);
-					}
-					
-					const int turret_type = int(barracades_entry["type"]);
-					switch (turret_type) {
-						case 0:
-							new_city_info->barracades.append(new_turret_info);
-							break;
-						case 1:
-							new_city_info->turrets.append(new_turret_info);
-							break;
-						case 2:
-							new_city_info->towns.append(new_turret_info);
-							break;
-					}
-				}
-
-				// Misc Attributes
-				const Array misc_attributes_lines = Array(entry["misc_attributes"]);
-				for (int y = 0; y < misc_attributes_lines.size(); y++)
-				{
-					const Dictionary misc_attributes_entry = misc_attributes_lines[y];
-
-					String name = misc_attributes_entry["name"];
-					String value1 = misc_attributes_entry["value_1"];
-					String value2 = misc_attributes_entry["value_2"];
-
-					Array values;
-					if (!value1.is_empty())
-						values.append(value1);
-					if (!value2.is_empty())
-						values.append(value2);
-
-					new_city_info->misc_attributes[name] = values;
-				}
-				
-				globals->city_info.append(new_city_info);
-			}
-		}
-	}
-
-	/////
 	///// Challenge Rating Guide
 	/////
 	{
@@ -1862,36 +1757,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 	}
 
 	/////
-	///// Item Slot Types
-	/////
-	{
-		const Dictionary item_slot_types_sheet = BG_JsonUtils::GetCBDSheet(data, "item_slot_types");
-		if (item_slot_types_sheet.has("lines"))
-		{
-			item_slot_types.clear();
-			const Array lines = Array(item_slot_types_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++)
-			{
-				BG_ItemSlotType *new_item_slot_type_class = memnew(BG_ItemSlotType);
-
-				const Dictionary entry = lines[i];
-				new_item_slot_type_class->id = entry["id"];
-				new_item_slot_type_class->name = entry["name"];
-				new_item_slot_type_class->icon_path = entry["icon_path"];
-
-				const Array percentage_of_all_items_dropped_per_act_lines = Array(entry["percentage_of_all_items_dropped_per_act"]);
-				for (int y = 0; y < percentage_of_all_items_dropped_per_act_lines.size(); y++)
-				{
-					const Dictionary percentage_of_all_items_dropped_entry = percentage_of_all_items_dropped_per_act_lines[y];
-					new_item_slot_type_class->percentage_of_all_items_dropped_per_act.append(float(percentage_of_all_items_dropped_entry["percent"]));
-				}
-
-				item_slot_types.append(new_item_slot_type_class);
-			}
-		}
-	}
-
-	/////
 	///// Items
 	/////
 	{
@@ -2358,31 +2223,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			}
 		}
 	}
-
-	/////
-	///// 2der
-	/////
-	{
-		const Dictionary twoder_sheet = BG_JsonUtils::GetCBDSheet(data, "two_der");
-		if (twoder_sheet.has("lines"))
-		{
-			two_der_data_entries.clear();
-			const Array lines = Array(twoder_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++) {
-				const Dictionary entry = lines[i];
-				BG_TwoDer_DataEntry *new_twoder_class = memnew(BG_TwoDer_DataEntry);
-				new_twoder_class->id = entry["id"];
-				new_twoder_class->data_path = entry["data_path"];
-				new_twoder_class->asset_name = entry["asset_name"];
-				new_twoder_class->prop_name = entry["prop_name"];
-				new_twoder_class->anim_name = entry["anim_name"];
-				new_twoder_class->camera_name = entry["camera_name"];
-				new_twoder_class->anim_speed_mult = float(entry["anim_speed_mult"]);
-				new_twoder_class->scale_multiplier = float(entry["scale_multiplier"]);
-				two_der_data_entries.append(new_twoder_class);
-			}
-		}
-	}
 }
 
 void BG_Booker_DB::try_parse_bder_data(const String &file_path)
@@ -2746,6 +2586,127 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		}
 	}
 
+	{ // City Info
+		globals->city_info.clear();
+		const Array lines = get_sheet_by_name("City_Info", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+
+			BG_CityInfo *new_city_info = memnew(BG_CityInfo);
+			new_city_info->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_city_info->nice_name = StringName(get_find_data_by_param_name("name", entry)["value"]);
+			new_city_info->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
+			new_city_info->scene_path = ensure_clean_path(get_find_data_by_param_name("scene_path", entry)["path"]);
+			new_city_info->max_health = int(get_find_data_by_param_name("health", entry)["value"]);
+
+			// Equipment
+			const Dictionary equipment_values = get_find_data_by_param_name("equipment", entry);
+			const Array equipment_values_array = equipment_values["array_values"];
+			for (int x = 0; x < equipment_values_array.size(); ++x) {
+				const Array equipment_values_entry = equipment_values_array[x];
+				new_city_info->equipment_ids.append(StringName(get_find_data_by_param_name("equipment", equipment_values_entry)["element_id_name_value"]));
+			}
+
+			// Barracades
+			const Dictionary barracades_values = get_find_data_by_param_name("barracades", entry);
+			const Array barracades_values_array = barracades_values["array_values"];
+			for (int x = 0; x < barracades_values_array.size(); ++x) {
+				const Array barracades_values_entry = barracades_values_array[x];
+
+				BG_TurretInfo *new_turret_info = memnew(BG_TurretInfo);
+				new_turret_info->nice_name = StringName(get_find_data_by_param_name("name", barracades_values_entry)["value"]);
+				new_turret_info->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", barracades_values_entry)["path"]);
+				new_turret_info->destroyed_icon_path = ensure_clean_path(get_find_data_by_param_name("destroyed_icon_path", barracades_values_entry)["path"]);
+				new_turret_info->max_health = int(get_find_data_by_param_name("health", barracades_values_entry)["value"]);
+				new_turret_info->destroyed_vfx_path = ensure_clean_path(get_find_data_by_param_name("vfx", barracades_values_entry)["path"]);
+				new_turret_info->destroyed_sfx_id = StringName(get_find_data_by_param_name("sfx", barracades_values_entry)["element_id_name_value"]);
+
+				// 2der Icons
+				const Dictionary twoder_icons_values = get_find_data_by_param_name("2der_icons", barracades_values_entry);
+				const Array twoder_icons_values_array = twoder_icons_values["array_values"];
+				for (int y = 0; y < twoder_icons_values_array.size(); ++y) {
+					const Array twoder_icons_values_entry = twoder_icons_values_array[y];
+					new_turret_info->twoder_icons.append(StringName(get_find_data_by_param_name("reference", twoder_icons_values_entry)["element_id_name_value"]));
+				}
+
+				// 2der Destroyed Icons
+				const Dictionary twoder_destroyed_icons_values = get_find_data_by_param_name("2der_destroyed_icons", barracades_values_entry);
+				const Array twoder_destroyed_icons_values_array = twoder_destroyed_icons_values["array_values"];
+				for (int y = 0; y < twoder_destroyed_icons_values_array.size(); ++y) {
+					const Array twoder_destroyed_icons_values_entry = twoder_destroyed_icons_values_array[y];
+					new_turret_info->twoder_destroyed_icons.append(StringName(get_find_data_by_param_name("reference", twoder_destroyed_icons_values_entry)["element_id_name_value"]));
+				}
+
+				// Equipment
+				const Dictionary barracades_equipment_values = get_find_data_by_param_name("equipment", barracades_values_entry);
+				const Array barracades_equipment_values_array = barracades_equipment_values["array_values"];
+				for (int y = 0; y < barracades_equipment_values_array.size(); ++y) {
+					const Array barracades_equipment_values_entry = barracades_equipment_values_array[y];
+					new_turret_info->equipment_ids.append(StringName(get_find_data_by_param_name("equipment", barracades_equipment_values_entry)["element_id_name_value"]));
+				}
+
+				const int turret_type = int(get_find_data_by_param_name("type", barracades_values_entry)["value"]);
+				switch (turret_type) {
+					case 0:
+						new_city_info->barracades.append(new_turret_info);
+						break;
+					case 1:
+						new_city_info->turrets.append(new_turret_info);
+						break;
+					case 2:
+						new_city_info->towns.append(new_turret_info);
+						break;
+				}
+			}
+
+			// Misc Attributes
+			const Dictionary misc_attributes_values = get_find_data_by_param_name("misc_attributes", entry);
+			const Array misc_attributes_values_array = misc_attributes_values["array_values"];
+			for (int x = 0; x < misc_attributes_values_array.size(); ++x) {
+				const Array misc_attributes_values_entry = misc_attributes_values_array[x];
+
+				const String name = String(get_find_data_by_param_name("name", misc_attributes_values_entry)["value"]);
+				const String value1 = String(get_find_data_by_param_name("value_1", misc_attributes_values_entry)["value"]);
+				const String value2 = String(get_find_data_by_param_name("value_2", misc_attributes_values_entry)["value"]);
+
+				Array values;
+				if (!value1.is_empty())
+					values.append(value1);
+				if (!value2.is_empty())
+					values.append(value2);
+
+				new_city_info->misc_attributes[name] = values;
+			}
+
+			globals->city_info.append(new_city_info);
+		}
+	}
+
+	{ // Item Slot Types
+		item_slot_types.clear();
+		const Array lines = get_sheet_by_name("Item_Slot_Types", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+
+			BG_ItemSlotType *new_item_slot_type_class = memnew(BG_ItemSlotType);
+			new_item_slot_type_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_item_slot_type_class->name = StringName(get_find_data_by_param_name("name", entry)["value"]);
+			new_item_slot_type_class->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
+
+			// Percentage of all items dropped per act.
+			const Dictionary percentage_of_all_items_dropped_per_act_values = get_find_data_by_param_name("percentage_of_all_items_dropped_per_act", entry);
+			const Array percentage_of_all_items_dropped_per_act_values_array = percentage_of_all_items_dropped_per_act_values["array_values"];
+			for (int x = 0; x < percentage_of_all_items_dropped_per_act_values_array.size(); ++x) {
+				const Array percentage_of_all_items_dropped_per_act_values_entry = percentage_of_all_items_dropped_per_act_values_array[x];
+				new_item_slot_type_class->percentage_of_all_items_dropped_per_act.append(
+					float(get_find_data_by_param_name("percent", percentage_of_all_items_dropped_per_act_values_entry)["value"])
+				);
+			}
+
+			item_slot_types.append(new_item_slot_type_class);
+		}
+	}
+
 	{ // Misc Globals
 		const Array lines = get_sheet_by_name("Misc_Globals", data);
 		for (int i = 0; i < lines.size(); ++i) {
@@ -2868,6 +2829,26 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 					globals->day_cycle_offset_per_act.append(int(get_find_data_by_param_name("offset", day_cycle_offset_per_act_entry)["value"]));
 				}
 			}
+		}
+	}
+
+	{ // 2der
+		two_der_data_entries.clear();
+		const Array lines = get_sheet_by_name("Two_Der", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+			BG_TwoDer_DataEntry *new_twoder_class = memnew(BG_TwoDer_DataEntry);
+
+			new_twoder_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_twoder_class->data_path = ensure_clean_path(get_find_data_by_param_name("data_path", entry)["path"]);
+			new_twoder_class->asset_name = StringName(get_find_data_by_param_name("asset_name", entry)["value"]);
+			new_twoder_class->prop_name = StringName(get_find_data_by_param_name("prop_name", entry)["value"]);
+			new_twoder_class->anim_name = StringName(get_find_data_by_param_name("anim_name", entry)["value"]);
+			new_twoder_class->camera_name = StringName(get_find_data_by_param_name("camera_name", entry)["value"]);
+			new_twoder_class->anim_speed_mult = float(get_find_data_by_param_name("anim_speed_mult", entry)["value"]);
+			new_twoder_class->scale_multiplier = float(get_find_data_by_param_name("scale_multiplier", entry)["value"]);
+
+			two_der_data_entries.append(new_twoder_class);
 		}
 	}
 

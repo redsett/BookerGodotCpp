@@ -109,7 +109,10 @@ void BG_HexGameSaveData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_week_of_last_active_objective"), &BG_HexGameSaveData::get_week_of_last_active_objective);
 	ClassDB::bind_method(D_METHOD("set_week_of_last_active_objective"), &BG_HexGameSaveData::set_week_of_last_active_objective);
 
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "asset_type", PROPERTY_HINT_ENUM, "BAND:0,JOB:1,CITY:2,TOWN:3,RESOURCE:4,BARRICADE:5,TURRET:6"), "set_asset_type", "get_asset_type");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "asset_type", PROPERTY_HINT_ENUM, 
+        "BAND:0,JOB:1,CITY:2,TOWN:3,RESOURCE:4,BARRICADE:5,TURRET:6,DUNGEON_ENTRANCE:7,DUNGEON_EXIT:8"), 
+        "set_asset_type", "get_asset_type"
+    );
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_newly_added_to_board"), "set_is_newly_added_to_board", "get_is_newly_added_to_board");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "has_attacked"), "set_has_attacked", "get_has_attacked");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "can_move"), "set_can_move", "get_can_move");
@@ -130,6 +133,8 @@ void BG_HexGameSaveData::_bind_methods()
     BIND_ENUM_CONSTANT(RESOURCE);
     BIND_ENUM_CONSTANT(BARRICADE);
     BIND_ENUM_CONSTANT(TURRET);
+    BIND_ENUM_CONSTANT(DUNGEON_ENTRANCE);
+    BIND_ENUM_CONSTANT(DUNGEON_EXIT);
 }
 
 ////
