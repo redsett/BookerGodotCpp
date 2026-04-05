@@ -8,6 +8,8 @@
 #include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
+#include <string>
+
 using namespace godot;
 
 struct counter
@@ -40,6 +42,11 @@ static Color convert_int_to_color(int color_int)
 		g > 0 ? g/255.0 : 0.0, 
 		b > 0 ? b/255.0 : 0.0
 	);
+}
+
+static Color convert_hex_to_color(const String &hex)
+{
+	return Color(hex);
 }
 
 struct fraction_struct
@@ -1232,43 +1239,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 	}
 
 	/////
-	///// Rarity Types
-	/////
-	{
-		const Dictionary rarity_types_sheet = BG_JsonUtils::GetCBDSheet(data, "rarity_types");
-		if (rarity_types_sheet.has("lines"))
-		{
-			rarity_types.clear();
-
-			const Array lines = Array(rarity_types_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++)
-			{
-				const Dictionary entry = lines[i];
-				
-				BG_RarityDetails *new_rarity_type = memnew(BG_RarityDetails);
-				new_rarity_type->id = entry["id"];
-				new_rarity_type->equipment_prefix_name = entry["equipment_prefix_name"];
-				new_rarity_type->beast_part_prefix_name = entry["beast_part_prefix_name"];
-				new_rarity_type->color = convert_int_to_color(int(entry["color"]));
-				const float color_muitiplier = float(entry["color_muitiplier"]);
-				new_rarity_type->color.r *= color_muitiplier;
-				new_rarity_type->color.g *= color_muitiplier;
-				new_rarity_type->color.b *= color_muitiplier;
-				new_rarity_type->damage_multiplier = float(entry["damage_multiplier"]);
-
-				const Array percentage_of_all_items_dropped_per_act_lines = Array(entry["percentage_of_all_items_dropped_per_act"]);
-				for (int y = 0; y < percentage_of_all_items_dropped_per_act_lines.size(); y++)
-				{
-					const Dictionary percentage_of_all_items_dropped_entry = percentage_of_all_items_dropped_per_act_lines[y];
-					new_rarity_type->percentage_of_all_items_dropped_per_act.append(float(percentage_of_all_items_dropped_entry["percent"]));
-				}
-
-				rarity_types.append(new_rarity_type);
-			}
-		}
-	}
-
-	/////
 	///// Stat Types
 	/////
 	{
@@ -2202,27 +2172,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			}
 		}
 	}
-
-	/////
-	///// Resource Types
-	/////
-	{
-		const Dictionary resource_types_sheet = BG_JsonUtils::GetCBDSheet(data, "resource_types");
-		if (resource_types_sheet.has("lines"))
-		{
-			resource_type_details.clear();
-			const Array lines = Array(resource_types_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++)
-			{
-				const Dictionary entry = lines[i];
-				BG_ResourceTypeDetails *new_resource_type_class = memnew(BG_ResourceTypeDetails);
-				new_resource_type_class->id = entry["id"];
-				new_resource_type_class->icon_path = entry["icon_path"];
-
-				resource_type_details[new_resource_type_class->id] = new_resource_type_class;
-			}
-		}
-	}
 }
 
 void BG_Booker_DB::try_parse_bder_data(const String &file_path)
@@ -2832,6 +2781,49 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		}
 	}
 
+	{ // Rarity Type
+		rarity_types.clear();
+		const Array lines = get_sheet_by_name("Rarity_Types", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+
+			BG_RarityDetails *new_rarity_type = memnew(BG_RarityDetails);
+			new_rarity_type->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_rarity_type->equipment_prefix_name = StringName(get_find_data_by_param_name("equipment_prefix_name", entry)["value"]);
+			new_rarity_type->beast_part_prefix_name = StringName(get_find_data_by_param_name("beast_part_prefix_name", entry)["value"]);
+			new_rarity_type->color = convert_hex_to_color(get_find_data_by_param_name("color", entry)["value"]);
+			const float color_muitiplier = float(get_find_data_by_param_name("color_muitiplier", entry)["value"]);
+			new_rarity_type->color.r *= color_muitiplier;
+			new_rarity_type->color.g *= color_muitiplier;
+			new_rarity_type->color.b *= color_muitiplier;
+			new_rarity_type->damage_multiplier = float(get_find_data_by_param_name("damage_multiplier", entry)["value"]);
+
+			// Percentage of all items dropped per act
+			const Dictionary percentage_of_all_items_dropped_per_act_values = get_find_data_by_param_name("percentage_of_all_items_dropped_per_act", entry);
+			const Array percentage_of_all_items_dropped_per_act_values_array = percentage_of_all_items_dropped_per_act_values["array_values"];
+			for (int x = 0; x < percentage_of_all_items_dropped_per_act_values_array.size(); ++x) {
+				const Array percentage_of_all_items_dropped_per_act_values_entry = percentage_of_all_items_dropped_per_act_values_array[x];
+				new_rarity_type->percentage_of_all_items_dropped_per_act.append(float(get_find_data_by_param_name("percent", percentage_of_all_items_dropped_per_act_values_entry)["value"]));
+			}
+
+			rarity_types.append(new_rarity_type);
+		}
+	}
+
+	{ // Resource Types
+		resource_type_details.clear();
+		const Array lines = get_sheet_by_name("Resource_Types", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+
+			BG_ResourceTypeDetails *new_resource_type_class = memnew(BG_ResourceTypeDetails);
+			new_resource_type_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_resource_type_class->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
+
+			resource_type_details[new_resource_type_class->id] = new_resource_type_class;
+		}
+	}
+
 	{ // 2der
 		two_der_data_entries.clear();
 		const Array lines = get_sheet_by_name("Two_Der", data);
@@ -2851,7 +2843,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			two_der_data_entries.append(new_twoder_class);
 		}
 	}
-
 }
 
 BG_Booker_DB::BG_Booker_DB()
