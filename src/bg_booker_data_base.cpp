@@ -1174,219 +1174,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 	//UtilityFunctions::print(BG_JsonUtils::GetCBDSheet(data, "globals"));
 
 	/////
-	///// Challenge Rating Guide
-	/////
-	{
-		const Dictionary challenge_rating_guide_sheet = BG_JsonUtils::GetCBDSheet(data, "challenge_rating_guide");
-		if (challenge_rating_guide_sheet.has("lines"))
-		{
-			globals->challenge_rating_guide.clear();
-
-			const Array lines = Array(challenge_rating_guide_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++)
-			{
-				const Dictionary entry = lines[i];
-				BG_ChallengeRatingGuide *challenge_rating_guide_class = memnew(BG_ChallengeRatingGuide);
-				challenge_rating_guide_class->cr_min_max = Vector2(float(entry["cr_min"]), float(entry["cr_max"]));
-				challenge_rating_guide_class->job_rep_reward = int(entry["job_rep_reward"]);
-				challenge_rating_guide_class->job_duralation = int(entry["job_duralation"]);
-				challenge_rating_guide_class->item_durability_consumption = float(entry["item_durability_consumption"]);
-				challenge_rating_guide_class->item_fame_addition = float(entry["item_fame_addition"]);
-				globals->challenge_rating_guide.append(challenge_rating_guide_class);
-			}
-		}
-	}
-
-	/////
-	///// Booker Skill Tree
-	/////
-	{
-		const Dictionary booker_skill_tree_sheet = BG_JsonUtils::GetCBDSheet(data, "booker_skill_tree");
-		if (booker_skill_tree_sheet.has("lines"))
-		{
-			booker_skill_tree_details.clear();
-			const Array lines = Array(booker_skill_tree_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++)
-			{
-				const Dictionary entry = lines[i];
-				if (bool(entry["disabled"]))
-					continue;
-				BG_BookerSkillTreeSlotDetails *new_booker_skill_tree_slot_details_class = memnew(BG_BookerSkillTreeSlotDetails);
-				new_booker_skill_tree_slot_details_class->id = entry["id"];
-				new_booker_skill_tree_slot_details_class->is_parent_button = bool(entry["is_parent_btn"]);
-				new_booker_skill_tree_slot_details_class->skill_name = entry["skill_name"];
-				new_booker_skill_tree_slot_details_class->skill_description = entry["skill_description"];
-				new_booker_skill_tree_slot_details_class->required_rep = int(entry["required_rep"]);
-				if (entry.has("parent_skill")) {
-					new_booker_skill_tree_slot_details_class->parent_skill_id = entry["parent_skill"];
-				}
-
-				// Value Attributes
-				const Array value_attribute_lines = Array(entry["value_attributes"]);
-				for (int y = 0; y < value_attribute_lines.size(); y++)
-				{
-					const Dictionary value_attribute_entry = value_attribute_lines[y];
-
-					const float value1 = float(value_attribute_entry["value_1"]);
-					const float value2 = float(value_attribute_entry["value_2"]);
-					new_booker_skill_tree_slot_details_class->value_attributes.append(value1);
-					new_booker_skill_tree_slot_details_class->value_attributes.append(value2);
-				}
-
-				booker_skill_tree_details.append(new_booker_skill_tree_slot_details_class);
-			}
-		}
-	}
-
-	/////
-	///// Stat Types
-	/////
-	{
-		const Dictionary stat_types_sheet = BG_JsonUtils::GetCBDSheet(data, "stat_types");
-		if (stat_types_sheet.has("lines"))
-		{
-			stat_types.clear();
-
-			const Array lines = Array(stat_types_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++)
-			{
-				const Dictionary entry = lines[i];
-				if (bool(entry["disabled"]))
-					continue;
-
-				BG_UnitStatDetails *new_stat_types = memnew(BG_UnitStatDetails);
-				new_stat_types->id = entry["id"];
-				new_stat_types->nice_name = entry["name"];
-				new_stat_types->icon_path = entry["icon_path"];
-				new_stat_types->is_damage_type = bool(entry["is_damage_type"]);
-				if (entry.has("weak_to_element")) {
-					new_stat_types->weak_to_element = entry["weak_to_element"];
-				}
-				new_stat_types->widget_color = convert_int_to_color(int(entry["widget_color"]));
-				new_stat_types->text_color = convert_int_to_color(int(entry["text_color"]));
-				new_stat_types->in_world_color = convert_int_to_color(int(entry["in_world_color"]));
-
-				stat_types.append(new_stat_types);
-			}
-		}
-	}
-
-	/////
-	///// Caste Types
-	/////
-	{
-		const Dictionary caste_types_sheet = BG_JsonUtils::GetCBDSheet(data, "caste_types");
-		if (caste_types_sheet.has("lines"))
-		{
-			band_info->unit_castes.clear();
-
-			const Array lines = Array(caste_types_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++)
-			{
-				const Dictionary entry = lines[i];
-				if (bool(entry["disabled"]))
-					continue;
-
-				BG_UnitCaste *new_unit_caste = memnew(BG_UnitCaste);
-				new_unit_caste->id = entry["id"];
-				new_unit_caste->name = entry["name"];
-				new_unit_caste->icon_path = entry["icon_path"];
-
-				// Hue Shifting
-				const Array hue_shifting_lines = Array(entry["hue_shifting"]);
-				for (int y = 0; y < hue_shifting_lines.size(); y++)
-				{
-					const Dictionary hue_shifting_entry = hue_shifting_lines[y];
-
-					BG_HueShiftData *new_hue_shift_data = memnew(BG_HueShiftData);
-					new_hue_shift_data->mask_path = hue_shifting_entry["mask_path"];
-					new_hue_shift_data->from_color = convert_int_to_color(int(hue_shifting_entry["from_color"]));
-					new_hue_shift_data->multiplier = float(hue_shifting_entry["multiplier"]);
-
-					new_unit_caste->hue_shift_data = new_hue_shift_data;
-				}
-
-				new_unit_caste->lod_mesh_paths.clear();
-				const Array lod_mesh_path_lines = Array(entry["lod_mesh_paths"]);
-				for (int y = 0; y < lod_mesh_path_lines.size(); y++)
-				{
-					const Dictionary lod_mesh_path_entry = lod_mesh_path_lines[y];
-					new_unit_caste->lod_mesh_paths.append(lod_mesh_path_entry["path"]);
-				}
-
-				const Array scale_limits_lines = Array(entry["scale_limits"]);
-				for (int y = 0; y < scale_limits_lines.size(); y++)
-				{
-					const Dictionary scale_limits_entry = scale_limits_lines[y];
-					new_unit_caste->scale_min = Vector2(float(scale_limits_entry["min_x"]), float(scale_limits_entry["min_y"]));
-					new_unit_caste->scale_max = Vector2(float(scale_limits_entry["max_x"]), float(scale_limits_entry["max_y"]));
-					new_unit_caste->scale_min_extreme = Vector2(float(scale_limits_entry["extreme_min_x"]), float(scale_limits_entry["extreme_min_y"]));
-					new_unit_caste->scale_max_extreme = Vector2(float(scale_limits_entry["extreme_max_x"]), float(scale_limits_entry["extreme_max_y"]));
-				}
-
-				const Array misc_stats_lines = Array(entry["misc_stats"]);
-				for (int y = 0; y < misc_stats_lines.size(); y++)
-				{
-					const Dictionary misc_stats_entry = misc_stats_lines[y];
-					new_unit_caste->travel_distance = int(misc_stats_entry["travel_distance"]);
-				}
-
-				const Array damage_type_lines = Array(entry["base_damage_type_stats"]);
-				for (int y = 0; y < damage_type_lines.size(); y++)
-				{
-					const Dictionary damage_type_entry = damage_type_lines[y];
-
-					BG_UnitStat *new_stat = memnew(BG_UnitStat);
-					new_stat->id = damage_type_entry["damage_type"];
-					new_stat->bonus_percentage = float(damage_type_entry["base_bonus_percentage"]);
-					new_stat->defensive_value = int(damage_type_entry["starting_value"]);
-
-					new_unit_caste->stats.append(new_stat);
-				}
-
-				const Array starting_items_lines = Array(entry["random_starting_items"]);
-				for (int y = 0; y < starting_items_lines.size(); y++)
-				{
-					const Dictionary starting_item_entry = starting_items_lines[y];
-					new_unit_caste->starting_item_ids.append(starting_item_entry["item"]);
-				}
-
-				const Array element_availability_lines = Array(entry["element_availability"]);
-				for (int y = 0; y < element_availability_lines.size(); y++)
-				{
-					const Dictionary element_availability_entry = element_availability_lines[y];
-					new_unit_caste->element_availability_ids.append(element_availability_entry["element"]);
-				}
-				band_info->unit_castes.append(new_unit_caste);
-			}
-		}
-	}
-
-	/////
-	///// Mail Data
-	/////
-	{
-		const Dictionary mail_data_sheet = BG_JsonUtils::GetCBDSheet(data, "mail_entries");
-		if (mail_data_sheet.has("lines"))
-		{
-			mail_data.clear();
-
-			const Array lines = Array(mail_data_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++)
-			{
-				const Dictionary entry = lines[i];
-
-				BG_MailData *new_mail_data = memnew(BG_MailData);
-				new_mail_data->id = entry["id"];
-				new_mail_data->act = int(entry["act"]);
-				new_mail_data->week = int(entry["week"]);
-
-				mail_data.append(new_mail_data);
-			}
-		}
-	}
-
-	/////
 	///// Marketplace
 	/////
 	{
@@ -1930,42 +1717,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				}
 			}
 		}
-		{
-			const Dictionary consumables_sheet = BG_JsonUtils::GetCBDSheet(data, "consumables");
-			if (consumables_sheet.has("lines"))
-			{
-				const Array lines = Array(consumables_sheet["lines"]);
-				for (int i = 0; i < lines.size(); i++)
-				{
-					const Dictionary entry = lines[i];
-					if (bool(entry["disabled"]))
-						continue;
-					BG_ItemDetails *new_item_class = memnew(BG_ItemDetails);
-					new_item_class->id = entry["id"];
-					new_item_class->name = entry["name"];
-					new_item_class->slot_type_id = entry["slot_type"];
-					new_item_class->icon_path = entry["icon_path"];
-					new_item_class->slot_type = BG_ItemDetails::CONSUMABLE;
-
-					// Effects
-					const Array effect_lines = Array(entry["effects"]);
-					for (int y = 0; y < effect_lines.size(); y++)
-					{
-						const Dictionary effect_entry = effect_lines[y];
-						TypedArray<StringName> effect_ids;
-
-						const Array effects_lines = Array(effect_entry["effects"]);
-						for (int x = 0; x < effects_lines.size(); x++)
-						{
-							const Dictionary effects_entry = effects_lines[x];
-							effect_ids.append(StringName(effects_entry["effect"]));
-						}
-						new_item_class->effects[StringName(effect_entry["rarity"])] = effect_ids;
-					}
-					items.append(new_item_class);
-				}
-			}
-		}
 	}
 
 	/////
@@ -2177,7 +1928,7 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 {
 	const Dictionary data = BG_JsonUtils::ParseJsonFile(file_path);
-	// UtilityFunctions::print(data["all_base_stats"]);
+	// UtilityFunctions::prints(data["all_base_stats"]);
 
 	auto get_find_data_by_param_name = [](const String& param_name, const Array& array_to_parse) -> Dictionary {
 		for (int i = 0; i < array_to_parse.size(); ++i) {
@@ -2305,6 +2056,31 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 
 		return new_class;
 	};
+
+	{ // Stat Types
+		stat_types.clear();
+		const Array lines = get_sheet_by_name("Stat_Types", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+			if (bool(get_find_data_by_param_name("disabled", entry)["value"]))
+				continue;
+			
+			BG_UnitStatDetails *new_stat_types = memnew(BG_UnitStatDetails);
+			new_stat_types->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_stat_types->nice_name = StringName(get_find_data_by_param_name("name", entry)["value"]);
+			new_stat_types->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
+			new_stat_types->is_damage_type = bool(get_find_data_by_param_name("is_damage_type", entry)["value"]);
+			StringName weak_to_element = StringName(get_find_data_by_param_name("weak_to_element", entry)["element_id_name_value"]);
+			if (!weak_to_element.is_empty())
+				new_stat_types->weak_to_element = weak_to_element;
+			
+			new_stat_types->widget_color = convert_hex_to_color(get_find_data_by_param_name("widget_color", entry)["value"]);
+			new_stat_types->text_color = convert_hex_to_color(get_find_data_by_param_name("text_color", entry)["value"]);
+			new_stat_types->in_world_color = convert_hex_to_color(get_find_data_by_param_name("in_world_color", entry)["value"]);
+			
+			stat_types.append(new_stat_types);
+		}
+	}
 
 	{ // Content
 		const Array lines = Array(data["all_content"]);
@@ -2535,6 +2311,164 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		}
 	}
 
+	{ // Booker Skill Tree
+		booker_skill_tree_details.clear();
+		const Array lines = get_sheet_by_name("Booker_Skill_Tree", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+			if (bool(get_find_data_by_param_name("disabled", entry)["value"]))
+				continue;
+			
+			BG_BookerSkillTreeSlotDetails *new_booker_skill_tree_slot_details_class = memnew(BG_BookerSkillTreeSlotDetails);
+			new_booker_skill_tree_slot_details_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_booker_skill_tree_slot_details_class->is_parent_button = bool(get_find_data_by_param_name("is_parent_btn", entry)["value"]);
+			new_booker_skill_tree_slot_details_class->skill_name = StringName(get_find_data_by_param_name("skill_name", entry)["value"]);
+			new_booker_skill_tree_slot_details_class->skill_description = StringName(get_find_data_by_param_name("skill_description", entry)["value"]);
+			new_booker_skill_tree_slot_details_class->required_rep = int(get_find_data_by_param_name("required_rep", entry)["value"]);
+			StringName parent_skill = StringName(get_find_data_by_param_name("parent_skill", entry)["element_id_name_value"]);
+			if (!parent_skill.is_empty())
+				new_booker_skill_tree_slot_details_class->parent_skill_id = parent_skill;
+			
+			// Value Attributes
+			const Dictionary value_attribute_values = get_find_data_by_param_name("value_attributes", entry);
+			const Array value_attribute_values_array = value_attribute_values["array_values"];
+			for (int x = 0; x < value_attribute_values_array.size(); ++x) {
+				const Array value_attribute_values_entry = value_attribute_values_array[x];
+
+				const float value1 = float(get_find_data_by_param_name("value_1", value_attribute_values_entry)["value"]);
+				const float value2 = float(get_find_data_by_param_name("value_2", value_attribute_values_entry)["value"]);
+				new_booker_skill_tree_slot_details_class->value_attributes.append(value1);
+				new_booker_skill_tree_slot_details_class->value_attributes.append(value2);
+			}
+
+			booker_skill_tree_details.append(new_booker_skill_tree_slot_details_class);
+		}
+	}
+
+	{ // Caste Types
+		band_info->unit_castes.clear();
+		const Array lines = get_sheet_by_name("Caste_Types", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+			if (bool(get_find_data_by_param_name("disabled", entry)["value"]))
+				continue;
+
+			BG_UnitCaste *new_unit_caste = memnew(BG_UnitCaste);
+			new_unit_caste->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_unit_caste->name = StringName(get_find_data_by_param_name("name", entry)["value"]);
+			new_unit_caste->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
+			
+			// Hue Shifting
+			const Dictionary hue_shifting_values = get_find_data_by_param_name("hue_shifting", entry);
+			const Array hue_shifting_values_array = hue_shifting_values["array_values"];
+			for (int x = 0; x < hue_shifting_values_array.size(); ++x) {
+				const Array hue_shifting_values_entry = hue_shifting_values_array[x];
+
+				BG_HueShiftData *new_hue_shift_data = memnew(BG_HueShiftData);
+				new_hue_shift_data->mask_path = ensure_clean_path(get_find_data_by_param_name("mask_path", hue_shifting_values_entry)["path"]);
+				new_hue_shift_data->from_color = convert_hex_to_color(get_find_data_by_param_name("from_color", hue_shifting_values_entry)["value"]);
+				new_hue_shift_data->multiplier = float(get_find_data_by_param_name("multiplier", hue_shifting_values_entry)["value"]);
+				new_unit_caste->hue_shift_data = new_hue_shift_data;
+			}
+
+			// LOD Mesh Paths
+			new_unit_caste->lod_mesh_paths.clear();
+			const Dictionary lod_mesh_paths_values = get_find_data_by_param_name("lod_mesh_paths", entry);
+			const Array lod_mesh_paths_values_array = lod_mesh_paths_values["array_values"];
+			for (int x = 0; x < lod_mesh_paths_values_array.size(); ++x) {
+				const Array lod_mesh_paths_values_entry = lod_mesh_paths_values_array[x];
+				new_unit_caste->lod_mesh_paths.append(ensure_clean_path(get_find_data_by_param_name("path", lod_mesh_paths_values_entry)["path"]));
+			}
+
+			// Scale Limits
+			const Dictionary scale_limits_values = get_find_data_by_param_name("scale_limits", entry);
+			const Array scale_limits_values_array = scale_limits_values["array_values"];
+			for (int x = 0; x < scale_limits_values_array.size(); ++x) {
+				const Array scale_limits_values_entry = scale_limits_values_array[x];
+
+				new_unit_caste->scale_min = Vector2(
+					float(get_find_data_by_param_name("min_x", scale_limits_values_entry)["value"]),
+					float(get_find_data_by_param_name("min_y", scale_limits_values_entry)["value"])
+				);
+				new_unit_caste->scale_max = Vector2(
+					float(get_find_data_by_param_name("max_x", scale_limits_values_entry)["value"]),
+					float(get_find_data_by_param_name("max_y", scale_limits_values_entry)["value"])
+				);
+				new_unit_caste->scale_min_extreme = Vector2(
+					float(get_find_data_by_param_name("extreme_min_x", scale_limits_values_entry)["value"]),
+					float(get_find_data_by_param_name("extreme_min_y", scale_limits_values_entry)["value"])
+				);
+				new_unit_caste->scale_max_extreme = Vector2(
+					float(get_find_data_by_param_name("extreme_max_x", scale_limits_values_entry)["value"]),
+					float(get_find_data_by_param_name("extreme_max_y", scale_limits_values_entry)["value"])
+				);
+			}
+
+			// Misc Stats
+			const Dictionary misc_stats_values = get_find_data_by_param_name("misc_stats", entry);
+			const Array misc_stats_values_array = misc_stats_values["array_values"];
+			for (int x = 0; x < misc_stats_values_array.size(); ++x) {
+				const Array misc_stats_values_entry = misc_stats_values_array[x];
+				new_unit_caste->travel_distance = int(get_find_data_by_param_name("travel_distance", misc_stats_values_entry)["value"]);
+			}
+
+			// Base Damage Type Stats
+			const Dictionary base_damage_type_stats_values = get_find_data_by_param_name("base_damage_type_stats", entry);
+			const Array base_damage_type_stats_values_array = base_damage_type_stats_values["array_values"];
+			for (int x = 0; x < base_damage_type_stats_values_array.size(); ++x) {
+				const Array base_damage_type_stats_values_entry = base_damage_type_stats_values_array[x];
+
+				BG_UnitStat *new_stat = memnew(BG_UnitStat);
+				new_stat->id = StringName(get_find_data_by_param_name("damage_type", base_damage_type_stats_values_entry)["element_id_name_value"]);
+				new_stat->bonus_percentage = float(get_find_data_by_param_name("base_bonus_percentage", base_damage_type_stats_values_entry)["value"]);
+				new_stat->defensive_value = int(get_find_data_by_param_name("starting_value", base_damage_type_stats_values_entry)["value"]);
+
+				new_unit_caste->stats.append(new_stat);
+			}
+
+			// Random Starting Items
+			const Dictionary random_starting_items_values = get_find_data_by_param_name("random_starting_items", entry);
+			const Array random_starting_items_values_array = random_starting_items_values["array_values"];
+			for (int x = 0; x < random_starting_items_values_array.size(); ++x) {
+				const Array random_starting_items_values_entry = random_starting_items_values_array[x];
+				new_unit_caste->starting_item_ids.append(
+					StringName(get_find_data_by_param_name("item", random_starting_items_values_entry)["element_id_name_value"])
+				);
+			}
+
+			// Element Availability
+			const Dictionary element_availability_values = get_find_data_by_param_name("element_availability", entry);
+			const Array element_availability_values_array = element_availability_values["array_values"];
+			for (int x = 0; x < element_availability_values_array.size(); ++x) {
+				const Array element_availability_values_entry = element_availability_values_array[x];
+				new_unit_caste->element_availability_ids.append(
+					StringName(get_find_data_by_param_name("element", element_availability_values_entry)["element_id_name_value"])
+				);
+			}
+
+			band_info->unit_castes.append(new_unit_caste);
+		}
+	}
+
+	{ // Challenge Rating Guide
+
+		globals->challenge_rating_guide.clear();
+		const Array lines = get_sheet_by_name("Audio", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+			BG_ChallengeRatingGuide *challenge_rating_guide_class = memnew(BG_ChallengeRatingGuide);
+			challenge_rating_guide_class->cr_min_max = Vector2(
+				float(get_find_data_by_param_name("cr_min", entry)["value"]),
+				float(get_find_data_by_param_name("cr_max", entry)["value"])
+			);
+			challenge_rating_guide_class->job_rep_reward = int(get_find_data_by_param_name("job_rep_reward", entry)["value"]);
+			challenge_rating_guide_class->job_duralation = int(get_find_data_by_param_name("job_duralation", entry)["value"]);
+			challenge_rating_guide_class->item_durability_consumption = float(get_find_data_by_param_name("item_durability_consumption", entry)["value"]);
+			challenge_rating_guide_class->item_fame_addition = float(get_find_data_by_param_name("item_fame_addition", entry)["value"]);
+			globals->challenge_rating_guide.append(challenge_rating_guide_class);
+		}
+	}
+
 	{ // City Info
 		globals->city_info.clear();
 		const Array lines = get_sheet_by_name("City_Info", data);
@@ -2631,6 +2565,42 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		}
 	}
 
+	{ // Consumables
+		const Array lines = get_sheet_by_name("Consumables", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+			if (bool(get_find_data_by_param_name("disabled", entry)["value"]))
+				continue;
+			
+			BG_ItemDetails *new_item_class = memnew(BG_ItemDetails);
+			new_item_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_item_class->name = StringName(get_find_data_by_param_name("name", entry)["value"]);
+			new_item_class->slot_type_id = StringName(get_find_data_by_param_name("slot_type", entry)["element_id_name_value"]);
+			new_item_class->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
+			new_item_class->slot_type = BG_ItemDetails::CONSUMABLE;
+
+			// Effects
+			const Dictionary effect_values = get_find_data_by_param_name("effects", entry);
+			const Array effect_values_array = effect_values["array_values"];
+			for (int x = 0; x < effect_values_array.size(); ++x) {
+				const Array effect_values_entry = effect_values_array[x];
+
+				TypedArray<StringName> effect_ids;
+
+				const Dictionary effects_values = get_find_data_by_param_name("effects", effect_values_entry);
+				const Array effects_values_array = effects_values["array_values"];
+				for (int y = 0; y < effects_values_array.size(); ++y) {
+					const Array effects_values_entry = effects_values_array[y];
+					effect_ids.append(StringName(get_find_data_by_param_name("effect", effects_values_entry)["element_id_name_value"]));
+				}
+				
+				new_item_class->effects[StringName(get_find_data_by_param_name("rarity", effect_values_entry)["element_id_name_value"])] = effect_ids;
+			}
+
+			items.append(new_item_class);
+		}
+	}
+
 	{ // Item Slot Types
 		item_slot_types.clear();
 		const Array lines = get_sheet_by_name("Item_Slot_Types", data);
@@ -2653,6 +2623,21 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			}
 
 			item_slot_types.append(new_item_slot_type_class);
+		}
+	}
+
+	{ // Mail Data
+		mail_data.clear();
+		const Array lines = get_sheet_by_name("Item_Slot_Types", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+
+			BG_MailData *new_mail_data = memnew(BG_MailData);
+			new_mail_data->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_mail_data->act = int(get_find_data_by_param_name("act", entry)["value"]);
+			new_mail_data->week = int(get_find_data_by_param_name("week", entry)["value"]);
+
+			mail_data.append(new_mail_data);
 		}
 	}
 
