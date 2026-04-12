@@ -36,6 +36,8 @@ public:
         NO_STOP_CELL,
         MISC_VISUAL_1,
         COMBAT_ENVIRONMENT,
+        DUNGEON_ENTRANCE,
+        DUNGEON_EXIT,
 	};
 
     static PackedStringArray get_hex_type_names() {
@@ -53,12 +55,32 @@ public:
         result.append("NO_STOP_CELL");
         result.append("MISC_VISUAL_1");
         result.append("COMBAT_ENVIRONMENT");
+        result.append("DUNGEON_ENTRANCE");
+        result.append("DUNGEON_EXIT");
+        return result;
+    }
+
+	enum DungeonTypes : int32_t {
+        RUIN,
+        CAVE,
+        MINE,
+	};
+
+    static PackedStringArray get_dungeon_type_names() {
+        PackedStringArray result;
+        result.append("RUIN");
+        result.append("CAVE");
+        result.append("MINE");
         return result;
     }
 
     HexVisualAssetTypes hex_type = MONSTER_SPAWN;
     HexVisualAssetTypes get_hex_type() const { return hex_type; }
     void set_hex_type(HexVisualAssetTypes v) { hex_type = v; }
+
+    DungeonTypes dungeon_type = RUIN;
+    DungeonTypes get_dungeon_type() const { return dungeon_type; }
+    void set_dungeon_type(DungeonTypes v) { dungeon_type = v; }
 
     float rotation = 0.0;
     float get_rotation() const { return rotation; }
@@ -91,9 +113,14 @@ public:
     bool force_disable_targeting = false;
     bool get_force_disable_targeting() const { return force_disable_targeting; }
     void set_force_disable_targeting(bool v) { force_disable_targeting = v; }
+
+    TypedArray<StringName> misc_stringname_data;
+    TypedArray<StringName> get_misc_stringname_data() { return misc_stringname_data; }
+    void set_misc_stringname_data(TypedArray<StringName> v) { misc_stringname_data = v; }
 };
 
 VARIANT_ENUM_CAST(BG_HexVisualAssetData::HexVisualAssetTypes);
+VARIANT_ENUM_CAST(BG_HexVisualAssetData::DungeonTypes);
 
 ////
 //// BG_HexVisualData
@@ -113,6 +140,8 @@ public:
     TypedArray<BG_HexVisualAssetData> hex_asset_datas;
     TypedArray<BG_HexVisualAssetData> get_hex_asset_datas() const { return hex_asset_datas; }
     void set_hex_asset_datas(TypedArray<BG_HexVisualAssetData> v) { hex_asset_datas = v; }
+
+    Ref<BG_HexVisualAssetData> get_hex_visual_asset_data_by_type(BG_HexVisualAssetData::HexVisualAssetTypes t) const;
 };
 
 ////

@@ -11,9 +11,12 @@
 void BG_HexVisualAssetData::_bind_methods()
 {
     ClassDB::bind_static_method("BG_HexVisualAssetData", D_METHOD("get_hex_type_names"), &BG_HexVisualAssetData::get_hex_type_names);
+    ClassDB::bind_static_method("BG_HexVisualAssetData", D_METHOD("get_dungeon_type_names"), &BG_HexVisualAssetData::get_dungeon_type_names);
 
 	ClassDB::bind_method(D_METHOD("get_hex_type"), &BG_HexVisualAssetData::get_hex_type);
 	ClassDB::bind_method(D_METHOD("set_hex_type"), &BG_HexVisualAssetData::set_hex_type);
+	ClassDB::bind_method(D_METHOD("get_dungeon_type"), &BG_HexVisualAssetData::get_dungeon_type);
+	ClassDB::bind_method(D_METHOD("set_dungeon_type"), &BG_HexVisualAssetData::set_dungeon_type);
 	ClassDB::bind_method(D_METHOD("get_rotation"), &BG_HexVisualAssetData::get_rotation);
 	ClassDB::bind_method(D_METHOD("set_rotation"), &BG_HexVisualAssetData::set_rotation);
 	ClassDB::bind_method(D_METHOD("get_scale_multiplier"), &BG_HexVisualAssetData::get_scale_multiplier);
@@ -30,10 +33,13 @@ void BG_HexVisualAssetData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_asset_health_normalized_percent"), &BG_HexVisualAssetData::set_asset_health_normalized_percent);
 	ClassDB::bind_method(D_METHOD("get_force_disable_targeting"), &BG_HexVisualAssetData::get_force_disable_targeting);
 	ClassDB::bind_method(D_METHOD("set_force_disable_targeting"), &BG_HexVisualAssetData::set_force_disable_targeting);
+	ClassDB::bind_method(D_METHOD("get_misc_stringname_data"), &BG_HexVisualAssetData::get_misc_stringname_data);
+	ClassDB::bind_method(D_METHOD("set_misc_stringname_data"), &BG_HexVisualAssetData::set_misc_stringname_data);
 
     ADD_PROPERTY(PropertyInfo(Variant::INT, "hex_type", PROPERTY_HINT_ENUM, 
-        "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3,SECTION:4,TOWN:5,RESOURCE:6,BAND_SPAWN:7,BARRICADE:8,TURRET:9,NO_STOP_CELL:10,MISC_VISUAL_1:11,COMBAT_ENVIRONMENT:12"), 
+        "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3,SECTION:4,TOWN:5,RESOURCE:6,BAND_SPAWN:7,BARRICADE:8,TURRET:9,NO_STOP_CELL:10,MISC_VISUAL_1:11,COMBAT_ENVIRONMENT:12,DUNGEON_ENTRANCE:13,DUNGEON_EXIT:14"), 
         "set_hex_type", "get_hex_type");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "dungeon_type", PROPERTY_HINT_ENUM, "RUIN:0,CAVE:1,MINE:2"), "set_dungeon_type", "get_dungeon_type");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "rotation"), "set_rotation", "get_rotation");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "scale_multiplier"), "set_scale_multiplier", "get_scale_multiplier");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "section_index"), "set_section_index", "get_section_index");
@@ -42,6 +48,7 @@ void BG_HexVisualAssetData::_bind_methods()
     ADD_PROPERTY(PropertyInfo(Variant::INT, "combat_environment_seed"), "set_combat_environment_seed", "get_combat_environment_seed");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "asset_health_normalized_percent"), "set_asset_health_normalized_percent", "get_asset_health_normalized_percent");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "force_disable_targeting"), "set_force_disable_targeting", "get_force_disable_targeting");
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "misc_stringname_data"), "set_misc_stringname_data", "get_misc_stringname_data");
 
 	BIND_ENUM_CONSTANT(CITY);
 	BIND_ENUM_CONSTANT(REST);
@@ -56,6 +63,12 @@ void BG_HexVisualAssetData::_bind_methods()
 	BIND_ENUM_CONSTANT(NO_STOP_CELL);
 	BIND_ENUM_CONSTANT(MISC_VISUAL_1);
 	BIND_ENUM_CONSTANT(COMBAT_ENVIRONMENT);
+	BIND_ENUM_CONSTANT(DUNGEON_ENTRANCE);
+	BIND_ENUM_CONSTANT(DUNGEON_EXIT);
+
+	BIND_ENUM_CONSTANT(RUIN);
+	BIND_ENUM_CONSTANT(CAVE);
+	BIND_ENUM_CONSTANT(MINE);
 }
 
 ////
@@ -67,9 +80,19 @@ void BG_HexVisualData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_qr"), &BG_HexVisualData::set_qr);
 	ClassDB::bind_method(D_METHOD("get_hex_asset_datas"), &BG_HexVisualData::get_hex_asset_datas);
 	ClassDB::bind_method(D_METHOD("set_hex_asset_datas"), &BG_HexVisualData::set_hex_asset_datas);
+	ClassDB::bind_method(D_METHOD("get_hex_visual_asset_data_by_type"), &BG_HexVisualData::get_hex_visual_asset_data_by_type);
 
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "qr"), "set_qr", "get_qr");
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "hex_asset_datas"), "set_hex_asset_datas", "get_hex_asset_datas");
+}
+
+Ref<BG_HexVisualAssetData> BG_HexVisualData::get_hex_visual_asset_data_by_type(BG_HexVisualAssetData::HexVisualAssetTypes t) const
+{
+	for (int i = 0; i < hex_asset_datas.size(); ++i) {
+		const Ref<BG_HexVisualAssetData> hvad = cast_to<BG_HexVisualAssetData>(hex_asset_datas[i]);
+        if (!hvad.is_null() && hvad->get_hex_type() == t) return hvad;
+    }
+    return nullptr;
 }
 
 ////
