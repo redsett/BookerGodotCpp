@@ -101,6 +101,7 @@ Ref<BG_HexVisualAssetData> BG_HexVisualData::get_hex_visual_asset_data_by_type(B
 void BG_HexGameSaveData::_bind_methods()
 {
     ClassDB::bind_static_method("BG_HexGameSaveData", D_METHOD("get_game_asset_type_names"), &BG_HexGameSaveData::get_game_asset_type_names);
+    ClassDB::bind_static_method("BG_HexGameSaveData", D_METHOD("prep_data_to_move_to_another_board", "old_data", "new_data"), &BG_HexGameSaveData::prep_data_to_move_to_another_board);
 
 	ClassDB::bind_method(D_METHOD("get_asset_type"), &BG_HexGameSaveData::get_asset_type);
 	ClassDB::bind_method(D_METHOD("set_asset_type"), &BG_HexGameSaveData::set_asset_type);
@@ -158,6 +159,24 @@ void BG_HexGameSaveData::_bind_methods()
     BIND_ENUM_CONSTANT(TURRET);
     BIND_ENUM_CONSTANT(DUNGEON_ENTRANCE);
     BIND_ENUM_CONSTANT(DUNGEON_EXIT);
+}
+
+/* static */ void BG_HexGameSaveData::prep_data_to_move_to_another_board(const Ref<BG_HexGameSaveData> old_data, Ref<BG_HexGameSaveData> new_data)
+{
+    if (old_data.is_null() || new_data.is_null()) return;
+    new_data->asset_health_normalized_percent = old_data->asset_health_normalized_percent;
+    new_data->asset_type = old_data->asset_type;
+    new_data->can_move = old_data->can_move;
+    new_data->has_attacked = old_data->has_attacked;
+    new_data->has_played_destroyed_vfx = old_data->has_played_destroyed_vfx;
+    new_data->is_destroyed = old_data->is_destroyed;
+    new_data->is_newly_added_to_board = old_data->is_newly_added_to_board;
+    // new_data->moved_from_qr = old_data->moved_from_qr;
+    new_data->objective_unique_id_reference = old_data->objective_unique_id_reference;
+    // new_data->qr = old_data->qr;
+    new_data->unique_id_reference = old_data->unique_id_reference;
+    // new_data->use_moved_from_qr = old_data->use_moved_from_qr;
+    new_data->week_of_last_active_objective = old_data->week_of_last_active_objective;
 }
 
 ////
@@ -757,7 +776,7 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> instigator, const Ref
     // If the goal is not a empty cell, then find a neighoring one that is empty.
     const int goal_hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ goal->get_qr(), /* do_pass_through_check */ false);
     if (goal_hex_cost == 0) {
-        Ref<BG_Hex> better_goal_cell = get_nearest_empty_cell_neighoring_target(start, goal);
+        Ref<BG_Hex> better_goal_cell = get_nearest_empty_cell_neighoring_target(instigator, goal);
         if (better_goal_cell.is_valid()) {
             return find_path(instigator, start, better_goal_cell, include_start, travel_distance);
         }

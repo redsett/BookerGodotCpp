@@ -1281,6 +1281,10 @@ public:
 	bool get_is_on_battle_board() const { return is_on_battle_board; }
 	void set_is_on_battle_board(bool value) { is_on_battle_board = value; }
 
+	int distance_traveled_this_turn = 0;
+	int get_distance_traveled_this_turn() const { return distance_traveled_this_turn; }
+	void set_distance_traveled_this_turn(int value) { distance_traveled_this_turn = value; }
+
 	bool has_done_combat_this_turn = false;
 	bool get_has_done_combat_this_turn() const { return has_done_combat_this_turn; }
 	void set_has_done_combat_this_turn(bool value) { has_done_combat_this_turn = value; }

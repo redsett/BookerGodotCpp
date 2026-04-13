@@ -683,6 +683,8 @@ void BG_Band::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_resting"), &BG_Band::set_resting);
 	ClassDB::bind_method(D_METHOD("get_is_on_battle_board"), &BG_Band::get_is_on_battle_board);
 	ClassDB::bind_method(D_METHOD("set_is_on_battle_board"), &BG_Band::set_is_on_battle_board);
+	ClassDB::bind_method(D_METHOD("get_distance_traveled_this_turn"), &BG_Band::get_distance_traveled_this_turn);
+	ClassDB::bind_method(D_METHOD("set_distance_traveled_this_turn"), &BG_Band::set_distance_traveled_this_turn);
 	ClassDB::bind_method(D_METHOD("get_has_done_combat_this_turn"), &BG_Band::get_has_done_combat_this_turn);
 	ClassDB::bind_method(D_METHOD("set_has_done_combat_this_turn"), &BG_Band::set_has_done_combat_this_turn);
 	ClassDB::bind_method(D_METHOD("get_knocked_out_turns"), &BG_Band::get_knocked_out_turns);
@@ -704,6 +706,7 @@ void BG_Band::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "resting"), "set_resting", "get_resting");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_on_battle_board"), "set_is_on_battle_board", "get_is_on_battle_board");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "distance_traveled_this_turn"), "set_distance_traveled_this_turn", "get_distance_traveled_this_turn");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "has_done_combat_this_turn"), "set_has_done_combat_this_turn", "get_has_done_combat_this_turn");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "knocked_out_turns"), "set_knocked_out_turns", "get_knocked_out_turns");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "band_members"), "set_band_members", "get_band_members");
