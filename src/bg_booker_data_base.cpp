@@ -681,6 +681,8 @@ void BG_Band::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_name"), &BG_Band::set_name);
 	ClassDB::bind_method(D_METHOD("get_resting"), &BG_Band::get_resting);
 	ClassDB::bind_method(D_METHOD("set_resting"), &BG_Band::set_resting);
+	ClassDB::bind_method(D_METHOD("get_is_on_battle_board"), &BG_Band::get_is_on_battle_board);
+	ClassDB::bind_method(D_METHOD("set_is_on_battle_board"), &BG_Band::set_is_on_battle_board);
 	ClassDB::bind_method(D_METHOD("get_has_done_combat_this_turn"), &BG_Band::get_has_done_combat_this_turn);
 	ClassDB::bind_method(D_METHOD("set_has_done_combat_this_turn"), &BG_Band::set_has_done_combat_this_turn);
 	ClassDB::bind_method(D_METHOD("get_knocked_out_turns"), &BG_Band::get_knocked_out_turns);
@@ -701,6 +703,7 @@ void BG_Band::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "unique_id"), "set_unique_id", "get_unique_id");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "resting"), "set_resting", "get_resting");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_on_battle_board"), "set_is_on_battle_board", "get_is_on_battle_board");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "has_done_combat_this_turn"), "set_has_done_combat_this_turn", "get_has_done_combat_this_turn");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "knocked_out_turns"), "set_knocked_out_turns", "get_knocked_out_turns");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "band_members"), "set_band_members", "get_band_members");
@@ -769,6 +772,8 @@ void BG_Job::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_monsters"), &BG_Job::set_monsters);
 	ClassDB::bind_method(D_METHOD("get_formation"), &BG_Job::get_formation);
 	ClassDB::bind_method(D_METHOD("set_formation"), &BG_Job::set_formation);
+	ClassDB::bind_method(D_METHOD("get_is_on_battle_board"), &BG_Job::get_is_on_battle_board);
+	ClassDB::bind_method(D_METHOD("set_is_on_battle_board"), &BG_Job::set_is_on_battle_board);
 	ClassDB::bind_method(D_METHOD("try_set_all_monsters_to_stoned", "is_stoned"), &BG_Job::try_set_all_monsters_to_stoned);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "job_id"), "set_job_id", "get_job_id");
@@ -777,6 +782,7 @@ void BG_Job::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "weeks_remaining_unless_removed"), "set_weeks_remaining_unless_removed", "get_weeks_remaining_unless_removed");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "monsters"), "set_monsters", "get_monsters");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "formation"), "set_formation", "get_formation");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_on_battle_board"), "set_is_on_battle_board", "get_is_on_battle_board");
 }
 
 void BG_Job::try_set_all_monsters_to_stoned(bool stoned)

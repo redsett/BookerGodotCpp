@@ -1277,6 +1277,10 @@ public:
 	bool get_resting() const { return resting; }
 	void set_resting(bool value) { resting = value; }
 
+	bool is_on_battle_board = false;
+	bool get_is_on_battle_board() const { return is_on_battle_board; }
+	void set_is_on_battle_board(bool value) { is_on_battle_board = value; }
+
 	bool has_done_combat_this_turn = false;
 	bool get_has_done_combat_this_turn() const { return has_done_combat_this_turn; }
 	void set_has_done_combat_this_turn(bool value) { has_done_combat_this_turn = value; }
@@ -1380,6 +1384,10 @@ public:
 	Dictionary formation; // BG_Monster : int(cell index)
 	Dictionary get_formation() const { return formation; }
 	void set_formation(Dictionary value) { formation = value; }
+
+	bool is_on_battle_board = false;
+	bool get_is_on_battle_board() const { return is_on_battle_board; }
+	void set_is_on_battle_board(bool value) { is_on_battle_board = value; }
 
 	void try_set_all_monsters_to_stoned(bool stoned);
 };

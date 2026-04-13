@@ -33,8 +33,8 @@ void BG_HexVisualAssetData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_asset_health_normalized_percent"), &BG_HexVisualAssetData::set_asset_health_normalized_percent);
 	ClassDB::bind_method(D_METHOD("get_force_disable_targeting"), &BG_HexVisualAssetData::get_force_disable_targeting);
 	ClassDB::bind_method(D_METHOD("set_force_disable_targeting"), &BG_HexVisualAssetData::set_force_disable_targeting);
-	ClassDB::bind_method(D_METHOD("get_misc_stringname_data"), &BG_HexVisualAssetData::get_misc_stringname_data);
-	ClassDB::bind_method(D_METHOD("set_misc_stringname_data"), &BG_HexVisualAssetData::set_misc_stringname_data);
+	ClassDB::bind_method(D_METHOD("get_misc_data"), &BG_HexVisualAssetData::get_misc_data);
+	ClassDB::bind_method(D_METHOD("set_misc_data"), &BG_HexVisualAssetData::set_misc_data);
 
     ADD_PROPERTY(PropertyInfo(Variant::INT, "hex_type", PROPERTY_HINT_ENUM, 
         "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3,SECTION:4,TOWN:5,RESOURCE:6,BAND_SPAWN:7,BARRICADE:8,TURRET:9,NO_STOP_CELL:10,MISC_VISUAL_1:11,COMBAT_ENVIRONMENT:12,DUNGEON_ENTRANCE:13,DUNGEON_EXIT:14"), 
@@ -48,7 +48,7 @@ void BG_HexVisualAssetData::_bind_methods()
     ADD_PROPERTY(PropertyInfo(Variant::INT, "combat_environment_seed"), "set_combat_environment_seed", "get_combat_environment_seed");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "asset_health_normalized_percent"), "set_asset_health_normalized_percent", "get_asset_health_normalized_percent");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "force_disable_targeting"), "set_force_disable_targeting", "get_force_disable_targeting");
-    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "misc_stringname_data"), "set_misc_stringname_data", "get_misc_stringname_data");
+    ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "misc_data"), "set_misc_data", "get_misc_data");
 
 	BIND_ENUM_CONSTANT(CITY);
 	BIND_ENUM_CONSTANT(REST);

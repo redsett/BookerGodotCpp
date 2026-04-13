@@ -114,9 +114,9 @@ public:
     bool get_force_disable_targeting() const { return force_disable_targeting; }
     void set_force_disable_targeting(bool v) { force_disable_targeting = v; }
 
-    TypedArray<StringName> misc_stringname_data;
-    TypedArray<StringName> get_misc_stringname_data() { return misc_stringname_data; }
-    void set_misc_stringname_data(TypedArray<StringName> v) { misc_stringname_data = v; }
+    Dictionary misc_data;
+    Dictionary get_misc_data() { return misc_data; }
+    void set_misc_data(Dictionary v) { misc_data = v; }
 };
 
 VARIANT_ENUM_CAST(BG_HexVisualAssetData::HexVisualAssetTypes);
