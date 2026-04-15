@@ -9,7 +9,7 @@
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
 
-// #include <bg_reactive.hpp>
+// #include <bg_hex_grid.hpp>
 
 using namespace godot;
 
@@ -68,6 +68,123 @@ public:
 
 	String code_end;
 	String get_code_end() const { return code_end; }
+};
+
+////
+//// BG_BattleBoard_HexTypeVisualDetails
+////
+class BG_BattleBoard_HexTypeVisualDetails : public Object
+{
+	GDCLASS(BG_BattleBoard_HexTypeVisualDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName icon_path;
+	StringName get_icon_path() const { return icon_path; }
+
+	StringName two_der_id;
+	StringName get_two_der_id() const { return two_der_id; }
+
+	StringName scene_path;
+	StringName get_scene_path() const { return scene_path; }
+
+	StringName destroyed_icon_path;
+	StringName get_destroyed_icon_path() const { return destroyed_icon_path; }
+
+	StringName destroyed_two_der_id;
+	StringName get_destroyed_two_der_id() const { return destroyed_two_der_id; }
+
+	StringName destroyed_scene_path;
+	StringName get_destroyed_scene_path() const { return destroyed_scene_path; }
+
+	Color tint = Color(1.0, 1.0, 1.0);
+	Color get_hex_tint() const { return tint; }
+};
+
+////
+//// BG_BattleBoard_HexTypeDetails
+////
+class BG_BattleBoard_HexTypeDetails : public Object
+{
+	GDCLASS(BG_BattleBoard_HexTypeDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	// BG_HexVisualAssetData::HexVisualAssetTypes hex_type;
+	// BG_HexVisualAssetData::HexVisualAssetTypes get_hex_type() const { return hex_type; }
+	int hex_type = 0;
+	int get_hex_type() const { return hex_type; }
+
+	TypedArray<BG_BattleBoard_HexTypeVisualDetails> visuals;
+	TypedArray<BG_BattleBoard_HexTypeVisualDetails> get_visuals() const { return visuals; }
+
+	StringName destroyed_vfx_scene_path;
+	StringName get_destroyed_vfx_scene_path() const { return destroyed_vfx_scene_path; }
+
+	StringName destroyed_sfx_id;
+	StringName get_destroyed_sfx_id() const { return destroyed_sfx_id; }
+
+	StringName hex_visual_scene_path_override;
+	StringName get_hex_visual_scene_path_override() const { return hex_visual_scene_path_override; }
+
+	float health_effectiveness = 0.0f;
+	float get_health_effectiveness() const { return health_effectiveness; }
+
+	TypedArray<StringName> equipment_ids;
+	TypedArray<StringName> get_equipment_ids() const { return equipment_ids; }
+};
+
+////
+//// BG_BattleBoardDetails
+////
+class BG_BattleBoardDetails : public Object
+{
+	GDCLASS(BG_BattleBoardDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	StringName unique_save_name;
+	StringName get_unique_save_name() const { return unique_save_name; }
+
+	StringName board_path;
+	StringName get_board_path() const { return board_path; }
+
+	StringName default_hex_visual_path;
+	StringName get_default_hex_visual_path() const { return default_hex_visual_path; }
+
+	TypedArray<BG_BattleBoard_HexTypeDetails> hex_types;
+	TypedArray<BG_BattleBoard_HexTypeDetails> get_hex_types() const { return hex_types; }
+
+	TypedArray<BG_BattleBoard_HexTypeDetails> get_hex_types_by_type(int type) const {
+		TypedArray<BG_BattleBoard_HexTypeDetails> result;
+		for (int i = 0; i < hex_types.size(); ++i) {
+			BG_BattleBoard_HexTypeDetails *ht = cast_to<BG_BattleBoard_HexTypeDetails>(hex_types[i]);
+			if (ht->hex_type == type)
+				result.append(ht);
+		}
+		return result;
+	}
+
+	BG_BattleBoard_HexTypeDetails *get_hex_type_by_id(StringName id) const {
+		for (int i = 0; i < hex_types.size(); ++i) {
+			BG_BattleBoard_HexTypeDetails *ht = cast_to<BG_BattleBoard_HexTypeDetails>(hex_types[i]);
+			if (ht->id == id)
+				return ht;
+		}
+		return nullptr;
+	}
 };
 
 ////
@@ -1573,9 +1690,6 @@ protected:
 	static void _bind_methods();
 
 public:
-	StringName battle_board_scene_path;
-	StringName get_battle_board_scene_path() const { return battle_board_scene_path; }
-
 	int total_week_count = 0;
 	int get_total_week_count() const { return total_week_count; }
 
@@ -1704,6 +1818,9 @@ public:
 
 	StringName scene_path;
 	StringName get_scene_path() const { return scene_path; }
+
+	StringName battle_board_id;
+	StringName get_battle_board_id() const { return battle_board_id; }
 
 	int max_health = 0;
 	int get_max_health() const { return max_health; }
@@ -1870,6 +1987,18 @@ public:
 
 	TypedArray<BG_BaseStat> base_stats;
 	TypedArray<BG_BaseStat> get_base_stats() const { return base_stats; }
+	
+	TypedArray<BG_BattleBoardDetails> battle_boards_details;
+	TypedArray<BG_BattleBoardDetails> get_battle_boards_details() const { return battle_boards_details; }
+
+	BG_BattleBoardDetails *get_battle_board_by_id(StringName id) {
+		for (int i = 0; i < battle_boards_details.size(); ++i) {
+			BG_BattleBoardDetails *bb = cast_to<BG_BattleBoardDetails>(battle_boards_details[i]);
+			if (bb->get_id() == id)
+				return bb;
+		}
+		return nullptr;
+	}
 
 	HashMap<StringName, BG_ResourceTypeDetails *> resource_type_details;
 	BG_ResourceTypeDetails *get_resource_type_details_by_id(StringName resource_id) const {

@@ -116,6 +116,50 @@ void BG_LocalizeEntryData::_bind_methods()
 }
 
 ////
+//// BG_BattleBoard_HexTypeVisualDetails
+////
+void BG_BattleBoard_HexTypeVisualDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_BattleBoard_HexTypeVisualDetails::get_icon_path);
+	ClassDB::bind_method(D_METHOD("get_two_der_id"), &BG_BattleBoard_HexTypeVisualDetails::get_two_der_id);
+	ClassDB::bind_method(D_METHOD("get_scene_path"), &BG_BattleBoard_HexTypeVisualDetails::get_scene_path);
+	ClassDB::bind_method(D_METHOD("get_destroyed_icon_path"), &BG_BattleBoard_HexTypeVisualDetails::get_destroyed_icon_path);
+	ClassDB::bind_method(D_METHOD("get_destroyed_two_der_id"), &BG_BattleBoard_HexTypeVisualDetails::get_destroyed_two_der_id);
+	ClassDB::bind_method(D_METHOD("get_destroyed_scene_path"), &BG_BattleBoard_HexTypeVisualDetails::get_destroyed_scene_path);
+	ClassDB::bind_method(D_METHOD("get_hex_tint"), &BG_BattleBoard_HexTypeVisualDetails::get_hex_tint);
+}
+
+////
+//// BG_BattleBoard_HexTypeDetails
+////
+void BG_BattleBoard_HexTypeDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_BattleBoard_HexTypeDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_hex_type"), &BG_BattleBoard_HexTypeDetails::get_hex_type);
+	ClassDB::bind_method(D_METHOD("get_visuals"), &BG_BattleBoard_HexTypeDetails::get_visuals);
+	ClassDB::bind_method(D_METHOD("get_destroyed_vfx_scene_path"), &BG_BattleBoard_HexTypeDetails::get_destroyed_vfx_scene_path);
+	ClassDB::bind_method(D_METHOD("get_destroyed_sfx_id"), &BG_BattleBoard_HexTypeDetails::get_destroyed_sfx_id);
+	ClassDB::bind_method(D_METHOD("get_hex_visual_scene_path_override"), &BG_BattleBoard_HexTypeDetails::get_hex_visual_scene_path_override);
+	ClassDB::bind_method(D_METHOD("get_health_effectiveness"), &BG_BattleBoard_HexTypeDetails::get_health_effectiveness);
+	ClassDB::bind_method(D_METHOD("get_equipment_ids"), &BG_BattleBoard_HexTypeDetails::get_equipment_ids);
+}
+
+////
+//// BG_BattleBoardDetails
+////
+void BG_BattleBoardDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_BattleBoardDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_unique_save_name"), &BG_BattleBoardDetails::get_unique_save_name);
+	ClassDB::bind_method(D_METHOD("get_board_path"), &BG_BattleBoardDetails::get_board_path);
+	ClassDB::bind_method(D_METHOD("get_default_hex_visual_path"), &BG_BattleBoardDetails::get_default_hex_visual_path);
+	ClassDB::bind_method(D_METHOD("get_hex_types"), &BG_BattleBoardDetails::get_hex_types);
+
+	ClassDB::bind_method(D_METHOD("get_hex_types_by_type", "type"), &BG_BattleBoardDetails::get_hex_types_by_type);
+	ClassDB::bind_method(D_METHOD("get_hex_type_by_id", "id"), &BG_BattleBoardDetails::get_hex_type_by_id);
+}
+
+////
 //// BG_ObjectiveTimeline
 ////
 void BG_ObjectiveTimeline::_bind_methods()
@@ -975,7 +1019,6 @@ void BG_ChallengeRatingGuide::_bind_methods()
 ////
 void BG_ActStats::_bind_methods()
 {
-	ClassDB::bind_method(D_METHOD("get_battle_board_scene_path"), &BG_ActStats::get_battle_board_scene_path);
 	ClassDB::bind_method(D_METHOD("get_total_week_count"), &BG_ActStats::get_total_week_count);
 	ClassDB::bind_method(D_METHOD("get_total_job_count"), &BG_ActStats::get_total_job_count);
 	ClassDB::bind_method(D_METHOD("get_job_handout_curve_path"), &BG_ActStats::get_job_handout_curve_path);
@@ -1031,6 +1074,7 @@ void BG_CityInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_nice_name"), &BG_CityInfo::get_nice_name);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_CityInfo::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_scene_path"), &BG_CityInfo::get_scene_path);
+	ClassDB::bind_method(D_METHOD("get_battle_board_id"), &BG_CityInfo::get_battle_board_id);
 	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_CityInfo::get_max_health);
 	ClassDB::bind_method(D_METHOD("get_equipment_ids"), &BG_CityInfo::get_equipment_ids);
 	ClassDB::bind_method(D_METHOD("get_barracades"), &BG_CityInfo::get_barracades);
@@ -1104,6 +1148,8 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_globals"), &BG_Booker_DB::get_globals);
 	ClassDB::bind_method(D_METHOD("get_base_stats"), &BG_Booker_DB::get_base_stats);
 	ClassDB::bind_method(D_METHOD("get_objectives"), &BG_Booker_DB::get_objectives);
+	ClassDB::bind_method(D_METHOD("get_battle_boards_details"), &BG_Booker_DB::get_battle_boards_details);
+	ClassDB::bind_method(D_METHOD("get_battle_board_by_id", "id"), &BG_Booker_DB::get_battle_board_by_id);
 	ClassDB::bind_method(D_METHOD("get_resource_type_details_by_id", "resource_id"), &BG_Booker_DB::get_resource_type_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_audio_data"), &BG_Booker_DB::get_audio_data);
 	ClassDB::bind_method(D_METHOD("get_audio_details", "id", "act"), &BG_Booker_DB::get_audio_details);
@@ -2320,6 +2366,64 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		}
 	}
 
+	{ // Battle Boards
+		const Array lines = get_sheet_by_name("Battle_Boards", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+			
+			BG_BattleBoardDetails *new_class = memnew(BG_BattleBoardDetails);
+			new_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_class->unique_save_name = StringName(get_find_data_by_param_name("unique_save_name", entry)["value"]);
+			new_class->board_path = ensure_clean_path(get_find_data_by_param_name("board_path", entry)["path"]);
+			new_class->default_hex_visual_path = ensure_clean_path(get_find_data_by_param_name("default_hex_visual_path", entry)["path"]);
+
+			// Hex Types
+			const Dictionary hex_types_values = get_find_data_by_param_name("hex_types", entry);
+			const Array hex_types_values_array = hex_types_values["array_values"];
+			for (int x = 0; x < hex_types_values_array.size(); ++x) {
+				const Array hex_types_entry = hex_types_values_array[x];
+
+				BG_BattleBoard_HexTypeDetails *new_hex_type_class = memnew(BG_BattleBoard_HexTypeDetails);
+				new_hex_type_class->id = StringName(get_find_data_by_param_name("id", hex_types_entry)["value"]);
+				new_hex_type_class->hex_type = int(get_find_data_by_param_name("type", hex_types_entry)["value"]);
+				new_hex_type_class->destroyed_vfx_scene_path = ensure_clean_path(get_find_data_by_param_name("destroyed_vfx_scene", hex_types_entry)["path"]);
+				new_hex_type_class->destroyed_sfx_id = StringName(get_find_data_by_param_name("destroyed_sfx", hex_types_entry)["element_id_name_value"]);
+				new_hex_type_class->hex_visual_scene_path_override = ensure_clean_path(get_find_data_by_param_name("hex_visual_file_path_override", hex_types_entry)["path"]);
+				new_hex_type_class->health_effectiveness = float(get_find_data_by_param_name("health_effectiveness", hex_types_entry)["value"]);
+
+				// Visuals
+				const Dictionary visuals_values = get_find_data_by_param_name("visuals", hex_types_entry);
+				const Array visuals_values_array = visuals_values["array_values"];
+				for (int y = 0; y < visuals_values_array.size(); ++y) {
+					const Array visuals_entry = visuals_values_array[y];
+
+					BG_BattleBoard_HexTypeVisualDetails *new_hex_type_visuals_class = memnew(BG_BattleBoard_HexTypeVisualDetails);
+					new_hex_type_visuals_class->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", visuals_entry)["path"]);
+					new_hex_type_visuals_class->two_der_id = StringName(get_find_data_by_param_name("two_der_id", visuals_entry)["element_id_name_value"]);
+					new_hex_type_visuals_class->scene_path = ensure_clean_path(get_find_data_by_param_name("scene_path", visuals_entry)["path"]);
+					new_hex_type_visuals_class->destroyed_icon_path = ensure_clean_path(get_find_data_by_param_name("destroyed_icon_path", visuals_entry)["path"]);
+					new_hex_type_visuals_class->destroyed_two_der_id = StringName(get_find_data_by_param_name("destroyed_two_der_id", visuals_entry)["element_id_name_value"]);
+					new_hex_type_visuals_class->destroyed_scene_path = ensure_clean_path(get_find_data_by_param_name("destroyed_scene_path", visuals_entry)["path"]);
+					new_hex_type_visuals_class->tint = convert_hex_to_color(get_find_data_by_param_name("tint", visuals_entry)["value"]);
+
+					new_hex_type_class->visuals.append(new_hex_type_visuals_class);
+				}
+
+				// Equipment
+				const Dictionary equipment_values = get_find_data_by_param_name("equipment", hex_types_entry);
+				const Array equipment_values_array = equipment_values["array_values"];
+				for (int y = 0; y < equipment_values_array.size(); ++y) {
+					const Array equipment_entry = equipment_values_array[y];
+					new_hex_type_class->equipment_ids.append(StringName(get_find_data_by_param_name("equipment", equipment_entry)["element_id_name_value"]));
+				}
+
+				new_class->hex_types.append(new_hex_type_class);
+			}
+
+			battle_boards_details.append(new_class);
+		}
+	}
+
 	{ // Booker Skill Tree
 		booker_skill_tree_details.clear();
 		const Array lines = get_sheet_by_name("Booker_Skill_Tree", data);
@@ -2489,6 +2593,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			new_city_info->nice_name = StringName(get_find_data_by_param_name("name", entry)["value"]);
 			new_city_info->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
 			new_city_info->scene_path = ensure_clean_path(get_find_data_by_param_name("scene_path", entry)["path"]);
+			new_city_info->battle_board_id = StringName(get_find_data_by_param_name("battle_board_id", entry)["element_id_name_value"]);
 			new_city_info->max_health = int(get_find_data_by_param_name("health", entry)["value"]);
 
 			// Equipment
@@ -2672,7 +2777,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				BG_ActStats *new_act_stats = memnew(BG_ActStats);
 				new_act_stats->total_week_count = int(get_find_data_by_param_name("weeks_count", weeks_per_act_entry)["value"]);
 
-				new_act_stats->battle_board_scene_path = StringName(get_find_data_by_param_name("battle_board_scene_path", job_globals_entry)["path"]);
 				if (globals->combat_rounds_per_combat == 0)
 					globals->combat_rounds_per_combat = int(get_find_data_by_param_name("combat_rounds_per_combat", job_globals_entry)["value"]);
 

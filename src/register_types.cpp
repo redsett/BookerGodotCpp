@@ -34,6 +34,9 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		ClassDB::register_class<BG_AnimatedAtlasTextureRect>();
 		ClassDB::register_class<BG_TwoDer_DataEntry>();
 		ClassDB::register_class<BG_LocalizeEntryData>();
+		ClassDB::register_class<BG_BattleBoard_HexTypeVisualDetails>();
+		ClassDB::register_class<BG_BattleBoard_HexTypeDetails>();
+		ClassDB::register_class<BG_BattleBoardDetails>();
 		ClassDB::register_class<BG_ObjectiveTimeline>();
 		ClassDB::register_class<BG_ObjectiveDetails>();
 		ClassDB::register_class<BG_ResourceTypeDetails>();
