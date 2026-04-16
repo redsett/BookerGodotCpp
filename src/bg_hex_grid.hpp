@@ -253,6 +253,8 @@ public:
     int get_week_of_last_active_objective() const { return week_of_last_active_objective; }
     void set_week_of_last_active_objective(int v) { week_of_last_active_objective = v; }
 
+    static BG_HexGameSaveData::HexGameAssetTypes map_asset_type_to_game_type(BG_HexVisualAssetData::HexVisualAssetTypes type);
+    static BG_HexVisualAssetData::HexVisualAssetTypes map_game_type_to_asset_type(HexGameAssetTypes type);
     static void prep_data_to_move_to_another_board(const Ref<BG_HexGameSaveData> old_data, Ref<BG_HexGameSaveData> new_data);
 };
 

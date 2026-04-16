@@ -1,5 +1,6 @@
 #include "bg_booker_data_base.hpp"
 #include "bg_focus_layers.hpp"
+#include "bg_hex_grid.hpp"
 
 #include "bg_json_utils.hpp"
 
@@ -157,6 +158,29 @@ void BG_BattleBoardDetails::_bind_methods()
 
 	ClassDB::bind_method(D_METHOD("get_hex_types_by_type", "type"), &BG_BattleBoardDetails::get_hex_types_by_type);
 	ClassDB::bind_method(D_METHOD("get_hex_type_by_id", "id"), &BG_BattleBoardDetails::get_hex_type_by_id);
+}
+
+TypedArray<BG_BattleBoard_HexTypeDetails> BG_BattleBoardDetails::get_hex_types_by_type(int type, bool is_game_type) const
+{
+	const int type_remapped = is_game_type ? static_cast<int>(BG_HexGameSaveData::map_game_type_to_asset_type(static_cast<BG_HexGameSaveData::HexGameAssetTypes>(type))) : type;
+
+	TypedArray<BG_BattleBoard_HexTypeDetails> result;
+	for (int i = 0; i < hex_types.size(); ++i) {
+		BG_BattleBoard_HexTypeDetails *ht = cast_to<BG_BattleBoard_HexTypeDetails>(hex_types[i]);
+		if (ht->hex_type == type_remapped)
+			result.append(ht);
+	}
+	return result;
+}
+
+BG_BattleBoard_HexTypeDetails *BG_BattleBoardDetails::get_hex_type_by_id(StringName id) const
+{
+	for (int i = 0; i < hex_types.size(); ++i) {
+		BG_BattleBoard_HexTypeDetails *ht = cast_to<BG_BattleBoard_HexTypeDetails>(hex_types[i]);
+		if (ht->id == id)
+			return ht;
+	}
+	return nullptr;
 }
 
 ////
@@ -1150,6 +1174,8 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_objectives"), &BG_Booker_DB::get_objectives);
 	ClassDB::bind_method(D_METHOD("get_battle_boards_details"), &BG_Booker_DB::get_battle_boards_details);
 	ClassDB::bind_method(D_METHOD("get_battle_board_by_id", "id"), &BG_Booker_DB::get_battle_board_by_id);
+	ClassDB::bind_method(D_METHOD("get_battle_board_hex_types_by_type", "parent_bb_id", "bb_id", "type"), &BG_Booker_DB::get_battle_board_hex_types_by_type);
+	ClassDB::bind_method(D_METHOD("get_battle_board_hex_type_by_id", "parent_bb_id", "bb_id", "id"), &BG_Booker_DB::get_battle_board_hex_type_by_id);
 	ClassDB::bind_method(D_METHOD("get_resource_type_details_by_id", "resource_id"), &BG_Booker_DB::get_resource_type_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_audio_data"), &BG_Booker_DB::get_audio_data);
 	ClassDB::bind_method(D_METHOD("get_audio_details", "id", "act"), &BG_Booker_DB::get_audio_details);
@@ -1172,6 +1198,93 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_localize_data", "sheet_name", "key", "language"), &BG_Booker_DB::get_localize_data);
 	ClassDB::bind_method(D_METHOD("get_localize_string", "sheet_name", "key", "language", "ignore_code_data"), &BG_Booker_DB::get_localize_string);
 	ClassDB::bind_method(D_METHOD("get_stat_from_stat_id_name", "stat_id_name"), &BG_Booker_DB::get_stat_from_stat_id_name);
+}
+
+BG_BattleBoardDetails *BG_Booker_DB::get_battle_board_by_id(StringName id) const {
+	for (int i = 0; i < battle_boards_details.size(); ++i) {
+		BG_BattleBoardDetails *bb = cast_to<BG_BattleBoardDetails>(battle_boards_details[i]);
+		if (bb->get_id() == id)
+			return bb;
+	}
+	return nullptr;
+}
+
+TypedArray<BG_BattleBoard_HexTypeDetails> BG_Booker_DB::get_battle_board_hex_types_by_type(StringName parent_bb_id, StringName bb_id, int type, bool is_game_type) const {
+	TypedArray<BG_BattleBoard_HexTypeDetails> result;
+	const BG_BattleBoardDetails *bb = get_battle_board_by_id(bb_id);
+	if (bb != nullptr)
+		result = bb->get_hex_types_by_type(type, is_game_type);
+	if (result.is_empty()) {
+		bb = get_battle_board_by_id(parent_bb_id);
+		if (bb != nullptr)
+			result = bb->get_hex_types_by_type(type, is_game_type);
+	}
+	return result;
+}
+
+BG_BattleBoard_HexTypeDetails *BG_Booker_DB::get_battle_board_hex_type_by_id(StringName parent_bb_id, StringName bb_id, StringName id) const {
+	BG_BattleBoard_HexTypeDetails *result = nullptr;
+	const BG_BattleBoardDetails *bb = get_battle_board_by_id(bb_id);
+	if (bb != nullptr)
+		result = bb->get_hex_type_by_id(id);
+	if (result == nullptr) {
+		bb = get_battle_board_by_id(parent_bb_id);
+		if (bb != nullptr)
+			result = bb->get_hex_type_by_id(id);
+	}
+	return result;
+}
+
+BG_ResourceTypeDetails *BG_Booker_DB::get_resource_type_details_by_id(StringName resource_id) const {
+	if (resource_type_details.has(resource_id)) {
+		return resource_type_details[resource_id];
+	}
+	return nullptr;
+}
+
+TypedArray<BG_AudioDataDetails> BG_Booker_DB::get_audio_details(StringName id, int act) const {
+	TypedArray<BG_AudioDataDetails> result;
+	for (int i = 0; i < audio_data.size(); ++i) {
+		BG_AudioData *ad = cast_to<BG_AudioData>(audio_data[i]);
+		if (ad->id != id) continue;
+		for (int x = 0; x < ad->audio_details.size(); ++x) {
+			BG_AudioDataDetails *audio_details = cast_to<BG_AudioDataDetails>(ad->audio_details[x]);
+			if (audio_details->restrict_to_acts.is_empty() || audio_details->restrict_to_acts.has(act)) {
+				result.append(audio_details);
+			}
+		}
+		break;
+	}
+	return result;
+}
+
+BG_TwoDer_DataEntry *BG_Booker_DB::get_two_der_data_from_id(StringName id) const {
+	for (int i = 0; i < two_der_data_entries.size(); ++i) {
+		BG_TwoDer_DataEntry *data = cast_to<BG_TwoDer_DataEntry>(two_der_data_entries[i]);
+		if (data == nullptr) continue;
+		if (data->get_id() == id) return data;
+	}
+	return nullptr;
+}
+
+BG_BaseStat *BG_Booker_DB::get_stat_from_stat_id_name(StringName stat_id_name) const {
+	for (int i = 0; i < base_stats.size(); ++i) {
+		BG_BaseStat *stat = cast_to<BG_BaseStat>(base_stats[i]);
+		if (stat == nullptr) continue;
+
+		if (stat->stat_id_name == stat_id_name) return stat;
+	}
+	return nullptr;
+}
+
+BG_BaseStat *BG_Booker_DB::get_stat_from_unique_id(int unique_id) const {
+	for (int i = 0; i < base_stats.size(); ++i) {
+		BG_BaseStat *stat = cast_to<BG_BaseStat>(base_stats[i]);
+		if (stat == nullptr) continue;
+
+		if (stat->unique_id == unique_id) return stat;
+	}
+	return nullptr;
 }
 
 BG_Booker_DB *BG_Booker_DB::get_singleton()

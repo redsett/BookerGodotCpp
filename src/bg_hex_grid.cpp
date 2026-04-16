@@ -101,6 +101,8 @@ Ref<BG_HexVisualAssetData> BG_HexVisualData::get_hex_visual_asset_data_by_type(B
 void BG_HexGameSaveData::_bind_methods()
 {
     ClassDB::bind_static_method("BG_HexGameSaveData", D_METHOD("get_game_asset_type_names"), &BG_HexGameSaveData::get_game_asset_type_names);
+    ClassDB::bind_static_method("BG_HexGameSaveData", D_METHOD("map_asset_type_to_game_type", "type"), &BG_HexGameSaveData::map_asset_type_to_game_type);
+    ClassDB::bind_static_method("BG_HexGameSaveData", D_METHOD("map_game_type_to_asset_type", "type"), &BG_HexGameSaveData::map_game_type_to_asset_type);
     ClassDB::bind_static_method("BG_HexGameSaveData", D_METHOD("prep_data_to_move_to_another_board", "old_data", "new_data"), &BG_HexGameSaveData::prep_data_to_move_to_another_board);
 
 	ClassDB::bind_method(D_METHOD("get_asset_type"), &BG_HexGameSaveData::get_asset_type);
@@ -159,6 +161,50 @@ void BG_HexGameSaveData::_bind_methods()
     BIND_ENUM_CONSTANT(TURRET);
     BIND_ENUM_CONSTANT(DUNGEON_ENTRANCE);
     BIND_ENUM_CONSTANT(DUNGEON_EXIT);
+}
+
+/* static */ BG_HexGameSaveData::HexGameAssetTypes BG_HexGameSaveData::map_asset_type_to_game_type(BG_HexVisualAssetData::HexVisualAssetTypes type)
+{
+    switch(type) {
+        case BG_HexVisualAssetData::HexVisualAssetTypes::CITY:
+            return HexGameAssetTypes::CITY;
+        case BG_HexVisualAssetData::HexVisualAssetTypes::TOWN:
+            return HexGameAssetTypes::TOWN;
+        case BG_HexVisualAssetData::HexVisualAssetTypes::RESOURCE:
+            return HexGameAssetTypes::RESOURCE;
+        case BG_HexVisualAssetData::HexVisualAssetTypes::BARRICADE:
+            return HexGameAssetTypes::BARRICADE;
+        case BG_HexVisualAssetData::HexVisualAssetTypes::TURRET:
+            return HexGameAssetTypes::TURRET;
+        case BG_HexVisualAssetData::HexVisualAssetTypes::DUNGEON_ENTRANCE:
+            return HexGameAssetTypes::DUNGEON_ENTRANCE;
+        case BG_HexVisualAssetData::HexVisualAssetTypes::DUNGEON_EXIT:
+            return HexGameAssetTypes::DUNGEON_EXIT;
+    }
+    UtilityFunctions::push_error("BG_HexGameSaveData::map_asset_type_to_game_type : Could not find type for", type);
+    return HexGameAssetTypes::CITY;
+}
+
+/* static */ BG_HexVisualAssetData::HexVisualAssetTypes BG_HexGameSaveData::map_game_type_to_asset_type(HexGameAssetTypes type)
+{
+    switch (type) {
+        case HexGameAssetTypes::CITY:
+            return BG_HexVisualAssetData::HexVisualAssetTypes::CITY;
+        case HexGameAssetTypes::TOWN:
+            return BG_HexVisualAssetData::HexVisualAssetTypes::TOWN;
+        case HexGameAssetTypes::RESOURCE:
+         return BG_HexVisualAssetData::HexVisualAssetTypes::RESOURCE;
+        case HexGameAssetTypes::BARRICADE:
+            return BG_HexVisualAssetData::HexVisualAssetTypes::BARRICADE;
+        case HexGameAssetTypes::TURRET:
+            return BG_HexVisualAssetData::HexVisualAssetTypes::TURRET;
+        case HexGameAssetTypes::DUNGEON_ENTRANCE:
+            return BG_HexVisualAssetData::HexVisualAssetTypes::DUNGEON_ENTRANCE;
+        case HexGameAssetTypes::DUNGEON_EXIT:
+            return BG_HexVisualAssetData::HexVisualAssetTypes::DUNGEON_EXIT;
+    }
+    UtilityFunctions::push_error("BG_HexGameSaveData::map_game_type_to_asset_type : Could not find type for", type);
+    return BG_HexVisualAssetData::HexVisualAssetTypes::CITY;
 }
 
 /* static */ void BG_HexGameSaveData::prep_data_to_move_to_another_board(const Ref<BG_HexGameSaveData> old_data, Ref<BG_HexGameSaveData> new_data)

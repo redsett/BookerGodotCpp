@@ -167,24 +167,8 @@ public:
 	TypedArray<BG_BattleBoard_HexTypeDetails> hex_types;
 	TypedArray<BG_BattleBoard_HexTypeDetails> get_hex_types() const { return hex_types; }
 
-	TypedArray<BG_BattleBoard_HexTypeDetails> get_hex_types_by_type(int type) const {
-		TypedArray<BG_BattleBoard_HexTypeDetails> result;
-		for (int i = 0; i < hex_types.size(); ++i) {
-			BG_BattleBoard_HexTypeDetails *ht = cast_to<BG_BattleBoard_HexTypeDetails>(hex_types[i]);
-			if (ht->hex_type == type)
-				result.append(ht);
-		}
-		return result;
-	}
-
-	BG_BattleBoard_HexTypeDetails *get_hex_type_by_id(StringName id) const {
-		for (int i = 0; i < hex_types.size(); ++i) {
-			BG_BattleBoard_HexTypeDetails *ht = cast_to<BG_BattleBoard_HexTypeDetails>(hex_types[i]);
-			if (ht->id == id)
-				return ht;
-		}
-		return nullptr;
-	}
+	TypedArray<BG_BattleBoard_HexTypeDetails> get_hex_types_by_type(int type, bool is_game_type = true) const;
+	BG_BattleBoard_HexTypeDetails *get_hex_type_by_id(StringName id) const;
 };
 
 ////
@@ -1991,40 +1975,16 @@ public:
 	TypedArray<BG_BattleBoardDetails> battle_boards_details;
 	TypedArray<BG_BattleBoardDetails> get_battle_boards_details() const { return battle_boards_details; }
 
-	BG_BattleBoardDetails *get_battle_board_by_id(StringName id) {
-		for (int i = 0; i < battle_boards_details.size(); ++i) {
-			BG_BattleBoardDetails *bb = cast_to<BG_BattleBoardDetails>(battle_boards_details[i]);
-			if (bb->get_id() == id)
-				return bb;
-		}
-		return nullptr;
-	}
+	BG_BattleBoardDetails *get_battle_board_by_id(StringName id) const;
+	TypedArray<BG_BattleBoard_HexTypeDetails> get_battle_board_hex_types_by_type(StringName parent_bb_id, StringName bb_id, int type, bool is_game_type = true) const;
+	BG_BattleBoard_HexTypeDetails *get_battle_board_hex_type_by_id(StringName parent_bb_id, StringName bb_id, StringName id) const;
 
 	HashMap<StringName, BG_ResourceTypeDetails *> resource_type_details;
-	BG_ResourceTypeDetails *get_resource_type_details_by_id(StringName resource_id) const {
-		if (resource_type_details.has(resource_id)) {
-			return resource_type_details[resource_id];
-		}
-		return nullptr;
-	}
+	BG_ResourceTypeDetails *get_resource_type_details_by_id(StringName resource_id) const;
 
 	TypedArray<BG_AudioData> audio_data;
 	TypedArray<BG_AudioData> get_audio_data() const { return audio_data; }
-	TypedArray<BG_AudioDataDetails> get_audio_details(StringName id, int act) {
-		TypedArray<BG_AudioDataDetails> result;
-		for (int i = 0; i < audio_data.size(); ++i) {
-			BG_AudioData *ad = cast_to<BG_AudioData>(audio_data[i]);
-			if (ad->id != id) continue;
-			for (int x = 0; x < ad->audio_details.size(); ++x) {
-				BG_AudioDataDetails *audio_details = cast_to<BG_AudioDataDetails>(ad->audio_details[x]);
-				if (audio_details->restrict_to_acts.is_empty() || audio_details->restrict_to_acts.has(act)) {
-					result.append(audio_details);
-				}
-			}
-			break;
-		}
-		return result;
-	}
+	TypedArray<BG_AudioDataDetails> get_audio_details(StringName id, int act) const;
 
 	TypedArray<BG_BookerSkillTreeSlotDetails> booker_skill_tree_details;
 	TypedArray<BG_BookerSkillTreeSlotDetails> get_booker_skill_tree_details() const { return booker_skill_tree_details; }
@@ -2067,14 +2027,7 @@ public:
 	
 	TypedArray<BG_TwoDer_DataEntry> two_der_data_entries;
 	TypedArray<BG_TwoDer_DataEntry> get_two_der_data_entries() const { return two_der_data_entries; }
-	BG_TwoDer_DataEntry *get_two_der_data_from_id(StringName id) const {
-		for (int i = 0; i < two_der_data_entries.size(); ++i) {
-			BG_TwoDer_DataEntry *data = cast_to<BG_TwoDer_DataEntry>(two_der_data_entries[i]);
-			if (data == nullptr) continue;
-			if (data->get_id() == id) return data;
-		}
-		return nullptr;
-	}
+	BG_TwoDer_DataEntry *get_two_der_data_from_id(StringName id) const;
 
 	bool revert_localization_to_english = true;
 	void set_revert_localization_to_english(bool revert) { revert_localization_to_english = revert; }
@@ -2086,27 +2039,11 @@ public:
 	static float get_job_challenge_rating_value(const TypedArray<BG_Monster> monsters);
 	static String get_job_challenge_rating(const TypedArray<BG_Monster> monsters);
 
-	BG_BaseStat *get_stat_from_stat_id_name(StringName stat_id_name) const {
-		for (int i = 0; i < base_stats.size(); ++i) {
-			BG_BaseStat *stat = cast_to<BG_BaseStat>(base_stats[i]);
-			if (stat == nullptr) continue;
-
-			if (stat->stat_id_name == stat_id_name) return stat;
-		}
-		return nullptr;
-	}
+	BG_BaseStat *get_stat_from_stat_id_name(StringName stat_id_name) const;
 
 private:
 	void try_parse_data(const String &file_path);
 	void try_parse_bder_data(const String &file_path);
 
-	BG_BaseStat *get_stat_from_unique_id(int unique_id) const {
-		for (int i = 0; i < base_stats.size(); ++i) {
-			BG_BaseStat *stat = cast_to<BG_BaseStat>(base_stats[i]);
-			if (stat == nullptr) continue;
-
-			if (stat->unique_id == unique_id) return stat;
-		}
-		return nullptr;
-	}
+	BG_BaseStat *get_stat_from_unique_id(int unique_id) const;
 };
