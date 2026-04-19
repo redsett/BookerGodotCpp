@@ -117,6 +117,58 @@ void BG_LocalizeEntryData::_bind_methods()
 }
 
 ////
+//// BG_BaseStat
+////
+void BG_BaseStat::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_unique_id"), &BG_BaseStat::get_unique_id);
+	ClassDB::bind_method(D_METHOD("get_is_base_value"), &BG_BaseStat::get_is_base_value);
+	ClassDB::bind_method(D_METHOD("get_value"), &BG_BaseStat::get_value);
+	// ClassDB::bind_method(D_METHOD("get_parent_stat_unique_id"), &BG_BaseStat::get_parent_stat_unique_id);
+	ClassDB::bind_method(D_METHOD("get_parent_stat_reference"), &BG_BaseStat::get_parent_stat_reference);
+	ClassDB::bind_method(D_METHOD("get_stat_id_name"), &BG_BaseStat::get_stat_id_name);
+}
+
+////
+//// BG_ContentStat
+////
+void BG_ContentStat::_bind_methods()
+{
+	ClassDB::bind_static_method("BG_ContentStat", D_METHOD("get_total_stat_value", "stat"), &BG_ContentStat::get_total_stat_value);
+
+	ClassDB::bind_method(D_METHOD("get_stat_reference"), &BG_ContentStat::get_stat_reference);
+	ClassDB::bind_method(D_METHOD("get_value"), &BG_ContentStat::get_value);
+	ClassDB::bind_method(D_METHOD("get_level_value"), &BG_ContentStat::get_level_value);
+	ClassDB::bind_method(D_METHOD("get_randomize_damage_type"), &BG_ContentStat::get_randomize_damage_type);
+	ClassDB::bind_method(D_METHOD("get_randomize_resistance_type"), &BG_ContentStat::get_randomize_resistance_type);
+}
+
+/* static */ float BG_ContentStat::get_total_stat_value(const BG_BaseStat *stat)
+{
+	if (stat == nullptr) return 0.0;
+	if (stat->get_is_base_value())
+		return stat->get_value();
+	
+	float result = 0.0;
+	float multiplier = 1.0;
+	multiplier *= stat->get_value();
+	
+	const BG_BaseStat *current_stat = stat;
+	while (current_stat->get_parent_stat_reference() != nullptr) {
+		current_stat = current_stat->get_parent_stat_reference();
+		
+		if (current_stat->get_is_base_value())
+			result += current_stat->get_value();
+		else
+			multiplier *= current_stat->get_value();
+	}
+	
+	float amount_to_mult = 1.0 / multiplier;
+	result *= amount_to_mult;
+	return result;
+}
+
+////
 //// BG_BattleBoard_HexTypeVisualDetails
 ////
 void BG_BattleBoard_HexTypeVisualDetails::_bind_methods()
@@ -177,6 +229,7 @@ BG_BattleBoard_HexTypeDetails *BG_BattleBoardDetails::get_hex_type_by_id(StringN
 {
 	for (int i = 0; i < hex_types.size(); ++i) {
 		BG_BattleBoard_HexTypeDetails *ht = cast_to<BG_BattleBoard_HexTypeDetails>(hex_types[i]);
+		// UtilityFunctions::prints(i, ht->id);
 		if (ht->id == id)
 			return ht;
 	}
@@ -301,57 +354,6 @@ void BG_HueShiftData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_mask_path"), &BG_HueShiftData::get_mask_path);
 	ClassDB::bind_method(D_METHOD("get_from_color"), &BG_HueShiftData::get_from_color);
 	ClassDB::bind_method(D_METHOD("get_multiplier"), &BG_HueShiftData::get_multiplier);
-}
-
-////
-//// BG_BaseStat
-////
-void BG_BaseStat::_bind_methods()
-{
-	ClassDB::bind_method(D_METHOD("get_unique_id"), &BG_BaseStat::get_unique_id);
-	ClassDB::bind_method(D_METHOD("get_is_base_value"), &BG_BaseStat::get_is_base_value);
-	ClassDB::bind_method(D_METHOD("get_value"), &BG_BaseStat::get_value);
-	// ClassDB::bind_method(D_METHOD("get_parent_stat_unique_id"), &BG_BaseStat::get_parent_stat_unique_id);
-	ClassDB::bind_method(D_METHOD("get_parent_stat_reference"), &BG_BaseStat::get_parent_stat_reference);
-	ClassDB::bind_method(D_METHOD("get_stat_id_name"), &BG_BaseStat::get_stat_id_name);
-}
-
-////
-//// BG_ContentStat
-////
-void BG_ContentStat::_bind_methods()
-{
-	ClassDB::bind_static_method("BG_ContentStat", D_METHOD("get_total_stat_value", "stat"), &BG_ContentStat::get_total_stat_value);
-
-	ClassDB::bind_method(D_METHOD("get_stat_reference"), &BG_ContentStat::get_stat_reference);
-	ClassDB::bind_method(D_METHOD("get_value"), &BG_ContentStat::get_value);
-	ClassDB::bind_method(D_METHOD("get_randomize_damage_type"), &BG_ContentStat::get_randomize_damage_type);
-	ClassDB::bind_method(D_METHOD("get_randomize_resistance_type"), &BG_ContentStat::get_randomize_resistance_type);
-}
-
-/* static */ float BG_ContentStat::get_total_stat_value(const BG_BaseStat *stat)
-{
-	if (stat == nullptr) return 0.0;
-	if (stat->get_is_base_value())
-		return stat->get_value();
-	
-	float result = 0.0;
-	float multiplier = 1.0;
-	multiplier *= stat->get_value();
-	
-	const BG_BaseStat *current_stat = stat;
-	while (current_stat->get_parent_stat_reference() != nullptr) {
-		current_stat = current_stat->get_parent_stat_reference();
-		
-		if (current_stat->get_is_base_value())
-			result += current_stat->get_value();
-		else
-			multiplier *= current_stat->get_value();
-	}
-	
-	float amount_to_mult = 1.0 / multiplier;
-	result *= amount_to_mult;
-	return result;
 }
 
 ////
@@ -691,8 +693,8 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_is_city_asset"), &BG_BandMember::set_is_city_asset);
 	ClassDB::bind_method(D_METHOD("get_band"), &BG_BandMember::get_band);
 	ClassDB::bind_method(D_METHOD("set_band"), &BG_BandMember::set_band);
-	ClassDB::bind_method(D_METHOD("get_turret_info"), &BG_BandMember::get_turret_info);
-	ClassDB::bind_method(D_METHOD("set_turret_info"), &BG_BandMember::set_turret_info);
+	ClassDB::bind_method(D_METHOD("get_battle_board_hex_type_details"), &BG_BandMember::get_battle_board_hex_type_details);
+	ClassDB::bind_method(D_METHOD("set_battle_board_hex_type_details"), &BG_BandMember::set_battle_board_hex_type_details);
 	ClassDB::bind_method(D_METHOD("get_element_upgrades"), &BG_BandMember::get_element_upgrades);
 	ClassDB::bind_method(D_METHOD("set_element_upgrades"), &BG_BandMember::set_element_upgrades);
 	ClassDB::bind_method(D_METHOD("get_consumable_upgrades"), &BG_BandMember::get_consumable_upgrades);
@@ -1073,23 +1075,6 @@ void BG_BookerSkillTreeSlotDetails::_bind_methods()
 }
 
 ////
-//// BG_TurretInfo
-////
-void BG_TurretInfo::_bind_methods()
-{
-	ClassDB::bind_method(D_METHOD("get_id"), &BG_TurretInfo::get_id);
-	ClassDB::bind_method(D_METHOD("get_nice_name"), &BG_TurretInfo::get_nice_name);
-	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_TurretInfo::get_icon_path);
-	ClassDB::bind_method(D_METHOD("get_twoder_icons"), &BG_TurretInfo::get_twoder_icons);
-	ClassDB::bind_method(D_METHOD("get_destroyed_icon_path"), &BG_TurretInfo::get_destroyed_icon_path);
-	ClassDB::bind_method(D_METHOD("get_twoder_destroyed_icons"), &BG_TurretInfo::get_twoder_destroyed_icons);
-	ClassDB::bind_method(D_METHOD("get_destroyed_vfx_path"), &BG_TurretInfo::get_destroyed_vfx_path);
-	ClassDB::bind_method(D_METHOD("get_destroyed_sfx_id"), &BG_TurretInfo::get_destroyed_sfx_id);
-	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_TurretInfo::get_max_health);
-	ClassDB::bind_method(D_METHOD("get_equipment_ids"), &BG_TurretInfo::get_equipment_ids);
-}
-
-////
 //// BG_CityInfo
 ////
 void BG_CityInfo::_bind_methods()
@@ -1099,11 +1084,6 @@ void BG_CityInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_CityInfo::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_scene_path"), &BG_CityInfo::get_scene_path);
 	ClassDB::bind_method(D_METHOD("get_battle_board_id"), &BG_CityInfo::get_battle_board_id);
-	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_CityInfo::get_max_health);
-	ClassDB::bind_method(D_METHOD("get_equipment_ids"), &BG_CityInfo::get_equipment_ids);
-	ClassDB::bind_method(D_METHOD("get_barracades"), &BG_CityInfo::get_barracades);
-	ClassDB::bind_method(D_METHOD("get_turrets"), &BG_CityInfo::get_turrets);
-	ClassDB::bind_method(D_METHOD("get_towns"), &BG_CityInfo::get_towns);
 	ClassDB::bind_method(D_METHOD("get_misc_attributes"), &BG_CityInfo::get_misc_attributes);
 }
 
@@ -1232,6 +1212,10 @@ BG_BattleBoard_HexTypeDetails *BG_Booker_DB::get_battle_board_hex_type_by_id(Str
 		if (bb != nullptr)
 			result = bb->get_hex_type_by_id(id);
 	}
+	// if (result == nullptr) {
+	// 	UtilityFunctions::prints(parent_bb_id, bb_id, id);
+	// 	UtilityFunctions::prints("uh oh");
+	// }
 	return result;
 }
 
@@ -2502,7 +2486,22 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				new_hex_type_class->destroyed_vfx_scene_path = ensure_clean_path(get_find_data_by_param_name("destroyed_vfx_scene", hex_types_entry)["path"]);
 				new_hex_type_class->destroyed_sfx_id = StringName(get_find_data_by_param_name("destroyed_sfx", hex_types_entry)["element_id_name_value"]);
 				new_hex_type_class->hex_visual_scene_path_override = ensure_clean_path(get_find_data_by_param_name("hex_visual_file_path_override", hex_types_entry)["path"]);
-				new_hex_type_class->health_effectiveness = float(get_find_data_by_param_name("health_effectiveness", hex_types_entry)["value"]);
+
+				{ // Health Effectiveness
+					static const String health_effectiveness = "health_effectiveness";
+					const float value = float(get_find_data_by_param_name(health_effectiveness, hex_types_entry)["value"]);
+					if (value != 0.0) { // No need to store empty values.
+						BG_ContentStat *new_class = memnew(BG_ContentStat);
+						new_hex_type_class->health_effectiveness = new_class;
+						
+						new_class->value = value;
+						new_class->level_value = int(get_find_data_by_param_name(health_effectiveness, hex_types_entry)["level_value"]);
+
+						// Store a reference to its relative stat.
+						const int unique_id = int(get_find_data_by_param_name(health_effectiveness, hex_types_entry)["base_stat_unique_id"]);
+						new_class->stat_reference = get_stat_from_unique_id(unique_id);
+					}
+				}
 
 				// Visuals
 				const Dictionary visuals_values = get_find_data_by_param_name("visuals", hex_types_entry);
@@ -2707,67 +2706,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			new_city_info->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
 			new_city_info->scene_path = ensure_clean_path(get_find_data_by_param_name("scene_path", entry)["path"]);
 			new_city_info->battle_board_id = StringName(get_find_data_by_param_name("battle_board_id", entry)["element_id_name_value"]);
-			new_city_info->max_health = int(get_find_data_by_param_name("health", entry)["value"]);
-
-			// Equipment
-			const Dictionary equipment_values = get_find_data_by_param_name("equipment", entry);
-			const Array equipment_values_array = equipment_values["array_values"];
-			for (int x = 0; x < equipment_values_array.size(); ++x) {
-				const Array equipment_values_entry = equipment_values_array[x];
-				new_city_info->equipment_ids.append(StringName(get_find_data_by_param_name("equipment", equipment_values_entry)["element_id_name_value"]));
-			}
-
-			// Barracades
-			const Dictionary barracades_values = get_find_data_by_param_name("barracades", entry);
-			const Array barracades_values_array = barracades_values["array_values"];
-			for (int x = 0; x < barracades_values_array.size(); ++x) {
-				const Array barracades_values_entry = barracades_values_array[x];
-
-				BG_TurretInfo *new_turret_info = memnew(BG_TurretInfo);
-				new_turret_info->nice_name = StringName(get_find_data_by_param_name("name", barracades_values_entry)["value"]);
-				new_turret_info->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", barracades_values_entry)["path"]);
-				new_turret_info->destroyed_icon_path = ensure_clean_path(get_find_data_by_param_name("destroyed_icon_path", barracades_values_entry)["path"]);
-				new_turret_info->max_health = int(get_find_data_by_param_name("health", barracades_values_entry)["value"]);
-				new_turret_info->destroyed_vfx_path = ensure_clean_path(get_find_data_by_param_name("vfx", barracades_values_entry)["path"]);
-				new_turret_info->destroyed_sfx_id = StringName(get_find_data_by_param_name("sfx", barracades_values_entry)["element_id_name_value"]);
-
-				// 2der Icons
-				const Dictionary twoder_icons_values = get_find_data_by_param_name("2der_icons", barracades_values_entry);
-				const Array twoder_icons_values_array = twoder_icons_values["array_values"];
-				for (int y = 0; y < twoder_icons_values_array.size(); ++y) {
-					const Array twoder_icons_values_entry = twoder_icons_values_array[y];
-					new_turret_info->twoder_icons.append(StringName(get_find_data_by_param_name("reference", twoder_icons_values_entry)["element_id_name_value"]));
-				}
-
-				// 2der Destroyed Icons
-				const Dictionary twoder_destroyed_icons_values = get_find_data_by_param_name("2der_destroyed_icons", barracades_values_entry);
-				const Array twoder_destroyed_icons_values_array = twoder_destroyed_icons_values["array_values"];
-				for (int y = 0; y < twoder_destroyed_icons_values_array.size(); ++y) {
-					const Array twoder_destroyed_icons_values_entry = twoder_destroyed_icons_values_array[y];
-					new_turret_info->twoder_destroyed_icons.append(StringName(get_find_data_by_param_name("reference", twoder_destroyed_icons_values_entry)["element_id_name_value"]));
-				}
-
-				// Equipment
-				const Dictionary barracades_equipment_values = get_find_data_by_param_name("equipment", barracades_values_entry);
-				const Array barracades_equipment_values_array = barracades_equipment_values["array_values"];
-				for (int y = 0; y < barracades_equipment_values_array.size(); ++y) {
-					const Array barracades_equipment_values_entry = barracades_equipment_values_array[y];
-					new_turret_info->equipment_ids.append(StringName(get_find_data_by_param_name("equipment", barracades_equipment_values_entry)["element_id_name_value"]));
-				}
-
-				const int turret_type = int(get_find_data_by_param_name("type", barracades_values_entry)["value"]);
-				switch (turret_type) {
-					case 0:
-						new_city_info->barracades.append(new_turret_info);
-						break;
-					case 1:
-						new_city_info->turrets.append(new_turret_info);
-						break;
-					case 2:
-						new_city_info->towns.append(new_turret_info);
-						break;
-				}
-			}
 
 			// Misc Attributes
 			const Dictionary misc_attributes_values = get_find_data_by_param_name("misc_attributes", entry);

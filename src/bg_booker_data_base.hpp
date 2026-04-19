@@ -71,6 +71,65 @@ public:
 };
 
 ////
+//// BG_BaseStat
+////
+class BG_BaseStat : public Object
+{
+	GDCLASS(BG_BaseStat, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	int unique_id = -1;
+	int get_unique_id() const { return unique_id; }
+
+	bool is_base_value = false;
+	bool get_is_base_value() const { return is_base_value; }
+
+	float value;
+	float get_value() const { return value; }
+
+	int parent_stat_unique_id = -1;
+	// int get_parent_stat_unique_id() const { return parent_stat_unique_id; }
+
+	BG_BaseStat *parent_stat_reference = nullptr;
+	BG_BaseStat *get_parent_stat_reference() const { return parent_stat_reference; }
+
+	StringName stat_id_name;
+	StringName get_stat_id_name() const { return stat_id_name; }
+};
+
+////
+//// BG_ContentStat
+////
+class BG_ContentStat : public Object
+{
+	GDCLASS(BG_ContentStat, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	BG_BaseStat *stat_reference = nullptr;
+	BG_BaseStat *get_stat_reference() const { return stat_reference; }
+
+	float value = 0.0;
+	float get_value() const { return value; }
+	
+	int level_value = 0;
+	int get_level_value() const { return level_value; }
+
+	bool randomize_damage_type = false;
+	bool get_randomize_damage_type() const { return randomize_damage_type; }
+
+	bool randomize_resistance_type = false;
+	bool get_randomize_resistance_type() const { return randomize_resistance_type; }
+
+	static float get_total_stat_value(const BG_BaseStat *stat);
+};
+
+////
 //// BG_BattleBoard_HexTypeVisualDetails
 ////
 class BG_BattleBoard_HexTypeVisualDetails : public Object
@@ -134,8 +193,8 @@ public:
 	StringName hex_visual_scene_path_override;
 	StringName get_hex_visual_scene_path_override() const { return hex_visual_scene_path_override; }
 
-	float health_effectiveness = 0.0f;
-	float get_health_effectiveness() const { return health_effectiveness; }
+	BG_ContentStat *health_effectiveness = nullptr;
+	BG_ContentStat *get_health_effectiveness() const { return health_effectiveness; }
 
 	TypedArray<StringName> equipment_ids;
 	TypedArray<StringName> get_equipment_ids() const { return equipment_ids; }
@@ -443,62 +502,6 @@ public:
 
 	float multiplier;
 	float get_multiplier() const { return multiplier; }
-};
-
-////
-//// BG_BaseStat
-////
-class BG_BaseStat : public Object
-{
-	GDCLASS(BG_BaseStat, Object);
-
-protected:
-	static void _bind_methods();
-
-public:
-	int unique_id = -1;
-	int get_unique_id() const { return unique_id; }
-
-	bool is_base_value = false;
-	bool get_is_base_value() const { return is_base_value; }
-
-	float value;
-	float get_value() const { return value; }
-
-	int parent_stat_unique_id = -1;
-	// int get_parent_stat_unique_id() const { return parent_stat_unique_id; }
-
-	BG_BaseStat *parent_stat_reference = nullptr;
-	BG_BaseStat *get_parent_stat_reference() const { return parent_stat_reference; }
-
-	StringName stat_id_name;
-	StringName get_stat_id_name() const { return stat_id_name; }
-};
-
-////
-//// BG_ContentStat
-////
-class BG_ContentStat : public Object
-{
-	GDCLASS(BG_ContentStat, Object);
-
-protected:
-	static void _bind_methods();
-
-public:
-	BG_BaseStat *stat_reference = nullptr;
-	BG_BaseStat *get_stat_reference() const { return stat_reference; }
-
-	float value = 0.0;
-	float get_value() const { return value; }
-	
-	bool randomize_damage_type = false;
-	bool get_randomize_damage_type() const { return randomize_damage_type; }
-
-	bool randomize_resistance_type = false;
-	bool get_randomize_resistance_type() const { return randomize_resistance_type; }
-
-	static float get_total_stat_value(const BG_BaseStat *stat);
 };
 
 ////
@@ -1283,9 +1286,9 @@ public:
 	Ref<BG_Band> get_band() const { return band; }
 	void set_band(Ref<BG_Band> value) { band = value; }
 
-	class BG_TurretInfo *turret_info = nullptr;
-	BG_TurretInfo *get_turret_info() const { return turret_info; }
-	void set_turret_info(BG_TurretInfo *v) { turret_info = v; }
+	BG_BattleBoard_HexTypeDetails *battle_board_hex_type_details = nullptr;
+	BG_BattleBoard_HexTypeDetails *get_battle_board_hex_type_details() const { return battle_board_hex_type_details; }
+	void set_battle_board_hex_type_details(BG_BattleBoard_HexTypeDetails *v) { battle_board_hex_type_details = v; }
 
 	Dictionary element_upgrades; //<StringName, int>
 	Dictionary get_element_upgrades() const { return element_upgrades; }
@@ -1739,48 +1742,6 @@ public:
 };
 
 ////
-//// BG_TurretInfo
-////
-class BG_TurretInfo : public Object
-{
-	GDCLASS(BG_TurretInfo, Object);
-
-protected:
-	static void _bind_methods();
-
-public:
-	StringName id;
-	StringName get_id() const { return id; }
-
-	StringName nice_name;
-	StringName get_nice_name() const { return nice_name; }
-
-	StringName icon_path;
-	StringName get_icon_path() const { return icon_path; }
-
-	TypedArray<StringName> twoder_icons;
-	TypedArray<StringName> get_twoder_icons() const { return twoder_icons; }
-	
-	StringName destroyed_icon_path;
-	StringName get_destroyed_icon_path() const { return destroyed_icon_path; }
-	
-	TypedArray<StringName> twoder_destroyed_icons;
-	TypedArray<StringName> get_twoder_destroyed_icons() const { return twoder_destroyed_icons; }
-
-	StringName destroyed_vfx_path;
-	StringName get_destroyed_vfx_path() const { return destroyed_vfx_path; }
-
-	StringName destroyed_sfx_id;
-	StringName get_destroyed_sfx_id() const { return destroyed_sfx_id; }
-
-	int max_health = 0;
-	int get_max_health() const { return max_health; }
-
-	TypedArray<StringName> equipment_ids;
-	TypedArray<StringName> get_equipment_ids() const { return equipment_ids; }
-};
-
-////
 //// BG_CityInfo
 ////
 class BG_CityInfo : public Object
@@ -1805,21 +1766,6 @@ public:
 
 	StringName battle_board_id;
 	StringName get_battle_board_id() const { return battle_board_id; }
-
-	int max_health = 0;
-	int get_max_health() const { return max_health; }
-
-	TypedArray<StringName> equipment_ids;
-	TypedArray<StringName> get_equipment_ids() const { return equipment_ids; }
-
-	TypedArray<BG_TurretInfo> barracades;
-	TypedArray<BG_TurretInfo> get_barracades() const { return barracades; }
-
-	TypedArray<BG_TurretInfo> turrets;
-	TypedArray<BG_TurretInfo> get_turrets() const { return turrets; }
-
-	TypedArray<BG_TurretInfo> towns;
-	TypedArray<BG_TurretInfo> get_towns() const { return towns; }
 
 	Dictionary misc_attributes;
 	Dictionary get_misc_attributes() const { return misc_attributes; }
