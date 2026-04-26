@@ -644,8 +644,8 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, b
 {
     const Ref<BG_HexGameSaveData> hgsd = get_game_data_from_qr(qr);
     const Ref<BG_HexGameSaveData> instigator_hgsd = instigator.is_valid() ? get_game_data_from_qr(instigator->get_qr()) : nullptr;
-    const bool is_band = instigator_hgsd.is_valid() ? instigator_hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::BAND : false;
-    const bool is_job = instigator_hgsd.is_valid() ? instigator_hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::JOB : false;
+    const bool is_band = instigator_hgsd.is_valid() ? instigator_hgsd->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::BAND : false;
+    const bool is_job = instigator_hgsd.is_valid() ? instigator_hgsd->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::JOB : false;
 
     const Ref<BG_Hex> hex = get_hex_by_qr(qr);
     if (hex.is_null() || hex->get_empty()) return 0;
@@ -661,16 +661,16 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, b
         if (h.is_valid()) {
             for (int i = 0; i < h->hex_asset_datas.size(); ++i) {
                 const Ref<BG_HexVisualAssetData> hvad = h->hex_asset_datas[i];
-                if (hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::CITY || 
-                    hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::WALL) {
+                if (hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::CITY || 
+                    hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::WALL) {
                     return 0;
                 }
 
                 // If this asset can be destroyed, then allow a job to pass through it if it is destroyed. Otherwise always allow bands to pass through it.
                 if (is_job) {
-                    if (hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::TOWN || 
-                        hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::BARRICADE || 
-                        hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::TURRET) {
+                    if (hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::TOWN || 
+                        hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::BARRICADE || 
+                        hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::TURRET) {
                         if (do_pass_through_check && hgsd.is_valid() && hgsd->get_asset_type_cost() == 0) {
                             if (hgsd->is_destroyed) return 1;
                         }
@@ -679,10 +679,10 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, b
                 }
 
                 if (!do_pass_through_check) {
-                    if (hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::BARRICADE || 
-                        hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::TURRET || 
-                        hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::TOWN || 
-                        hvad->hex_type == BG_HexVisualAssetData::HexVisualAssetTypes::NO_STOP_CELL) {
+                    if (hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::BARRICADE || 
+                        hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::TURRET || 
+                        hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::TOWN || 
+                        hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::NO_STOP_CELL) {
                         return 0;
                     }
                 }
@@ -701,11 +701,11 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, b
                         return 0;
                     }
                 }
-                else if (hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::BAND || // Allow these if band is moving.
-                    hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
-                    hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::BARRICADE ||
-                    hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::TURRET ||
-                    hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::CITY) {
+                else if (hgsd->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::BAND || // Allow these if band is moving.
+                    hgsd->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
+                    hgsd->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::BARRICADE ||
+                    hgsd->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::TURRET ||
+                    hgsd->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::CITY) {
                     // Do nothing.
                 } else {
                     return 0;
@@ -718,13 +718,13 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, b
                         return 0;
                     }
                 }
-                else if (hgsd->asset_type != BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
-                    hgsd->asset_type != BG_HexGameSaveData::HexGameAssetTypes::BARRICADE ||
-                    hgsd->asset_type != BG_HexGameSaveData::HexGameAssetTypes::TURRET) {
+                else if (hgsd->get_asset_type() != BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
+                    hgsd->get_asset_type() != BG_HexGameSaveData::HexGameAssetTypes::BARRICADE ||
+                    hgsd->get_asset_type() != BG_HexGameSaveData::HexGameAssetTypes::TURRET) {
                     if (!hgsd->is_destroyed) {
                         return 0;
                     }
-                } else if (hgsd->asset_type != BG_HexGameSaveData::HexGameAssetTypes::JOB) {
+                } else if (hgsd->get_asset_type() != BG_HexGameSaveData::HexGameAssetTypes::JOB) {
                     return 0;
                 }
             }
@@ -751,11 +751,20 @@ Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_job_attackable(const Ref<BG_Hex>
     for (uint32_t i = 0; i < game_data.size(); ++i) {
         const Ref<BG_HexGameSaveData> data = game_data[i];
         if (data.is_null()) continue;
-
-        if (data->get_is_destroyed() || !attackable_types_converted.has(data->asset_type)) continue;
+        if (data->get_is_destroyed()) continue;
+        
+        if (data->get_is_dynamic_type()) {
+            const BG_HexGameSaveData::HexGameAssetTypes game_type = BG_HexGameSaveData::map_asset_type_to_game_type(
+                static_cast<BG_HexVisualAssetData::HexVisualAssetTypes>(data->get_dyn_hex_type_details()->get_hex_type())
+            );
+            if (!attackable_types_converted.has(game_type)) continue;
+        }
+        else {
+            if (!attackable_types_converted.has(data->get_asset_type())) continue;
+        }
 
         // If the asset is a band, then ensure the band is still alive.
-        if (data->asset_type == BG_HexGameSaveData::HexGameAssetTypes::BAND) {
+        if (data->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::BAND) {
             bool band_alive = false;
             for (uint32_t y = 0; y < bands.size(); ++y) {
                 const Ref<BG_Band> band = bands[y];
