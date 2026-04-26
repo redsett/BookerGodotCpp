@@ -188,6 +188,7 @@ void BG_BattleBoard_HexTypeVisualDetails::_bind_methods()
 void BG_BattleBoard_HexTypeDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_BattleBoard_HexTypeDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_is_dynamic_type"), &BG_BattleBoard_HexTypeDetails::get_is_dynamic_type);
 	ClassDB::bind_method(D_METHOD("get_hex_type"), &BG_BattleBoard_HexTypeDetails::get_hex_type);
 	ClassDB::bind_method(D_METHOD("get_visuals"), &BG_BattleBoard_HexTypeDetails::get_visuals);
 	ClassDB::bind_method(D_METHOD("get_destroyed_vfx_scene_path"), &BG_BattleBoard_HexTypeDetails::get_destroyed_vfx_scene_path);
@@ -195,6 +196,10 @@ void BG_BattleBoard_HexTypeDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_hex_visual_scene_path_override"), &BG_BattleBoard_HexTypeDetails::get_hex_visual_scene_path_override);
 	ClassDB::bind_method(D_METHOD("get_health_effectiveness"), &BG_BattleBoard_HexTypeDetails::get_health_effectiveness);
 	ClassDB::bind_method(D_METHOD("get_equipment_ids"), &BG_BattleBoard_HexTypeDetails::get_equipment_ids);
+	ClassDB::bind_method(D_METHOD("get_is_actionable"), &BG_BattleBoard_HexTypeDetails::get_is_actionable);
+	ClassDB::bind_method(D_METHOD("get_actionable_requires_move"), &BG_BattleBoard_HexTypeDetails::get_actionable_requires_move);
+	ClassDB::bind_method(D_METHOD("get_pass_through_by_ally"), &BG_BattleBoard_HexTypeDetails::get_pass_through_by_ally);
+	ClassDB::bind_method(D_METHOD("get_pass_through_by_enemy"), &BG_BattleBoard_HexTypeDetails::get_pass_through_by_enemy);
 }
 
 ////
@@ -1154,6 +1159,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_objectives"), &BG_Booker_DB::get_objectives);
 	ClassDB::bind_method(D_METHOD("get_battle_boards_details"), &BG_Booker_DB::get_battle_boards_details);
 	ClassDB::bind_method(D_METHOD("get_battle_board_by_id", "id"), &BG_Booker_DB::get_battle_board_by_id);
+	ClassDB::bind_method(D_METHOD("get_battle_board_details_for_bb", "parent_bb_id", "bb_id"), &BG_Booker_DB::get_battle_board_details_for_bb);
 	ClassDB::bind_method(D_METHOD("get_battle_board_hex_types_by_type", "parent_bb_id", "bb_id", "type"), &BG_Booker_DB::get_battle_board_hex_types_by_type);
 	ClassDB::bind_method(D_METHOD("get_battle_board_hex_type_by_id", "parent_bb_id", "bb_id", "id"), &BG_Booker_DB::get_battle_board_hex_type_by_id);
 	ClassDB::bind_method(D_METHOD("get_resource_type_details_by_id", "resource_id"), &BG_Booker_DB::get_resource_type_details_by_id);
@@ -1187,6 +1193,47 @@ BG_BattleBoardDetails *BG_Booker_DB::get_battle_board_by_id(StringName id) const
 			return bb;
 	}
 	return nullptr;
+}
+
+TypedArray<BG_BattleBoard_HexTypeDetails> BG_Booker_DB::get_battle_board_details_for_bb(StringName parent_bb_id, StringName bb_id) const
+{
+	// Add all of the parent battle board hex details.
+	HashMap<StringName, TypedArray<BG_BattleBoard_HexTypeDetails>> sorted;
+	const BG_BattleBoardDetails *bb = get_battle_board_by_id(parent_bb_id);
+	if (bb != nullptr) {
+		for (int i = 0; i < bb->get_hex_types().size(); ++i) {
+			BG_BattleBoard_HexTypeDetails *hex_type_details = cast_to<BG_BattleBoard_HexTypeDetails>(bb->get_hex_types()[i]);
+			if (!sorted.has(hex_type_details->get_id())) {
+				TypedArray<BG_BattleBoard_HexTypeDetails> a;
+				sorted[hex_type_details->get_id()] = a;
+			}
+			sorted[hex_type_details->get_id()].append(hex_type_details);
+		}
+	}
+
+	// Add the child battle board details. If the child has an existing Id from the parent, then override it.
+	bb = get_battle_board_by_id(bb_id);
+	if (bb != nullptr) {
+		TypedArray<StringName> child_ids_hit;
+		for (int i = 0; i < bb->get_hex_types().size(); ++i) {
+			BG_BattleBoard_HexTypeDetails *hex_type_details = cast_to<BG_BattleBoard_HexTypeDetails>(bb->get_hex_types()[i]);
+			if (!sorted.has(hex_type_details->get_id())) {
+				TypedArray<BG_BattleBoard_HexTypeDetails> a;
+				sorted[hex_type_details->get_id()] = a;
+			} else if (!child_ids_hit.has(hex_type_details->get_id())) {
+				sorted[hex_type_details->get_id()].clear();
+			}
+			sorted[hex_type_details->get_id()].append(hex_type_details);
+			child_ids_hit.append(hex_type_details->get_id());
+		}
+	}
+
+	TypedArray<BG_BattleBoard_HexTypeDetails> result;
+	for (const auto &pair : sorted) {
+		result.append_array(pair.value);
+	}
+
+	return result;
 }
 
 TypedArray<BG_BattleBoard_HexTypeDetails> BG_Booker_DB::get_battle_board_hex_types_by_type(StringName parent_bb_id, StringName bb_id, int type, bool is_game_type) const {
@@ -1282,6 +1329,11 @@ void BG_Booker_DB::refresh_data()
 	globals = memnew(BG_Booker_Globals);
 	if (band_info != nullptr) memfree(band_info);
 	band_info = memnew(BG_BandInfo);
+	for (int i = 0; i < items.size(); ++i) {
+		BG_ItemDetails *c = cast_to<BG_ItemDetails>(items[i]);
+		memfree(c);
+	}
+	items.clear();
 
 	const String booker_data_file_name = "bookerData.cdb";
 	const String exe_path = OS::get_singleton()->get_executable_path().get_base_dir() + "/";
@@ -2126,8 +2178,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Global Curves
-		globals->global_curves.clear();
-
 		const Array lines = Array(data["global_curves"]);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Dictionary entry = lines[i];
@@ -2137,6 +2187,10 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Base Stats
+		for (int i = 0; i < base_stats.size(); ++i) {
+			BG_BaseStat *c = cast_to<BG_BaseStat>(base_stats[i]);
+			memfree(c);
+		}
 		base_stats.clear();
 
 		const Array lines = Array(data["all_base_stats"]);
@@ -2210,7 +2264,12 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	};
 
 	{ // Stat Types
+		for (int i = 0; i < stat_types.size(); ++i) {
+			BG_UnitStatDetails *c = cast_to<BG_UnitStatDetails>(stat_types[i]);
+			memfree(c);
+		}
 		stat_types.clear();
+
 		const Array lines = get_sheet_by_name("Stat_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2394,6 +2453,12 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Audio
+		for (int i = 0; i < audio_data.size(); ++i) {
+			BG_AudioData *c = cast_to<BG_AudioData>(audio_data[i]);
+			memfree(c);
+		}
+		audio_data.clear();
+
 		const Array lines = get_sheet_by_name("Audio", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2448,7 +2513,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				const Array last_names_entry = last_names_array[x];
 				band_info->last_names.append(StringName(get_find_data_by_param_name("name", last_names_entry)["value"]));
 			}
-
+			
 			const Dictionary bands = get_find_data_by_param_name("bands", entry);
 			const Array bands_array = bands["array_values"];
 			for (int x = 0; x < bands_array.size(); ++x) {
@@ -2464,6 +2529,12 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Battle Boards
+		for (int i = 0; i < battle_boards_details.size(); ++i) {
+			BG_BattleBoardDetails *c = cast_to<BG_BattleBoardDetails>(battle_boards_details[i]);
+			memfree(c);
+		}
+		battle_boards_details.clear();
+
 		const Array lines = get_sheet_by_name("Battle_Boards", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2482,10 +2553,15 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 
 				BG_BattleBoard_HexTypeDetails *new_hex_type_class = memnew(BG_BattleBoard_HexTypeDetails);
 				new_hex_type_class->id = StringName(get_find_data_by_param_name("id", hex_types_entry)["value"]);
+				new_hex_type_class->is_dynamic_type = bool(get_find_data_by_param_name("is_dynamic_type", hex_types_entry)["value"]);
 				new_hex_type_class->hex_type = int(get_find_data_by_param_name("type", hex_types_entry)["value"]);
 				new_hex_type_class->destroyed_vfx_scene_path = ensure_clean_path(get_find_data_by_param_name("destroyed_vfx_scene", hex_types_entry)["path"]);
 				new_hex_type_class->destroyed_sfx_id = StringName(get_find_data_by_param_name("destroyed_sfx", hex_types_entry)["element_id_name_value"]);
 				new_hex_type_class->hex_visual_scene_path_override = ensure_clean_path(get_find_data_by_param_name("hex_visual_file_path_override", hex_types_entry)["path"]);
+				new_hex_type_class->is_actionable = bool(get_find_data_by_param_name("is_actionable", hex_types_entry)["value"]);
+				new_hex_type_class->actionable_requires_move = bool(get_find_data_by_param_name("actionable_requires_move", hex_types_entry)["value"]);
+				new_hex_type_class->pass_through_by_ally = bool(get_find_data_by_param_name("pass_through_by_ally", hex_types_entry)["value"]);
+				new_hex_type_class->pass_through_by_enemy = bool(get_find_data_by_param_name("pass_through_by_enemy", hex_types_entry)["value"]);
 
 				{ // Health Effectiveness
 					static const String health_effectiveness = "health_effectiveness";
@@ -2537,7 +2613,12 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Booker Skill Tree
+		for (int i = 0; i < booker_skill_tree_details.size(); ++i) {
+			BG_BookerSkillTreeSlotDetails *c = cast_to<BG_BookerSkillTreeSlotDetails>(booker_skill_tree_details[i]);
+			memfree(c);
+		}
 		booker_skill_tree_details.clear();
+
 		const Array lines = get_sheet_by_name("Booker_Skill_Tree", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2571,7 +2652,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Caste Types
-		band_info->unit_castes.clear();
 		const Array lines = get_sheet_by_name("Caste_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2676,8 +2756,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Challenge Rating Guide
-
-		globals->challenge_rating_guide.clear();
 		const Array lines = get_sheet_by_name("Audio", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2695,7 +2773,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // City Info
-		globals->city_info.clear();
 		const Array lines = get_sheet_by_name("City_Info", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2767,7 +2844,12 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Item Slot Types
+		for (int i = 0; i < item_slot_types.size(); ++i) {
+			BG_ItemSlotType *c = cast_to<BG_ItemSlotType>(item_slot_types[i]);
+			memfree(c);
+		}
 		item_slot_types.clear();
+		
 		const Array lines = get_sheet_by_name("Item_Slot_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2792,7 +2874,12 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Mail Data
+		for (int i = 0; i < mail_data.size(); ++i) {
+			BG_MailData *c = cast_to<BG_MailData>(mail_data[i]);
+			memfree(c);
+		}
 		mail_data.clear();
+
 		const Array lines = get_sheet_by_name("Item_Slot_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2931,7 +3018,12 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Rarity Type
+		for (int i = 0; i < rarity_types.size(); ++i) {
+			BG_RarityDetails *c = cast_to<BG_RarityDetails>(rarity_types[i]);
+			memfree(c);
+		}
 		rarity_types.clear();
+
 		const Array lines = get_sheet_by_name("Rarity_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2960,7 +3052,11 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Resource Types
+		for (const auto &pair : resource_type_details) {
+			memfree(resource_type_details[pair.key]);
+		}
 		resource_type_details.clear();
+
 		const Array lines = get_sheet_by_name("Resource_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2974,7 +3070,12 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // 2der
+		for (int i = 0; i < two_der_data_entries.size(); ++i) {
+			BG_TwoDer_DataEntry *c = cast_to<BG_TwoDer_DataEntry>(two_der_data_entries[i]);
+			memfree(c);
+		}
 		two_der_data_entries.clear();
+
 		const Array lines = get_sheet_by_name("Two_Der", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];

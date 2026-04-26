@@ -176,8 +176,9 @@ public:
 	StringName id;
 	StringName get_id() const { return id; }
 
-	// BG_HexVisualAssetData::HexVisualAssetTypes hex_type;
-	// BG_HexVisualAssetData::HexVisualAssetTypes get_hex_type() const { return hex_type; }
+	bool is_dynamic_type = false;
+	bool get_is_dynamic_type() const { return is_dynamic_type; }
+
 	int hex_type = 0;
 	int get_hex_type() const { return hex_type; }
 
@@ -198,6 +199,18 @@ public:
 
 	TypedArray<StringName> equipment_ids;
 	TypedArray<StringName> get_equipment_ids() const { return equipment_ids; }
+
+	bool is_actionable = false;
+	bool get_is_actionable() const { return is_actionable; }
+
+	bool actionable_requires_move = false;
+	bool get_actionable_requires_move() const { return actionable_requires_move; }
+
+	bool pass_through_by_ally = false;
+	bool get_pass_through_by_ally() const { return pass_through_by_ally; }
+	
+	bool pass_through_by_enemy = false;
+	bool get_pass_through_by_enemy() const { return pass_through_by_enemy; }
 };
 
 ////
@@ -1922,6 +1935,7 @@ public:
 	TypedArray<BG_BattleBoardDetails> get_battle_boards_details() const { return battle_boards_details; }
 
 	BG_BattleBoardDetails *get_battle_board_by_id(StringName id) const;
+	TypedArray<BG_BattleBoard_HexTypeDetails> get_battle_board_details_for_bb(StringName parent_bb_id, StringName bb_id) const;
 	TypedArray<BG_BattleBoard_HexTypeDetails> get_battle_board_hex_types_by_type(StringName parent_bb_id, StringName bb_id, int type, bool is_game_type = true) const;
 	BG_BattleBoard_HexTypeDetails *get_battle_board_hex_type_by_id(StringName parent_bb_id, StringName bb_id, StringName id) const;
 

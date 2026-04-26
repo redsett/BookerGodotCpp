@@ -36,8 +36,7 @@ public:
         NO_STOP_CELL,
         MISC_VISUAL_1,
         COMBAT_ENVIRONMENT,
-        DUNGEON_ENTRANCE,
-        DUNGEON_EXIT,
+        NONE,
 	};
 
     static PackedStringArray get_hex_type_names() {
@@ -55,32 +54,21 @@ public:
         result.append("NO_STOP_CELL");
         result.append("MISC_VISUAL_1");
         result.append("COMBAT_ENVIRONMENT");
-        result.append("DUNGEON_ENTRANCE");
-        result.append("DUNGEON_EXIT");
-        return result;
-    }
-
-	enum DungeonTypes : int32_t {
-        RUIN,
-        CAVE,
-        MINE,
-	};
-
-    static PackedStringArray get_dungeon_type_names() {
-        PackedStringArray result;
-        result.append("RUIN");
-        result.append("CAVE");
-        result.append("MINE");
+        result.append("NONE");
         return result;
     }
 
     HexVisualAssetTypes hex_type = MONSTER_SPAWN;
-    HexVisualAssetTypes get_hex_type() const { return hex_type; }
+    HexVisualAssetTypes get_hex_type() const {
+        if (!hex_type_dyn.is_empty())
+            return BG_HexVisualAssetData::HexVisualAssetTypes::NONE;
+        return hex_type;
+    }
     void set_hex_type(HexVisualAssetTypes v) { hex_type = v; }
 
-    DungeonTypes dungeon_type = RUIN;
-    DungeonTypes get_dungeon_type() const { return dungeon_type; }
-    void set_dungeon_type(DungeonTypes v) { dungeon_type = v; }
+    StringName hex_type_dyn;
+    StringName get_hex_type_dyn() const { return hex_type_dyn; }
+    void set_hex_type_dyn(StringName v) { hex_type_dyn = v; }
 
     float rotation = 0.0;
     float get_rotation() const { return rotation; }
@@ -120,7 +108,6 @@ public:
 };
 
 VARIANT_ENUM_CAST(BG_HexVisualAssetData::HexVisualAssetTypes);
-VARIANT_ENUM_CAST(BG_HexVisualAssetData::DungeonTypes);
 
 ////
 //// BG_HexVisualData
@@ -142,6 +129,7 @@ public:
     void set_hex_asset_datas(TypedArray<BG_HexVisualAssetData> v) { hex_asset_datas = v; }
 
     Ref<BG_HexVisualAssetData> get_hex_visual_asset_data_by_type(BG_HexVisualAssetData::HexVisualAssetTypes t) const;
+    Ref<BG_HexVisualAssetData> get_hex_visual_asset_data_by_id(StringName id) const;
 };
 
 ////
@@ -163,8 +151,7 @@ public:
 		RESOURCE,
 		BARRICADE,
 		TURRET,
-        DUNGEON_ENTRANCE, // The entrance to a dungeon. Generally placed on the main battle board.
-        DUNGEON_EXIT, // Placed in the dungeon as a place where the user can exit the dungeon. Placing them at a DUNGEON_ENTRANCE.
+        NONE,
 	};
 
     static PackedStringArray get_game_asset_type_names() {
@@ -176,29 +163,32 @@ public:
         result.append("RESOURCE");
         result.append("BARRICADE");
         result.append("TURRET");
-        result.append("DUNGEON_ENTRANCE");
-        result.append("DUNGEON_EXIT");
+        result.append("NONE");
         return result;
     }
 
     HexGameAssetTypes asset_type = BAND;
-    HexGameAssetTypes get_asset_type() const { return asset_type; }
+    HexGameAssetTypes get_asset_type() const {
+        if (!asset_type_dyn.is_empty())
+            return BG_HexGameSaveData::HexGameAssetTypes::NONE;
+        return asset_type;
+    }
     void set_asset_type(HexGameAssetTypes v) { asset_type = v; }
 
     int get_asset_type_cost() const {
-        if (asset_type == BG_HexGameSaveData::HexGameAssetTypes::BAND ||
-            asset_type == BG_HexGameSaveData::HexGameAssetTypes::JOB ||
-            asset_type == BG_HexGameSaveData::HexGameAssetTypes::CITY ||
-            asset_type == BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
-            asset_type == BG_HexGameSaveData::HexGameAssetTypes::BARRICADE ||
-            asset_type == BG_HexGameSaveData::HexGameAssetTypes::TURRET ||
-            asset_type == BG_HexGameSaveData::HexGameAssetTypes::DUNGEON_ENTRANCE ||
-            asset_type == BG_HexGameSaveData::HexGameAssetTypes::DUNGEON_EXIT ||
-            asset_type == BG_HexGameSaveData::HexGameAssetTypes::RESOURCE) {
-                return 0;
-        }
-        return 1;
+        return 0;
     }
+
+    void init(StringName parent_bb_id, StringName bb_id) {
+        if (asset_type_dyn.is_empty()) return;
+        const BG_Booker_DB *bdb = BG_Booker_DB::get_singleton();
+        if (bdb == nullptr) return;
+        dyn_hex_type_details = bdb->get_battle_board_hex_type_by_id(parent_bb_id, bb_id, asset_type_dyn);
+    }
+
+    StringName asset_type_dyn;
+    StringName get_asset_type_dyn() const { return asset_type_dyn; }
+    void set_asset_type_dyn(StringName v) { asset_type_dyn = v; }
 
     bool is_newly_added_to_board = true;
     bool get_is_newly_added_to_board() const { return is_newly_added_to_board; }
@@ -256,6 +246,11 @@ public:
     static BG_HexGameSaveData::HexGameAssetTypes map_asset_type_to_game_type(BG_HexVisualAssetData::HexVisualAssetTypes type);
     static BG_HexVisualAssetData::HexVisualAssetTypes map_game_type_to_asset_type(HexGameAssetTypes type);
     static void prep_data_to_move_to_another_board(const Ref<BG_HexGameSaveData> old_data, Ref<BG_HexGameSaveData> new_data);
+
+    BG_BattleBoard_HexTypeDetails *dyn_hex_type_details = nullptr;
+    BG_BattleBoard_HexTypeDetails *get_dyn_hex_type_details() const { return dyn_hex_type_details; }
+
+    bool get_is_dynamic_type() const { return dyn_hex_type_details != nullptr; }
 };
 
 VARIANT_ENUM_CAST(BG_HexGameSaveData::HexGameAssetTypes);
@@ -364,14 +359,14 @@ public:
         }
         return result;
     }
-	void set_base_grid_visual_data(Vector2i qr, Ref<BG_HexVisualData> v) {
+	void set_base_grid_visual_data(const Vector2i &qr, Ref<BG_HexVisualData> v) {
         base_grid_visual_data[qr] = v;
     }
     
     TypedArray<BG_HexGameSaveData> game_data;
     TypedArray<BG_HexGameSaveData> get_game_data() const { return game_data; };
 	void set_game_data(TypedArray<BG_HexGameSaveData> v) { game_data = v; }
-    Ref<BG_HexGameSaveData> get_game_data_from_qr(Vector2i qr) const {
+    Ref<BG_HexGameSaveData> get_game_data_from_qr(const Vector2i &qr) const {
         for (int i = 0; i < game_data.size(); ++i) {
             const Ref<BG_HexGameSaveData> h = game_data[i];
             if (h.is_null()) continue;

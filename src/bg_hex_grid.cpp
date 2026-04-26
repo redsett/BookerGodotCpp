@@ -11,12 +11,11 @@
 void BG_HexVisualAssetData::_bind_methods()
 {
     ClassDB::bind_static_method("BG_HexVisualAssetData", D_METHOD("get_hex_type_names"), &BG_HexVisualAssetData::get_hex_type_names);
-    ClassDB::bind_static_method("BG_HexVisualAssetData", D_METHOD("get_dungeon_type_names"), &BG_HexVisualAssetData::get_dungeon_type_names);
 
 	ClassDB::bind_method(D_METHOD("get_hex_type"), &BG_HexVisualAssetData::get_hex_type);
 	ClassDB::bind_method(D_METHOD("set_hex_type"), &BG_HexVisualAssetData::set_hex_type);
-	ClassDB::bind_method(D_METHOD("get_dungeon_type"), &BG_HexVisualAssetData::get_dungeon_type);
-	ClassDB::bind_method(D_METHOD("set_dungeon_type"), &BG_HexVisualAssetData::set_dungeon_type);
+	ClassDB::bind_method(D_METHOD("get_hex_type_dyn"), &BG_HexVisualAssetData::get_hex_type_dyn);
+	ClassDB::bind_method(D_METHOD("set_hex_type_dyn"), &BG_HexVisualAssetData::set_hex_type_dyn);
 	ClassDB::bind_method(D_METHOD("get_rotation"), &BG_HexVisualAssetData::get_rotation);
 	ClassDB::bind_method(D_METHOD("set_rotation"), &BG_HexVisualAssetData::set_rotation);
 	ClassDB::bind_method(D_METHOD("get_scale_multiplier"), &BG_HexVisualAssetData::get_scale_multiplier);
@@ -37,9 +36,9 @@ void BG_HexVisualAssetData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_misc_data"), &BG_HexVisualAssetData::set_misc_data);
 
     ADD_PROPERTY(PropertyInfo(Variant::INT, "hex_type", PROPERTY_HINT_ENUM, 
-        "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3,SECTION:4,TOWN:5,RESOURCE:6,BAND_SPAWN:7,BARRICADE:8,TURRET:9,NO_STOP_CELL:10,MISC_VISUAL_1:11,COMBAT_ENVIRONMENT:12,DUNGEON_ENTRANCE:13,DUNGEON_EXIT:14"), 
+        "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3,SECTION:4,TOWN:5,RESOURCE:6,BAND_SPAWN:7,BARRICADE:8,TURRET:9,NO_STOP_CELL:10,MISC_VISUAL_1:11,COMBAT_ENVIRONMENT:12,NONE:13"), 
         "set_hex_type", "get_hex_type");
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "dungeon_type", PROPERTY_HINT_ENUM, "RUIN:0,CAVE:1,MINE:2"), "set_dungeon_type", "get_dungeon_type");
+    ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "hex_type_dyn"), "set_hex_type_dyn", "get_hex_type_dyn");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "rotation"), "set_rotation", "get_rotation");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "scale_multiplier"), "set_scale_multiplier", "get_scale_multiplier");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "section_index"), "set_section_index", "get_section_index");
@@ -63,12 +62,7 @@ void BG_HexVisualAssetData::_bind_methods()
 	BIND_ENUM_CONSTANT(NO_STOP_CELL);
 	BIND_ENUM_CONSTANT(MISC_VISUAL_1);
 	BIND_ENUM_CONSTANT(COMBAT_ENVIRONMENT);
-	BIND_ENUM_CONSTANT(DUNGEON_ENTRANCE);
-	BIND_ENUM_CONSTANT(DUNGEON_EXIT);
-
-	BIND_ENUM_CONSTANT(RUIN);
-	BIND_ENUM_CONSTANT(CAVE);
-	BIND_ENUM_CONSTANT(MINE);
+	BIND_ENUM_CONSTANT(NONE);
 }
 
 ////
@@ -80,7 +74,8 @@ void BG_HexVisualData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_qr"), &BG_HexVisualData::set_qr);
 	ClassDB::bind_method(D_METHOD("get_hex_asset_datas"), &BG_HexVisualData::get_hex_asset_datas);
 	ClassDB::bind_method(D_METHOD("set_hex_asset_datas"), &BG_HexVisualData::set_hex_asset_datas);
-	ClassDB::bind_method(D_METHOD("get_hex_visual_asset_data_by_type"), &BG_HexVisualData::get_hex_visual_asset_data_by_type);
+	ClassDB::bind_method(D_METHOD("get_hex_visual_asset_data_by_type", "type"), &BG_HexVisualData::get_hex_visual_asset_data_by_type);
+	ClassDB::bind_method(D_METHOD("get_hex_visual_asset_data_by_id", "id"), &BG_HexVisualData::get_hex_visual_asset_data_by_id);
 
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "qr"), "set_qr", "get_qr");
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "hex_asset_datas"), "set_hex_asset_datas", "get_hex_asset_datas");
@@ -95,6 +90,15 @@ Ref<BG_HexVisualAssetData> BG_HexVisualData::get_hex_visual_asset_data_by_type(B
     return nullptr;
 }
 
+Ref<BG_HexVisualAssetData> BG_HexVisualData::get_hex_visual_asset_data_by_id(StringName id) const
+{
+	for (int i = 0; i < hex_asset_datas.size(); ++i) {
+		const Ref<BG_HexVisualAssetData> hvad = cast_to<BG_HexVisualAssetData>(hex_asset_datas[i]);
+        if (!hvad.is_null() && hvad->get_hex_type_dyn() == id) return hvad;
+    }
+    return nullptr;
+}
+
 ////
 //// BG_HexGameSaveData
 ////
@@ -105,8 +109,11 @@ void BG_HexGameSaveData::_bind_methods()
     ClassDB::bind_static_method("BG_HexGameSaveData", D_METHOD("map_game_type_to_asset_type", "type"), &BG_HexGameSaveData::map_game_type_to_asset_type);
     ClassDB::bind_static_method("BG_HexGameSaveData", D_METHOD("prep_data_to_move_to_another_board", "old_data", "new_data"), &BG_HexGameSaveData::prep_data_to_move_to_another_board);
 
+	ClassDB::bind_method(D_METHOD("init", "parent_bb_id", "bb_id"), &BG_HexGameSaveData::init);
 	ClassDB::bind_method(D_METHOD("get_asset_type"), &BG_HexGameSaveData::get_asset_type);
 	ClassDB::bind_method(D_METHOD("set_asset_type"), &BG_HexGameSaveData::set_asset_type);
+	ClassDB::bind_method(D_METHOD("get_asset_type_dyn"), &BG_HexGameSaveData::get_asset_type_dyn);
+	ClassDB::bind_method(D_METHOD("set_asset_type_dyn"), &BG_HexGameSaveData::set_asset_type_dyn);
 	ClassDB::bind_method(D_METHOD("get_asset_type_cost"), &BG_HexGameSaveData::get_asset_type_cost);
 	ClassDB::bind_method(D_METHOD("get_is_newly_added_to_board"), &BG_HexGameSaveData::get_is_newly_added_to_board);
 	ClassDB::bind_method(D_METHOD("set_is_newly_added_to_board"), &BG_HexGameSaveData::set_is_newly_added_to_board);
@@ -134,11 +141,14 @@ void BG_HexGameSaveData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_is_newly_added_objective"), &BG_HexGameSaveData::set_is_newly_added_objective);
 	ClassDB::bind_method(D_METHOD("get_week_of_last_active_objective"), &BG_HexGameSaveData::get_week_of_last_active_objective);
 	ClassDB::bind_method(D_METHOD("set_week_of_last_active_objective"), &BG_HexGameSaveData::set_week_of_last_active_objective);
+	ClassDB::bind_method(D_METHOD("get_dyn_hex_type_details"), &BG_HexGameSaveData::get_dyn_hex_type_details);
+	ClassDB::bind_method(D_METHOD("get_is_dynamic_type"), &BG_HexGameSaveData::get_is_dynamic_type);
 
     ADD_PROPERTY(PropertyInfo(Variant::INT, "asset_type", PROPERTY_HINT_ENUM, 
-        "BAND:0,JOB:1,CITY:2,TOWN:3,RESOURCE:4,BARRICADE:5,TURRET:6,DUNGEON_ENTRANCE:7,DUNGEON_EXIT:8"), 
+        "BAND:0,JOB:1,CITY:2,TOWN:3,RESOURCE:4,BARRICADE:5,TURRET:6,NONE:7"), 
         "set_asset_type", "get_asset_type"
     );
+    ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "asset_type_dyn"), "set_asset_type_dyn", "get_asset_type_dyn");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_newly_added_to_board"), "set_is_newly_added_to_board", "get_is_newly_added_to_board");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "has_attacked"), "set_has_attacked", "get_has_attacked");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "can_move"), "set_can_move", "get_can_move");
@@ -159,8 +169,7 @@ void BG_HexGameSaveData::_bind_methods()
     BIND_ENUM_CONSTANT(RESOURCE);
     BIND_ENUM_CONSTANT(BARRICADE);
     BIND_ENUM_CONSTANT(TURRET);
-    BIND_ENUM_CONSTANT(DUNGEON_ENTRANCE);
-    BIND_ENUM_CONSTANT(DUNGEON_EXIT);
+    BIND_ENUM_CONSTANT(NONE);
 }
 
 /* static */ BG_HexGameSaveData::HexGameAssetTypes BG_HexGameSaveData::map_asset_type_to_game_type(BG_HexVisualAssetData::HexVisualAssetTypes type)
@@ -176,13 +185,11 @@ void BG_HexGameSaveData::_bind_methods()
             return HexGameAssetTypes::BARRICADE;
         case BG_HexVisualAssetData::HexVisualAssetTypes::TURRET:
             return HexGameAssetTypes::TURRET;
-        case BG_HexVisualAssetData::HexVisualAssetTypes::DUNGEON_ENTRANCE:
-            return HexGameAssetTypes::DUNGEON_ENTRANCE;
-        case BG_HexVisualAssetData::HexVisualAssetTypes::DUNGEON_EXIT:
-            return HexGameAssetTypes::DUNGEON_EXIT;
+        case BG_HexVisualAssetData::HexVisualAssetTypes::NONE:
+            return HexGameAssetTypes::NONE;
     }
-    UtilityFunctions::push_error("BG_HexGameSaveData::map_asset_type_to_game_type : Could not find type for", type);
-    return HexGameAssetTypes::CITY;
+    UtilityFunctions::push_error("BG_HexGameSaveData::map_asset_type_to_game_type : Could not find type for: ", BG_HexVisualAssetData::get_hex_type_names()[type]);
+    return HexGameAssetTypes::NONE;
 }
 
 /* static */ BG_HexVisualAssetData::HexVisualAssetTypes BG_HexGameSaveData::map_game_type_to_asset_type(HexGameAssetTypes type)
@@ -198,13 +205,11 @@ void BG_HexGameSaveData::_bind_methods()
             return BG_HexVisualAssetData::HexVisualAssetTypes::BARRICADE;
         case HexGameAssetTypes::TURRET:
             return BG_HexVisualAssetData::HexVisualAssetTypes::TURRET;
-        case HexGameAssetTypes::DUNGEON_ENTRANCE:
-            return BG_HexVisualAssetData::HexVisualAssetTypes::DUNGEON_ENTRANCE;
-        case HexGameAssetTypes::DUNGEON_EXIT:
-            return BG_HexVisualAssetData::HexVisualAssetTypes::DUNGEON_EXIT;
+        case HexGameAssetTypes::NONE:
+            return BG_HexVisualAssetData::HexVisualAssetTypes::NONE;
     }
-    UtilityFunctions::push_error("BG_HexGameSaveData::map_game_type_to_asset_type : Could not find type for", type);
-    return BG_HexVisualAssetData::HexVisualAssetTypes::CITY;
+    UtilityFunctions::push_error("BG_HexGameSaveData::map_game_type_to_asset_type : Could not find type for: ", get_game_asset_type_names()[type]);
+    return BG_HexVisualAssetData::HexVisualAssetTypes::NONE;
 }
 
 /* static */ void BG_HexGameSaveData::prep_data_to_move_to_another_board(const Ref<BG_HexGameSaveData> old_data, Ref<BG_HexGameSaveData> new_data)
@@ -691,7 +696,12 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, b
             // Band
             if (is_band) {
 
-                if (hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::BAND || // Allow these if band is moving.
+                if (hgsd->get_is_dynamic_type()) {
+                    if (!hgsd->get_dyn_hex_type_details()->get_pass_through_by_ally()) {
+                        return 0;
+                    }
+                }
+                else if (hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::BAND || // Allow these if band is moving.
                     hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
                     hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::BARRICADE ||
                     hgsd->asset_type == BG_HexGameSaveData::HexGameAssetTypes::TURRET ||
@@ -703,7 +713,12 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, b
             // Job
             } else if (is_job) {
 
-                if (hgsd->asset_type != BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
+                if (hgsd->get_is_dynamic_type()) {
+                    if (!hgsd->get_dyn_hex_type_details()->get_pass_through_by_enemy()) {
+                        return 0;
+                    }
+                }
+                else if (hgsd->asset_type != BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
                     hgsd->asset_type != BG_HexGameSaveData::HexGameAssetTypes::BARRICADE ||
                     hgsd->asset_type != BG_HexGameSaveData::HexGameAssetTypes::TURRET) {
                     if (!hgsd->is_destroyed) {
