@@ -240,7 +240,7 @@ public:
 	TypedArray<BG_BattleBoard_HexTypeDetails> get_hex_types() const { return hex_types; }
 
 	TypedArray<BG_BattleBoard_HexTypeDetails> get_hex_types_by_type(int type, bool is_game_type = true) const;
-	BG_BattleBoard_HexTypeDetails *get_hex_type_by_id(StringName id) const;
+	BG_BattleBoard_HexTypeDetails *get_hex_type_by_id(const StringName &id) const;
 };
 
 ////
@@ -450,7 +450,7 @@ public:
 
 	TypedArray<int> items_sold_indexies;
 	TypedArray<int> get_items_sold_indexies() const { return items_sold_indexies; }
-	void set_items_sold_indexies(TypedArray<int> v) { items_sold_indexies = v; }
+	void set_items_sold_indexies(const TypedArray<int> &v) { items_sold_indexies = v; }
 };
 
 ////
@@ -599,14 +599,14 @@ public:
 	bool get_use_raw_numbers() const { return use_raw_numbers; }
 	void set_use_raw_numbers(bool value) { use_raw_numbers = value; }
 
-	static int calculate_dice(const TypedArray<BG_Dice> dice, RandomNumberGenerator *random_num_generator = nullptr);
-	static int get_dice_max_roll(const TypedArray<BG_Dice> dice);
-	static int get_dice_average_roll(const TypedArray<BG_Dice> dice);
-	static String dice_to_nice_name(const TypedArray<BG_Dice> dice);
-	static String dice_to_string(const Ref<BG_Dice> dice);
-	static Ref<BG_Dice> string_to_dice(String string);
-	static TypedArray<BG_Dice> string_to_dice_options(String string);
-	static Ref<BG_Dice> duplicate_dice(const Ref<BG_Dice> dice);
+	static int calculate_dice(const TypedArray<BG_Dice> &dice, RandomNumberGenerator *random_num_generator = nullptr);
+	static int get_dice_max_roll(const TypedArray<BG_Dice> &dice);
+	static int get_dice_average_roll(const TypedArray<BG_Dice> &dice);
+	static String dice_to_nice_name(const TypedArray<BG_Dice> &dice);
+	static String dice_to_string(const Ref<BG_Dice> &dice);
+	static Ref<BG_Dice> string_to_dice(const String &string);
+	static TypedArray<BG_Dice> string_to_dice_options(const String &string);
+	static Ref<BG_Dice> duplicate_dice(const Ref<BG_Dice> &dice);
 };
 
 ////
@@ -738,9 +738,9 @@ public:
 
 	Ref<BG_Dice> dice = nullptr;
 	Ref<BG_Dice> get_dice() const { return dice; }
-	void set_dice(Ref<BG_Dice> value) { dice = value; }
+	void set_dice(const Ref<BG_Dice> &value) { dice = value; }
 
-	static Vector2i string_to_resistant_value_min_max(String string);
+	static Vector2i string_to_resistant_value_min_max(const String &string);
 };
 
 ////
@@ -824,8 +824,8 @@ public:
 	TypedArray<BG_AnimationTagDetails> tags;
 	TypedArray<BG_AnimationTagDetails> get_tags() const { return tags; }
 
-	static TypedArray<BG_AnimationDetails> get_all_anim_details_of_id(TypedArray<BG_AnimationDetails> from, StringName id);
-	static BG_AnimationDetails *get_anim_details(TypedArray<BG_AnimationDetails> from, StringName id, AnimationType anim_type);
+	static TypedArray<BG_AnimationDetails> get_all_anim_details_of_id(const TypedArray<BG_AnimationDetails> &from, const StringName &id);
+	static BG_AnimationDetails *get_anim_details(const TypedArray<BG_AnimationDetails> &from, const StringName &id, AnimationType anim_type);
 };
 
 VARIANT_ENUM_CAST(BG_AnimationDetails::AnimationType);
@@ -868,7 +868,7 @@ protected:
 public:
 	StringName id;
 	StringName get_id() const { return id; }
-	void set_id(StringName v) { id = v; }
+	void set_id(const StringName &v) { id = v; }
 
 	int random_variation = 0;
 	int get_random_variation() const { return random_variation; }
@@ -924,19 +924,19 @@ public:
 
 	StringName rarity_id;
 	StringName get_rarity_id() const { return rarity_id; }
-	void set_rarity_id(StringName value) { rarity_id = value; }
+	void set_rarity_id(const StringName &value) { rarity_id = value; }
 
 	TypedArray<BG_Item> grafts;
 	TypedArray<BG_Item> get_grafts() const { return grafts; }
-	void set_grafts(TypedArray<BG_Item> value) { grafts = value; }
+	void set_grafts(const TypedArray<BG_Item> &value) { grafts = value; }
 
 	StringName forced_damage_element;
 	StringName get_forced_damage_element() const { return forced_damage_element; }
-	void set_forced_damage_element(StringName v) { forced_damage_element = v; }
+	void set_forced_damage_element(const StringName &v) { forced_damage_element = v; }
 
 	TypedArray<BG_Item> nested_items;
 	TypedArray<BG_Item> get_nested_items() const { return nested_items; }
-	void set_nested_items(TypedArray<BG_Item> value) { nested_items = value; }
+	void set_nested_items(const TypedArray<BG_Item> &value) { nested_items = value; }
 };
 
 ////
@@ -1249,7 +1249,7 @@ public:
 
 	StringName name;
 	StringName get_name() const { return name; }
-	void set_name(StringName value) { name = value; }
+	void set_name(const StringName &value) { name = value; }
 
 	int current_health = 0;
 	int get_current_health() const { return current_health; }
@@ -1277,11 +1277,11 @@ public:
 
 	Vector3 scale;
 	Vector3 get_scale() const { return scale; }
-	void set_scale(Vector3 value) { scale = value; }
+	void set_scale(const Vector3 &value) { scale = value; }
 
 	StringName caste_id;
 	StringName get_caste_id() const { return caste_id; }
-	void set_caste_id(StringName value) { caste_id = value; }
+	void set_caste_id(const StringName &value) { caste_id = value; }
 
 	// Ref<BG_ReactiveArray> equipment;
 	// Ref<BG_ReactiveArray> get_equipment() const { return equipment; }
@@ -1289,7 +1289,7 @@ public:
 
 	TypedArray<BG_Item> equipment;
 	TypedArray<BG_Item> get_equipment() const { return equipment; }
-	void set_equipment(TypedArray<BG_Item> value) { equipment = value; }
+	void set_equipment(const TypedArray<BG_Item> &value) { equipment = value; }
 
 	bool is_city_asset = false;
 	bool get_is_city_asset() const { return is_city_asset; }
@@ -1297,7 +1297,7 @@ public:
 
 	Ref<class BG_Band> band;
 	Ref<BG_Band> get_band() const { return band; }
-	void set_band(Ref<BG_Band> value) { band = value; }
+	void set_band(const Ref<BG_Band> &value) { band = value; }
 
 	BG_BattleBoard_HexTypeDetails *battle_board_hex_type_details = nullptr;
 	BG_BattleBoard_HexTypeDetails *get_battle_board_hex_type_details() const { return battle_board_hex_type_details; }
@@ -1305,11 +1305,11 @@ public:
 
 	Dictionary element_upgrades; //<StringName, int>
 	Dictionary get_element_upgrades() const { return element_upgrades; }
-	void set_element_upgrades(Dictionary v) { element_upgrades = v; }
+	void set_element_upgrades(const Dictionary &v) { element_upgrades = v; }
 
 	Dictionary consumable_upgrades; //<StringName(consumable_id), int(how_many)>
 	Dictionary get_consumable_upgrades() const { return consumable_upgrades; }
-	void set_consumable_upgrades(Dictionary v) { consumable_upgrades = v; }
+	void set_consumable_upgrades(const Dictionary &v) { consumable_upgrades = v; }
 
 	bool is_dead() { return current_health <= 0; }
 };
@@ -1327,7 +1327,7 @@ protected:
 public:
 	String id;
 	String get_id() const { return id; }
-	void set_id(String value) {
+	void set_id(const String &value) {
 		id = value;
 		if (!Engine::get_singleton()->is_editor_hint()) {
 			return;
@@ -1368,7 +1368,7 @@ protected:
 public:
 	TypedArray<BG_Formation> formations;
 	Array get_formations() const { return formations; }
-	void set_formations(Array value) { formations = value; }
+	void set_formations(const Array &value) { formations = value; }
 };
 
 ////
@@ -1388,7 +1388,7 @@ public:
 
 	StringName name;
 	StringName get_name() const { return name; }
-	void set_name(StringName value) { name = value; }
+	void set_name(const StringName &value) { name = value; }
 
 	bool resting = false;
 	bool get_resting() const { return resting; }
@@ -1412,7 +1412,7 @@ public:
 
 	TypedArray<BG_BandMember> band_members;
 	TypedArray<BG_BandMember> get_band_members() const { return band_members; }
-	void set_band_members(TypedArray<BG_BandMember> value) { band_members = value; }
+	void set_band_members(const TypedArray<BG_BandMember> &value) { band_members = value; }
 
 	int current_unique_job_id = -1; // -1 means that they don't have a job.
 	int get_current_unique_job_id() const { return current_unique_job_id; }
@@ -1420,7 +1420,7 @@ public:
 
 	Dictionary band_formation; // BG_BandMember : int(cell index)
 	Dictionary get_band_formation() const { return band_formation; }
-	void set_band_formation(Dictionary value) { band_formation = value; }	
+	void set_band_formation(const Dictionary &value) { band_formation = value; }	
 
 	bool has_job() const { return current_unique_job_id != -1; };
 
@@ -1442,7 +1442,7 @@ public:
 		return bm;
 	}
 
-	void set_band_leader(Ref<BG_BandMember> p_band_member) {
+	void set_band_leader(const Ref<BG_BandMember> &p_band_member) {
 		if (!p_band_member.is_valid()) return;
 		for (int i = 0; i < band_members.size(); ++i) {
 			Ref<BG_BandMember> bm = band_members[i];
@@ -1484,7 +1484,7 @@ protected:
 public:
 	StringName job_id;
 	StringName get_job_id() const { return job_id; }
-	void set_job_id(StringName value) { job_id = value; }
+	void set_job_id(const StringName &value) { job_id = value; }
 
 	int unique_job_id = 0;
 	int get_unique_job_id() const { return unique_job_id; }
@@ -1500,11 +1500,11 @@ public:
 	
 	TypedArray<class BG_Monster> monsters;
 	TypedArray<BG_Monster> get_monsters() const { return monsters; }
-	void set_monsters(TypedArray<BG_Monster> value) { monsters = value; }
+	void set_monsters(const TypedArray<BG_Monster> &value) { monsters = value; }
 
 	Dictionary formation; // BG_Monster : int(cell index)
 	Dictionary get_formation() const { return formation; }
-	void set_formation(Dictionary value) { formation = value; }
+	void set_formation(const Dictionary &value) { formation = value; }
 
 	bool is_on_battle_board = false;
 	bool get_is_on_battle_board() const { return is_on_battle_board; }
@@ -1917,7 +1917,7 @@ public:
 
 	void refresh_data();
 
-	static void timer_test(Callable callable);
+	static void timer_test(const Callable &callable);
 
 	String modding_path = "";
 	String get_modding_path() const { return modding_path; }
@@ -1934,17 +1934,17 @@ public:
 	TypedArray<BG_BattleBoardDetails> battle_boards_details;
 	TypedArray<BG_BattleBoardDetails> get_battle_boards_details() const { return battle_boards_details; }
 
-	BG_BattleBoardDetails *get_battle_board_by_id(StringName id) const;
-	TypedArray<BG_BattleBoard_HexTypeDetails> get_battle_board_details_for_bb(StringName parent_bb_id, StringName bb_id) const;
-	TypedArray<BG_BattleBoard_HexTypeDetails> get_battle_board_hex_types_by_type(StringName parent_bb_id, StringName bb_id, int type, bool is_game_type = true) const;
-	BG_BattleBoard_HexTypeDetails *get_battle_board_hex_type_by_id(StringName parent_bb_id, StringName bb_id, StringName id) const;
+	BG_BattleBoardDetails *get_battle_board_by_id(const StringName &id) const;
+	TypedArray<BG_BattleBoard_HexTypeDetails> get_battle_board_details_for_bb(const StringName &parent_bb_id, const StringName &bb_id) const;
+	TypedArray<BG_BattleBoard_HexTypeDetails> get_battle_board_hex_types_by_type(const StringName &parent_bb_id, const StringName &bb_id, int type, bool is_game_type = true) const;
+	BG_BattleBoard_HexTypeDetails *get_battle_board_hex_type_by_id(const StringName &parent_bb_id, const StringName &bb_id, const StringName &id) const;
 
 	HashMap<StringName, BG_ResourceTypeDetails *> resource_type_details;
-	BG_ResourceTypeDetails *get_resource_type_details_by_id(StringName resource_id) const;
+	BG_ResourceTypeDetails *get_resource_type_details_by_id(const StringName &resource_id) const;
 
 	TypedArray<BG_AudioData> audio_data;
 	TypedArray<BG_AudioData> get_audio_data() const { return audio_data; }
-	TypedArray<BG_AudioDataDetails> get_audio_details(StringName id, int act) const;
+	TypedArray<BG_AudioDataDetails> get_audio_details(const StringName &id, int act) const;
 
 	TypedArray<BG_BookerSkillTreeSlotDetails> booker_skill_tree_details;
 	TypedArray<BG_BookerSkillTreeSlotDetails> get_booker_skill_tree_details() const { return booker_skill_tree_details; }
@@ -1987,19 +1987,19 @@ public:
 	
 	TypedArray<BG_TwoDer_DataEntry> two_der_data_entries;
 	TypedArray<BG_TwoDer_DataEntry> get_two_der_data_entries() const { return two_der_data_entries; }
-	BG_TwoDer_DataEntry *get_two_der_data_from_id(StringName id) const;
+	BG_TwoDer_DataEntry *get_two_der_data_from_id(const StringName &id) const;
 
 	bool revert_localization_to_english = true;
 	void set_revert_localization_to_english(bool revert) { revert_localization_to_english = revert; }
 	// Sheet Name, Key, Data
 	HashMap<StringName, HashMap<StringName, TypedArray<BG_LocalizeEntryData>>> localize_data;
-	TypedArray<BG_LocalizeEntryData> get_localize_data(const StringName sheet_name, const StringName key, const StringName language);
-	String get_localize_string(const StringName sheet_name, const StringName key, const StringName language, bool ignore_code_data = false);
+	TypedArray<BG_LocalizeEntryData> get_localize_data(const StringName &sheet_name, const StringName &key, const StringName &language);
+	String get_localize_string(const StringName &sheet_name, const StringName &key, const StringName &language, bool ignore_code_data = false);
 
-	static float get_job_challenge_rating_value(const TypedArray<BG_Monster> monsters);
-	static String get_job_challenge_rating(const TypedArray<BG_Monster> monsters);
+	static float get_job_challenge_rating_value(const TypedArray<BG_Monster> &monsters);
+	static String get_job_challenge_rating(const TypedArray<BG_Monster> &monsters);
 
-	BG_BaseStat *get_stat_from_stat_id_name(StringName stat_id_name) const;
+	BG_BaseStat *get_stat_from_stat_id_name(const StringName &stat_id_name) const;
 
 private:
 	void try_parse_data(const String &file_path);

@@ -68,7 +68,7 @@ public:
 
     StringName hex_type_dyn;
     StringName get_hex_type_dyn() const { return hex_type_dyn; }
-    void set_hex_type_dyn(StringName v) { hex_type_dyn = v; }
+    void set_hex_type_dyn(const StringName &v) { hex_type_dyn = v; }
 
     float rotation = 0.0;
     float get_rotation() const { return rotation; }
@@ -104,7 +104,7 @@ public:
 
     Dictionary misc_data;
     Dictionary get_misc_data() { return misc_data; }
-    void set_misc_data(Dictionary v) { misc_data = v; }
+    void set_misc_data(const Dictionary &v) { misc_data = v; }
 };
 
 VARIANT_ENUM_CAST(BG_HexVisualAssetData::HexVisualAssetTypes);
@@ -122,14 +122,14 @@ protected:
 public:
     Vector2i qr = Vector2i();
     Vector2i get_qr() const { return qr; }
-    void set_qr(Vector2i v) { qr = v; }
+    void set_qr(const Vector2i &v) { qr = v; }
 
     TypedArray<BG_HexVisualAssetData> hex_asset_datas;
     TypedArray<BG_HexVisualAssetData> get_hex_asset_datas() const { return hex_asset_datas; }
-    void set_hex_asset_datas(TypedArray<BG_HexVisualAssetData> v) { hex_asset_datas = v; }
+    void set_hex_asset_datas(const TypedArray<BG_HexVisualAssetData> &v) { hex_asset_datas = v; }
 
     Ref<BG_HexVisualAssetData> get_hex_visual_asset_data_by_type(BG_HexVisualAssetData::HexVisualAssetTypes t) const;
-    Ref<BG_HexVisualAssetData> get_hex_visual_asset_data_by_id(StringName id) const;
+    Ref<BG_HexVisualAssetData> get_hex_visual_asset_data_by_id(const StringName &id) const;
 };
 
 ////
@@ -179,7 +179,7 @@ public:
         return 0;
     }
 
-    void init(StringName parent_bb_id, StringName bb_id) {
+    void init(const StringName &parent_bb_id, const StringName &bb_id) {
         if (asset_type_dyn.is_empty()) return;
         const BG_Booker_DB *bdb = BG_Booker_DB::get_singleton();
         if (bdb == nullptr) return;
@@ -188,7 +188,7 @@ public:
 
     StringName asset_type_dyn;
     StringName get_asset_type_dyn() const { return asset_type_dyn; }
-    void set_asset_type_dyn(StringName v) { asset_type_dyn = v; }
+    void set_asset_type_dyn(const StringName &v) { asset_type_dyn = v; }
 
     bool is_newly_added_to_board = true;
     bool get_is_newly_added_to_board() const { return is_newly_added_to_board; }
@@ -204,7 +204,7 @@ public:
 
     Vector2i qr = Vector2i();
     Vector2i get_qr() const { return qr; }
-    void set_qr(Vector2i v) { qr = v; }
+    void set_qr(const Vector2i &v) { qr = v; }
 
     bool use_moved_from_qr = false;
     bool get_use_moved_from_qr() const { return use_moved_from_qr; }
@@ -212,7 +212,7 @@ public:
 
     Vector2i moved_from_qr = Vector2i();
     Vector2i get_moved_from_qr() const { return moved_from_qr; }
-    void set_moved_from_qr(Vector2i v) { moved_from_qr = v; }
+    void set_moved_from_qr(const Vector2i &v) { moved_from_qr = v; }
 
     int unique_id_reference = 0;
     int get_unique_id_reference() const { return unique_id_reference; }
@@ -245,7 +245,7 @@ public:
 
     static BG_HexGameSaveData::HexGameAssetTypes map_asset_type_to_game_type(BG_HexVisualAssetData::HexVisualAssetTypes type);
     static BG_HexVisualAssetData::HexVisualAssetTypes map_game_type_to_asset_type(HexGameAssetTypes type);
-    static void prep_data_to_move_to_another_board(const Ref<BG_HexGameSaveData> old_data, Ref<BG_HexGameSaveData> new_data);
+    static void prep_data_to_move_to_another_board(const Ref<BG_HexGameSaveData> &old_data, Ref<BG_HexGameSaveData> new_data);
 
     BG_BattleBoard_HexTypeDetails *dyn_hex_type_details = nullptr;
     BG_BattleBoard_HexTypeDetails *get_dyn_hex_type_details() const { return dyn_hex_type_details; }
@@ -268,7 +268,7 @@ protected:
 public:
     TypedArray<BG_HexGameSaveData> hex_slots;
     TypedArray<BG_HexGameSaveData> get_hex_slots() const { return hex_slots; }
-    void set_hex_slots(TypedArray<BG_HexGameSaveData> v) { hex_slots = v; }
+    void set_hex_slots(const TypedArray<BG_HexGameSaveData> &v) { hex_slots = v; }
 };
 
 ////
@@ -337,7 +337,7 @@ public:
         TOP_LEFT
 	};
 
-    Vector2i get_direction_difference(const Ref<BG_Hex> hex, Vector2i d) const;
+    Vector2i get_direction_difference(const Ref<BG_Hex> &hex, const Vector2i &d) const;
     
     HashMap<HexDirections, Vector2i> hex_directions;
     Vector2i get_hex_direction_vec(HexDirections dir) const { return hex_directions[dir]; }
@@ -359,13 +359,13 @@ public:
         }
         return result;
     }
-	void set_base_grid_visual_data(const Vector2i &qr, Ref<BG_HexVisualData> v) {
+	void set_base_grid_visual_data(const Vector2i &qr, const Ref<BG_HexVisualData> &v) {
         base_grid_visual_data[qr] = v;
     }
     
     TypedArray<BG_HexGameSaveData> game_data;
     TypedArray<BG_HexGameSaveData> get_game_data() const { return game_data; };
-	void set_game_data(TypedArray<BG_HexGameSaveData> v) { game_data = v; }
+	void set_game_data(const TypedArray<BG_HexGameSaveData> &v) { game_data = v; }
     Ref<BG_HexGameSaveData> get_game_data_from_qr(const Vector2i &qr) const {
         for (int i = 0; i < game_data.size(); ++i) {
             const Ref<BG_HexGameSaveData> h = game_data[i];
@@ -376,7 +376,7 @@ public:
         return nullptr;
     }
 
-    int get_hex_cost(const Ref<BG_Hex> from_hex, Vector2i qr, bool do_pass_through_check) const;
+    int get_hex_cost(const Ref<BG_Hex> &from_hex, const Vector2i &qr, bool do_pass_through_check) const;
     
     float size_per_hex = 10.0;
     float get_size_per_hex() const { return size_per_hex; }
@@ -394,29 +394,29 @@ public:
         return hex->get_location() + half_size;
     }
 
-    int get_disance_between_hexes(const Ref<BG_Hex> from_hex, const Ref<BG_Hex> to_hex);
+    int get_disance_between_hexes(const Ref<BG_Hex> &from_hex, const Ref<BG_Hex> &to_hex);
 
-    Ref<BG_Hex> get_hex_in_direction(const Ref<BG_Hex> from_hex, Vector2i d) const;
-    inline HashMap<HexDirections, Ref<BG_Hex>> get_hex_neighbors_fast(const Ref<BG_Hex> from_hex) const;
-    Dictionary get_hex_neighbors_directions(const Ref<BG_Hex> from_hex) const;
-    Dictionary get_hex_neighbors_qr(const Ref<BG_Hex> instigator, const Ref<BG_Hex> from_hex, int cell_distance, bool do_pathing_checks) const;
+    Ref<BG_Hex> get_hex_in_direction(const Ref<BG_Hex> &from_hex, const Vector2i &d) const;
+    inline HashMap<HexDirections, Ref<BG_Hex>> get_hex_neighbors_fast(const Ref<BG_Hex> &from_hex) const;
+    Dictionary get_hex_neighbors_directions(const Ref<BG_Hex> &from_hex) const;
+    Dictionary get_hex_neighbors_qr(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &from_hex, int cell_distance, bool do_pathing_checks) const;
 
-    Ref<BG_Hex> get_hex_by_coords(Vector2i coords) const;
-    Ref<BG_Hex> get_hex_by_qr(Vector2i qr) const;
+    Ref<BG_Hex> get_hex_by_coords(const Vector2i &coords) const;
+    Ref<BG_Hex> get_hex_by_qr(const Vector2i &qr) const;
 
-    void add_hex(const Ref<BG_Hex> hex);
-    void add_hex_from_qr(Vector2i qr, bool is_empty);
+    void add_hex(const Ref<BG_Hex> &hex);
+    void add_hex_from_qr(const Vector2i &qr, bool is_empty);
     void add_row(int column_index, int initial_emptys, int count);
 
     void update_locations(float x_offset_percent, float y_offset_percent);
 
-    Ref<BG_HexGameSaveData> get_nearest_job_attackable(const Ref<BG_Hex> from_job_hex, const TypedArray<int> attackable_types, const TypedArray<BG_Band> bands) const;
-    Ref<BG_Hex> get_nearest_empty_cell_neighoring_target(const Ref<BG_Hex> instigator, const Ref<BG_Hex> target) const;
-    Ref<BG_Hex> get_nearest_empty_cell(const Ref<BG_Hex> instigator, const Ref<BG_Hex> target, const TypedArray<BG_Hex> cells_to_check) const;
+    Ref<BG_HexGameSaveData> get_nearest_job_attackable(const Ref<BG_Hex> &from_job_hex, const TypedArray<int> &attackable_types, const TypedArray<BG_Band> &bands) const;
+    Ref<BG_Hex> get_nearest_empty_cell_neighoring_target(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &target) const;
+    Ref<BG_Hex> get_nearest_empty_cell(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &target, const TypedArray<BG_Hex> &cells_to_check) const;
 
-    TypedArray<BG_Hex> find_path(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, const Ref<BG_Hex> goal, bool include_start, int travel_distance) const;
-    TypedArray<BG_Hex> find_reachable_cells_in_distance(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, int distance) const;
-    bool comp_priority_item(Dictionary a, Dictionary b) const;
+    TypedArray<BG_Hex> find_path(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &start, const Ref<BG_Hex> &goal, bool include_start, int travel_distance) const;
+    TypedArray<BG_Hex> find_reachable_cells_in_distance(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &start, int distance) const;
+    bool comp_priority_item(const Dictionary &a, const Dictionary &b) const;
 };
 
 VARIANT_ENUM_CAST(BG_HexGrid::OffsetType);

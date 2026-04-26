@@ -230,7 +230,7 @@ TypedArray<BG_BattleBoard_HexTypeDetails> BG_BattleBoardDetails::get_hex_types_b
 	return result;
 }
 
-BG_BattleBoard_HexTypeDetails *BG_BattleBoardDetails::get_hex_type_by_id(StringName id) const
+BG_BattleBoard_HexTypeDetails *BG_BattleBoardDetails::get_hex_type_by_id(const StringName &id) const
 {
 	for (int i = 0; i < hex_types.size(); ++i) {
 		BG_BattleBoard_HexTypeDetails *ht = cast_to<BG_BattleBoard_HexTypeDetails>(hex_types[i]);
@@ -525,7 +525,7 @@ void BG_AnimationDetails::_bind_methods()
 	BIND_ENUM_CONSTANT(TRAVERSE_TYPE_HOP_INTRO_LOOP_OUTRO);
 }
 
-/* static */ TypedArray<BG_AnimationDetails> BG_AnimationDetails::get_all_anim_details_of_id(TypedArray<BG_AnimationDetails> from, StringName id)
+/* static */ TypedArray<BG_AnimationDetails> BG_AnimationDetails::get_all_anim_details_of_id(const TypedArray<BG_AnimationDetails> &from, const StringName &id)
 {
 	TypedArray<BG_AnimationDetails> result;
 	for (int i = 0; i < from.size(); ++i) {
@@ -538,7 +538,7 @@ void BG_AnimationDetails::_bind_methods()
 	return result;
 }
 
-/* static */ BG_AnimationDetails *BG_AnimationDetails::get_anim_details(TypedArray<BG_AnimationDetails> from, StringName id, AnimationType anim_type)
+/* static */ BG_AnimationDetails *BG_AnimationDetails::get_anim_details(const TypedArray<BG_AnimationDetails> &from, const StringName &id, AnimationType anim_type)
 {
 	for (int i = 0; i < from.size(); ++i) {
 		BG_AnimationDetails *anim_dets = cast_to<BG_AnimationDetails>(from[i]);
@@ -1186,7 +1186,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_stat_from_stat_id_name", "stat_id_name"), &BG_Booker_DB::get_stat_from_stat_id_name);
 }
 
-BG_BattleBoardDetails *BG_Booker_DB::get_battle_board_by_id(StringName id) const {
+BG_BattleBoardDetails *BG_Booker_DB::get_battle_board_by_id(const StringName &id) const {
 	for (int i = 0; i < battle_boards_details.size(); ++i) {
 		BG_BattleBoardDetails *bb = cast_to<BG_BattleBoardDetails>(battle_boards_details[i]);
 		if (bb->get_id() == id)
@@ -1195,7 +1195,7 @@ BG_BattleBoardDetails *BG_Booker_DB::get_battle_board_by_id(StringName id) const
 	return nullptr;
 }
 
-TypedArray<BG_BattleBoard_HexTypeDetails> BG_Booker_DB::get_battle_board_details_for_bb(StringName parent_bb_id, StringName bb_id) const
+TypedArray<BG_BattleBoard_HexTypeDetails> BG_Booker_DB::get_battle_board_details_for_bb(const StringName &parent_bb_id, const StringName &bb_id) const
 {
 	// Add all of the parent battle board hex details.
 	HashMap<StringName, TypedArray<BG_BattleBoard_HexTypeDetails>> sorted;
@@ -1236,7 +1236,7 @@ TypedArray<BG_BattleBoard_HexTypeDetails> BG_Booker_DB::get_battle_board_details
 	return result;
 }
 
-TypedArray<BG_BattleBoard_HexTypeDetails> BG_Booker_DB::get_battle_board_hex_types_by_type(StringName parent_bb_id, StringName bb_id, int type, bool is_game_type) const {
+TypedArray<BG_BattleBoard_HexTypeDetails> BG_Booker_DB::get_battle_board_hex_types_by_type(const StringName &parent_bb_id, const StringName &bb_id, int type, bool is_game_type) const {
 	TypedArray<BG_BattleBoard_HexTypeDetails> result;
 	const BG_BattleBoardDetails *bb = get_battle_board_by_id(bb_id);
 	if (bb != nullptr)
@@ -1249,7 +1249,7 @@ TypedArray<BG_BattleBoard_HexTypeDetails> BG_Booker_DB::get_battle_board_hex_typ
 	return result;
 }
 
-BG_BattleBoard_HexTypeDetails *BG_Booker_DB::get_battle_board_hex_type_by_id(StringName parent_bb_id, StringName bb_id, StringName id) const {
+BG_BattleBoard_HexTypeDetails *BG_Booker_DB::get_battle_board_hex_type_by_id(const StringName &parent_bb_id, const StringName &bb_id, const StringName &id) const {
 	BG_BattleBoard_HexTypeDetails *result = nullptr;
 	const BG_BattleBoardDetails *bb = get_battle_board_by_id(bb_id);
 	if (bb != nullptr)
@@ -1266,14 +1266,14 @@ BG_BattleBoard_HexTypeDetails *BG_Booker_DB::get_battle_board_hex_type_by_id(Str
 	return result;
 }
 
-BG_ResourceTypeDetails *BG_Booker_DB::get_resource_type_details_by_id(StringName resource_id) const {
+BG_ResourceTypeDetails *BG_Booker_DB::get_resource_type_details_by_id(const StringName &resource_id) const {
 	if (resource_type_details.has(resource_id)) {
 		return resource_type_details[resource_id];
 	}
 	return nullptr;
 }
 
-TypedArray<BG_AudioDataDetails> BG_Booker_DB::get_audio_details(StringName id, int act) const {
+TypedArray<BG_AudioDataDetails> BG_Booker_DB::get_audio_details(const StringName &id, int act) const {
 	TypedArray<BG_AudioDataDetails> result;
 	for (int i = 0; i < audio_data.size(); ++i) {
 		BG_AudioData *ad = cast_to<BG_AudioData>(audio_data[i]);
@@ -1289,7 +1289,7 @@ TypedArray<BG_AudioDataDetails> BG_Booker_DB::get_audio_details(StringName id, i
 	return result;
 }
 
-BG_TwoDer_DataEntry *BG_Booker_DB::get_two_der_data_from_id(StringName id) const {
+BG_TwoDer_DataEntry *BG_Booker_DB::get_two_der_data_from_id(const StringName &id) const {
 	for (int i = 0; i < two_der_data_entries.size(); ++i) {
 		BG_TwoDer_DataEntry *data = cast_to<BG_TwoDer_DataEntry>(two_der_data_entries[i]);
 		if (data == nullptr) continue;
@@ -1298,7 +1298,7 @@ BG_TwoDer_DataEntry *BG_Booker_DB::get_two_der_data_from_id(StringName id) const
 	return nullptr;
 }
 
-BG_BaseStat *BG_Booker_DB::get_stat_from_stat_id_name(StringName stat_id_name) const {
+BG_BaseStat *BG_Booker_DB::get_stat_from_stat_id_name(const StringName &stat_id_name) const {
 	for (int i = 0; i < base_stats.size(); ++i) {
 		BG_BaseStat *stat = cast_to<BG_BaseStat>(base_stats[i]);
 		if (stat == nullptr) continue;
@@ -1365,7 +1365,7 @@ void BG_Booker_DB::refresh_data()
 	}
 }
 
-/* static */ void BG_Booker_DB::timer_test(Callable callable)
+/* static */ void BG_Booker_DB::timer_test(const Callable &callable)
 {
 	static counter cont = counter();
 	TIME_FUNC(callable, cont);
@@ -2134,7 +2134,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	const Dictionary data = BG_JsonUtils::ParseJsonFile(file_path);
 	// UtilityFunctions::prints(data["all_base_stats"]);
 
-	auto get_find_data_by_param_name = [](const String& param_name, const Array& array_to_parse) -> Dictionary {
+	auto get_find_data_by_param_name = [](const String &param_name, const Array &array_to_parse) -> Dictionary {
 		for (int i = 0; i < array_to_parse.size(); ++i) {
 			const Dictionary entry = array_to_parse[i];
 			const String para_name = entry["param_name"];
@@ -2145,7 +2145,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		return {};
 	};
 
-	auto get_sheet_by_name = [](const String& name, const Dictionary& d) -> Array {
+	auto get_sheet_by_name = [](const String &name, const Dictionary &d) -> Array {
 		const Array lines = Array(d["sheets"]);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Dictionary sheet = lines[i];
@@ -2156,7 +2156,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		return {};
 	};
 
-	auto ensure_clean_path = [](const String& path) -> StringName {
+	auto ensure_clean_path = [](const String &path) -> StringName {
 		return StringName(path.trim_prefix("/"));
 	};
 
@@ -3118,7 +3118,7 @@ BG_Booker_DB::~BG_Booker_DB()
 	}
 }
 
-TypedArray<BG_LocalizeEntryData> BG_Booker_DB::get_localize_data(const StringName sheet_name, const StringName key, const StringName language)
+TypedArray<BG_LocalizeEntryData> BG_Booker_DB::get_localize_data(const StringName &sheet_name, const StringName &key, const StringName &language)
 {
 	// Check if we already cached it.
 	if (localize_data.has(sheet_name)) {
@@ -3213,7 +3213,7 @@ TypedArray<BG_LocalizeEntryData> BG_Booker_DB::get_localize_data(const StringNam
 	return result;
 }
 
-String BG_Booker_DB::get_localize_string(const StringName sheet_name, const StringName key, const StringName language, bool ignore_code_data)
+String BG_Booker_DB::get_localize_string(const StringName &sheet_name, const StringName &key, const StringName &language, bool ignore_code_data)
 {
 	TypedArray<BG_LocalizeEntryData> data = get_localize_data(sheet_name, key, language);
 	ERR_FAIL_COND_V_EDMSG(data.size() < 1, 
@@ -3233,7 +3233,7 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 	return result;
 }
 
-/* static */ float BG_Booker_DB::get_job_challenge_rating_value(const TypedArray<BG_Monster> monsters)
+/* static */ float BG_Booker_DB::get_job_challenge_rating_value(const TypedArray<BG_Monster> &monsters)
 {
 	const TypedArray<BG_Monster> global_monster_types = BG_Booker_DB::get_singleton()->get_monster_types();
 
@@ -3281,7 +3281,7 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 	return challenge_rating + total_monster_count * 0.25f;
 }
 
-/* static */ String BG_Booker_DB::get_job_challenge_rating(const TypedArray<BG_Monster> monsters)
+/* static */ String BG_Booker_DB::get_job_challenge_rating(const TypedArray<BG_Monster> &monsters)
 {
 	String result = "";
 
@@ -3302,7 +3302,7 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 ////
 //// BG_UnitStat
 ////
-/* static */ Vector2i BG_UnitStat::string_to_resistant_value_min_max(String string)
+/* static */ Vector2i BG_UnitStat::string_to_resistant_value_min_max(const String &string)
 {
 	if (string.is_empty())
 	{
@@ -3321,7 +3321,7 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 ////
 //// BG_Dice
 ////
-/* static */ int BG_Dice::calculate_dice(const TypedArray<BG_Dice> dice, RandomNumberGenerator *random_num_generator)
+/* static */ int BG_Dice::calculate_dice(const TypedArray<BG_Dice> &dice, RandomNumberGenerator *random_num_generator)
 {
 	float result = 0.0;
 	for (int i = 0; i < dice.size(); i++)
@@ -3347,7 +3347,7 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 	return Math::max(0, result_int);
 }
 
-/* static */ int BG_Dice::get_dice_max_roll(const TypedArray<BG_Dice> dice)
+/* static */ int BG_Dice::get_dice_max_roll(const TypedArray<BG_Dice> &dice)
 {
 	float result = 0.0;
 	for (int i = 0; i < dice.size(); i++)
@@ -3370,7 +3370,7 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 	return result_int;
 }
 
-/* static */ int BG_Dice::get_dice_average_roll(const TypedArray<BG_Dice> dice)
+/* static */ int BG_Dice::get_dice_average_roll(const TypedArray<BG_Dice> &dice)
 {
 	float max_roll = 0.0;
 	float additives = 0.0;
@@ -3392,7 +3392,7 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 	return int(Math::round((max_roll + roll_counts * 0.5f) + additives));
 }
 
-/* static */ String BG_Dice::dice_to_nice_name(const TypedArray<BG_Dice> dice)
+/* static */ String BG_Dice::dice_to_nice_name(const TypedArray<BG_Dice> &dice)
 {
 	float minimum_damage = 0.0;
 	float maximum_damage = 0.0;
@@ -3425,7 +3425,7 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 	return String::num_int64(minimum_damage_int) + "~" + String::num_int64(maximum_damage_int);
 }
 
-/* static */ String BG_Dice::dice_to_string(const Ref<BG_Dice> dice)
+/* static */ String BG_Dice::dice_to_string(const Ref<BG_Dice> &dice)
 {
 	if ( dice == nullptr || !BG_Focus_Layer_Properties::bg_is_instance_valid(dice.ptr()) )
 	{
@@ -3446,7 +3446,7 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 	return result;
 }
 
-/* static */ Ref<BG_Dice> BG_Dice::string_to_dice(String string)
+/* static */ Ref<BG_Dice> BG_Dice::string_to_dice(const String &string)
 {
 	if (string.is_empty()) {
 		return nullptr;
@@ -3488,7 +3488,7 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 	
 	return result;}
 
-/* static */ TypedArray<BG_Dice> BG_Dice::string_to_dice_options(String string)
+/* static */ TypedArray<BG_Dice> BG_Dice::string_to_dice_options(const String &string)
 {
 	TypedArray<BG_Dice> result;
 	if (string.is_empty())
@@ -3621,7 +3621,7 @@ String BG_Booker_DB::get_localize_string(const StringName sheet_name, const Stri
 	return result;
 }
 
-/* static */ Ref<BG_Dice> BG_Dice::duplicate_dice(const Ref<BG_Dice> dice)
+/* static */ Ref<BG_Dice> BG_Dice::duplicate_dice(const Ref<BG_Dice> &dice)
 {
 	if (dice == nullptr || !BG_Focus_Layer_Properties::bg_is_instance_valid(dice.ptr())) return nullptr;
 	Ref<BG_Dice> result = memnew(BG_Dice);

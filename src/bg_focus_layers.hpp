@@ -106,7 +106,7 @@ public:
         bool p_select_layer = true
     );
     Control *get_current_parent_control() const;
-    void find_control_in_direction(Vector2 direction);
+    void find_control_in_direction(const Vector2 &direction);
     void input_type_updated(bool using_gamepad);
     void press_back_button() const;
 

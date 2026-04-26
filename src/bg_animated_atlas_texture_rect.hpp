@@ -24,11 +24,11 @@ public:
 	
 	Ref<Texture2D> atlas_texture;
 	Ref<Texture2D> get_atlas_texture() const { return atlas_texture; }
-	void set_atlas_texture(Ref<Texture2D> value) { atlas_texture = value; }
+	void set_atlas_texture(const Ref<Texture2D> &value) { atlas_texture = value; }
 	
 	Vector2 frame_size = Vector2(256.0, 256.0);
 	Vector2 get_frame_size() const { return frame_size; }
-	void set_frame_size(Vector2 value) { frame_size = value; }
+	void set_frame_size(const Vector2 &value) { frame_size = value; }
 	
 	int frame_count = 15;
 	int get_frame_count() const { return frame_count; }
@@ -40,7 +40,7 @@ public:
 
 	Rect2 texture_margin;
 	Rect2 get_texture_margin() const { return texture_margin; }
-	void set_texture_margin(Rect2 value) { texture_margin = value; }
+	void set_texture_margin(const Rect2 &value) { texture_margin = value; }
 
 	bool randomize_starting_frame = false;
 	bool get_randomize_starting_frame() const { return randomize_starting_frame; }

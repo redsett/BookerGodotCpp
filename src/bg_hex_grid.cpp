@@ -90,7 +90,7 @@ Ref<BG_HexVisualAssetData> BG_HexVisualData::get_hex_visual_asset_data_by_type(B
     return nullptr;
 }
 
-Ref<BG_HexVisualAssetData> BG_HexVisualData::get_hex_visual_asset_data_by_id(StringName id) const
+Ref<BG_HexVisualAssetData> BG_HexVisualData::get_hex_visual_asset_data_by_id(const StringName &id) const
 {
 	for (int i = 0; i < hex_asset_datas.size(); ++i) {
 		const Ref<BG_HexVisualAssetData> hvad = cast_to<BG_HexVisualAssetData>(hex_asset_datas[i]);
@@ -212,7 +212,7 @@ void BG_HexGameSaveData::_bind_methods()
     return BG_HexVisualAssetData::HexVisualAssetTypes::NONE;
 }
 
-/* static */ void BG_HexGameSaveData::prep_data_to_move_to_another_board(const Ref<BG_HexGameSaveData> old_data, Ref<BG_HexGameSaveData> new_data)
+/* static */ void BG_HexGameSaveData::prep_data_to_move_to_another_board(const Ref<BG_HexGameSaveData> &old_data, Ref<BG_HexGameSaveData> new_data)
 {
     if (old_data.is_null() || new_data.is_null()) return;
     new_data->asset_health_normalized_percent = old_data->asset_health_normalized_percent;
@@ -354,7 +354,7 @@ inline static int hex_distance(const Vector3i &a, const Vector3i &b, BG_HexGrid:
     return hex_length(hex_subtract(offset_to_cube(a, offset_type), offset_to_cube(b, offset_type) ));
 }
 
-static int heuristic(const Ref<BG_Hex> a, const Ref<BG_Hex> b) {
+static int heuristic(const Ref<BG_Hex> &a, const Ref<BG_Hex> &b) {
     return (Math::abs(a->q - b->q) + Math::abs(a->r - b->r) + Math::abs(a->s - b->s)) / 2;
 }
 
@@ -364,7 +364,7 @@ void BG_HexGrid::clear_grid()
     grid_map.clear();
 }
 
-Vector2i BG_HexGrid::get_direction_difference(const Ref<BG_Hex> hex, Vector2i d) const
+Vector2i BG_HexGrid::get_direction_difference(const Ref<BG_Hex> &hex, const Vector2i &d) const
 {
     if (hex.is_null()) return Vector2i(0, 0);
     const bool column_is_odd = hex->q & 1; // Bitwise instead of modulo to support negative numbers.
@@ -433,10 +433,9 @@ Vector2i BG_HexGrid::get_direction_difference(const Ref<BG_Hex> hex, Vector2i d)
     return d;
 }
 
-Ref<BG_Hex> BG_HexGrid::get_hex_by_coords(Vector2i coords) const
+Ref<BG_Hex> BG_HexGrid::get_hex_by_coords(const Vector2i &coords) const
 {
-	for (int i = 0; i < grid.size(); ++i)
-	{
+	for (int i = 0; i < grid.size(); ++i) {
 		Ref<BG_Hex> h = grid[i];
         if (coords == h->get_coords())
             return h;
@@ -444,18 +443,18 @@ Ref<BG_Hex> BG_HexGrid::get_hex_by_coords(Vector2i coords) const
     return nullptr;
 }
 
-Ref<BG_Hex> BG_HexGrid::get_hex_by_qr(Vector2i qr) const
+Ref<BG_Hex> BG_HexGrid::get_hex_by_qr(const Vector2i &qr) const
 {
     return grid_map.has(qr) ? grid_map[qr] : nullptr;
 }
 
-int BG_HexGrid::get_disance_between_hexes(const Ref<BG_Hex> from_hex, const Ref<BG_Hex> to_hex)
+int BG_HexGrid::get_disance_between_hexes(const Ref<BG_Hex> &from_hex, const Ref<BG_Hex> &to_hex)
 {
     if (from_hex.is_null() || to_hex.is_null()) return 0;
     return hex_distance(from_hex->get_full_qr(), to_hex->get_full_qr(), offset_type);
 }
 
-Ref<BG_Hex> BG_HexGrid::get_hex_in_direction(const Ref<BG_Hex> from_hex, Vector2i d) const
+Ref<BG_Hex> BG_HexGrid::get_hex_in_direction(const Ref<BG_Hex> &from_hex, const Vector2i &d) const
 {
     const Vector2i direction_diff = get_direction_difference(from_hex, d);
     const Vector2i v = direction_diff + from_hex->get_coords();
@@ -470,7 +469,7 @@ Ref<BG_Hex> BG_HexGrid::get_hex_in_direction(const Ref<BG_Hex> from_hex, Vector2
     return nullptr;
 }
 
-HashMap<BG_HexGrid::HexDirections, Ref<BG_Hex>> BG_HexGrid::get_hex_neighbors_fast(const Ref<BG_Hex> from_hex) const
+HashMap<BG_HexGrid::HexDirections, Ref<BG_Hex>> BG_HexGrid::get_hex_neighbors_fast(const Ref<BG_Hex> &from_hex) const
 {
     HashMap<HexDirections, Ref<BG_Hex>> result;
     result[BG_HexGrid::HexDirections::TOP] = get_hex_in_direction(from_hex, hex_directions[BG_HexGrid::HexDirections::TOP]);
@@ -482,7 +481,7 @@ HashMap<BG_HexGrid::HexDirections, Ref<BG_Hex>> BG_HexGrid::get_hex_neighbors_fa
     return result;
 }
 
-Dictionary BG_HexGrid::get_hex_neighbors_directions(const Ref<BG_Hex> from_hex) const
+Dictionary BG_HexGrid::get_hex_neighbors_directions(const Ref<BG_Hex> &from_hex) const
 {
     Dictionary result;
     const HashMap<BG_HexGrid::HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(from_hex);
@@ -492,7 +491,7 @@ Dictionary BG_HexGrid::get_hex_neighbors_directions(const Ref<BG_Hex> from_hex) 
     return result;
 }
 
-Dictionary BG_HexGrid::get_hex_neighbors_qr(const Ref<BG_Hex> instigator, const Ref<BG_Hex> from_hex, int cell_distance, bool do_pathing_checks) const
+Dictionary BG_HexGrid::get_hex_neighbors_qr(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &from_hex, int cell_distance, bool do_pathing_checks) const
 {
     if (cell_distance < 1 || from_hex.is_null()) return {};
 
@@ -541,7 +540,7 @@ Dictionary BG_HexGrid::get_hex_neighbors_qr(const Ref<BG_Hex> instigator, const 
     return result;
 }
 
-void BG_HexGrid::add_hex(const Ref<BG_Hex> hex)
+void BG_HexGrid::add_hex(const Ref<BG_Hex> &hex)
 {
     grid_map[hex->get_qr()] = hex;
 
@@ -570,7 +569,7 @@ void BG_HexGrid::add_hex(const Ref<BG_Hex> hex)
     grid.append(hex);
 }
 
-void BG_HexGrid::add_hex_from_qr(Vector2i qr, bool is_empty)
+void BG_HexGrid::add_hex_from_qr(const Vector2i &qr, bool is_empty)
 {
     if (grid_map.has(qr)) {
         UtilityFunctions::print("Grid already has QR:", qr, "Skipped");
@@ -628,7 +627,7 @@ void BG_HexGrid::update_locations(float p_x_offset_percent, float p_y_offset_per
     }
 }
 
-inline static Dictionary make_priority_item(const Ref<BG_Hex> h, int priority)
+inline static Dictionary make_priority_item(const Ref<BG_Hex> &h, int priority)
 {
     Dictionary result;
     result["h"] = h;
@@ -636,11 +635,11 @@ inline static Dictionary make_priority_item(const Ref<BG_Hex> h, int priority)
     return result;
 }
 
-bool BG_HexGrid::comp_priority_item(Dictionary a, Dictionary b) const {
+bool BG_HexGrid::comp_priority_item(const Dictionary &a, const Dictionary &b) const {
 	return int(a["p"]) < int(b["p"]);
 }
 
-inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, bool do_pass_through_check) const
+inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> &instigator, const Vector2i &qr, bool do_pass_through_check) const
 {
     const Ref<BG_HexGameSaveData> hgsd = get_game_data_from_qr(qr);
     const Ref<BG_HexGameSaveData> instigator_hgsd = instigator.is_valid() ? get_game_data_from_qr(instigator->get_qr()) : nullptr;
@@ -715,13 +714,15 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, b
 
                 if (hgsd->get_is_dynamic_type()) {
                     if (!hgsd->get_dyn_hex_type_details()->get_pass_through_by_enemy()) {
-                        return 0;
+                        if (!hgsd->get_is_destroyed()) { // Allow pass through if it's destroyed.
+                            return 0;
+                        }
                     }
                 }
                 else if (hgsd->get_asset_type() != BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
                     hgsd->get_asset_type() != BG_HexGameSaveData::HexGameAssetTypes::BARRICADE ||
                     hgsd->get_asset_type() != BG_HexGameSaveData::HexGameAssetTypes::TURRET) {
-                    if (!hgsd->is_destroyed) {
+                    if (!hgsd->get_is_destroyed()) {
                         return 0;
                     }
                 } else if (hgsd->get_asset_type() != BG_HexGameSaveData::HexGameAssetTypes::JOB) {
@@ -736,7 +737,7 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> instigator, Vector2i qr, b
     return 1;
 }
 
-Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_job_attackable(const Ref<BG_Hex> from_job_hex, const TypedArray<int> attackable_types, const TypedArray<BG_Band> bands) const
+Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_job_attackable(const Ref<BG_Hex> &from_job_hex, const TypedArray<int> &attackable_types, const TypedArray<BG_Band> &bands) const
 {
     if (from_job_hex.is_null()) return nullptr;
 
@@ -752,7 +753,7 @@ Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_job_attackable(const Ref<BG_Hex>
         const Ref<BG_HexGameSaveData> data = game_data[i];
         if (data.is_null()) continue;
         if (data->get_is_destroyed()) continue;
-        
+
         if (data->get_is_dynamic_type()) {
             const BG_HexGameSaveData::HexGameAssetTypes game_type = BG_HexGameSaveData::map_asset_type_to_game_type(
                 static_cast<BG_HexVisualAssetData::HexVisualAssetTypes>(data->get_dyn_hex_type_details()->get_hex_type())
@@ -788,7 +789,7 @@ Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_job_attackable(const Ref<BG_Hex>
     return result;
 }
 
-Ref<BG_Hex> BG_HexGrid::get_nearest_empty_cell_neighoring_target(const Ref<BG_Hex> instigator, const Ref<BG_Hex> target) const
+Ref<BG_Hex> BG_HexGrid::get_nearest_empty_cell_neighoring_target(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &target) const
 {
     const HashMap<HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(target);
     
@@ -801,7 +802,7 @@ Ref<BG_Hex> BG_HexGrid::get_nearest_empty_cell_neighoring_target(const Ref<BG_He
     return get_nearest_empty_cell(instigator, target, cells_to_check);
 }
 
-Ref<BG_Hex> BG_HexGrid::get_nearest_empty_cell(const Ref<BG_Hex> instigator, const Ref<BG_Hex> target, const TypedArray<BG_Hex> cells_to_check) const
+Ref<BG_Hex> BG_HexGrid::get_nearest_empty_cell(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &target, const TypedArray<BG_Hex> &cells_to_check) const
 {
     if (instigator.is_null()) return nullptr;
     if (target.is_null()) return nullptr;
@@ -834,7 +835,7 @@ Ref<BG_Hex> BG_HexGrid::get_nearest_empty_cell(const Ref<BG_Hex> instigator, con
     return result;
 }
 
-TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, const Ref<BG_Hex> goal, bool include_start, int travel_distance) const
+TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &start, const Ref<BG_Hex> &goal, bool include_start, int travel_distance) const
 {
     if (start.is_null()) return {};
     if (goal.is_null()) return {};
@@ -945,7 +946,7 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> instigator, const Ref
     return result;
 }
 
-TypedArray<BG_Hex> BG_HexGrid::find_reachable_cells_in_distance(const Ref<BG_Hex> instigator, const Ref<BG_Hex> start, int distance) const
+TypedArray<BG_Hex> BG_HexGrid::find_reachable_cells_in_distance(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &start, int distance) const
 {
     TypedArray<BG_Hex> frontier;
     frontier.append(start);

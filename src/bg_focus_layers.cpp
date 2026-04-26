@@ -25,11 +25,9 @@ void BG_Focus_Layer_Properties::_bind_methods()
 
 /* static */ bool BG_Focus_Layer_Properties::has_focus_layer(const TypedArray<BG_Focus_Layer_Properties> &p_focus_layers, const StringName &p_focus_layer_name)
 {
-    for (int i = 0; i < p_focus_layers.size(); i++)
-    {
+    for (int i = 0; i < p_focus_layers.size(); ++i) {
         const BG_Focus_Layer_Properties *prop = cast_to<BG_Focus_Layer_Properties>(p_focus_layers[i]);
-        if (BG_Focus_Layer_Properties::bg_is_instance_valid(prop) && prop->get_focus_layer_name() == p_focus_layer_name)
-        {
+        if (BG_Focus_Layer_Properties::bg_is_instance_valid(prop) && prop->get_focus_layer_name() == p_focus_layer_name) {
             return true;
         }
     }
@@ -81,10 +79,10 @@ BG_Focus_Layers::~BG_Focus_Layers()
 
 void BG_Focus_Layers::_set_control_default_focus_static(Control *p_control)
 {
-		p_control->set_focus_neighbor(godot::Side::SIDE_LEFT, p_control->get_path());
-		p_control->set_focus_neighbor(godot::Side::SIDE_BOTTOM, p_control->get_path());
-		p_control->set_focus_neighbor(godot::Side::SIDE_RIGHT, p_control->get_path());
-		p_control->set_focus_neighbor(godot::Side::SIDE_TOP, p_control->get_path());
+    p_control->set_focus_neighbor(godot::Side::SIDE_LEFT, p_control->get_path());
+    p_control->set_focus_neighbor(godot::Side::SIDE_BOTTOM, p_control->get_path());
+    p_control->set_focus_neighbor(godot::Side::SIDE_RIGHT, p_control->get_path());
+    p_control->set_focus_neighbor(godot::Side::SIDE_TOP, p_control->get_path());
 }
 
 void BG_Focus_Layers::try_set_focused_control(Control *p_ctrl)
@@ -92,7 +90,7 @@ void BG_Focus_Layers::try_set_focused_control(Control *p_ctrl)
 	if (_focus_layer_stack.is_empty())
 		return;
 
-    for (int i = 0; i < _focus_layers.size(); i++)
+    for (int i = 0; i < _focus_layers.size(); ++i)
     {
         BG_Focus_Layer_Properties *prop = cast_to<BG_Focus_Layer_Properties>(_focus_layers[i]);
         if (BG_Focus_Layer_Properties::bg_is_instance_valid(prop))
@@ -101,8 +99,8 @@ void BG_Focus_Layers::try_set_focused_control(Control *p_ctrl)
             if (layer_controls.has(p_ctrl))
             {
                 prop->set_focused_control(p_ctrl);
-                for (int i = 0; i < layer_controls.size(); i++)
-                    _set_control_default_focus_static(cast_to<Control>(layer_controls[i]));
+                for (int x = 0; x < layer_controls.size(); ++x)
+                    _set_control_default_focus_static(cast_to<Control>(layer_controls[x]));
                 _focus_active_control();
                 break;
             }
@@ -144,7 +142,7 @@ void BG_Focus_Layers::remove_focus_layer(const StringName &p_layer_name, bool p_
     }
 	if (p_full_remove)
     {
-        for (int i = 0; i < _focus_layers.size(); i++)
+        for (int i = 0; i < _focus_layers.size(); ++i)
         {
             const BG_Focus_Layer_Properties *prop = cast_to<BG_Focus_Layer_Properties>(_focus_layers[i]);
             if (BG_Focus_Layer_Properties::bg_is_instance_valid(prop) && prop->get_focus_layer_name() == p_layer_name)
@@ -166,7 +164,7 @@ BG_Focus_Layer_Properties *BG_Focus_Layers::get_active_focus_layer() const
     if (_focus_layer_stack.is_empty())
         return nullptr;
     
-    for (int i = 0; i < _focus_layers.size(); i++)
+    for (int i = 0; i < _focus_layers.size(); ++i)
     {
         BG_Focus_Layer_Properties *prop = cast_to<BG_Focus_Layer_Properties>(_focus_layers[i]);
         if (BG_Focus_Layer_Properties::bg_is_instance_valid(prop) && prop->get_focus_layer_name() == String(_focus_layer_stack[0]))
@@ -194,7 +192,7 @@ Control *BG_Focus_Layers::_get_active_control()
     } else {
         // Let's find a new control to focus.
         const TypedArray<Control> focusable_ctrls = BG_Focus_Layers::get_all_focusable_controls_under_control(prop->get_parent_control());
-        for (int i = 0; i < focusable_ctrls.size(); i++) {
+        for (int i = 0; i < focusable_ctrls.size(); ++i) {
             if (_check_if_valid_control(cast_to<Control>(focusable_ctrls[i]))) {
                 prop->set_focused_control(cast_to<Control>(focusable_ctrls[i]));
                 return prop->get_focused_control();
@@ -215,10 +213,14 @@ Button *BG_Focus_Layers::_get_active_back_button() const
 void BG_Focus_Layers::_focus_active_control()
 {
     Control *control_to_focus = _get_active_control();
-    if (!BG_Focus_Layer_Properties::bg_is_instance_valid(control_to_focus))
+    if (!BG_Focus_Layer_Properties::bg_is_instance_valid(control_to_focus)) {
         return;
-    // if (control_to_focus->get_focus_mode() == Control::FOCUS_NONE)
-    //     return;
+    }
+    if (control_to_focus->get_focus_mode() == Control::FOCUS_NONE) {
+        control_to_focus->get_viewport()->gui_release_focus();
+        // UtilityFunctions::prints("Released focus on: ", control_to_focus->get_name());
+        return;
+    }
     
     control_to_focus->grab_focus();
     if (!_is_using_gamepad)
@@ -236,7 +238,7 @@ void BG_Focus_Layers::add_focus_layer(
 {
 	// Basically ignore the built in method of finding controls to focus. We will do this ourselves in find_control_in_direction().
     TypedArray<Control> focusable_ctrls = BG_Focus_Layers::get_all_focusable_controls_under_control(p_parent_control);
-    for (int i = 0; i < focusable_ctrls.size(); i++)
+    for (int i = 0; i < focusable_ctrls.size(); ++i)
 		_set_control_default_focus_static(cast_to<Control>(focusable_ctrls[i]));
 
     Button *back_btn = cast_to<Button>(p_back_button);
@@ -249,7 +251,7 @@ void BG_Focus_Layers::add_focus_layer(
     // Reuse the existing focus layer if it already exists.
     if (BG_Focus_Layer_Properties::has_focus_layer(_focus_layers, p_layer_name))
     {
-        for (int i = 0; i < _focus_layers.size(); i++)
+        for (int i = 0; i < _focus_layers.size(); ++i)
         {
             BG_Focus_Layer_Properties *prop = cast_to<BG_Focus_Layer_Properties>(_focus_layers[i]);
             if (BG_Focus_Layer_Properties::bg_is_instance_valid(prop) && prop->get_focus_layer_name() == p_layer_name)
@@ -302,7 +304,7 @@ bool BG_Focus_Layers::_is_control_top(const Vector2 &direction, const Control *c
 {
     const Vector2 &ctrl_pos = ctrl->get_screen_transform().get_origin();
     const float c_top_y = ctrl_pos.y;
-    for (int i = 0; i < all_ctrls.size(); i++)
+    for (int i = 0; i < all_ctrls.size(); ++i)
     {
         const Control *child = cast_to<Control>(all_ctrls[i]);
         const Vector2 &child_ctrl_pos = child->get_screen_transform().get_origin();
@@ -323,7 +325,7 @@ bool BG_Focus_Layers::_is_control_bottom(const Vector2 &direction, const Control
 {
     const Vector2 &ctrl_pos = ctrl->get_screen_transform().get_origin();
     const float c_bottom_y = ctrl_pos.y + ctrl->get_global_rect().size.y;
-    for (int i = 0; i < all_ctrls.size(); i++)
+    for (int i = 0; i < all_ctrls.size(); ++i)
     {
         const Control *child = cast_to<Control>(all_ctrls[i]);
         const Vector2 &child_ctrl_pos = child->get_screen_transform().get_origin();
@@ -340,7 +342,7 @@ bool BG_Focus_Layers::_is_control_bottom(const Vector2 &direction, const Control
     return true;
 }
 
-void BG_Focus_Layers::find_control_in_direction(Vector2 direction)
+void BG_Focus_Layers::find_control_in_direction(const Vector2 &direction)
 {
     BG_Focus_Layer_Properties *prop = get_active_focus_layer();
     if (!BG_Focus_Layer_Properties::bg_is_instance_valid(prop))
@@ -372,7 +374,7 @@ void BG_Focus_Layers::find_control_in_direction(Vector2 direction)
 
 		Control *new_selected_control = nullptr;
 		float best_distance = should_get_farthest_control ? 0.0f : 9999.0f;
-        for (int i = 0; i < ctrls.size(); i++)
+        for (int i = 0; i < ctrls.size(); ++i)
         {
             Control *c = cast_to<Control>(ctrls[i]);
             if (BG_Focus_Layer_Properties::bg_is_instance_valid(c) && c != last_selected_control && _check_if_valid_control(c))
@@ -425,7 +427,7 @@ void BG_Focus_Layers::input_type_updated(bool using_gamepad)
             _get_active_control()->release_focus();
     }
 
-    for (int i = 0; i < _focus_layers.size(); i++)
+    for (int i = 0; i < _focus_layers.size(); ++i)
     {
         BG_Focus_Layer_Properties *prop = cast_to<BG_Focus_Layer_Properties>(_focus_layers[i]);
         if (BG_Focus_Layer_Properties::bg_is_instance_valid(prop)) {
@@ -446,8 +448,7 @@ void BG_Focus_Layers::press_back_button() const
 
 /* static */ Control *BG_Focus_Layers::find_valid_control(const TypedArray<Control> &p_controls)
 {
-    for (int i = 0; i < p_controls.size(); i++)
-    {
+    for (int i = 0; i < p_controls.size(); ++i) {
         Control *ctrl = cast_to<Control>(p_controls[i]);
         if (BG_Focus_Layers::_check_if_valid_control(ctrl))
             return ctrl;
@@ -461,7 +462,7 @@ void BG_Focus_Layers::press_back_button() const
     if (BG_Focus_Layer_Properties::bg_is_instance_valid(p_control))
     {
         const TypedArray<Node> children = p_control->get_children();
-        for (int i = 0; i < children.size(); i++)
+        for (int i = 0; i < children.size(); ++i)
         {
             const Control *ctrl = cast_to<Control>(children[i]);
             if (BG_Focus_Layer_Properties::bg_is_instance_valid(ctrl))
@@ -474,7 +475,7 @@ void BG_Focus_Layers::press_back_button() const
                 const SubViewport *sub_viewport = cast_to<SubViewport>(children[i]);
                 if (BG_Focus_Layer_Properties::bg_is_instance_valid(sub_viewport)) {
                     const TypedArray<Node> s_children = sub_viewport->get_children();
-                    for (int si = 0; si < s_children.size(); si++)
+                    for (int si = 0; si < s_children.size(); ++si)
                     {
                         result.append_array(BG_Focus_Layers::get_all_focusable_controls_under_control(cast_to<Control>(s_children[si])));
                     }
@@ -492,7 +493,7 @@ void BG_Focus_Layers::press_back_button() const
     if (BG_Focus_Layer_Properties::bg_is_instance_valid(p_control))
     {
         const TypedArray<Node> children = p_control->get_children();
-        for (int i = 0; i < children.size(); i++)
+        for (int i = 0; i < children.size(); ++i)
         {
             const Control *ctrl = cast_to<Control>(children[i]);
             if (BG_Focus_Layer_Properties::bg_is_instance_valid(ctrl)) {
@@ -505,7 +506,7 @@ void BG_Focus_Layers::press_back_button() const
                 const SubViewport *sub_viewport = cast_to<SubViewport>(children[i]);
                 if (BG_Focus_Layer_Properties::bg_is_instance_valid(sub_viewport)) {
                     const TypedArray<Node> s_children = sub_viewport->get_children();
-                    for (int si = 0; si < s_children.size(); si++)
+                    for (int si = 0; si < s_children.size(); ++si)
                     {
                         result.append_array(BG_Focus_Layers::get_current_focusable_controls_under_control(cast_to<Control>(s_children[si])));
                     }

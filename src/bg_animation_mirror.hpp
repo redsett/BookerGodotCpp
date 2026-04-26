@@ -14,15 +14,15 @@ protected:
 
 	StringName left_side_bone_name;
 	StringName get_left_side_bone_name() const { return left_side_bone_name; }
-	void set_left_side_bone_name(StringName p_left_side_bone_name) { left_side_bone_name = p_left_side_bone_name; }
+	void set_left_side_bone_name(const StringName &p_left_side_bone_name) { left_side_bone_name = p_left_side_bone_name; }
 
 	StringName right_side_bone_name;
 	StringName get_right_side_bone_name() const { return right_side_bone_name; }
-	void set_right_side_bone_name(StringName p_right_side_bone_name) { right_side_bone_name = p_right_side_bone_name; }
+	void set_right_side_bone_name(const StringName &p_right_side_bone_name) { right_side_bone_name = p_right_side_bone_name; }
 
 	Vector3 mirror_multiplier = Vector3(-1.0f, 1.0f, -1.0f);
 	Vector3 get_mirror_multiplier() const { return mirror_multiplier; }
-	void set_mirror_multiplier(Vector3 p_mirror_multiplier) { mirror_multiplier = p_mirror_multiplier; }
+	void set_mirror_multiplier(const Vector3 &p_mirror_multiplier) { mirror_multiplier = p_mirror_multiplier; }
 };
 
 class BG_AnimationMirrorData : public Resource
@@ -34,7 +34,7 @@ protected:
 
 	TypedArray<BG_AnimationMirrorDataMap> bone_maps;
 	TypedArray<BG_AnimationMirrorDataMap> get_bone_maps() const { return bone_maps; }
-	void set_bone_maps(TypedArray<BG_AnimationMirrorDataMap> p_bone_maps) { bone_maps = p_bone_maps; }
+	void set_bone_maps(const TypedArray<BG_AnimationMirrorDataMap> &p_bone_maps) { bone_maps = p_bone_maps; }
 };
 
 class BG_AnimationMirror : public AnimationNodeSync
