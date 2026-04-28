@@ -163,6 +163,9 @@ void BG_ContentStat::_bind_methods()
 			multiplier *= current_stat->get_value();
 	}
 	
+	if (multiplier == 0.0) {
+		UtilityFunctions::push_error("BG_ContentStat::get_total_stat_value - multiplier is 0.0???");
+	}
 	float amount_to_mult = 1.0 / multiplier;
 	result *= amount_to_mult;
 	return result;
@@ -886,7 +889,6 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_current_health"), &BG_Monster::set_current_health);
 	ClassDB::bind_method(D_METHOD("get_random_variation"), &BG_Monster::get_random_variation);
 	ClassDB::bind_method(D_METHOD("set_random_variation"), &BG_Monster::set_random_variation);
-	ClassDB::bind_method(D_METHOD("get_challenge_rating"), &BG_Monster::get_challenge_rating);
 	ClassDB::bind_method(D_METHOD("get_level"), &BG_Monster::get_level);
 	ClassDB::bind_method(D_METHOD("set_level"), &BG_Monster::set_level);
 	ClassDB::bind_method(D_METHOD("get_monster_type"), &BG_Monster::get_monster_type);
@@ -900,7 +902,6 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_effect_ids"), &BG_Monster::get_effect_ids);
 	ClassDB::bind_method(D_METHOD("get_out_of_combat_effect_ids"), &BG_Monster::get_out_of_combat_effect_ids);
 	ClassDB::bind_method(D_METHOD("get_hue_shift_data"), &BG_Monster::get_hue_shift_data);
-	ClassDB::bind_method(D_METHOD("get_challenge_rating_fraction_string"), &BG_Monster::get_challenge_rating_fraction_string);
 	ClassDB::bind_method(D_METHOD("get_can_be_turned_to_stone"), &BG_Monster::get_can_be_turned_to_stone);
 	ClassDB::bind_method(D_METHOD("get_is_turned_to_stone"), &BG_Monster::get_is_turned_to_stone);
 	ClassDB::bind_method(D_METHOD("set_is_turned_to_stone"), &BG_Monster::set_is_turned_to_stone);
@@ -927,23 +928,6 @@ void BG_Monster::set_is_turned_to_stone(bool v) {
 		is_turned_to_stone = v;
 		BG_Booker_DB::get_singleton()->emit_signal("monster_stoned_changed", this, v);
 	}
-}
-
-String BG_Monster::get_challenge_rating_fraction_string() const
-{
-	String result = "";
-	fraction_struct fract_struct = get_fract(get_challenge_rating());
-	if (fract_struct.integral > 0.0f)
-	{
-		result += String::num_int64(int(fract_struct.integral)) + " ";
-	}
-	if (fract_struct.numerator > 0)
-	{
-		result += String::num_int64(fract_struct.numerator);
-		result += "/";
-		result += String::num_int64(fract_struct.denominator);
-	}
-	return result;
 }
 
 ////
@@ -1034,18 +1018,6 @@ void BG_JobDetails::_bind_methods()
 }
 
 ////
-//// BG_ChallengeRatingGuide
-////
-void BG_ChallengeRatingGuide::_bind_methods()
-{
-	ClassDB::bind_method(D_METHOD("get_cr_min_max"), &BG_ChallengeRatingGuide::get_cr_min_max);
-	ClassDB::bind_method(D_METHOD("get_job_rep_reward"), &BG_ChallengeRatingGuide::get_job_rep_reward);
-	ClassDB::bind_method(D_METHOD("get_job_duralation"), &BG_ChallengeRatingGuide::get_job_duralation);
-	ClassDB::bind_method(D_METHOD("get_item_durability_consumption"), &BG_ChallengeRatingGuide::get_item_durability_consumption);
-	ClassDB::bind_method(D_METHOD("get_item_fame_addition"), &BG_ChallengeRatingGuide::get_item_fame_addition);
-}
-
-////
 //// BG_ActStats
 ////
 void BG_ActStats::_bind_methods()
@@ -1105,7 +1077,6 @@ void BG_Booker_Globals::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_max_resistance_hard_cap"), &BG_Booker_Globals::get_max_resistance_hard_cap);
 	ClassDB::bind_method(D_METHOD("get_city_info"), &BG_Booker_Globals::get_city_info);
 	ClassDB::bind_method(D_METHOD("get_act_stats"), &BG_Booker_Globals::get_act_stats);
-	ClassDB::bind_method(D_METHOD("get_challenge_rating_guide"), &BG_Booker_Globals::get_challenge_rating_guide);
 	ClassDB::bind_method(D_METHOD("get_monster_element_distribution"), &BG_Booker_Globals::get_monster_element_distribution);
 
 	ClassDB::bind_method(D_METHOD("get_sell_tier_values"), &BG_Booker_Globals::get_sell_tier_values);
@@ -1145,8 +1116,6 @@ void BG_Booker_DB::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("refresh_data"), &BG_Booker_DB::refresh_data);
 	ClassDB::bind_static_method("BG_Booker_DB", D_METHOD("timer_test"), &BG_Booker_DB::timer_test);
-	ClassDB::bind_static_method("BG_Booker_DB", D_METHOD("get_job_challenge_rating_value", "monsters"), &BG_Booker_DB::get_job_challenge_rating_value);
-	ClassDB::bind_static_method("BG_Booker_DB", D_METHOD("get_job_challenge_rating", "monsters"), &BG_Booker_DB::get_job_challenge_rating);
 
     ADD_SIGNAL(MethodInfo("monster_stoned_changed",
         PropertyInfo(Variant::OBJECT, "monster"),
@@ -1442,7 +1411,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				BG_Monster *new_monster_type = memnew(BG_Monster);
 				new_monster_type->id = entry["id"];
 				new_monster_type->name = entry["name"];
-				new_monster_type->challenge_rating = float(entry["challenge_rating"]);
 				new_monster_type->icon_path = entry["icon_path"];
 				new_monster_type->monster_type = int(entry["type"]);
 
@@ -2755,23 +2723,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		}
 	}
 
-	{ // Challenge Rating Guide
-		const Array lines = get_sheet_by_name("Audio", data);
-		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
-			BG_ChallengeRatingGuide *challenge_rating_guide_class = memnew(BG_ChallengeRatingGuide);
-			challenge_rating_guide_class->cr_min_max = Vector2(
-				float(get_find_data_by_param_name("cr_min", entry)["value"]),
-				float(get_find_data_by_param_name("cr_max", entry)["value"])
-			);
-			challenge_rating_guide_class->job_rep_reward = int(get_find_data_by_param_name("job_rep_reward", entry)["value"]);
-			challenge_rating_guide_class->job_duralation = int(get_find_data_by_param_name("job_duralation", entry)["value"]);
-			challenge_rating_guide_class->item_durability_consumption = float(get_find_data_by_param_name("item_durability_consumption", entry)["value"]);
-			challenge_rating_guide_class->item_fame_addition = float(get_find_data_by_param_name("item_fame_addition", entry)["value"]);
-			globals->challenge_rating_guide.append(challenge_rating_guide_class);
-		}
-	}
-
 	{ // City Info
 		const Array lines = get_sheet_by_name("City_Info", data);
 		for (int i = 0; i < lines.size(); ++i) {
@@ -3230,72 +3181,6 @@ String BG_Booker_DB::get_localize_string(const StringName &sheet_name, const Str
 		}
 	}
 
-	return result;
-}
-
-/* static */ float BG_Booker_DB::get_job_challenge_rating_value(const TypedArray<BG_Monster> &monsters)
-{
-	const TypedArray<BG_Monster> global_monster_types = BG_Booker_DB::get_singleton()->get_monster_types();
-
-	TypedArray<BG_Monster> unique_monsters;
-	TypedArray<float> challenge_ratings;
-	TypedArray<int> monster_counts;
-	for (int i = 0; i < monsters.size(); i++)
-	{
-		const BG_Monster *monster = nullptr;
-		const BG_Monster *m = cast_to<BG_Monster>(monsters[i]);
-		// Find the global version of this monster, as it has more details that were not saved in the resource.
-		for (int x = 0; x < global_monster_types.size(); x++)
-		{
-			const BG_Monster *gm = cast_to<BG_Monster>(global_monster_types[x]);
-			if (m->get_id() == gm->get_id())
-			{
-				monster = gm;
-				break;
-			}
-		}
-
-		if (monster == nullptr)
-			break;
-
-		if (unique_monsters.count(monster) > 0)
-		{
-			const int array_index = unique_monsters.find(monster);
-			monster_counts[array_index] = int(monster_counts[array_index]) + 1;
-		}
-		else
-		{
-			unique_monsters.append(monster);
-			challenge_ratings.append(monster->get_challenge_rating());
-			monster_counts.append(1);
-		}
-	}
-
-	float challenge_rating = 0.0f;
-	for (int i = 0; i < challenge_ratings.size(); i++)
-	{
-		challenge_rating += float(challenge_ratings[i]) * float(monster_counts[i]);
-	}
-	const int total_monster_count = monsters.size();
-
-	return challenge_rating + total_monster_count * 0.25f;
-}
-
-/* static */ String BG_Booker_DB::get_job_challenge_rating(const TypedArray<BG_Monster> &monsters)
-{
-	String result = "";
-
-	fraction_struct fract_struct = get_fract(BG_Booker_DB::get_job_challenge_rating_value(monsters));
-	if (fract_struct.integral > 0.0f)
-	{
-		result += String::num_int64(int(fract_struct.integral)) + " ";
-	}
-	if (fract_struct.numerator > 0)
-	{
-		result += String::num_int64(fract_struct.numerator);
-		result += "/";
-		result += String::num_int64(fract_struct.denominator);
-	}
 	return result;
 }
 

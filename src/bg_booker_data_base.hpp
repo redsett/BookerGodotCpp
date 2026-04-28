@@ -1526,7 +1526,7 @@ protected:
 public:
 	StringName id;
 	StringName get_id() const { return id; }
-	void set_id(StringName value) { id = value; }
+	void set_id(const StringName &value) { id = value; }
 
 	StringName name;
 	StringName get_name() const { return name; }
@@ -1547,9 +1547,6 @@ public:
 	int random_variation = 0;
 	int get_random_variation() const { return random_variation; }
 	void set_random_variation(int v) { random_variation = v; }
-
-	float challenge_rating = 0.0f;
-	float get_challenge_rating() const { return challenge_rating; }
 	
 	int level = 1;
 	int get_level() const { return level; }
@@ -1581,9 +1578,7 @@ public:
 
 	Ref<BG_Job> job;
 	Ref<BG_Job> get_job() const { return job; };
-	void set_job(Ref<BG_Job> value) { job = value; };
-
-	String get_challenge_rating_fraction_string() const;
+	void set_job(const Ref<BG_Job> &value) { job = value; };
 
 	bool can_be_turned_to_stone = true;
 	bool get_can_be_turned_to_stone() const { return can_be_turned_to_stone; }
@@ -1650,33 +1645,6 @@ public:
 	int knocked_out_turns = 0;
 	int get_knocked_out_turns() const { return knocked_out_turns; }
 
-};
-
-////
-//// BG_ChallengeRatingGuide
-////
-class BG_ChallengeRatingGuide : public Object
-{
-	GDCLASS(BG_ChallengeRatingGuide, Object);
-
-protected:
-	static void _bind_methods();
-
-public:
-	Vector2 cr_min_max = Vector2();
-	Vector2 get_cr_min_max() const { return cr_min_max; }
-
-	int job_rep_reward = 0;
-	int get_job_rep_reward() const { return job_rep_reward; }
-
-	int job_duralation = 0;
-	int get_job_duralation() const { return job_duralation; }
-
-	float item_durability_consumption = 0.0f;
-	float get_item_durability_consumption() const { return item_durability_consumption; }
-
-	float item_fame_addition = 0.0f;
-	float get_item_fame_addition() const { return item_fame_addition; }
 };
 
 ////
@@ -1822,9 +1790,6 @@ public:
 	//MyCustomClass* result = dynamic_cast<MyCustomClass*>(container.object());
 	TypedArray<BG_ActStats> act_stats;
 	TypedArray<BG_ActStats> get_act_stats() const { return act_stats; }
-	
-	TypedArray<BG_ChallengeRatingGuide> challenge_rating_guide;
-	TypedArray<BG_ChallengeRatingGuide> get_challenge_rating_guide() const { return challenge_rating_guide; }
 
 	TypedArray<float> monster_element_distribution;
 	TypedArray<float> get_monster_element_distribution() const { return monster_element_distribution; }
@@ -1995,9 +1960,6 @@ public:
 	HashMap<StringName, HashMap<StringName, TypedArray<BG_LocalizeEntryData>>> localize_data;
 	TypedArray<BG_LocalizeEntryData> get_localize_data(const StringName &sheet_name, const StringName &key, const StringName &language);
 	String get_localize_string(const StringName &sheet_name, const StringName &key, const StringName &language, bool ignore_code_data = false);
-
-	static float get_job_challenge_rating_value(const TypedArray<BG_Monster> &monsters);
-	static String get_job_challenge_rating(const TypedArray<BG_Monster> &monsters);
 
 	BG_BaseStat *get_stat_from_stat_id_name(const StringName &stat_id_name) const;
 
