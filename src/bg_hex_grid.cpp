@@ -272,8 +272,8 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_game_data"), &BG_HexGrid::set_game_data);
 	ClassDB::bind_method(D_METHOD("get_game_data_from_qr", "qr"), &BG_HexGrid::get_game_data_from_qr);
 	ClassDB::bind_method(D_METHOD("get_hex_cost", "from_hex", "qr", "do_friendly_check"), &BG_HexGrid::get_hex_cost);
-	ClassDB::bind_method(D_METHOD("get_size_per_hex"), &BG_HexGrid::get_size_per_hex);
-	ClassDB::bind_method(D_METHOD("set_size_per_hex"), &BG_HexGrid::set_size_per_hex);
+	ClassDB::bind_method(D_METHOD("get_hex_size"), &BG_HexGrid::get_hex_size);
+	ClassDB::bind_method(D_METHOD("set_hex_size"), &BG_HexGrid::set_hex_size);
 	ClassDB::bind_method(D_METHOD("get_offset_between_hexes"), &BG_HexGrid::get_offset_between_hexes);
 	ClassDB::bind_method(D_METHOD("set_offset_between_hexes"), &BG_HexGrid::set_offset_between_hexes);
 	ClassDB::bind_method(D_METHOD("get_center_of_hex_location"), &BG_HexGrid::get_center_of_hex_location);
@@ -599,8 +599,8 @@ void BG_HexGrid::update_locations(float p_x_offset_percent, float p_y_offset_per
 	for (int i = 0; i < grid.size(); ++i)
 	{
 		Ref<BG_Hex> h = grid[i];
-        const float x_s = size_per_hex * (1.0 - x_offset_percent);
-        const float y_s = size_per_hex * (1.0 - y_offset_percent);
+        const float x_s = get_hex_size().x * (1.0 - x_offset_percent);
+        const float y_s = get_hex_size().y * (1.0 - y_offset_percent);
         h->location.x = (float(h->r) * x_s) + (float(h->r) * offset_between_hexes);
         h->location.y = (float(h->q) * y_s) + (float(h->q) * offset_between_hexes);
 

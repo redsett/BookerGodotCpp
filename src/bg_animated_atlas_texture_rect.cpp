@@ -64,17 +64,29 @@ void BG_AnimatedAtlasTextureRect::_process(double delta)
 	if (!get_texture().is_valid() || !atlas_texture.is_valid()) return;
 	if (!is_visible_in_tree()) return;
 
+	// clock_t start, end;
+	// double elapsed;
+	// start = clock();
+
 	time_on_frame += (delta * anim_fps);
 	if (time_on_frame < 1.0) return;
 	time_on_frame -= 1.0;
 	current_frame = (current_frame + 1) % frame_count;
 	
-	Vector2 frame_location = Vector2(frame_size.x * current_frame, 0.0);
+	frame_location.x = frame_size.x * current_frame;
 	const int v_count = int(Math::floor(frame_location.x / atlas_texture->get_size().x));
 	frame_location.x -= (atlas_texture->get_size().x * v_count);
 	frame_location.y = frame_size.y * v_count;
 	
 	AtlasTexture *at = cast_to<AtlasTexture>(get_texture().ptr());
 	if (at == nullptr) return;
-	at->set_region(Rect2(frame_location.x, frame_location.y, frame_size.x, frame_size.y));
+	reg.position.x = frame_location.x;
+	reg.position.y = frame_location.y;
+	reg.size.x = frame_size.x;
+	reg.size.y = frame_size.y;
+	at->set_region(reg);
+
+	// end = clock();
+	// elapsed = (double)(end - start) / CLOCKS_PER_SEC;
+	// UtilityFunctions::print("Took ", elapsed);
 }

@@ -130,6 +130,48 @@ public:
 };
 
 ////
+//// BG_PuzzleDetails_MiscParams
+////
+class BG_PuzzleDetails_MiscParams : public Object
+{
+	GDCLASS(BG_PuzzleDetails_MiscParams, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName param_name;
+	StringName get_param_name() const { return param_name; }
+
+	StringName value1;
+	StringName get_value1() const { return value1; }
+
+	StringName value2;
+	StringName get_value2() const { return value2; }
+};
+
+////
+//// BG_PuzzleDetails
+////
+class BG_PuzzleDetails : public Object
+{
+	GDCLASS(BG_PuzzleDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	StringName scene_path;
+	StringName get_scene_path() const { return scene_path; }
+
+	TypedArray<BG_PuzzleDetails_MiscParams> misc_params;
+	TypedArray<BG_PuzzleDetails_MiscParams> get_misc_params() const { return misc_params; }
+};
+
+////
 //// BG_BattleBoard_HexTypeVisualDetails
 ////
 class BG_BattleBoard_HexTypeVisualDetails : public Object
@@ -1018,6 +1060,8 @@ public:
 	int durability_value_tier = 0;
 	int get_durability_value_tier() const { return durability_value_tier; }
 	
+	StringName puzzle_id;
+	StringName get_puzzle_id() const { return puzzle_id; }
 	
 	// New DBer Data
 	bool use_dber_data = false;
@@ -1949,6 +1993,10 @@ public:
 
 	TypedArray<BG_MailData> mail_data;
 	TypedArray<BG_MailData> get_mail_data() const { return mail_data; }
+
+	TypedArray<BG_PuzzleDetails> puzzles;
+	TypedArray<BG_PuzzleDetails> get_puzzles() const { return puzzles; }
+	BG_PuzzleDetails *get_puzzle_details_by_id(const StringName &id) const;
 	
 	TypedArray<BG_TwoDer_DataEntry> two_der_data_entries;
 	TypedArray<BG_TwoDer_DataEntry> get_two_der_data_entries() const { return two_der_data_entries; }

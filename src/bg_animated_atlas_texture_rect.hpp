@@ -11,11 +11,14 @@ class BG_AnimatedAtlasTextureRect : public TextureRect
 {
 	GDCLASS(BG_AnimatedAtlasTextureRect, TextureRect);
 
+private:
+	Vector2 frame_location;
+	Rect2 reg;
+
 protected:
 	static void _bind_methods();
 
 	float time_on_frame = 0.0;
-
 	int current_frame = 0;
 
 public:

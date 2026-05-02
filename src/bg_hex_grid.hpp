@@ -378,19 +378,16 @@ public:
 
     int get_hex_cost(const Ref<BG_Hex> &from_hex, const Vector2i &qr, bool do_pass_through_check) const;
     
-    float size_per_hex = 10.0;
-    float get_size_per_hex() const { return size_per_hex; }
-    void set_size_per_hex(float v) { size_per_hex = v; }
+    Vector2 hex_size = Vector2();
+    Vector2 get_hex_size() const { return hex_size; }
+    void set_hex_size(const Vector2 &v) { hex_size = v; }
 
     float offset_between_hexes = 0.0;
     float get_offset_between_hexes() const { return offset_between_hexes; }
     void set_offset_between_hexes(float v) { offset_between_hexes = v; }
 
     Vector2 get_center_of_hex_location(const Ref<BG_Hex> hex) const {
-        const Vector2 half_size = Vector2(
-            size_per_hex * 0.5,// * (1.0 - x_offset_percent), 
-            size_per_hex * 0.5// * (1.0 - y_offset_percent)
-        );
+        const Vector2 half_size = get_hex_size() * 0.5;
         return hex->get_location() + half_size;
     }
 

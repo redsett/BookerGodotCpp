@@ -172,6 +172,26 @@ void BG_ContentStat::_bind_methods()
 }
 
 ////
+//// BG_PuzzleDetails_MiscParams
+////
+void BG_PuzzleDetails_MiscParams::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_param_name"), &BG_PuzzleDetails_MiscParams::get_param_name);
+	ClassDB::bind_method(D_METHOD("get_value1"), &BG_PuzzleDetails_MiscParams::get_value1);
+	ClassDB::bind_method(D_METHOD("get_value2"), &BG_PuzzleDetails_MiscParams::get_value2);
+}
+
+////
+//// BG_PuzzleDetails
+////
+void BG_PuzzleDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_PuzzleDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_scene_path"), &BG_PuzzleDetails::get_scene_path);
+	ClassDB::bind_method(D_METHOD("get_misc_params"), &BG_PuzzleDetails::get_misc_params);
+}
+
+////
 //// BG_BattleBoard_HexTypeVisualDetails
 ////
 void BG_BattleBoard_HexTypeVisualDetails::_bind_methods()
@@ -650,6 +670,7 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_sell_value_tier"), &BG_ItemDetails::get_sell_value_tier);
 	ClassDB::bind_method(D_METHOD("get_fame_value_tier"), &BG_ItemDetails::get_fame_value_tier);
 	ClassDB::bind_method(D_METHOD("get_durability_value_tier"), &BG_ItemDetails::get_durability_value_tier);
+	ClassDB::bind_method(D_METHOD("get_puzzle_id"), &BG_ItemDetails::get_puzzle_id);
 
 	ClassDB::bind_method(D_METHOD("get_use_dber_data"), &BG_ItemDetails::get_use_dber_data);
 	ClassDB::bind_method(D_METHOD("get_item_effectiveness_stats"), &BG_ItemDetails::get_item_effectiveness_stats);
@@ -1147,6 +1168,8 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_market_place_data"), &BG_Booker_DB::get_market_place_data);
 	ClassDB::bind_method(D_METHOD("get_monster_types"), &BG_Booker_DB::get_monster_types);
 	ClassDB::bind_method(D_METHOD("get_mail_data"), &BG_Booker_DB::get_mail_data);
+	ClassDB::bind_method(D_METHOD("get_puzzles"), &BG_Booker_DB::get_puzzles);
+	ClassDB::bind_method(D_METHOD("get_puzzle_details_by_id", "id"), &BG_Booker_DB::get_puzzle_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_two_der_data_entries"), &BG_Booker_DB::get_two_der_data_entries);
 	ClassDB::bind_method(D_METHOD("get_two_der_data_from_id", "id"), &BG_Booker_DB::get_two_der_data_from_id);
 	ClassDB::bind_method(D_METHOD("set_revert_localization_to_english"), &BG_Booker_DB::set_revert_localization_to_english);
@@ -1256,6 +1279,15 @@ TypedArray<BG_AudioDataDetails> BG_Booker_DB::get_audio_details(const StringName
 		break;
 	}
 	return result;
+}
+
+BG_PuzzleDetails *BG_Booker_DB::get_puzzle_details_by_id(const StringName &id) const {
+	for (int i = 0; i < puzzles.size(); ++i) {
+		BG_PuzzleDetails *puzzle_dets = cast_to<BG_PuzzleDetails>(puzzles[i]);
+		if (puzzle_dets != nullptr && puzzle_dets->get_id() == id)
+			return puzzle_dets;
+	}
+	return nullptr;
 }
 
 BG_TwoDer_DataEntry *BG_Booker_DB::get_two_der_data_from_id(const StringName &id) const {
@@ -2790,6 +2822,15 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				new_item_class->effects[StringName(get_find_data_by_param_name("rarity", effect_values_entry)["element_id_name_value"])] = effect_ids;
 			}
 
+			// Misc
+			const Dictionary misc_values = get_find_data_by_param_name("misc", entry);
+			const Array misc_array = misc_values["array_values"];
+			for (int x = 0; x < misc_array.size(); ++x) {
+				const Array misc_entry = misc_array[x];
+
+				new_item_class->puzzle_id = StringName(get_find_data_by_param_name("puzzle_id", misc_entry)["element_id_name_value"]);
+			}
+
 			items.append(new_item_class);
 		}
 	}
@@ -2965,6 +3006,39 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 					globals->day_cycle_offset_per_act.append(int(get_find_data_by_param_name("offset", day_cycle_offset_per_act_entry)["value"]));
 				}
 			}
+		}
+	}
+
+	{ // Puzzles
+		for (int i = 0; i < puzzles.size(); ++i) {
+			BG_PuzzleDetails *c = cast_to<BG_PuzzleDetails>(puzzles[i]);
+			memfree(c);
+		}
+		puzzles.clear();
+
+		const Array lines = get_sheet_by_name("Puzzles", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+
+			BG_PuzzleDetails *new_data = memnew(BG_PuzzleDetails);
+			new_data->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_data->scene_path = ensure_clean_path(get_find_data_by_param_name("scene_path", entry)["path"]);
+
+			// Misc Params
+			const Dictionary misc_params_values = get_find_data_by_param_name("misc_params", entry);
+			const Array misc_params_array = misc_params_values["array_values"];
+			for (int x = 0; x < misc_params_array.size(); ++x) {
+				const Array misc_params_entry = misc_params_array[x];
+
+				BG_PuzzleDetails_MiscParams *new_params_data = memnew(BG_PuzzleDetails_MiscParams);
+				new_params_data->param_name = StringName(get_find_data_by_param_name("param_name", misc_params_entry)["value"]);
+				new_params_data->value1 = StringName(get_find_data_by_param_name("value1", misc_params_entry)["value"]);
+				new_params_data->value2 = StringName(get_find_data_by_param_name("value2", misc_params_entry)["value"]);
+
+				new_data->misc_params.append(new_params_data);
+			}
+
+			puzzles.append(new_data);
 		}
 	}
 
