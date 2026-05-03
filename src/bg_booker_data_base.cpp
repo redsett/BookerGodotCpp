@@ -667,10 +667,11 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_ItemDetails::get_stats);
 	ClassDB::bind_method(D_METHOD("get_animation_attach_socket"), &BG_ItemDetails::get_animation_attach_socket);
 	ClassDB::bind_method(D_METHOD("get_effects"), &BG_ItemDetails::get_effects);
+	ClassDB::bind_method(D_METHOD("get_audio_data_by_id", "id", "act"), &BG_ItemDetails::get_audio_data_by_id);
+	ClassDB::bind_method(D_METHOD("get_audio_id_by_id", "id"), &BG_ItemDetails::get_audio_id_by_id);
 	ClassDB::bind_method(D_METHOD("get_sell_value_tier"), &BG_ItemDetails::get_sell_value_tier);
 	ClassDB::bind_method(D_METHOD("get_fame_value_tier"), &BG_ItemDetails::get_fame_value_tier);
 	ClassDB::bind_method(D_METHOD("get_durability_value_tier"), &BG_ItemDetails::get_durability_value_tier);
-	ClassDB::bind_method(D_METHOD("get_puzzle_id"), &BG_ItemDetails::get_puzzle_id);
 
 	ClassDB::bind_method(D_METHOD("get_use_dber_data"), &BG_ItemDetails::get_use_dber_data);
 	ClassDB::bind_method(D_METHOD("get_item_effectiveness_stats"), &BG_ItemDetails::get_item_effectiveness_stats);
@@ -691,6 +692,19 @@ void BG_ItemDetails::_bind_methods()
 	BIND_ENUM_CONSTANT(ALL_RANDOM_ROW);
 	BIND_ENUM_CONSTANT(ALL_RANDOM_COLUMN);
 	BIND_ENUM_CONSTANT(ALL);
+}
+
+TypedArray<BG_AudioDataDetails> BG_ItemDetails::get_audio_data_by_id(const StringName &id, int act) const {
+	if (audio_events.has(id)) {
+		const BG_Booker_DB *booker_db = BG_Booker_DB::get_singleton();
+		return booker_db->get_audio_details(id, 0);
+	}
+	return {};
+}
+
+StringName BG_ItemDetails::get_audio_id_by_id(const StringName &id) const {
+	if (audio_events.has(id)) return audio_events[id];
+	return StringName("");
 }
 
 ////
@@ -1442,7 +1456,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 
 				BG_Monster *new_monster_type = memnew(BG_Monster);
 				new_monster_type->id = entry["id"];
-				new_monster_type->name = entry["name"];
 				new_monster_type->icon_path = entry["icon_path"];
 				new_monster_type->monster_type = int(entry["type"]);
 
@@ -1459,15 +1472,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_hue_shift_data->multiplier = float(hue_shifting_entry["multiplier"]);
 
 					new_monster_type->hue_shift_data.append(new_hue_shift_data);
-				}
-
-				// Model Info
-				const Array model_lines = Array(entry["model"]);
-				for (int y = 0; y < model_lines.size(); y++)
-				{
-					const Dictionary model_entry = model_lines[y];
-
-					new_monster_type->model_path = StringName(model_entry["path"]);
 				}
 
 				// Misc Stats
@@ -1495,25 +1499,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					new_stat->dice_options = BG_Dice::string_to_dice_options(new_stat->dice_string);
 					
 					new_monster_type->stats.append(new_stat);
-				}
-
-				// Element Availability
-				const Array element_availability_lines = Array(entry["element_availability"]);
-				for (int y = 0; y < element_availability_lines.size(); y++)
-				{
-					const Dictionary element_availability_entry = element_availability_lines[y];
-					new_monster_type->element_availability_ids.append(element_availability_entry["element"]);
-				}
-				
-				// Effects
-				const Array effect_lines = Array(entry["effects"]);
-				for (int y = 0; y < effect_lines.size(); y++)
-				{
-					const Dictionary effect_entry = effect_lines[y];
-					if (effect_entry.has("effect"))
-						new_monster_type->effect_ids.append(effect_entry["effect"]);
-					if (effect_entry.has("out_of_combat_effect"))
-						new_monster_type->out_of_combat_effect_ids.append(effect_entry["out_of_combat_effect"]);
 				}
 
 				monster_types.append(new_monster_type);
@@ -1757,18 +1742,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 						new_item_class->hue_shift_data = new_hue_shift_data;
 					}
 
-					// Lore
-					new_item_class->lore.clear();
-					const Array lore_lines = Array(entry["lore"]);
-					for (int y = 0; y < lore_lines.size(); y++)
-					{
-						const Dictionary lore_entry = lore_lines[y];
-						BG_LoreRarity *new_lore = memnew(BG_LoreRarity);
-						new_lore->rarity_id = lore_entry["rarity_id"];
-						new_lore->description = lore_entry["description"];
-						new_item_class->lore.append(new_lore);
-					}
-
 					// Caste
 					new_item_class->caste_ids.clear();
 					const Array caste_lines = Array(entry["caste"]);
@@ -1800,22 +1773,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 						}
 
 						new_item_class->stats[StringName(stat_entry["rarity"])] = rarity_stats;
-					}
-
-					// Effects
-					const Array effect_lines = Array(entry["effects"]);
-					for (int y = 0; y < effect_lines.size(); y++)
-					{
-						const Dictionary effect_entry = effect_lines[y];
-						TypedArray<StringName> effect_ids;
-
-						const Array effects_lines = Array(effect_entry["effects"]);
-						for (int x = 0; x < effects_lines.size(); x++)
-						{
-							const Dictionary effects_entry = effects_lines[x];
-							effect_ids.append(StringName(effects_entry["effect"]));
-						}
-						new_item_class->effects[StringName(effect_entry["rarity"])] = effect_ids;
 					}
 
 					items.append(new_item_class);
@@ -1919,65 +1876,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 					}
 					items.append(new_item_class);
 				}
-			}
-		}
-	}
-
-	/////
-	///// Effects
-	/////
-	{
-		const Dictionary effects_sheet = BG_JsonUtils::GetCBDSheet(data, "effects");
-		if (effects_sheet.has("lines"))
-		{
-			effects.clear();
-			const Array lines = Array(effects_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++)
-			{
-				const Dictionary entry = lines[i];
-				BG_Effect *new_effect_class = memnew(BG_Effect);
-				new_effect_class->id = entry["id"];
-				new_effect_class->nice_name = entry["name"];
-				new_effect_class->use_owning_item_icon = bool(entry["use_owning_item_icon"]);
-				if (entry.has("status_icon")) {
-					new_effect_class->status_icon_path = entry["status_icon"];
-				}
-
-				// Rarities
-				const Array rarity_lines = Array(entry["details_per_rarity"]);
-				for (int r = 0; r < rarity_lines.size(); r++)
-				{
-					const Dictionary rarity_entry = rarity_lines[r];
-					BG_EffectRarityDetails *new_rarity_class = memnew(BG_EffectRarityDetails);
-
-					new_rarity_class->rarity_id = rarity_entry["rarity"];
-					new_rarity_class->description = rarity_entry["description"];
-					new_rarity_class->script_path = rarity_entry["script_path"];
-
-					// Value Attributes
-					const Array value_attribute_lines = Array(rarity_entry["value_attributes"]);
-					for (int y = 0; y < value_attribute_lines.size(); y++)
-					{
-						const Dictionary value_attribute_entry = value_attribute_lines[y];
-
-						String name = value_attribute_entry["name"];
-						String value1 = value_attribute_entry["value_1"];
-						String value2 = value_attribute_entry["value_2"];
-
-						Array values;
-						if (!value1.is_empty())
-							values.append(value1);
-						if (!value2.is_empty())
-							values.append(value2);
-
-						new_rarity_class->value_attributes[name] = values;
-					}
-
-					new_effect_class->details_per_rarity.append(new_rarity_class);
-				}
-
-
-				effects.append(new_effect_class);
 			}
 		}
 	}
@@ -2316,27 +2214,43 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 					}
 				}
 				if (item_details == nullptr) {
-					UtilityFunctions::print("Could not find data for id : " + String(content_id));
-					continue;
+					item_details = memnew(BG_ItemDetails);
+					items.append(item_details);
+					// UtilityFunctions::prints("Could not find data for id : ", String(content_id), " Creating new instance.");
 				}
+
+				item_details->id = content_id;
+				item_details->name = StringName(entry["nice_name"]);
+				
+				const int slot_type = int(get_find_data_by_param_name("slot_type", misc_params)["value"]);
+				item_details->slot_type_id = global_enums["equipment_slot_types"][slot_type];
+				if (slot_type == 3) item_details->slot_type = BG_ItemDetails::ItemType::BEAST_PART;
+				else if (slot_type > 3) item_details->slot_type = BG_ItemDetails::ItemType::CONSUMABLE;
+				// const int attack_target_type = int(get_find_data_by_param_name("attack_target_type", misc_params)["value"]);
+				// item_details->attack_target_type = global_enums["attack_target_types"][attack_target_type];
 
 				item_details->use_dber_data = true;
 				item_details->effectiveness = float(entry["effectiveness"]);
 				item_details->use_stat_requirements = bool(entry["use_stat_requirements"]);
 				item_details->icon_path = ensure_clean_path(get_find_data_by_param_name("icon", misc_params)["path"]);
-				item_details->mesh_path = ensure_clean_path(get_find_data_by_param_name("mesh_scene_path", misc_params)["path"]);
-				item_details->animation_attach_socket= int(get_find_data_by_param_name("anim_attach_socket", misc_params)["value"]) + 1;
+				const Dictionary mesh_path_dict = get_find_data_by_param_name("mesh_scene_path", misc_params);
+				if (mesh_path_dict.has("path")) item_details->mesh_path = ensure_clean_path(mesh_path_dict["path"]);
+				const Dictionary animation_attach_socket_dict = get_find_data_by_param_name("anim_attach_socket", misc_params);
+				if (animation_attach_socket_dict.has("value")) item_details->animation_attach_socket = int(animation_attach_socket_dict["value"]) + 1;
 				const Dictionary level_range = get_find_data_by_param_name("level_range", misc_params);
-				item_details->level_range = Vector2(int(level_range["value_x"]), int(level_range["value_y"]));
+				if (level_range.has("value_x")) item_details->level_range = Vector2(int(level_range["value_x"]), int(level_range["value_y"]));
 
 				{ // Available Castes
 					item_details->caste_ids.clear();
-					const Array available_castes = Array(get_find_data_by_param_name("available_castes", misc_params)["array_values"]);
-					for (int x = 0; x < available_castes.size(); ++x) {
-						const Array aa = available_castes[x];
-						const Dictionary e = aa[0];
-						const StringName caste_id = global_enums["caste_types"][int(e["value"])];
-						item_details->caste_ids.append(caste_id);
+					const Dictionary available_castes_dict = get_find_data_by_param_name("available_castes", misc_params);
+					if (available_castes_dict.has("array_values")) {
+						const Array available_castes = Array(available_castes_dict["array_values"]);
+						for (int x = 0; x < available_castes.size(); ++x) {
+							const Array aa = available_castes[x];
+							const Dictionary e = aa[0];
+							const StringName caste_id = global_enums["caste_types"][int(e["value"])];
+							item_details->caste_ids.append(caste_id);
+						}
 					}
 				}
 
@@ -2374,7 +2288,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				}
 
 				{ // Item Stat Requirements
-					if (item_details->use_stat_requirements) {
+					if (item_details->use_stat_requirements && entry.has("item_stat_requirements")) {
 						const Array item_stat_requirement_lines = Array(entry["item_stat_requirements"]);
 						for (int x = 0; x < item_stat_requirement_lines.size(); ++x) {
 							const Dictionary item_stat_requirement_entry = item_stat_requirement_lines[x];
@@ -2390,6 +2304,36 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 							new_class->stat_reference = get_stat_from_unique_id(unique_id);
 
 							item_details->item_stat_requirements.append(new_class);
+						}
+					}
+				}
+
+				{ // Effects
+					const Array effects_lines = Array(get_find_data_by_param_name("effects", misc_params)["array_values"]);
+					for (int x = 0; x < effects_lines.size(); ++x) {
+						const Array effects_entry = effects_lines[x];
+
+						TypedArray<StringName> effect_ids;
+						const Array effect_array = Array(get_find_data_by_param_name("effects", effects_entry)["array_values"]);
+						for (int y = 0; y < effect_array.size(); ++y) {
+							const Array effect_entry = effect_array[y];
+							effect_ids.append(StringName(get_find_data_by_param_name("effect", effect_entry)["element_id_name_value"]));
+						}
+						
+						const StringName rarity_id = StringName(get_find_data_by_param_name("rarity", effects_entry)["element_id_name_value"]);
+						item_details->effects[rarity_id] = effect_ids;
+					}
+				}
+
+				{ // Audio Events
+					item_details->audio_events.clear();
+					const Dictionary audio_events_dict = get_find_data_by_param_name("audio_events", misc_params);
+					if (audio_events_dict.has("array_values")) {
+						const Array audio_events = Array(audio_events_dict["array_values"]);
+						for (int x = 0; x < audio_events.size(); ++x) {
+							const Array audio_events_entry = audio_events[x];
+							const StringName audio_id_key = StringName(get_find_data_by_param_name("id", audio_events_entry)["value"]);
+							item_details->audio_events[audio_id_key] = StringName(get_find_data_by_param_name("audio_id", audio_events_entry)["element_id_name_value"]);
 						}
 					}
 				}
@@ -2413,6 +2357,8 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 					continue;
 				}
 
+				monster_details->id = content_id;
+				monster_details->name = StringName(entry["nice_name"]);
 				monster_details->use_dber_data = true;
 				monster_details->effectiveness = float(entry["effectiveness"]);
 				monster_details->icon_path = ensure_clean_path(get_find_data_by_param_name("icon", misc_params)["path"]);
@@ -2445,6 +2391,22 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 					const Array animations = Array(get_find_data_by_param_name("animations", misc_params)["array_values"]);
 					for (int x = 0; x < animations.size(); ++x) {
 						monster_details->animations.append(get_animation_detail(global_enums, animations, x));
+					}
+				}
+
+				{ // Effects
+					const Array effects_lines = Array(get_find_data_by_param_name("effects", misc_params)["array_values"]);
+					for (int x = 0; x < effects_lines.size(); ++x) {
+						const Array effects_entry = effects_lines[x];
+
+						TypedArray<StringName> effect_ids;
+						const Array effect_array = Array(get_find_data_by_param_name("effects", effects_entry)["array_values"]);
+						for (int y = 0; y < effect_array.size(); ++y) {
+							const Array effect_entry = effect_array[y];
+							effect_ids.append(StringName(get_find_data_by_param_name("effect", effect_entry)["element_id_name_value"]));
+						}
+						
+						monster_details->effect_ids = effect_ids;
 					}
 				}
 			}
@@ -2790,48 +2752,60 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		}
 	}
 
-	{ // Consumables
-		const Array lines = get_sheet_by_name("Consumables", data);
+	{ // Effects
+		for (int i = 0; i < effects.size(); ++i) {
+			BG_Effect *c = cast_to<BG_Effect>(effects[i]);
+			memfree(c);
+		}
+		effects.clear();
+
+		const Array lines = get_sheet_by_name("Effects", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
 			if (bool(get_find_data_by_param_name("disabled", entry)["value"]))
 				continue;
-			
-			BG_ItemDetails *new_item_class = memnew(BG_ItemDetails);
-			new_item_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_item_class->name = StringName(get_find_data_by_param_name("name", entry)["value"]);
-			new_item_class->slot_type_id = StringName(get_find_data_by_param_name("slot_type", entry)["element_id_name_value"]);
-			new_item_class->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
-			new_item_class->slot_type = BG_ItemDetails::CONSUMABLE;
 
-			// Effects
-			const Dictionary effect_values = get_find_data_by_param_name("effects", entry);
-			const Array effect_values_array = effect_values["array_values"];
-			for (int x = 0; x < effect_values_array.size(); ++x) {
-				const Array effect_values_entry = effect_values_array[x];
+			BG_Effect *new_effect_class = memnew(BG_Effect);
+			new_effect_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_effect_class->nice_name = StringName(get_find_data_by_param_name("name", entry)["value"]);
+			new_effect_class->use_owning_item_icon = bool(get_find_data_by_param_name("use_owning_item_icon", entry)["value"]);
+			new_effect_class->status_icon_path = ensure_clean_path(get_find_data_by_param_name("status_icon", entry)["path"]);
 
-				TypedArray<StringName> effect_ids;
+			// Rarities
+			const Dictionary rarity_values = get_find_data_by_param_name("details_per_rarity", entry);
+			const Array rarity_array = rarity_values["array_values"];
+			for (int x = 0; x < rarity_array.size(); ++x) {
+				const Array rarity_entry = rarity_array[x];
 
-				const Dictionary effects_values = get_find_data_by_param_name("effects", effect_values_entry);
-				const Array effects_values_array = effects_values["array_values"];
-				for (int y = 0; y < effects_values_array.size(); ++y) {
-					const Array effects_values_entry = effects_values_array[y];
-					effect_ids.append(StringName(get_find_data_by_param_name("effect", effects_values_entry)["element_id_name_value"]));
+				BG_EffectRarityDetails *new_rarity_class = memnew(BG_EffectRarityDetails);
+
+				new_rarity_class->rarity_id = StringName(get_find_data_by_param_name("rarity", rarity_entry)["element_id_name_value"]);
+				new_rarity_class->description = StringName(get_find_data_by_param_name("description", rarity_entry)["value"]);
+				new_rarity_class->script_path = ensure_clean_path(get_find_data_by_param_name("script_path", rarity_entry)["path"]);
+
+				// Value Attributes
+				const Dictionary value_attributes_values = get_find_data_by_param_name("value_attributes", rarity_entry);
+				const Array value_attributes_array = value_attributes_values["array_values"];
+				for (int y = 0; y < value_attributes_array.size(); ++y) {
+					const Array value_attributes_entry = value_attributes_array[y];
+
+					String name = StringName(get_find_data_by_param_name("name", value_attributes_entry)["value"]);
+					String value1 = StringName(get_find_data_by_param_name("value_1", value_attributes_entry)["value"]);
+					String value2 = StringName(get_find_data_by_param_name("value_2", value_attributes_entry)["value"]);
+
+					Array values;
+					if (!value1.is_empty())
+						values.append(value1);
+					if (!value2.is_empty())
+						values.append(value2);
+
+					new_rarity_class->value_attributes[name] = values;
 				}
-				
-				new_item_class->effects[StringName(get_find_data_by_param_name("rarity", effect_values_entry)["element_id_name_value"])] = effect_ids;
+
+				new_effect_class->details_per_rarity.append(new_rarity_class);
 			}
 
-			// Misc
-			const Dictionary misc_values = get_find_data_by_param_name("misc", entry);
-			const Array misc_array = misc_values["array_values"];
-			for (int x = 0; x < misc_array.size(); ++x) {
-				const Array misc_entry = misc_array[x];
-
-				new_item_class->puzzle_id = StringName(get_find_data_by_param_name("puzzle_id", misc_entry)["element_id_name_value"]);
-			}
-
-			items.append(new_item_class);
+			effects.append(new_effect_class);
 		}
 	}
 

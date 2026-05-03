@@ -1051,6 +1051,10 @@ public:
 	Dictionary effects; // StringName(rarity id): TypedArray<StringName>(effect ids)
 	Dictionary get_effects() const { return effects; }
 
+	HashMap<StringName, StringName> audio_events; // id: audio_id
+	TypedArray<BG_AudioDataDetails> get_audio_data_by_id(const StringName &id, int act) const;
+	StringName get_audio_id_by_id(const StringName &id) const;
+
 	int sell_value_tier = 0;
 	int get_sell_value_tier() const { return sell_value_tier; }
 
@@ -1059,9 +1063,6 @@ public:
 
 	int durability_value_tier = 0;
 	int get_durability_value_tier() const { return durability_value_tier; }
-	
-	StringName puzzle_id;
-	StringName get_puzzle_id() const { return puzzle_id; }
 	
 	// New DBer Data
 	bool use_dber_data = false;
