@@ -169,6 +169,8 @@ public:
 
 	TypedArray<BG_PuzzleDetails_MiscParams> misc_params;
 	TypedArray<BG_PuzzleDetails_MiscParams> get_misc_params() const { return misc_params; }
+
+	BG_PuzzleDetails_MiscParams *get_misc_param_by_id(const StringName &id) const;
 };
 
 ////

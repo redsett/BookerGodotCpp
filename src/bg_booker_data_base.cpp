@@ -189,6 +189,17 @@ void BG_PuzzleDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_PuzzleDetails::get_id);
 	ClassDB::bind_method(D_METHOD("get_scene_path"), &BG_PuzzleDetails::get_scene_path);
 	ClassDB::bind_method(D_METHOD("get_misc_params"), &BG_PuzzleDetails::get_misc_params);
+	ClassDB::bind_method(D_METHOD("get_misc_param_by_id", "id"), &BG_PuzzleDetails::get_misc_param_by_id);
+}
+
+BG_PuzzleDetails_MiscParams *BG_PuzzleDetails::get_misc_param_by_id(const StringName &id) const
+{
+	for (int i = 0; i < misc_params.size(); ++i) {
+		BG_PuzzleDetails_MiscParams *param = cast_to<BG_PuzzleDetails_MiscParams>(misc_params[i]);
+		if (param != nullptr && param->get_param_name() == id)
+			return param;
+	}
+	return nullptr;
 }
 
 ////
