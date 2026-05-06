@@ -81,6 +81,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_BaseStat();
+
 	int unique_id = -1;
 	int get_unique_id() const { return unique_id; }
 
@@ -111,6 +113,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_ContentStat();
+
 	BG_BaseStat *stat_reference = nullptr;
 	BG_BaseStat *get_stat_reference() const { return stat_reference; }
 
@@ -1121,6 +1125,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_ItemDropPool();
+
 	StringName id;
 	StringName get_id() const { return id; }
 
@@ -1166,6 +1172,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_JobMonsterDetails();
+	
 	StringName monster_id;
 	StringName get_monster_id() const { return monster_id; }
 

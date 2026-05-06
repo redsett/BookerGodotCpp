@@ -129,6 +129,11 @@ void BG_BaseStat::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_stat_id_name"), &BG_BaseStat::get_stat_id_name);
 }
 
+BG_BaseStat::~BG_BaseStat()
+{
+	parent_stat_reference = nullptr;
+}
+
 ////
 //// BG_ContentStat
 ////
@@ -141,6 +146,11 @@ void BG_ContentStat::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_level_value"), &BG_ContentStat::get_level_value);
 	ClassDB::bind_method(D_METHOD("get_randomize_damage_type"), &BG_ContentStat::get_randomize_damage_type);
 	ClassDB::bind_method(D_METHOD("get_randomize_resistance_type"), &BG_ContentStat::get_randomize_resistance_type);
+}
+
+BG_ContentStat::~BG_ContentStat()
+{
+	stat_reference = nullptr;
 }
 
 /* static */ float BG_ContentStat::get_total_stat_value(const BG_BaseStat *stat)
@@ -789,6 +799,8 @@ BG_ItemDetails::~BG_ItemDetails()
 		if (BG_Booker_DB::bg_is_instance_valid(d))
 			memdelete(d);
 	}
+	if (BG_Booker_DB::bg_is_instance_valid(hue_shift_data))
+		memdelete(hue_shift_data);
 	for (int i = 0; i < item_effectiveness_stats.size(); ++i) {
 		BG_ContentStat *d = cast_to<BG_ContentStat>(item_effectiveness_stats[i]);
 		if (BG_Booker_DB::bg_is_instance_valid(d))
@@ -1130,6 +1142,11 @@ BG_BandInfo::~BG_BandInfo()
 		if (BG_Booker_DB::bg_is_instance_valid(d))
 			memdelete(d);
 	}
+	for (int i = 0; i < unit_castes.size(); ++i) {
+		BG_UnitCaste *d = cast_to<BG_UnitCaste>(unit_castes[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
 }
 
 ////
@@ -1149,6 +1166,15 @@ void BG_ItemDropPool::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_ItemDropPool::get_id);
 	ClassDB::bind_method(D_METHOD("get_item_drops"), &BG_ItemDropPool::get_item_drops);
+}
+
+BG_ItemDropPool::~BG_ItemDropPool()
+{
+	for (int i = 0; i < item_drops.size(); ++i) {
+		BG_RewardItem *d = cast_to<BG_RewardItem>(item_drops[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
 }
 
 ////
@@ -1183,6 +1209,15 @@ void BG_JobMonsterDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_always_drop_at_least_one"), &BG_JobMonsterDetails::get_always_drop_at_least_one);
 }
 
+BG_JobMonsterDetails::~BG_JobMonsterDetails()
+{
+	for (int i = 0; i < drops.size(); ++i) {
+		BG_RewardItem *d = cast_to<BG_RewardItem>(drops[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+}
+
 ////
 //// BG_JobDetails
 ////
@@ -1210,13 +1245,13 @@ BG_JobDetails::~BG_JobDetails()
 		if (BG_Booker_DB::bg_is_instance_valid(d))
 			memdelete(d);
 	}
+	if (BG_Booker_DB::bg_is_instance_valid(event_resource_details))
+		memdelete(event_resource_details);
 	for (int i = 0; i < distribution_per_act.size(); ++i) {
 		BG_JobDistributionForAct *d = cast_to<BG_JobDistributionForAct>(distribution_per_act[i]);
 		if (BG_Booker_DB::bg_is_instance_valid(d))
 			memdelete(d);
 	}
-	if (BG_Booker_DB::bg_is_instance_valid(event_resource_details))
-		memdelete(event_resource_details);
 }
 
 ////
