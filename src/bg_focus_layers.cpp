@@ -75,6 +75,12 @@ BG_Focus_Layers::~BG_Focus_Layers()
 {
 	ERR_FAIL_COND(singleton != this);
 	singleton = nullptr;
+
+	for (int i = 0; i < _focus_layers.size(); ++i) {
+		BG_Focus_Layer_Properties *d = cast_to<BG_Focus_Layer_Properties>(_focus_layers[i]);
+		if (d != nullptr)
+			memdelete(d);
+	}
 }
 
 void BG_Focus_Layers::_set_control_default_focus_static(Control *p_control)

@@ -179,11 +179,16 @@ public:
         return 0;
     }
 
-    void init(const StringName &parent_bb_id, const StringName &bb_id) {
-        if (asset_type_dyn.is_empty()) return;
-        const BG_Booker_DB *bdb = BG_Booker_DB::get_singleton();
-        if (bdb == nullptr) return;
-        dyn_hex_type_details = bdb->get_battle_board_hex_type_by_id(parent_bb_id, bb_id, asset_type_dyn);
+    StringName parent_bb_id;
+    StringName bb_id;
+    void init(const StringName &_parent_bb_id, const StringName &_bb_id) {
+        parent_bb_id = _parent_bb_id;
+        bb_id = _bb_id;
+        get_dyn_hex_type_details();
+        // if (asset_type_dyn.is_empty()) return;
+        // const BG_Booker_DB *bdb = BG_Booker_DB::get_singleton();
+        // if (bdb == nullptr) return;
+        // dyn_hex_type_details = bdb->get_battle_board_hex_type_by_id(parent_bb_id, bb_id, asset_type_dyn);
     }
 
     StringName asset_type_dyn;
@@ -243,12 +248,30 @@ public:
     int get_week_of_last_active_objective() const { return week_of_last_active_objective; }
     void set_week_of_last_active_objective(int v) { week_of_last_active_objective = v; }
 
+    bool force_pass_through_by_ally = false;
+    bool get_force_pass_through_by_ally() const { return force_pass_through_by_ally; }
+    void set_force_pass_through_by_ally(bool v) { force_pass_through_by_ally = v; }
+
+    bool force_pass_through_by_enemy = false;
+    bool get_force_pass_through_by_enemy() const { return force_pass_through_by_enemy; }
+    void set_force_pass_through_by_enemy(bool v) { force_pass_through_by_enemy = v; }
+
+    bool force_disable_is_actionable = false;
+    bool get_force_disable_is_actionable() const { return force_disable_is_actionable; }
+    void set_force_disable_is_actionable(bool v) { force_disable_is_actionable = v; }
+
     static BG_HexGameSaveData::HexGameAssetTypes map_asset_type_to_game_type(BG_HexVisualAssetData::HexVisualAssetTypes type);
     static BG_HexVisualAssetData::HexVisualAssetTypes map_game_type_to_asset_type(HexGameAssetTypes type);
     static void prep_data_to_move_to_another_board(const Ref<BG_HexGameSaveData> &old_data, Ref<BG_HexGameSaveData> new_data);
 
     BG_BattleBoard_HexTypeDetails *dyn_hex_type_details = nullptr;
-    BG_BattleBoard_HexTypeDetails *get_dyn_hex_type_details() const { return dyn_hex_type_details; }
+    BG_BattleBoard_HexTypeDetails *get_dyn_hex_type_details() {
+        if (asset_type_dyn.is_empty()) return nullptr;
+        const BG_Booker_DB *bdb = BG_Booker_DB::get_singleton();
+        if (bdb == nullptr) return nullptr;
+        dyn_hex_type_details = bdb->get_battle_board_hex_type_by_id(parent_bb_id, bb_id, asset_type_dyn);
+        return dyn_hex_type_details;
+    }
 
     bool get_is_dynamic_type() const { return dyn_hex_type_details != nullptr; }
 };

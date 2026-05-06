@@ -161,6 +161,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_PuzzleDetails();
+
 	StringName id;
 	StringName get_id() const { return id; }
 
@@ -217,6 +219,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_BattleBoard_HexTypeDetails();
+
 	StringName id;
 	StringName get_id() const { return id; }
 
@@ -268,6 +272,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_BattleBoardDetails();
+
 	StringName id;
 	StringName get_id() const { return id; }
 
@@ -340,6 +346,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_ObjectiveDetails();
+
 	enum ObjectiveRepeatableType : int32_t {
 		UNIQUE,
 		REPEATABLE_UNIQUE,
@@ -470,6 +478,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_MarketplaceData();
+
 	Vector2i items_per_month_min_max;
 	Vector2i get_items_per_month_min_max() const { return items_per_month_min_max; }
 
@@ -530,6 +540,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_AudioData();
+
 	StringName id;
 	StringName get_id() const { return id; }
 
@@ -596,6 +608,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_Effect();
+
 	StringName id;
 	StringName get_id() const { return id; }
 
@@ -816,6 +830,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_AnimationDetails();
+
 	enum AnimationType : int32_t {
 		IDLE,
 		COMBAT_IDLE,
@@ -994,6 +1010,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_ItemDetails();
+
 	enum ItemType : int32_t {
 		GEAR,
 		BEAST_PART,
@@ -1121,19 +1139,19 @@ protected:
 	static void _bind_methods();
 
 public:
-	int act;
+	int act = 0;
 	int get_act() const { return act; }
 
-	int min_week;
+	int min_week = 0;
 	int get_min_week() const { return min_week; }
 
-	int max_week;
+	int max_week = 0;
 	int get_max_week() const { return max_week; }
 	
-	int min_job_spawn_count;
+	int min_job_spawn_count = 0;
 	int get_min_job_spawn_count() const { return min_job_spawn_count; }
 
-	int max_job_spawn_count;
+	int max_job_spawn_count = 0;
 	int get_max_job_spawn_count() const { return max_job_spawn_count; }
 };
 
@@ -1172,10 +1190,10 @@ protected:
 	static void _bind_methods();
 
 public:
-	int maelstrite_amount_of_drops_during_range;
+	int maelstrite_amount_of_drops_during_range = 0;
 	int get_maelstrite_amount_of_drops_during_range() const { return maelstrite_amount_of_drops_during_range; }
 
-	int maelstrite_total_amount_by_end_of_weeks;
+	int maelstrite_total_amount_by_end_of_weeks = 0;
 	int get_maelstrite_total_amount_by_end_of_weeks() const { return maelstrite_total_amount_by_end_of_weeks; }
 };
 
@@ -1190,6 +1208,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_JobDetails();
+
 	enum BattleBoardEventTypes : int32_t {
 		JOB,
 		RESOURCE,
@@ -1236,6 +1256,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_UnitCaste();
+
 	StringName id;
 	StringName get_id() const { return id; }
 
@@ -1287,6 +1309,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_BandMember();
+
 	// void _init() {
 	// 	if (equipment.is_null()) {
 	// 		BG_ReactiveArray *new_array = memnew(BG_ReactiveArray);
@@ -1571,6 +1595,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_Monster();
+
 	StringName id;
 	StringName get_id() const { return id; }
 	void set_id(const StringName &value) { id = value; }
@@ -1665,6 +1691,8 @@ protected:
 	static void _bind_methods();
 
 public:
+	~BG_BandInfo();
+
 	TypedArray<BG_BandNameInfo> band_names;
 	TypedArray<BG_BandNameInfo> get_band_names() const { return band_names; }
 
@@ -1811,7 +1839,7 @@ protected:
 
 public:
 	BG_Booker_Globals() {};
-	~BG_Booker_Globals() {};
+	~BG_Booker_Globals();
 
 	Dictionary global_curves;
 	Dictionary get_global_curves() const { return global_curves; }
@@ -1925,6 +1953,14 @@ public:
 	BG_Booker_DB();
 	~BG_Booker_DB();
 
+    static bool bg_is_instance_valid(const Object *obj) {
+        try {
+            return UtilityFunctions::is_instance_id_valid(obj->get_instance_id());
+        }
+        catch (...) { }
+        return false;
+    };
+
 	static BG_Booker_DB *get_singleton();
 
 	void refresh_data();
@@ -2015,6 +2051,8 @@ public:
 	BG_BaseStat *get_stat_from_stat_id_name(const StringName &stat_id_name) const;
 
 private:
+	void free_all_params();
+
 	void try_parse_data(const String &file_path);
 	void try_parse_bder_data(const String &file_path);
 

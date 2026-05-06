@@ -141,6 +141,12 @@ void BG_HexGameSaveData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_is_newly_added_objective"), &BG_HexGameSaveData::set_is_newly_added_objective);
 	ClassDB::bind_method(D_METHOD("get_week_of_last_active_objective"), &BG_HexGameSaveData::get_week_of_last_active_objective);
 	ClassDB::bind_method(D_METHOD("set_week_of_last_active_objective"), &BG_HexGameSaveData::set_week_of_last_active_objective);
+	ClassDB::bind_method(D_METHOD("get_force_pass_through_by_ally"), &BG_HexGameSaveData::get_force_pass_through_by_ally);
+	ClassDB::bind_method(D_METHOD("set_force_pass_through_by_ally"), &BG_HexGameSaveData::set_force_pass_through_by_ally);
+	ClassDB::bind_method(D_METHOD("get_force_pass_through_by_enemy"), &BG_HexGameSaveData::get_force_pass_through_by_enemy);
+	ClassDB::bind_method(D_METHOD("set_force_pass_through_by_enemy"), &BG_HexGameSaveData::set_force_pass_through_by_enemy);
+	ClassDB::bind_method(D_METHOD("get_force_disable_is_actionable"), &BG_HexGameSaveData::get_force_disable_is_actionable);
+	ClassDB::bind_method(D_METHOD("set_force_disable_is_actionable"), &BG_HexGameSaveData::set_force_disable_is_actionable);
 	ClassDB::bind_method(D_METHOD("get_dyn_hex_type_details"), &BG_HexGameSaveData::get_dyn_hex_type_details);
 	ClassDB::bind_method(D_METHOD("get_is_dynamic_type"), &BG_HexGameSaveData::get_is_dynamic_type);
 
@@ -161,6 +167,9 @@ void BG_HexGameSaveData::_bind_methods()
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "asset_health_normalized_percent"), "set_asset_health_normalized_percent", "get_asset_health_normalized_percent");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "objective_unique_id_reference"), "set_objective_unique_id_reference", "get_objective_unique_id_reference");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "week_of_last_active_objective"), "set_week_of_last_active_objective", "get_week_of_last_active_objective");
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "force_pass_through_by_ally"), "set_force_pass_through_by_ally", "get_force_pass_through_by_ally");
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "force_pass_through_by_enemy"), "set_force_pass_through_by_enemy", "get_force_pass_through_by_enemy");
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "force_disable_is_actionable"), "set_force_disable_is_actionable", "get_force_disable_is_actionable");
 
     BIND_ENUM_CONSTANT(BAND);
     BIND_ENUM_CONSTANT(JOB);
@@ -671,7 +680,7 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> &instigator, const Vector2
                         hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::BARRICADE || 
                         hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::TURRET) {
                         if (do_pass_through_check && hgsd.is_valid() && hgsd->get_asset_type_cost() == 0) {
-                            if (hgsd->is_destroyed) return 1;
+                            if (hgsd->get_is_destroyed()) return 1;
                         }
                         return 0;
                     }
@@ -695,7 +704,9 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> &instigator, const Vector2
             // Band
             if (is_band) {
 
-                if (hgsd->get_is_dynamic_type()) {
+                if (hgsd->get_force_pass_through_by_ally()) {
+                }
+                else if (hgsd->get_is_dynamic_type()) {
                     if (!hgsd->get_dyn_hex_type_details()->get_pass_through_by_ally()) {
                         return 0;
                     }
@@ -712,20 +723,23 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> &instigator, const Vector2
             // Job
             } else if (is_job) {
 
-                if (hgsd->get_is_dynamic_type()) {
+                if (hgsd->get_force_pass_through_by_enemy()) {
+                }
+                else if (hgsd->get_is_dynamic_type()) {
                     if (!hgsd->get_dyn_hex_type_details()->get_pass_through_by_enemy()) {
-                        if (!hgsd->get_is_destroyed()) { // Allow pass through if it's destroyed.
-                            return 0;
-                        }
+                    }
+                    else if (!hgsd->get_is_destroyed()) { // Allow pass through if it's destroyed.
+                        return 0;
                     }
                 }
                 else if (hgsd->get_asset_type() != BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
                     hgsd->get_asset_type() != BG_HexGameSaveData::HexGameAssetTypes::BARRICADE ||
                     hgsd->get_asset_type() != BG_HexGameSaveData::HexGameAssetTypes::TURRET) {
-                    if (!hgsd->get_is_destroyed()) {
+                    if (!hgsd->get_is_destroyed()) { // Allow pass through if it's destroyed.
                         return 0;
                     }
-                } else if (hgsd->get_asset_type() != BG_HexGameSaveData::HexGameAssetTypes::JOB) {
+                }
+                else if (hgsd->get_asset_type() != BG_HexGameSaveData::HexGameAssetTypes::JOB) {
                     return 0;
                 }
             }

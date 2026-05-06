@@ -192,6 +192,15 @@ void BG_PuzzleDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_misc_param_by_id", "id"), &BG_PuzzleDetails::get_misc_param_by_id);
 }
 
+BG_PuzzleDetails::~BG_PuzzleDetails()
+{
+	for (int i = 0; i < misc_params.size(); ++i) {
+		BG_PuzzleDetails_MiscParams *d = cast_to<BG_PuzzleDetails_MiscParams>(misc_params[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+}
+
 BG_PuzzleDetails_MiscParams *BG_PuzzleDetails::get_misc_param_by_id(const StringName &id) const
 {
 	for (int i = 0; i < misc_params.size(); ++i) {
@@ -236,6 +245,18 @@ void BG_BattleBoard_HexTypeDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_pass_through_by_enemy"), &BG_BattleBoard_HexTypeDetails::get_pass_through_by_enemy);
 }
 
+BG_BattleBoard_HexTypeDetails::~BG_BattleBoard_HexTypeDetails()
+{
+	for (int i = 0; i < visuals.size(); ++i) {
+		BG_BattleBoard_HexTypeVisualDetails *d = cast_to<BG_BattleBoard_HexTypeVisualDetails>(visuals[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	if (BG_Booker_DB::bg_is_instance_valid(health_effectiveness))
+		memdelete(health_effectiveness);
+	health_effectiveness = nullptr;
+}
+
 ////
 //// BG_BattleBoardDetails
 ////
@@ -249,6 +270,15 @@ void BG_BattleBoardDetails::_bind_methods()
 
 	ClassDB::bind_method(D_METHOD("get_hex_types_by_type", "type"), &BG_BattleBoardDetails::get_hex_types_by_type);
 	ClassDB::bind_method(D_METHOD("get_hex_type_by_id", "id"), &BG_BattleBoardDetails::get_hex_type_by_id);
+}
+
+BG_BattleBoardDetails::~BG_BattleBoardDetails()
+{
+	for (int i = 0; i < hex_types.size(); ++i) {
+		BG_BattleBoard_HexTypeDetails *d = cast_to<BG_BattleBoard_HexTypeDetails>(hex_types[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
 }
 
 TypedArray<BG_BattleBoard_HexTypeDetails> BG_BattleBoardDetails::get_hex_types_by_type(int type, bool is_game_type) const
@@ -313,6 +343,17 @@ void BG_ObjectiveDetails::_bind_methods()
 	BIND_ENUM_CONSTANT(REPEATABLE);
 }
 
+BG_ObjectiveDetails::~BG_ObjectiveDetails()
+{
+	for (int i = 0; i < drops.size(); ++i) {
+		BG_RewardItem *d = cast_to<BG_RewardItem>(drops[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	if (BG_Booker_DB::bg_is_instance_valid(timeline))
+		memdelete(timeline);
+}
+
 ////
 //// BG_ResourceTypeDetails
 ////
@@ -339,6 +380,15 @@ void BG_MarketplaceData::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_items_per_month_min_max"), &BG_MarketplaceData::get_items_per_month_min_max);
 	ClassDB::bind_method(D_METHOD("get_entries"), &BG_MarketplaceData::get_entries);
+}
+
+BG_MarketplaceData::~BG_MarketplaceData()
+{
+	for (int i = 0; i < entries.size(); ++i) {
+		BG_MarketplaceEntryData *d = cast_to<BG_MarketplaceEntryData>(entries[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
 }
 
 ////
@@ -384,6 +434,15 @@ void BG_AudioData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_audio_details"), &BG_AudioData::get_audio_details);
 }
 
+BG_AudioData::~BG_AudioData()
+{
+	for (int i = 0; i < audio_details.size(); ++i) {
+		BG_AudioDataDetails *d = cast_to<BG_AudioDataDetails>(audio_details[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+}
+
 ////
 //// BG_HueShiftData
 ////
@@ -416,6 +475,15 @@ void BG_Effect::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_details_per_rarity"), &BG_Effect::get_details_per_rarity);
 	ClassDB::bind_method(D_METHOD("get_use_owning_item_icon"), &BG_Effect::get_use_owning_item_icon);
 	ClassDB::bind_method(D_METHOD("get_status_icon_path"), &BG_Effect::get_status_icon_path);
+}
+
+BG_Effect::~BG_Effect()
+{
+	for (int i = 0; i < details_per_rarity.size(); ++i) {
+		BG_EffectRarityDetails *d = cast_to<BG_EffectRarityDetails>(details_per_rarity[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
 }
 
 ////
@@ -557,6 +625,15 @@ void BG_AnimationDetails::_bind_methods()
 	BIND_ENUM_CONSTANT(TRAVERSE_TYPE_RUN_INTRO_LOOP_OUTRO);
 	BIND_ENUM_CONSTANT(TRAVERSE_TYPE_HOP);
 	BIND_ENUM_CONSTANT(TRAVERSE_TYPE_HOP_INTRO_LOOP_OUTRO);
+}
+
+BG_AnimationDetails::~BG_AnimationDetails()
+{
+	for (int i = 0; i < tags.size(); ++i) {
+		BG_AnimationTagDetails *d = cast_to<BG_AnimationTagDetails>(tags[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
 }
 
 /* static */ TypedArray<BG_AnimationDetails> BG_AnimationDetails::get_all_anim_details_of_id(const TypedArray<BG_AnimationDetails> &from, const StringName &id)
@@ -705,6 +782,30 @@ void BG_ItemDetails::_bind_methods()
 	BIND_ENUM_CONSTANT(ALL);
 }
 
+BG_ItemDetails::~BG_ItemDetails()
+{
+	for (int i = 0; i < lore.size(); ++i) {
+		BG_LoreRarity *d = cast_to<BG_LoreRarity>(lore[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	for (int i = 0; i < item_effectiveness_stats.size(); ++i) {
+		BG_ContentStat *d = cast_to<BG_ContentStat>(item_effectiveness_stats[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	for (int i = 0; i < item_stat_requirements.size(); ++i) {
+		BG_ContentStat *d = cast_to<BG_ContentStat>(item_stat_requirements[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	for (int i = 0; i < item_animations.size(); ++i) {
+		BG_AnimationDetails *d = cast_to<BG_AnimationDetails>(item_animations[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+}
+
 TypedArray<BG_AudioDataDetails> BG_ItemDetails::get_audio_data_by_id(const StringName &id, int act) const {
 	if (audio_events.has(id)) {
 		const BG_Booker_DB *booker_db = BG_Booker_DB::get_singleton();
@@ -767,6 +868,11 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipment"), "set_equipment", "get_equipment");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "element_upgrades"), "set_element_upgrades", "get_element_upgrades");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "consumable_upgrades"), "set_consumable_upgrades", "get_consumable_upgrades");
+}
+
+BG_BandMember::~BG_BandMember()
+{
+	battle_board_hex_type_details = nullptr;
 }
 
 ////
@@ -873,6 +979,12 @@ void BG_UnitCaste::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_element_availability_ids"), &BG_UnitCaste::get_element_availability_ids);
 }
 
+BG_UnitCaste::~BG_UnitCaste()
+{
+	if (BG_Booker_DB::bg_is_instance_valid(hue_shift_data))
+		memdelete(hue_shift_data);
+}
+
 ////
 //// BG_BandNameInfo
 ////
@@ -966,6 +1078,25 @@ void BG_Monster::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_turned_to_stone"), "set_is_turned_to_stone", "get_is_turned_to_stone");
 }
 
+BG_Monster::~BG_Monster()
+{
+	for (int i = 0; i < hue_shift_data.size(); ++i) {
+		BG_HueShiftData *d = cast_to<BG_HueShiftData>(hue_shift_data[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	for (int i = 0; i < effectiveness_stats.size(); ++i) {
+		BG_ContentStat *d = cast_to<BG_ContentStat>(effectiveness_stats[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	for (int i = 0; i < animations.size(); ++i) {
+		BG_AnimationDetails *d = cast_to<BG_AnimationDetails>(animations[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+}
+
 void BG_Monster::set_is_turned_to_stone(bool v) {
 	if (!can_be_turned_to_stone) {
 		v = false;
@@ -990,6 +1121,15 @@ void BG_BandInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_unit_castes"), &BG_BandInfo::get_unit_castes);
 	ClassDB::bind_method(D_METHOD("get_rest_recovery_speed"), &BG_BandInfo::get_rest_recovery_speed);
 	ClassDB::bind_method(D_METHOD("get_knocked_out_turns"), &BG_BandInfo::get_knocked_out_turns);
+}
+
+BG_BandInfo::~BG_BandInfo()
+{
+	for (int i = 0; i < band_names.size(); ++i) {
+		BG_BandNameInfo *d = cast_to<BG_BandNameInfo>(band_names[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
 }
 
 ////
@@ -1061,6 +1201,22 @@ void BG_JobDetails::_bind_methods()
 	BIND_ENUM_CONSTANT(JOB);
 	BIND_ENUM_CONSTANT(RESOURCE);
 	BIND_ENUM_CONSTANT(EVENT);
+}
+
+BG_JobDetails::~BG_JobDetails()
+{
+	for (int i = 0; i < monster_details.size(); ++i) {
+		BG_JobMonsterDetails *d = cast_to<BG_JobMonsterDetails>(monster_details[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	for (int i = 0; i < distribution_per_act.size(); ++i) {
+		BG_JobDistributionForAct *d = cast_to<BG_JobDistributionForAct>(distribution_per_act[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	if (BG_Booker_DB::bg_is_instance_valid(event_resource_details))
+		memdelete(event_resource_details);
 }
 
 ////
@@ -1151,6 +1307,20 @@ void BG_Booker_Globals::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_day_night_cycle_turns_per_day"), &BG_Booker_Globals::get_day_night_cycle_turns_per_day);
 	ClassDB::bind_method(D_METHOD("get_percentage_of_day_is_day_time"), &BG_Booker_Globals::get_percentage_of_day_is_day_time);
 	ClassDB::bind_method(D_METHOD("get_day_cycle_offset_per_act"), &BG_Booker_Globals::get_day_cycle_offset_per_act);
+}
+
+BG_Booker_Globals::~BG_Booker_Globals()
+{
+	for (int i = 0; i < city_info.size(); ++i) {
+		BG_CityInfo *d = cast_to<BG_CityInfo>(city_info[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	for (int i = 0; i < act_stats.size(); ++i) {
+		BG_ActStats *d = cast_to<BG_ActStats>(act_stats[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
 }
 
 ////
@@ -1351,15 +1521,13 @@ BG_Booker_DB *BG_Booker_DB::get_singleton()
 
 void BG_Booker_DB::refresh_data()
 {
-	if (globals != nullptr) memfree(globals);
+	// static bool has_done_once = false;
+	// if (has_done_once) return;
+	// has_done_once = true;
+	UtilityFunctions::print("BG_Booker_DB::refresh_data()");
+	free_all_params();
 	globals = memnew(BG_Booker_Globals);
-	if (band_info != nullptr) memfree(band_info);
 	band_info = memnew(BG_BandInfo);
-	for (int i = 0; i < items.size(); ++i) {
-		BG_ItemDetails *c = cast_to<BG_ItemDetails>(items[i]);
-		memfree(c);
-	}
-	items.clear();
 
 	const String booker_data_file_name = "bookerData.cdb";
 	const String exe_path = OS::get_singleton()->get_executable_path().get_base_dir() + "/";
@@ -1410,9 +1578,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 		const Dictionary marketplace_data_sheet = BG_JsonUtils::GetCBDSheet(data, "marketplace");
 		if (marketplace_data_sheet.has("lines"))
 		{
-			if (market_place_data != nullptr) {
-				memdelete(market_place_data);
-			}
 			market_place_data = memnew(BG_MarketplaceData);
 
 			const Array lines = Array(marketplace_data_sheet["lines"]);
@@ -1458,8 +1623,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 		const Dictionary monster_types_sheet = BG_JsonUtils::GetCBDSheet(data, "monster_types");
 		if (monster_types_sheet.has("lines"))
 		{
-			monster_types.clear();
-
 			const Array lines = Array(monster_types_sheet["lines"]);
 			for (int i = 0; i < lines.size(); i++)
 			{
@@ -1524,7 +1687,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 		const Dictionary item_drop_pools_sheet = BG_JsonUtils::GetCBDSheet(data, "item_drop_pools");
 		if (item_drop_pools_sheet.has("lines"))
 		{
-			item_drop_pools.clear();
 			const Array lines = Array(item_drop_pools_sheet["lines"]);
 			for (int i = 0; i < lines.size(); i++)
 			{
@@ -1578,8 +1740,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 		const Dictionary jobs_sheet = BG_JsonUtils::GetCBDSheet(data, "battle_board_events");
 		if (jobs_sheet.has("lines"))
 		{
-			jobs.clear();
-
 			const Array lines = Array(jobs_sheet["lines"]);
 			for (int i = 0; i < lines.size(); i++)
 			{
@@ -1721,7 +1881,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 			const Dictionary equipment_sheet = BG_JsonUtils::GetCBDSheet(data, "equipment");
 			if (equipment_sheet.has("lines"))
 			{
-				items.clear();
 				const Array lines = Array(equipment_sheet["lines"]);
 				for (int i = 0; i < lines.size(); i++)
 				{
@@ -1928,7 +2087,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 		const Dictionary objectives_sheet = BG_JsonUtils::GetCBDSheet(data, "objectives");
 		if (objectives_sheet.has("lines"))
 		{
-			objectives.clear();
 			const Array lines = Array(objectives_sheet["lines"]);
 			for (int i = 0; i < lines.size(); i++)
 			{
@@ -2096,12 +2254,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Base Stats
-		for (int i = 0; i < base_stats.size(); ++i) {
-			BG_BaseStat *c = cast_to<BG_BaseStat>(base_stats[i]);
-			memfree(c);
-		}
-		base_stats.clear();
-
 		const Array lines = Array(data["all_base_stats"]);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Dictionary entry = lines[i];
@@ -2173,12 +2325,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	};
 
 	{ // Stat Types
-		for (int i = 0; i < stat_types.size(); ++i) {
-			BG_UnitStatDetails *c = cast_to<BG_UnitStatDetails>(stat_types[i]);
-			memfree(c);
-		}
-		stat_types.clear();
-
 		const Array lines = get_sheet_by_name("Stat_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2426,12 +2572,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Audio
-		for (int i = 0; i < audio_data.size(); ++i) {
-			BG_AudioData *c = cast_to<BG_AudioData>(audio_data[i]);
-			memfree(c);
-		}
-		audio_data.clear();
-
 		const Array lines = get_sheet_by_name("Audio", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2502,12 +2642,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Battle Boards
-		for (int i = 0; i < battle_boards_details.size(); ++i) {
-			BG_BattleBoardDetails *c = cast_to<BG_BattleBoardDetails>(battle_boards_details[i]);
-			memfree(c);
-		}
-		battle_boards_details.clear();
-
 		const Array lines = get_sheet_by_name("Battle_Boards", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2586,12 +2720,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Booker Skill Tree
-		for (int i = 0; i < booker_skill_tree_details.size(); ++i) {
-			BG_BookerSkillTreeSlotDetails *c = cast_to<BG_BookerSkillTreeSlotDetails>(booker_skill_tree_details[i]);
-			memfree(c);
-		}
-		booker_skill_tree_details.clear();
-
 		const Array lines = get_sheet_by_name("Booker_Skill_Tree", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2764,12 +2892,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Effects
-		for (int i = 0; i < effects.size(); ++i) {
-			BG_Effect *c = cast_to<BG_Effect>(effects[i]);
-			memfree(c);
-		}
-		effects.clear();
-
 		const Array lines = get_sheet_by_name("Effects", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2821,12 +2943,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Item Slot Types
-		for (int i = 0; i < item_slot_types.size(); ++i) {
-			BG_ItemSlotType *c = cast_to<BG_ItemSlotType>(item_slot_types[i]);
-			memfree(c);
-		}
-		item_slot_types.clear();
-		
 		const Array lines = get_sheet_by_name("Item_Slot_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2851,12 +2967,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Mail Data
-		for (int i = 0; i < mail_data.size(); ++i) {
-			BG_MailData *c = cast_to<BG_MailData>(mail_data[i]);
-			memfree(c);
-		}
-		mail_data.clear();
-
 		const Array lines = get_sheet_by_name("Item_Slot_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -2995,12 +3105,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Puzzles
-		for (int i = 0; i < puzzles.size(); ++i) {
-			BG_PuzzleDetails *c = cast_to<BG_PuzzleDetails>(puzzles[i]);
-			memfree(c);
-		}
-		puzzles.clear();
-
 		const Array lines = get_sheet_by_name("Puzzles", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -3028,12 +3132,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Rarity Type
-		for (int i = 0; i < rarity_types.size(); ++i) {
-			BG_RarityDetails *c = cast_to<BG_RarityDetails>(rarity_types[i]);
-			memfree(c);
-		}
-		rarity_types.clear();
-
 		const Array lines = get_sheet_by_name("Rarity_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -3062,11 +3160,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Resource Types
-		for (const auto &pair : resource_type_details) {
-			memfree(resource_type_details[pair.key]);
-		}
-		resource_type_details.clear();
-
 		const Array lines = get_sheet_by_name("Resource_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -3080,12 +3173,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // 2der
-		for (int i = 0; i < two_der_data_entries.size(); ++i) {
-			BG_TwoDer_DataEntry *c = cast_to<BG_TwoDer_DataEntry>(two_der_data_entries[i]);
-			memfree(c);
-		}
-		two_der_data_entries.clear();
-
 		const Array lines = get_sheet_by_name("Two_Der", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
@@ -3116,16 +3203,138 @@ BG_Booker_DB::~BG_Booker_DB()
 	ERR_FAIL_COND(singleton != this);
 	singleton = nullptr;
 
-	if (globals)
-	{
+	for (const auto &pair : localize_data) {
+		for (const auto &pair_two : pair.value) {
+			for (int i = 0; i < pair_two.value.size(); ++i) {
+				BG_LocalizeEntryData *d = cast_to<BG_LocalizeEntryData>(pair_two.value[i]);
+				if (BG_Booker_DB::bg_is_instance_valid(d))
+					memdelete(d);
+			}
+		}
+	}
+	localize_data.clear();
+
+	free_all_params();
+}
+
+void BG_Booker_DB::free_all_params()
+{
+	modding_path = "";
+
+	if (BG_Booker_DB::bg_is_instance_valid(globals)) {
 		memdelete(globals);
-		globals = nullptr;
 	}
-	if (band_info)
-	{
+	globals = nullptr;
+	for (int i = 0; i < objectives.size(); ++i) {
+		BG_ObjectiveDetails *d = cast_to<BG_ObjectiveDetails>(objectives[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	objectives.clear();
+	for (int i = 0; i < base_stats.size(); ++i) {
+		BG_BaseStat *d = cast_to<BG_BaseStat>(base_stats[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	base_stats.clear();
+	for (int i = 0; i < battle_boards_details.size(); ++i) {
+		BG_BattleBoardDetails *d = cast_to<BG_BattleBoardDetails>(battle_boards_details[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	battle_boards_details.clear();
+	for (const auto &pair : resource_type_details) {
+		if (BG_Booker_DB::bg_is_instance_valid(pair.value))
+			memdelete(pair.value);
+	}
+	resource_type_details.clear();
+	for (int i = 0; i < audio_data.size(); ++i) {
+		BG_AudioData *d = cast_to<BG_AudioData>(audio_data[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	audio_data.clear();
+	for (int i = 0; i < booker_skill_tree_details.size(); ++i) {
+		BG_BookerSkillTreeSlotDetails *d = cast_to<BG_BookerSkillTreeSlotDetails>(booker_skill_tree_details[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	booker_skill_tree_details.clear();
+	for (int i = 0; i < jobs.size(); ++i) {
+		BG_JobDetails *d = cast_to<BG_JobDetails>(jobs[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	jobs.clear();
+	for (int i = 0; i < items.size(); ++i) {
+		BG_ItemDetails *d = cast_to<BG_ItemDetails>(items[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	items.clear();
+	for (int i = 0; i < item_drop_pools.size(); ++i) {
+		BG_ItemDropPool *d = cast_to<BG_ItemDropPool>(item_drop_pools[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	item_drop_pools.clear();
+	for (int i = 0; i < effects.size(); ++i) {
+		BG_Effect *d = cast_to<BG_Effect>(effects[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	effects.clear();
+	for (int i = 0; i < equipment_animation_details.size(); ++i) {
+		BG_EquipmentAnimationDetails *d = cast_to<BG_EquipmentAnimationDetails>(equipment_animation_details[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	equipment_animation_details.clear();
+	if (BG_Booker_DB::bg_is_instance_valid(band_info)) {
 		memdelete(band_info);
-		band_info = nullptr;
 	}
+	band_info = nullptr;
+	for (int i = 0; i < item_slot_types.size(); ++i) {
+		BG_ItemSlotType *d = cast_to<BG_ItemSlotType>(item_slot_types[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	item_slot_types.clear();
+	for (int i = 0; i < rarity_types.size(); ++i) {
+		BG_RarityDetails *d = cast_to<BG_RarityDetails>(rarity_types[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	rarity_types.clear();
+	for (int i = 0; i < stat_types.size(); ++i) {
+		BG_UnitStatDetails *d = cast_to<BG_UnitStatDetails>(stat_types[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	stat_types.clear();
+	if (BG_Booker_DB::bg_is_instance_valid(market_place_data)) {
+		memdelete(market_place_data);
+	}
+	market_place_data = nullptr;
+	monster_types.clear();
+	for (int i = 0; i < mail_data.size(); ++i) {
+		BG_MailData *d = cast_to<BG_MailData>(mail_data[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	mail_data.clear();
+	for (int i = 0; i < puzzles.size(); ++i) {
+		BG_PuzzleDetails *d = cast_to<BG_PuzzleDetails>(puzzles[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	puzzles.clear();
+	for (int i = 0; i < two_der_data_entries.size(); ++i) {
+		BG_TwoDer_DataEntry *d = cast_to<BG_TwoDer_DataEntry>(two_der_data_entries[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	two_der_data_entries.clear();
 }
 
 TypedArray<BG_LocalizeEntryData> BG_Booker_DB::get_localize_data(const StringName &sheet_name, const StringName &key, const StringName &language)
