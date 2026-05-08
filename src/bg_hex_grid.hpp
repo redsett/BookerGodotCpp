@@ -266,6 +266,9 @@ public:
 
     BG_BattleBoard_HexTypeDetails *dyn_hex_type_details = nullptr;
     BG_BattleBoard_HexTypeDetails *get_dyn_hex_type_details() {
+        if (BG_Booker_DB::bg_is_instance_valid(dyn_hex_type_details)) {
+            return dyn_hex_type_details;
+        }
         if (asset_type_dyn.is_empty()) return nullptr;
         const BG_Booker_DB *bdb = BG_Booker_DB::get_singleton();
         if (bdb == nullptr) return nullptr;
