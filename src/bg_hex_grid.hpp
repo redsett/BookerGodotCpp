@@ -11,6 +11,49 @@
 
 using namespace godot;
 
+class BG_HexVisualAssetData;
+
+////
+//// BG_HexVisualMessage
+////
+class BG_HexVisualMessage : public Resource
+{
+	GDCLASS(BG_HexVisualMessage, Resource);
+
+protected:
+    static void _bind_methods();
+
+public:
+	enum HexVisualMessageTypes : int32_t {
+        TRIGGER_ON,
+        TRIGGER_OFF,
+	};
+
+    static PackedStringArray get_message_type_names() {
+        PackedStringArray result;
+        result.append("TRIGGER_ON");
+        result.append("TRIGGER_OFF");
+        return result;
+    }
+
+    HexVisualMessageTypes message_type = HexVisualMessageTypes::TRIGGER_ON;
+    HexVisualMessageTypes get_message_type() const { return message_type; }
+    void set_message_type(HexVisualMessageTypes v) { message_type = v; }
+
+    TypedArray<BG_HexVisualAssetData> linked_asset_data;
+    TypedArray<BG_HexVisualAssetData> get_linked_asset_data() const { return linked_asset_data; }
+    void set_linked_asset_data(const TypedArray<BG_HexVisualAssetData> &v) { linked_asset_data = v; }
+
+    TypedArray<Vector2i> linked_qrs;
+    TypedArray<Vector2i> get_linked_qrs() const { return linked_qrs; }
+    void set_linked_qrs(const TypedArray<Vector2i> &v) { linked_qrs = v; }
+
+    StringName message;
+    StringName get_message() const { return message; }
+    void set_message(const StringName &v) { message = v; }
+};
+VARIANT_ENUM_CAST(BG_HexVisualMessage::HexVisualMessageTypes);
+
 ////
 //// BG_HexVisualAssetData
 ////
@@ -102,6 +145,10 @@ public:
     bool get_force_disable_targeting() const { return force_disable_targeting; }
     void set_force_disable_targeting(bool v) { force_disable_targeting = v; }
 
+    TypedArray<BG_HexVisualMessage> messages;
+    TypedArray<BG_HexVisualMessage> get_messages() const { return messages; }
+    void set_messages(const TypedArray<BG_HexVisualMessage> &v) { messages = v; }
+
     Dictionary misc_data;
     Dictionary get_misc_data() { return misc_data; }
     void set_misc_data(const Dictionary &v) { misc_data = v; }
@@ -143,6 +190,8 @@ protected:
     static void _bind_methods();
 
 public:
+    ~BG_HexGameSaveData();
+
 	enum HexGameAssetTypes : int32_t {
         BAND,
 		JOB,
@@ -175,16 +224,21 @@ public:
     }
     void set_asset_type(HexGameAssetTypes v) { asset_type = v; }
 
-    int get_asset_type_cost() const {
-        return 0;
-    }
+    int get_asset_type_cost() const { return 0; }
 
     StringName parent_bb_id;
     StringName bb_id;
     void init(const StringName &_parent_bb_id, const StringName &_bb_id) {
         parent_bb_id = _parent_bb_id;
         bb_id = _bb_id;
-        get_dyn_hex_type_details();
+        _update_dyn_hex_type_details();
+
+        BG_Booker_DB *bdb = BG_Booker_DB::get_singleton();
+        if (bdb != nullptr) {
+            if (!bdb->is_connected(bdb->refreshed_data_signal_name, Callable(this, "_update_dyn_hex_type_details"))) {
+                bdb->connect(bdb->refreshed_data_signal_name, Callable(this, "_update_dyn_hex_type_details"));
+            }
+        }
         // if (asset_type_dyn.is_empty()) return;
         // const BG_Booker_DB *bdb = BG_Booker_DB::get_singleton();
         // if (bdb == nullptr) return;
@@ -265,18 +319,16 @@ public:
     static void prep_data_to_move_to_another_board(const Ref<BG_HexGameSaveData> &old_data, Ref<BG_HexGameSaveData> new_data);
 
     BG_BattleBoard_HexTypeDetails *dyn_hex_type_details = nullptr;
-    BG_BattleBoard_HexTypeDetails *get_dyn_hex_type_details() {
-        if (BG_Booker_DB::bg_is_instance_valid(dyn_hex_type_details)) {
-            return dyn_hex_type_details;
-        }
-        if (asset_type_dyn.is_empty()) return nullptr;
+    BG_BattleBoard_HexTypeDetails *get_dyn_hex_type_details() const { return dyn_hex_type_details; }
+
+    void _update_dyn_hex_type_details() {
+        if (asset_type_dyn.is_empty()) return;
         const BG_Booker_DB *bdb = BG_Booker_DB::get_singleton();
-        if (bdb == nullptr) return nullptr;
+        if (bdb == nullptr) return;
         dyn_hex_type_details = bdb->get_battle_board_hex_type_by_id(parent_bb_id, bb_id, asset_type_dyn);
-        return dyn_hex_type_details;
     }
 
-    bool get_is_dynamic_type() const { return dyn_hex_type_details != nullptr; }
+    bool get_is_dynamic_type() { return dyn_hex_type_details != nullptr; }
 };
 
 VARIANT_ENUM_CAST(BG_HexGameSaveData::HexGameAssetTypes);

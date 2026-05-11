@@ -1961,9 +1961,24 @@ public:
 	BG_Booker_DB();
 	~BG_Booker_DB();
 
+	const StringName refreshed_data_signal_name = "refreshed_data";
+
+    // static bool bg_is_instance_valid(const Variant &p_object) {
+	// 	try {
+	// 		Object* obj = p_object.get_validated_object();
+	// 		if (!obj) {
+	// 			return false;
+	// 		}
+
+	// 		Object* node = Object::cast_to<Object>(obj);
+	// 		if (node) {
+	// 			return true;
+	// 		}
+	// 	}
     static bool bg_is_instance_valid(const Object *obj) {
         try {
-            return UtilityFunctions::is_instance_id_valid(obj->get_instance_id());
+            return (obj && UtilityFunctions::is_instance_id_valid(obj->get_instance_id()));
+			// return (obj && ObjectDB::get_instance(obj->get_instance_id()) != nullptr);
         }
         catch (...) { }
         return false;

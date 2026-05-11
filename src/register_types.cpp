@@ -90,6 +90,7 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 
 
 		ClassDB::register_class<BG_HexVisualAssetData>();
+		ClassDB::register_class<BG_HexVisualMessage>();
 		ClassDB::register_class<BG_HexVisualData>();
 		ClassDB::register_class<BG_HexGameSaveData>();
 		ClassDB::register_class<BG_BattleBoardGameSaveData>();

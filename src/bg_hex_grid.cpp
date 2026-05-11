@@ -6,6 +6,33 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 
 ////
+//// BG_HexVisualMessage
+////
+void BG_HexVisualMessage::_bind_methods()
+{
+    ClassDB::bind_static_method("BG_HexVisualMessage", D_METHOD("get_message_type_names"), &BG_HexVisualMessage::get_message_type_names);
+
+    ClassDB::bind_method(D_METHOD("get_message_type"), &BG_HexVisualMessage::get_message_type);
+    ClassDB::bind_method(D_METHOD("set_message_type"), &BG_HexVisualMessage::set_message_type);
+    ClassDB::bind_method(D_METHOD("get_linked_asset_data"), &BG_HexVisualMessage::get_linked_asset_data);
+    ClassDB::bind_method(D_METHOD("set_linked_asset_data"), &BG_HexVisualMessage::set_linked_asset_data);
+    ClassDB::bind_method(D_METHOD("get_linked_qrs"), &BG_HexVisualMessage::get_linked_qrs);
+    ClassDB::bind_method(D_METHOD("set_linked_qrs"), &BG_HexVisualMessage::set_linked_qrs);
+    ClassDB::bind_method(D_METHOD("get_message"), &BG_HexVisualMessage::get_message);
+    ClassDB::bind_method(D_METHOD("set_message"), &BG_HexVisualMessage::set_message);
+
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "message_type", PROPERTY_HINT_ENUM, 
+        "TRIGGER_ON:0,TRIGGER_OFF:1"), 
+        "set_message_type", "get_message_type");
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "linked_asset_data"), "set_linked_asset_data", "get_linked_asset_data");
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "linked_qrs"), "set_linked_qrs", "get_linked_qrs");
+    ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "message"), "set_message", "get_message");
+
+	BIND_ENUM_CONSTANT(TRIGGER_ON);
+	BIND_ENUM_CONSTANT(TRIGGER_OFF);
+}
+
+////
 //// BG_HexVisualAssetData
 ////
 void BG_HexVisualAssetData::_bind_methods()
@@ -32,6 +59,8 @@ void BG_HexVisualAssetData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_asset_health_normalized_percent"), &BG_HexVisualAssetData::set_asset_health_normalized_percent);
 	ClassDB::bind_method(D_METHOD("get_force_disable_targeting"), &BG_HexVisualAssetData::get_force_disable_targeting);
 	ClassDB::bind_method(D_METHOD("set_force_disable_targeting"), &BG_HexVisualAssetData::set_force_disable_targeting);
+	ClassDB::bind_method(D_METHOD("get_messages"), &BG_HexVisualAssetData::get_messages);
+	ClassDB::bind_method(D_METHOD("set_messages"), &BG_HexVisualAssetData::set_messages);
 	ClassDB::bind_method(D_METHOD("get_misc_data"), &BG_HexVisualAssetData::get_misc_data);
 	ClassDB::bind_method(D_METHOD("set_misc_data"), &BG_HexVisualAssetData::set_misc_data);
 
@@ -47,6 +76,7 @@ void BG_HexVisualAssetData::_bind_methods()
     ADD_PROPERTY(PropertyInfo(Variant::INT, "combat_environment_seed"), "set_combat_environment_seed", "get_combat_environment_seed");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "asset_health_normalized_percent"), "set_asset_health_normalized_percent", "get_asset_health_normalized_percent");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "force_disable_targeting"), "set_force_disable_targeting", "get_force_disable_targeting");
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "messages"), "set_messages", "get_messages");
     ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "misc_data"), "set_misc_data", "get_misc_data");
 
 	BIND_ENUM_CONSTANT(CITY);
@@ -150,6 +180,8 @@ void BG_HexGameSaveData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_dyn_hex_type_details"), &BG_HexGameSaveData::get_dyn_hex_type_details);
 	ClassDB::bind_method(D_METHOD("get_is_dynamic_type"), &BG_HexGameSaveData::get_is_dynamic_type);
 
+	ClassDB::bind_method(D_METHOD("_update_dyn_hex_type_details"), &BG_HexGameSaveData::_update_dyn_hex_type_details);
+
     ADD_PROPERTY(PropertyInfo(Variant::INT, "asset_type", PROPERTY_HINT_ENUM, 
         "BAND:0,JOB:1,CITY:2,TOWN:3,RESOURCE:4,BARRICADE:5,TURRET:6,NONE:7"), 
         "set_asset_type", "get_asset_type"
@@ -179,6 +211,17 @@ void BG_HexGameSaveData::_bind_methods()
     BIND_ENUM_CONSTANT(BARRICADE);
     BIND_ENUM_CONSTANT(TURRET);
     BIND_ENUM_CONSTANT(NONE);
+}
+
+BG_HexGameSaveData::~BG_HexGameSaveData()
+{
+    BG_Booker_DB *bdb = BG_Booker_DB::get_singleton();
+    if (bdb != nullptr) {
+        if (bdb->is_connected(bdb->refreshed_data_signal_name, Callable(this, "_update_dyn_hex_type_details"))) {
+            bdb->disconnect(bdb->refreshed_data_signal_name, Callable(this, "_update_dyn_hex_type_details"));
+        }
+    }
+    dyn_hex_type_details = nullptr;
 }
 
 /* static */ BG_HexGameSaveData::HexGameAssetTypes BG_HexGameSaveData::map_asset_type_to_game_type(BG_HexVisualAssetData::HexVisualAssetTypes type)

@@ -1365,6 +1365,8 @@ BG_Booker_DB *BG_Booker_DB::singleton = nullptr;
 
 void BG_Booker_DB::_bind_methods()
 {
+	ADD_SIGNAL(MethodInfo("refreshed_data"));
+
 	ClassDB::bind_method(D_METHOD("refresh_data"), &BG_Booker_DB::refresh_data);
 	ClassDB::bind_static_method("BG_Booker_DB", D_METHOD("timer_test"), &BG_Booker_DB::timer_test);
 
@@ -1559,7 +1561,7 @@ void BG_Booker_DB::refresh_data()
 	// static bool has_done_once = false;
 	// if (has_done_once) return;
 	// has_done_once = true;
-	UtilityFunctions::print("BG_Booker_DB::refresh_data()");
+	// UtilityFunctions::print("BG_Booker_DB::refresh_data()");
 	free_all_params();
 	globals = memnew(BG_Booker_Globals);
 	band_info = memnew(BG_BandInfo);
@@ -1592,6 +1594,8 @@ void BG_Booker_DB::refresh_data()
 		UtilityFunctions::print("Log - Using modding booker data.");
 		try_parse_data(modding_dber_data_path);
 	}
+
+	emit_signal(refreshed_data_signal_name);
 }
 
 /* static */ void BG_Booker_DB::timer_test(const Callable &callable)
