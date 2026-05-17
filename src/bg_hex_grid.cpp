@@ -14,8 +14,6 @@ void BG_HexVisualMessage::_bind_methods()
 
     ClassDB::bind_method(D_METHOD("get_message_type"), &BG_HexVisualMessage::get_message_type);
     ClassDB::bind_method(D_METHOD("set_message_type"), &BG_HexVisualMessage::set_message_type);
-    ClassDB::bind_method(D_METHOD("get_linked_asset_data"), &BG_HexVisualMessage::get_linked_asset_data);
-    ClassDB::bind_method(D_METHOD("set_linked_asset_data"), &BG_HexVisualMessage::set_linked_asset_data);
     ClassDB::bind_method(D_METHOD("get_linked_qrs"), &BG_HexVisualMessage::get_linked_qrs);
     ClassDB::bind_method(D_METHOD("set_linked_qrs"), &BG_HexVisualMessage::set_linked_qrs);
     ClassDB::bind_method(D_METHOD("get_message"), &BG_HexVisualMessage::get_message);
@@ -24,7 +22,6 @@ void BG_HexVisualMessage::_bind_methods()
     ADD_PROPERTY(PropertyInfo(Variant::INT, "message_type", PROPERTY_HINT_ENUM, 
         "TRIGGER_ON:0,TRIGGER_OFF:1"), 
         "set_message_type", "get_message_type");
-    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "linked_asset_data"), "set_linked_asset_data", "get_linked_asset_data");
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "linked_qrs"), "set_linked_qrs", "get_linked_qrs");
     ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "message"), "set_message", "get_message");
 
@@ -177,6 +174,8 @@ void BG_HexGameSaveData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_force_pass_through_by_enemy"), &BG_HexGameSaveData::set_force_pass_through_by_enemy);
 	ClassDB::bind_method(D_METHOD("get_force_disable_is_actionable"), &BG_HexGameSaveData::get_force_disable_is_actionable);
 	ClassDB::bind_method(D_METHOD("set_force_disable_is_actionable"), &BG_HexGameSaveData::set_force_disable_is_actionable);
+	ClassDB::bind_method(D_METHOD("get_misc_data"), &BG_HexGameSaveData::get_misc_data);
+	ClassDB::bind_method(D_METHOD("set_misc_data"), &BG_HexGameSaveData::set_misc_data);
 	ClassDB::bind_method(D_METHOD("get_dyn_hex_type_details"), &BG_HexGameSaveData::get_dyn_hex_type_details);
 	ClassDB::bind_method(D_METHOD("get_is_dynamic_type"), &BG_HexGameSaveData::get_is_dynamic_type);
 
@@ -202,6 +201,7 @@ void BG_HexGameSaveData::_bind_methods()
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "force_pass_through_by_ally"), "set_force_pass_through_by_ally", "get_force_pass_through_by_ally");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "force_pass_through_by_enemy"), "set_force_pass_through_by_enemy", "get_force_pass_through_by_enemy");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "force_disable_is_actionable"), "set_force_disable_is_actionable", "get_force_disable_is_actionable");
+    ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "misc_data"), "set_misc_data", "get_misc_data");
 
     BIND_ENUM_CONSTANT(BAND);
     BIND_ENUM_CONSTANT(JOB);

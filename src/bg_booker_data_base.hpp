@@ -231,6 +231,9 @@ public:
 	bool is_dynamic_type = false;
 	bool get_is_dynamic_type() const { return is_dynamic_type; }
 
+	bool is_game_type = false;
+	bool get_is_game_type() const { return is_game_type; }
+
 	int hex_type = 0;
 	int get_hex_type() const { return hex_type; }
 
@@ -245,6 +248,9 @@ public:
 
 	StringName hex_visual_scene_path_override;
 	StringName get_hex_visual_scene_path_override() const { return hex_visual_scene_path_override; }
+
+	Dictionary extra_types;
+	Dictionary get_extra_types() const { return extra_types; }
 
 	BG_ContentStat *health_effectiveness = nullptr;
 	BG_ContentStat *get_health_effectiveness() const { return health_effectiveness; }
@@ -263,6 +269,9 @@ public:
 	
 	bool pass_through_by_enemy = false;
 	bool get_pass_through_by_enemy() const { return pass_through_by_enemy; }
+
+	Dictionary misc_attributes;
+	Dictionary get_misc_attributes() const { return misc_attributes; }
 };
 
 ////

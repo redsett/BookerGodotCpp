@@ -40,10 +40,6 @@ public:
     HexVisualMessageTypes get_message_type() const { return message_type; }
     void set_message_type(HexVisualMessageTypes v) { message_type = v; }
 
-    TypedArray<BG_HexVisualAssetData> linked_asset_data;
-    TypedArray<BG_HexVisualAssetData> get_linked_asset_data() const { return linked_asset_data; }
-    void set_linked_asset_data(const TypedArray<BG_HexVisualAssetData> &v) { linked_asset_data = v; }
-
     TypedArray<Vector2i> linked_qrs;
     TypedArray<Vector2i> get_linked_qrs() const { return linked_qrs; }
     void set_linked_qrs(const TypedArray<Vector2i> &v) { linked_qrs = v; }
@@ -313,6 +309,10 @@ public:
     bool force_disable_is_actionable = false;
     bool get_force_disable_is_actionable() const { return force_disable_is_actionable; }
     void set_force_disable_is_actionable(bool v) { force_disable_is_actionable = v; }
+
+    Dictionary misc_data;
+    Dictionary get_misc_data() { return misc_data; }
+    void set_misc_data(const Dictionary &v) { misc_data = v; }
 
     static BG_HexGameSaveData::HexGameAssetTypes map_asset_type_to_game_type(BG_HexVisualAssetData::HexVisualAssetTypes type);
     static BG_HexVisualAssetData::HexVisualAssetTypes map_game_type_to_asset_type(HexGameAssetTypes type);

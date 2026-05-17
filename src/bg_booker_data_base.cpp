@@ -242,17 +242,20 @@ void BG_BattleBoard_HexTypeDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_BattleBoard_HexTypeDetails::get_id);
 	ClassDB::bind_method(D_METHOD("get_is_dynamic_type"), &BG_BattleBoard_HexTypeDetails::get_is_dynamic_type);
+	ClassDB::bind_method(D_METHOD("get_is_game_type"), &BG_BattleBoard_HexTypeDetails::get_is_game_type);
 	ClassDB::bind_method(D_METHOD("get_hex_type"), &BG_BattleBoard_HexTypeDetails::get_hex_type);
 	ClassDB::bind_method(D_METHOD("get_visuals"), &BG_BattleBoard_HexTypeDetails::get_visuals);
 	ClassDB::bind_method(D_METHOD("get_destroyed_vfx_scene_path"), &BG_BattleBoard_HexTypeDetails::get_destroyed_vfx_scene_path);
 	ClassDB::bind_method(D_METHOD("get_destroyed_sfx_id"), &BG_BattleBoard_HexTypeDetails::get_destroyed_sfx_id);
 	ClassDB::bind_method(D_METHOD("get_hex_visual_scene_path_override"), &BG_BattleBoard_HexTypeDetails::get_hex_visual_scene_path_override);
+	ClassDB::bind_method(D_METHOD("get_extra_types"), &BG_BattleBoard_HexTypeDetails::get_extra_types);
 	ClassDB::bind_method(D_METHOD("get_health_effectiveness"), &BG_BattleBoard_HexTypeDetails::get_health_effectiveness);
 	ClassDB::bind_method(D_METHOD("get_equipment_ids"), &BG_BattleBoard_HexTypeDetails::get_equipment_ids);
 	ClassDB::bind_method(D_METHOD("get_is_actionable"), &BG_BattleBoard_HexTypeDetails::get_is_actionable);
 	ClassDB::bind_method(D_METHOD("get_actionable_requires_move"), &BG_BattleBoard_HexTypeDetails::get_actionable_requires_move);
 	ClassDB::bind_method(D_METHOD("get_pass_through_by_ally"), &BG_BattleBoard_HexTypeDetails::get_pass_through_by_ally);
 	ClassDB::bind_method(D_METHOD("get_pass_through_by_enemy"), &BG_BattleBoard_HexTypeDetails::get_pass_through_by_enemy);
+	ClassDB::bind_method(D_METHOD("get_misc_attributes"), &BG_BattleBoard_HexTypeDetails::get_misc_attributes);
 }
 
 BG_BattleBoard_HexTypeDetails::~BG_BattleBoard_HexTypeDetails()
@@ -2699,30 +2702,24 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 
 				BG_BattleBoard_HexTypeDetails *new_hex_type_class = memnew(BG_BattleBoard_HexTypeDetails);
 				new_hex_type_class->id = StringName(get_find_data_by_param_name("id", hex_types_entry)["value"]);
-				new_hex_type_class->is_dynamic_type = bool(get_find_data_by_param_name("is_dynamic_type", hex_types_entry)["value"]);
 				new_hex_type_class->hex_type = int(get_find_data_by_param_name("type", hex_types_entry)["value"]);
 				new_hex_type_class->destroyed_vfx_scene_path = ensure_clean_path(get_find_data_by_param_name("destroyed_vfx_scene", hex_types_entry)["path"]);
 				new_hex_type_class->destroyed_sfx_id = StringName(get_find_data_by_param_name("destroyed_sfx", hex_types_entry)["element_id_name_value"]);
 				new_hex_type_class->hex_visual_scene_path_override = ensure_clean_path(get_find_data_by_param_name("hex_visual_file_path_override", hex_types_entry)["path"]);
-				new_hex_type_class->is_actionable = bool(get_find_data_by_param_name("is_actionable", hex_types_entry)["value"]);
-				new_hex_type_class->actionable_requires_move = bool(get_find_data_by_param_name("actionable_requires_move", hex_types_entry)["value"]);
-				new_hex_type_class->pass_through_by_ally = bool(get_find_data_by_param_name("pass_through_by_ally", hex_types_entry)["value"]);
-				new_hex_type_class->pass_through_by_enemy = bool(get_find_data_by_param_name("pass_through_by_enemy", hex_types_entry)["value"]);
 
-				{ // Health Effectiveness
-					static const String health_effectiveness = "health_effectiveness";
-					const float value = float(get_find_data_by_param_name(health_effectiveness, hex_types_entry)["value"]);
-					if (value != 0.0) { // No need to store empty values.
-						BG_ContentStat *new_class = memnew(BG_ContentStat);
-						new_hex_type_class->health_effectiveness = new_class;
-						
-						new_class->value = value;
-						new_class->level_value = int(get_find_data_by_param_name(health_effectiveness, hex_types_entry)["level_value"]);
+				// Settings
+				const Dictionary settings_values = get_find_data_by_param_name("settings", hex_types_entry);
+				const Array settings_array = settings_values["array_values"];
+				for (int y = 0; y < settings_array.size(); ++y) {
+					const Array settings_entry = settings_array[y];
 
-						// Store a reference to its relative stat.
-						const int unique_id = int(get_find_data_by_param_name(health_effectiveness, hex_types_entry)["base_stat_unique_id"]);
-						new_class->stat_reference = get_stat_from_unique_id(unique_id);
-					}
+					new_hex_type_class->is_dynamic_type = bool(get_find_data_by_param_name("is_dynamic_type", settings_entry)["value"]);
+					new_hex_type_class->is_game_type = bool(get_find_data_by_param_name("is_game_type", settings_entry)["value"]);
+					new_hex_type_class->is_actionable = bool(get_find_data_by_param_name("is_actionable", settings_entry)["value"]);
+					new_hex_type_class->actionable_requires_move = bool(get_find_data_by_param_name("actionable_requires_move", settings_entry)["value"]);
+					new_hex_type_class->pass_through_by_ally = bool(get_find_data_by_param_name("pass_through_by_ally", settings_entry)["value"]);
+					new_hex_type_class->pass_through_by_enemy = bool(get_find_data_by_param_name("pass_through_by_enemy", settings_entry)["value"]);
+					break; // Should only ever be one entry.
 				}
 
 				// Visuals
@@ -2743,12 +2740,58 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 					new_hex_type_class->visuals.append(new_hex_type_visuals_class);
 				}
 
+				{ // Health Effectiveness
+					static const String health_effectiveness = "health_effectiveness";
+					const float value = float(get_find_data_by_param_name(health_effectiveness, hex_types_entry)["value"]);
+					if (value != 0.0) { // No need to store empty values.
+						BG_ContentStat *new_class = memnew(BG_ContentStat);
+						new_hex_type_class->health_effectiveness = new_class;
+						
+						new_class->value = value;
+						new_class->level_value = int(get_find_data_by_param_name(health_effectiveness, hex_types_entry)["level_value"]);
+
+						// Store a reference to its relative stat.
+						const int unique_id = int(get_find_data_by_param_name(health_effectiveness, hex_types_entry)["base_stat_unique_id"]);
+						new_class->stat_reference = get_stat_from_unique_id(unique_id);
+					}
+				}
+
+				// Extra Types
+				const Dictionary extra_types_values = get_find_data_by_param_name("extra_types", hex_types_entry);
+				const Array extra_types_array = extra_types_values["array_values"];
+				for (int y = 0; y < extra_types_array.size(); ++y) {
+					const Array extra_types_entry = extra_types_array[y];
+
+					const StringName type_name = StringName(get_find_data_by_param_name("type_name", extra_types_entry)["value"]);
+					const int type_index = int(get_find_data_by_param_name("type", extra_types_entry)["value"]);
+					new_hex_type_class->extra_types[type_name] = type_index;
+				}
+
 				// Equipment
 				const Dictionary equipment_values = get_find_data_by_param_name("equipment", hex_types_entry);
 				const Array equipment_values_array = equipment_values["array_values"];
 				for (int y = 0; y < equipment_values_array.size(); ++y) {
 					const Array equipment_entry = equipment_values_array[y];
 					new_hex_type_class->equipment_ids.append(StringName(get_find_data_by_param_name("equipment", equipment_entry)["element_id_name_value"]));
+				}
+
+				// Misc Attributes
+				const Dictionary misc_attributes_values = get_find_data_by_param_name("misc_attributes", hex_types_entry);
+				const Array misc_attributes_array = misc_attributes_values["array_values"];
+				for (int y = 0; y < misc_attributes_array.size(); ++y) {
+					const Array misc_attributes_entry = misc_attributes_array[y];
+
+					const String name = String(get_find_data_by_param_name("name", misc_attributes_entry)["value"]);
+					const String value1 = String(get_find_data_by_param_name("value_1", misc_attributes_entry)["value"]);
+					const String value2 = String(get_find_data_by_param_name("value_2", misc_attributes_entry)["value"]);
+
+					PackedStringArray values;
+					if (!value1.is_empty())
+						values.append(value1);
+					if (!value2.is_empty())
+						values.append(value2);
+
+					new_hex_type_class->misc_attributes[name] = values;
 				}
 
 				new_class->hex_types.append(new_hex_type_class);
