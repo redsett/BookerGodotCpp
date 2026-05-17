@@ -1394,6 +1394,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_jobs"), &BG_Booker_DB::get_jobs);
 	ClassDB::bind_method(D_METHOD("get_items"), &BG_Booker_DB::get_items);
 	ClassDB::bind_method(D_METHOD("get_item_drop_pools"), &BG_Booker_DB::get_item_drop_pools);
+	ClassDB::bind_method(D_METHOD("get_item_drop_pool_by_id"), &BG_Booker_DB::get_item_drop_pool_by_id);
 	ClassDB::bind_method(D_METHOD("get_effects"), &BG_Booker_DB::get_effects);
 	ClassDB::bind_method(D_METHOD("get_equipment_animation_details"), &BG_Booker_DB::get_equipment_animation_details);
 	ClassDB::bind_method(D_METHOD("get_band_info"), &BG_Booker_DB::get_band_info);
@@ -1496,6 +1497,16 @@ BG_BattleBoard_HexTypeDetails *BG_Booker_DB::get_battle_board_hex_type_by_id(con
 BG_ResourceTypeDetails *BG_Booker_DB::get_resource_type_details_by_id(const StringName &resource_id) const {
 	if (resource_type_details.has(resource_id)) {
 		return resource_type_details[resource_id];
+	}
+	return nullptr;
+}
+
+BG_ItemDropPool *BG_Booker_DB::get_item_drop_pool_by_id(const StringName &id) const
+{
+	for (int i = 0; i < item_drop_pools.size(); ++i) {
+		BG_ItemDropPool *idp = cast_to<BG_ItemDropPool>(item_drop_pools[i]);
+		if (idp->id == id)
+			return idp;
 	}
 	return nullptr;
 }

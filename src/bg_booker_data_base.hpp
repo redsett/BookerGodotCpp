@@ -2037,6 +2037,7 @@ public:
 
 	TypedArray<BG_ItemDropPool> item_drop_pools;
 	TypedArray<BG_ItemDropPool> get_item_drop_pools() const { return item_drop_pools; }
+	BG_ItemDropPool *get_item_drop_pool_by_id(const StringName &id) const;
 
 	TypedArray<BG_Effect> effects;
 	TypedArray<BG_Effect> get_effects() const { return effects; }
