@@ -298,6 +298,7 @@ public:
     int get_week_of_last_active_objective() const { return week_of_last_active_objective; }
     void set_week_of_last_active_objective(int v) { week_of_last_active_objective = v; }
 
+    // Forces
     bool force_pass_through_by_ally = false;
     bool get_force_pass_through_by_ally() const { return force_pass_through_by_ally; }
     void set_force_pass_through_by_ally(bool v) { force_pass_through_by_ally = v; }
@@ -378,6 +379,10 @@ public:
     bool empty = false;
     bool get_empty() const { return empty; }
     void set_empty(bool v) { empty = v; }
+
+    bool is_forced_wall = false;
+    bool get_is_forced_wall() const { return is_forced_wall; }
+    void set_is_forced_wall(bool v) { is_forced_wall = v; }
 
     Vector2 location;
     Vector2 get_location() const { return location; }

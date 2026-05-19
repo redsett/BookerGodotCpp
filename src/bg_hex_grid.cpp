@@ -305,6 +305,8 @@ void BG_Hex::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_qr"), &BG_Hex::get_qr);
 	ClassDB::bind_method(D_METHOD("get_empty"), &BG_Hex::get_empty);
 	ClassDB::bind_method(D_METHOD("set_empty"), &BG_Hex::set_empty);
+	ClassDB::bind_method(D_METHOD("get_is_forced_wall"), &BG_Hex::get_is_forced_wall);
+	ClassDB::bind_method(D_METHOD("set_is_forced_wall"), &BG_Hex::set_is_forced_wall);
 	ClassDB::bind_method(D_METHOD("get_location"), &BG_Hex::get_location);
 }
 
@@ -699,7 +701,7 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> &instigator, const Vector2
     const bool is_job = instigator_hgsd.is_valid() ? instigator_hgsd->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::JOB : false;
 
     const Ref<BG_Hex> hex = get_hex_by_qr(qr);
-    if (hex.is_null() || hex->get_empty()) return 0;
+    if (hex.is_null() || hex->get_empty() || hex->get_is_forced_wall()) return 0;
 
     // If the instigator is on this cell, then it's good.
     if (instigator_hgsd.is_valid() && instigator == hex) {

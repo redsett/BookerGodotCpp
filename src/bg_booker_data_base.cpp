@@ -2710,7 +2710,9 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			const Array hex_types_values_array = hex_types_values["array_values"];
 			for (int x = 0; x < hex_types_values_array.size(); ++x) {
 				const Array hex_types_entry = hex_types_values_array[x];
-
+				if (bool(get_find_data_by_param_name("disabled", hex_types_entry)["value"]))
+					continue;
+				
 				BG_BattleBoard_HexTypeDetails *new_hex_type_class = memnew(BG_BattleBoard_HexTypeDetails);
 				new_hex_type_class->id = StringName(get_find_data_by_param_name("id", hex_types_entry)["value"]);
 				new_hex_type_class->hex_type = int(get_find_data_by_param_name("type", hex_types_entry)["value"]);
