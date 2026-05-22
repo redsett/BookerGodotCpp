@@ -63,6 +63,7 @@ void BG_AnimatedAtlasTextureRect::_process(double delta)
 {
 	if (!get_texture().is_valid() || !atlas_texture.is_valid()) return;
 	if (!is_visible_in_tree()) return;
+	if (anim_fps == 0.0) return;
 
 	// clock_t start, end;
 	// double elapsed;
