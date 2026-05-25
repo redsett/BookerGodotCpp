@@ -1305,6 +1305,9 @@ public:
 	int travel_distance = 0;
 	int get_travel_distance() const { return travel_distance; }
 
+	int inventory_space = 0;
+	int get_inventory_space() const { return inventory_space; }
+
 	TypedArray<BG_UnitStat> stats;
 	TypedArray<BG_UnitStat> get_stats() const { return stats; }
 
@@ -1371,13 +1374,13 @@ public:
 	StringName get_caste_id() const { return caste_id; }
 	void set_caste_id(const StringName &value) { caste_id = value; }
 
-	// Ref<BG_ReactiveArray> equipment;
-	// Ref<BG_ReactiveArray> get_equipment() const { return equipment; }
-	// void set_equipment(Ref<BG_ReactiveArray> value) { equipment = value; }
-
 	TypedArray<BG_Item> equipment;
 	TypedArray<BG_Item> get_equipment() const { return equipment; }
 	void set_equipment(const TypedArray<BG_Item> &value) { equipment = value; }
+
+	TypedArray<BG_Item> inventory;
+	TypedArray<BG_Item> get_inventory() const { return inventory; }
+	void set_inventory(const TypedArray<BG_Item> &value) { inventory = value; }
 
 	bool is_city_asset = false;
 	bool get_is_city_asset() const { return is_city_asset; }
@@ -1730,6 +1733,7 @@ public:
 
 	TypedArray<BG_UnitCaste> unit_castes;
 	TypedArray<BG_UnitCaste> get_unit_castes() const { return unit_castes; }
+	BG_UnitCaste *get_caste_by_id(const StringName &id) const;
 
 	float rest_recovery_speed = 0.0;
 	float get_rest_recovery_speed() const { return rest_recovery_speed; }

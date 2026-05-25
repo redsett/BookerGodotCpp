@@ -859,6 +859,8 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_caste_id"), &BG_BandMember::set_caste_id);
 	ClassDB::bind_method(D_METHOD("get_equipment"), &BG_BandMember::get_equipment);
 	ClassDB::bind_method(D_METHOD("set_equipment"), &BG_BandMember::set_equipment);
+	ClassDB::bind_method(D_METHOD("get_inventory"), &BG_BandMember::get_inventory);
+	ClassDB::bind_method(D_METHOD("set_inventory"), &BG_BandMember::set_inventory);
 	ClassDB::bind_method(D_METHOD("get_is_city_asset"), &BG_BandMember::get_is_city_asset);
 	ClassDB::bind_method(D_METHOD("set_is_city_asset"), &BG_BandMember::set_is_city_asset);
 	ClassDB::bind_method(D_METHOD("get_band"), &BG_BandMember::get_band);
@@ -881,6 +883,7 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "scale"), "set_scale", "get_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "caste_id"), "set_caste_id", "get_caste_id");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipment"), "set_equipment", "get_equipment");
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "inventory"), "set_inventory", "get_inventory");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "element_upgrades"), "set_element_upgrades", "get_element_upgrades");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "consumable_upgrades"), "set_consumable_upgrades", "get_consumable_upgrades");
 }
@@ -989,6 +992,7 @@ void BG_UnitCaste::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_scale_min_extreme"), &BG_UnitCaste::get_scale_min_extreme);
 	ClassDB::bind_method(D_METHOD("get_scale_max_extreme"), &BG_UnitCaste::get_scale_max_extreme);
 	ClassDB::bind_method(D_METHOD("get_travel_distance"), &BG_UnitCaste::get_travel_distance);
+	ClassDB::bind_method(D_METHOD("get_inventory_space"), &BG_UnitCaste::get_inventory_space);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_UnitCaste::get_stats);
 	ClassDB::bind_method(D_METHOD("get_starting_item_ids"), &BG_UnitCaste::get_starting_item_ids);
 	ClassDB::bind_method(D_METHOD("get_element_availability_ids"), &BG_UnitCaste::get_element_availability_ids);
@@ -1134,6 +1138,7 @@ void BG_BandInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_band_size_min_max"), &BG_BandInfo::get_band_size_min_max);
 	ClassDB::bind_method(D_METHOD("get_num_bands_for_hire"), &BG_BandInfo::get_num_bands_for_hire);
 	ClassDB::bind_method(D_METHOD("get_unit_castes"), &BG_BandInfo::get_unit_castes);
+	ClassDB::bind_method(D_METHOD("get_caste_by_id"), &BG_BandInfo::get_caste_by_id);
 	ClassDB::bind_method(D_METHOD("get_rest_recovery_speed"), &BG_BandInfo::get_rest_recovery_speed);
 	ClassDB::bind_method(D_METHOD("get_knocked_out_turns"), &BG_BandInfo::get_knocked_out_turns);
 }
@@ -1150,6 +1155,16 @@ BG_BandInfo::~BG_BandInfo()
 		if (BG_Booker_DB::bg_is_instance_valid(d))
 			memdelete(d);
 	}
+}
+
+BG_UnitCaste *BG_BandInfo::get_caste_by_id(const StringName &id) const
+{
+	for (int i = 0; i < unit_castes.size(); ++i) {
+		BG_UnitCaste *caste = cast_to<BG_UnitCaste>(unit_castes[i]);
+		if (caste->id == id)
+			return caste;
+	}
+	return nullptr;
 }
 
 ////
@@ -2911,6 +2926,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			for (int x = 0; x < misc_stats_values_array.size(); ++x) {
 				const Array misc_stats_values_entry = misc_stats_values_array[x];
 				new_unit_caste->travel_distance = int(get_find_data_by_param_name("travel_distance", misc_stats_values_entry)["value"]);
+				new_unit_caste->inventory_space = int(get_find_data_by_param_name("inventory_space", misc_stats_values_entry)["value"]);
 			}
 
 			// Base Damage Type Stats
