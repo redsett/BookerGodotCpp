@@ -1728,8 +1728,8 @@ public:
 	Vector2 band_size_min_max;
 	Vector2 get_band_size_min_max() const { return band_size_min_max; }
 
-	int num_bands_for_hire = 0;
-	int get_num_bands_for_hire() const { return num_bands_for_hire; }
+	int num_band_members_for_hire = 0;
+	int get_num_band_members_for_hire() const { return num_band_members_for_hire; }
 
 	TypedArray<BG_UnitCaste> unit_castes;
 	TypedArray<BG_UnitCaste> get_unit_castes() const { return unit_castes; }

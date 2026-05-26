@@ -1136,7 +1136,7 @@ void BG_BandInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_first_names"), &BG_BandInfo::get_first_names);
 	ClassDB::bind_method(D_METHOD("get_last_names"), &BG_BandInfo::get_last_names);
 	ClassDB::bind_method(D_METHOD("get_band_size_min_max"), &BG_BandInfo::get_band_size_min_max);
-	ClassDB::bind_method(D_METHOD("get_num_bands_for_hire"), &BG_BandInfo::get_num_bands_for_hire);
+	ClassDB::bind_method(D_METHOD("get_num_band_members_for_hire"), &BG_BandInfo::get_num_band_members_for_hire);
 	ClassDB::bind_method(D_METHOD("get_unit_castes"), &BG_BandInfo::get_unit_castes);
 	ClassDB::bind_method(D_METHOD("get_caste_by_id"), &BG_BandInfo::get_caste_by_id);
 	ClassDB::bind_method(D_METHOD("get_rest_recovery_speed"), &BG_BandInfo::get_rest_recovery_speed);
@@ -2675,7 +2675,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
 
-			band_info->num_bands_for_hire = int(get_find_data_by_param_name("num_bands_for_hire", entry)["value"]);
+			band_info->num_band_members_for_hire = int(get_find_data_by_param_name("num_band_members_for_hire", entry)["value"]);
 			band_info->rest_recovery_speed = float(get_find_data_by_param_name("rest_recovery_speed", entry)["value"]);
 			band_info->knocked_out_turns = int(get_find_data_by_param_name("knocked_out_turns", entry)["value"]);
 			const Dictionary band_sizes_min_max = get_find_data_by_param_name("band_sizes_min_max", entry);
