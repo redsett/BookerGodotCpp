@@ -75,14 +75,14 @@ protected:
     bool _is_using_gamepad = true;
     TypedArray<String> _focus_layer_stack;
     TypedArray<BG_Focus_Layer_Properties> _focus_layers;
-
-    inline void _set_control_default_focus_static(Control *p_control);
+    
     void _focus_active_control();
     bool _is_control_top(const Vector2 &direction, const Control *ctrl, const TypedArray<Control> &all_ctrls);
     bool _is_control_bottom(const Vector2 &direction, const Control *ctrl, const TypedArray<Control> &all_ctrls);
     Control *_get_active_control();
     Button *_get_active_back_button() const;
     static bool _check_if_valid_control(const Control *c);
+    bool check_if_manual_focus_neighbor(Control *last_selected_control, BG_Focus_Layer_Properties *prop, godot::Side side);
 
 public:
 	BG_Focus_Layers();

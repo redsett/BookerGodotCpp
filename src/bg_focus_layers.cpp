@@ -3,6 +3,8 @@
 #include <godot_cpp/variant/variant.hpp>
 #include <godot_cpp/classes/input.hpp>
 #include <godot_cpp/classes/sub_viewport.hpp>
+#include <godot_cpp/classes/node.hpp>
+#include <godot_cpp/variant/node_path.hpp>
 
 ////
 //// BG_Focus_Layer_Properties
@@ -83,14 +85,6 @@ BG_Focus_Layers::~BG_Focus_Layers()
 	}
 }
 
-void BG_Focus_Layers::_set_control_default_focus_static(Control *p_control)
-{
-    p_control->set_focus_neighbor(godot::Side::SIDE_LEFT, p_control->get_path());
-    p_control->set_focus_neighbor(godot::Side::SIDE_BOTTOM, p_control->get_path());
-    p_control->set_focus_neighbor(godot::Side::SIDE_RIGHT, p_control->get_path());
-    p_control->set_focus_neighbor(godot::Side::SIDE_TOP, p_control->get_path());
-}
-
 void BG_Focus_Layers::try_set_focused_control(Control *p_ctrl)
 {
 	if (_focus_layer_stack.is_empty())
@@ -105,8 +99,6 @@ void BG_Focus_Layers::try_set_focused_control(Control *p_ctrl)
             if (layer_controls.has(p_ctrl))
             {
                 prop->set_focused_control(p_ctrl);
-                for (int x = 0; x < layer_controls.size(); ++x)
-                    _set_control_default_focus_static(cast_to<Control>(layer_controls[x]));
                 _focus_active_control();
                 break;
             }
@@ -242,11 +234,6 @@ void BG_Focus_Layers::add_focus_layer(
     bool p_select_layer
 )
 {
-	// Basically ignore the built in method of finding controls to focus. We will do this ourselves in find_control_in_direction().
-    TypedArray<Control> focusable_ctrls = BG_Focus_Layers::get_all_focusable_controls_under_control(p_parent_control);
-    for (int i = 0; i < focusable_ctrls.size(); ++i)
-		_set_control_default_focus_static(cast_to<Control>(focusable_ctrls[i]));
-
     Button *back_btn = cast_to<Button>(p_back_button);
     if (BG_Focus_Layer_Properties::bg_is_instance_valid(back_btn))
         back_btn->set_visible(!_is_using_gamepad);
@@ -348,6 +335,21 @@ bool BG_Focus_Layers::_is_control_bottom(const Vector2 &direction, const Control
     return true;
 }
 
+bool BG_Focus_Layers::check_if_manual_focus_neighbor(Control *last_selected_control, BG_Focus_Layer_Properties *prop, godot::Side side)
+{
+    const NodePath focus_neighbor = last_selected_control->get_focus_neighbor(side);
+    if (!focus_neighbor.is_empty()) {
+        Control *ctrl_to_focus = cast_to<Control>(last_selected_control->get_node_or_null(focus_neighbor));
+        prop->set_focused_control(ctrl_to_focus);
+        if (prop->get_focused_control() != last_selected_control) {
+            last_selected_control->release_focus();
+            _focus_active_control();
+        }
+        return true;
+    }
+    return false;
+}
+
 void BG_Focus_Layers::find_control_in_direction(const Vector2 &direction)
 {
     BG_Focus_Layer_Properties *prop = get_active_focus_layer();
@@ -362,19 +364,31 @@ void BG_Focus_Layers::find_control_in_direction(const Vector2 &direction)
 		Vector2 last_control_dir_location = Vector2();
 		if (direction == Vector2(0, -1))
         {
+            if (check_if_manual_focus_neighbor(last_selected_control, prop, godot::Side::SIDE_TOP))
+                return;
+
 			last_control_dir_location = last_selected_control->get_screen_transform().get_origin() + (last_selected_control->get_global_rect().size * Vector2(0.5, 0.0));
 			if (prop->get_should_loop_vertically())
 				should_get_farthest_control = _is_control_top(direction, last_selected_control, ctrls);
         } else if (direction == Vector2(0, 1))
         {
+            if (check_if_manual_focus_neighbor(last_selected_control, prop, godot::Side::SIDE_BOTTOM))
+                return;
+
 			if (prop->get_should_loop_vertically())
 				should_get_farthest_control = _is_control_bottom(direction, last_selected_control, ctrls);
 			last_control_dir_location = last_selected_control->get_screen_transform().get_origin() + (last_selected_control->get_global_rect().size * Vector2(0.5, 1.0));
         } else if (direction == Vector2(1, 0))
         {
+            if (check_if_manual_focus_neighbor(last_selected_control, prop, godot::Side::SIDE_RIGHT))
+                return;
+
 			last_control_dir_location = last_selected_control->get_screen_transform().get_origin() + (last_selected_control->get_global_rect().size * Vector2(1.0, 0.5));
         } else
         {
+            if (check_if_manual_focus_neighbor(last_selected_control, prop, godot::Side::SIDE_LEFT))
+                return;
+
 			last_control_dir_location = last_selected_control->get_screen_transform().get_origin() + (last_selected_control->get_global_rect().size * Vector2(0.0, 0.5));
         }
 

@@ -1520,6 +1520,7 @@ public:
 	bool is_band_alive() const;
 
 	Ref<BG_BandMember> get_band_leader() const {
+		if (band_members.is_empty()) return nullptr;
 		for (int i = 0; i < band_members.size(); ++i) {
 			Ref<BG_BandMember> bm = band_members[i];
 			if (!bm.is_valid()) continue;
