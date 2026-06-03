@@ -435,6 +435,7 @@ void BG_AudioDataDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_file_path"), &BG_AudioDataDetails::get_file_path);
 	ClassDB::bind_method(D_METHOD("get_volume_db_base_value"), &BG_AudioDataDetails::get_volume_db_base_value);
+	ClassDB::bind_method(D_METHOD("get_random_pitch_scale"), &BG_AudioDataDetails::get_random_pitch_scale);
 	ClassDB::bind_method(D_METHOD("get_restrict_to_acts"), &BG_AudioDataDetails::get_restrict_to_acts);
 }
 
@@ -2655,6 +2656,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				BG_AudioDataDetails *new_audio_details = memnew(BG_AudioDataDetails);
 				new_audio_details->file_path = ensure_clean_path(get_find_data_by_param_name("path", audio_details_entry)["path"]);
 				new_audio_details->volume_db_base_value = int(get_find_data_by_param_name("volume_db", audio_details_entry)["value"]);
+				new_audio_details->random_pitch_scale = float(get_find_data_by_param_name("random_pitch_scale", audio_details_entry)["value"]);
 
 				const Dictionary restrict_to_cities_dict = get_find_data_by_param_name("restrict_to_cities", audio_details_entry);
 				const Array restrict_to_cities = restrict_to_cities_dict["array_values"];

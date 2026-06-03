@@ -535,8 +535,11 @@ public:
 	StringName file_path;
 	StringName get_file_path() const { return file_path; }
 
-	int volume_db_base_value;
+	int volume_db_base_value = 0;
 	int get_volume_db_base_value() const { return volume_db_base_value; }
+	
+	float random_pitch_scale = 0.0;
+	float get_random_pitch_scale() const { return random_pitch_scale; }
 
 	TypedArray<int> restrict_to_acts;
 	TypedArray<int> get_restrict_to_acts() const { return restrict_to_acts; }
