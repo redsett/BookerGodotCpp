@@ -134,12 +134,13 @@ void BG_Focus_Layers::set_focus_layer(const StringName &p_layer_name)
 void BG_Focus_Layers::remove_focus_layer(const StringName &p_layer_name, bool p_full_remove)
 {
     //ERR_FAIL_COND(!_focus_layer_controls.has(p_layer_name));
-	if (_focus_layer_stack.has(p_layer_name))
-    {
+	if (_focus_layer_stack.has(p_layer_name)) {
         _focus_layer_stack.erase(p_layer_name);
+    } else {
+        return;
     }
-	if (p_full_remove)
-    {
+
+	if (p_full_remove) {
         for (int i = 0; i < _focus_layers.size(); ++i)
         {
             const BG_Focus_Layer_Properties *prop = cast_to<BG_Focus_Layer_Properties>(_focus_layers[i]);
@@ -151,8 +152,7 @@ void BG_Focus_Layers::remove_focus_layer(const StringName &p_layer_name, bool p_
             }
         }
     }
-	if (!_focus_layer_stack.is_empty())
-    {
+	if (!_focus_layer_stack.is_empty()) {
 		_focus_active_control();
     }
 }
