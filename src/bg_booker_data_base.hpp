@@ -307,6 +307,26 @@ public:
 };
 
 ////
+//// BG_GameMapNodeDetails
+////
+class BG_GameMapNodeDetails : public Object
+{
+	GDCLASS(BG_GameMapNodeDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	~BG_GameMapNodeDetails();
+
+	StringName id;
+	StringName get_id() const { return id; }
+
+	StringName battle_board_id;
+	StringName get_battle_board_id() const { return battle_board_id; }
+};
+
+////
 //// BG_RewardItem
 ////
 class BG_RewardItem : public Object
@@ -1845,6 +1865,9 @@ public:
 	StringName scene_path;
 	StringName get_scene_path() const { return scene_path; }
 
+	StringName game_map_path;
+	StringName get_game_map_path() const { return game_map_path; }
+
 	StringName battle_board_id;
 	StringName get_battle_board_id() const { return battle_board_id; }
 
@@ -2021,11 +2044,14 @@ public:
 	
 	TypedArray<BG_BattleBoardDetails> battle_boards_details;
 	TypedArray<BG_BattleBoardDetails> get_battle_boards_details() const { return battle_boards_details; }
-
 	BG_BattleBoardDetails *get_battle_board_by_id(const StringName &id) const;
 	TypedArray<BG_BattleBoard_HexTypeDetails> get_battle_board_details_for_bb(const StringName &parent_bb_id, const StringName &bb_id) const;
 	TypedArray<BG_BattleBoard_HexTypeDetails> get_battle_board_hex_types_by_type(const StringName &parent_bb_id, const StringName &bb_id, int type, bool is_game_type = true) const;
 	BG_BattleBoard_HexTypeDetails *get_battle_board_hex_type_by_id(const StringName &parent_bb_id, const StringName &bb_id, const StringName &id) const;
+
+	TypedArray<BG_GameMapNodeDetails> game_map_node_details;
+	TypedArray<BG_GameMapNodeDetails> get_game_map_node_details() const { return game_map_node_details; }
+	BG_GameMapNodeDetails *get_game_map_node_details_by_id(const StringName &id) const;
 
 	HashMap<StringName, BG_ResourceTypeDetails *> resource_type_details;
 	BG_ResourceTypeDetails *get_resource_type_details_by_id(const StringName &resource_id) const;
