@@ -322,8 +322,34 @@ public:
 	StringName id;
 	StringName get_id() const { return id; }
 
+	int type;
+	int get_type() const { return type; }
+
+	StringName script_path;
+	StringName get_script_path() const { return script_path; }
+	
 	StringName battle_board_id;
 	StringName get_battle_board_id() const { return battle_board_id; }
+};
+
+////
+//// BG_GameMapDetails
+////
+class BG_GameMapDetails : public Object
+{
+	GDCLASS(BG_GameMapDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	~BG_GameMapDetails();
+
+	StringName id;
+	StringName get_id() const { return id; }
+
+	StringName scene_path;
+	StringName get_scene_path() const { return scene_path; }
 };
 
 ////
@@ -1865,11 +1891,8 @@ public:
 	StringName scene_path;
 	StringName get_scene_path() const { return scene_path; }
 
-	StringName game_map_path;
-	StringName get_game_map_path() const { return game_map_path; }
-
-	StringName battle_board_id;
-	StringName get_battle_board_id() const { return battle_board_id; }
+	StringName game_map_id;
+	StringName get_game_map_id() const { return game_map_id; }
 
 	Dictionary misc_attributes;
 	Dictionary get_misc_attributes() const { return misc_attributes; }
@@ -2052,6 +2075,10 @@ public:
 	TypedArray<BG_GameMapNodeDetails> game_map_node_details;
 	TypedArray<BG_GameMapNodeDetails> get_game_map_node_details() const { return game_map_node_details; }
 	BG_GameMapNodeDetails *get_game_map_node_details_by_id(const StringName &id) const;
+
+	TypedArray<BG_GameMapDetails> game_map_details;
+	TypedArray<BG_GameMapDetails> get_game_map_details() const { return game_map_details; }
+	BG_GameMapDetails *get_game_map_details_by_id(const StringName &id) const;
 
 	HashMap<StringName, BG_ResourceTypeDetails *> resource_type_details;
 	BG_ResourceTypeDetails *get_resource_type_details_by_id(const StringName &resource_id) const;

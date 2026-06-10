@@ -324,10 +324,25 @@ BG_BattleBoard_HexTypeDetails *BG_BattleBoardDetails::get_hex_type_by_id(const S
 void BG_GameMapNodeDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_GameMapNodeDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_type"), &BG_GameMapNodeDetails::get_type);
+	ClassDB::bind_method(D_METHOD("get_script_path"), &BG_GameMapNodeDetails::get_script_path);
 	ClassDB::bind_method(D_METHOD("get_battle_board_id"), &BG_GameMapNodeDetails::get_battle_board_id);
 }
 
 BG_GameMapNodeDetails::~BG_GameMapNodeDetails()
+{
+}
+
+////
+//// BG_GameMapDetails
+////
+void BG_GameMapDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_GameMapDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_scene_path"), &BG_GameMapDetails::get_scene_path);
+}
+
+BG_GameMapDetails::~BG_GameMapDetails()
 {
 }
 
@@ -1329,8 +1344,7 @@ void BG_CityInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_nice_name"), &BG_CityInfo::get_nice_name);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_CityInfo::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_scene_path"), &BG_CityInfo::get_scene_path);
-	ClassDB::bind_method(D_METHOD("get_game_map_path"), &BG_CityInfo::get_game_map_path);
-	ClassDB::bind_method(D_METHOD("get_battle_board_id"), &BG_CityInfo::get_battle_board_id);
+	ClassDB::bind_method(D_METHOD("get_game_map_id"), &BG_CityInfo::get_game_map_id);
 	ClassDB::bind_method(D_METHOD("get_misc_attributes"), &BG_CityInfo::get_misc_attributes);
 }
 
@@ -1419,6 +1433,8 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_battle_board_hex_type_by_id", "parent_bb_id", "bb_id", "id"), &BG_Booker_DB::get_battle_board_hex_type_by_id);
 	ClassDB::bind_method(D_METHOD("get_game_map_node_details"), &BG_Booker_DB::get_game_map_node_details);
 	ClassDB::bind_method(D_METHOD("get_game_map_node_details_by_id", "id"), &BG_Booker_DB::get_game_map_node_details_by_id);
+	ClassDB::bind_method(D_METHOD("get_game_map_details"), &BG_Booker_DB::get_game_map_details);
+	ClassDB::bind_method(D_METHOD("get_game_map_details_by_id", "id"), &BG_Booker_DB::get_game_map_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_resource_type_details_by_id", "resource_id"), &BG_Booker_DB::get_resource_type_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_audio_data"), &BG_Booker_DB::get_audio_data);
 	ClassDB::bind_method(D_METHOD("get_audio_details", "id", "act"), &BG_Booker_DB::get_audio_details);
@@ -1529,6 +1545,15 @@ BG_BattleBoard_HexTypeDetails *BG_Booker_DB::get_battle_board_hex_type_by_id(con
 BG_GameMapNodeDetails *BG_Booker_DB::get_game_map_node_details_by_id(const StringName &id) const {
 	for (int i = 0; i < game_map_node_details.size(); ++i) {
 		BG_GameMapNodeDetails *gmd = cast_to<BG_GameMapNodeDetails>(game_map_node_details[i]);
+		if (gmd->get_id() == id)
+			return gmd;
+	}
+	return nullptr;
+}
+
+BG_GameMapDetails *BG_Booker_DB::get_game_map_details_by_id(const StringName &id) const {
+	for (int i = 0; i < game_map_details.size(); ++i) {
+		BG_GameMapDetails *gmd = cast_to<BG_GameMapDetails>(game_map_details[i]);
 		if (gmd->get_id() == id)
 			return gmd;
 	}
@@ -3004,8 +3029,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			new_city_info->nice_name = StringName(get_find_data_by_param_name("name", entry)["value"]);
 			new_city_info->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
 			new_city_info->scene_path = ensure_clean_path(get_find_data_by_param_name("scene_path", entry)["path"]);
-			new_city_info->game_map_path = ensure_clean_path(get_find_data_by_param_name("game_map_path", entry)["path"]);
-			new_city_info->battle_board_id = StringName(get_find_data_by_param_name("battle_board_id", entry)["element_id_name_value"]);
+			new_city_info->game_map_id = StringName(get_find_data_by_param_name("game_map_id", entry)["element_id_name_value"]);
 
 			// Misc Attributes
 			const Dictionary misc_attributes_values = get_find_data_by_param_name("misc_attributes", entry);
@@ -3081,6 +3105,19 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		}
 	}
 
+	{ // Game Maps
+		const Array lines = get_sheet_by_name("Game_Maps", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+
+			BG_GameMapDetails *new_game_map_class = memnew(BG_GameMapDetails);
+			new_game_map_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_game_map_class->scene_path = ensure_clean_path(get_find_data_by_param_name("scene_path", entry)["path"]);
+
+			game_map_details.append(new_game_map_class);
+		}
+	}
+
 	{ // Game Map Nodes
 		const Array lines = get_sheet_by_name("Game_Map_Nodes", data);
 		for (int i = 0; i < lines.size(); ++i) {
@@ -3088,6 +3125,8 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 
 			BG_GameMapNodeDetails *new_game_map_node_class = memnew(BG_GameMapNodeDetails);
 			new_game_map_node_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_game_map_node_class->type = int(get_find_data_by_param_name("type", entry)["value"]);
+			new_game_map_node_class->script_path = ensure_clean_path(get_find_data_by_param_name("script_path", entry)["path"]);
 			new_game_map_node_class->battle_board_id = StringName(get_find_data_by_param_name("battle_board_id", entry)["element_id_name_value"]);
 
 			game_map_node_details.append(new_game_map_node_class);
@@ -3401,6 +3440,12 @@ void BG_Booker_DB::free_all_params()
 			memdelete(d);
 	}
 	game_map_node_details.clear();
+	for (int i = 0; i < game_map_details.size(); ++i) {
+		BG_GameMapDetails *d = cast_to<BG_GameMapDetails>(game_map_details[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	game_map_details.clear();
 	for (const auto &pair : resource_type_details) {
 		if (BG_Booker_DB::bg_is_instance_valid(pair.value))
 			memdelete(pair.value);
