@@ -14,6 +14,24 @@
 using namespace godot;
 
 ////
+//// BG_IconDetails
+////
+class BG_IconDetails : public Object
+{
+	GDCLASS(BG_IconDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	StringName icon_path;
+	StringName get_icon_path() const { return icon_path; }
+};
+
+////
 //// BG_TwoDer_DataEntry
 ////
 class BG_TwoDer_DataEntry : public Object
@@ -2086,6 +2104,10 @@ public:
 	TypedArray<BG_AudioData> audio_data;
 	TypedArray<BG_AudioData> get_audio_data() const { return audio_data; }
 	TypedArray<BG_AudioDataDetails> get_audio_details(const StringName &id, int act) const;
+
+	TypedArray<BG_IconDetails> icon_details;
+	TypedArray<BG_IconDetails> get_icon_details() const { return icon_details; }
+	BG_IconDetails *get_icon_details_by_id(const StringName &id) const;
 
 	TypedArray<BG_BookerSkillTreeSlotDetails> booker_skill_tree_details;
 	TypedArray<BG_BookerSkillTreeSlotDetails> get_booker_skill_tree_details() const { return booker_skill_tree_details; }

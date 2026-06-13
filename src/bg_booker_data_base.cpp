@@ -92,6 +92,15 @@ static fraction_struct get_fract(double input)
 }
 
 ////
+//// BG_IconDetails
+////
+void BG_IconDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_IconDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_IconDetails::get_icon_path);
+}
+
+////
 //// BG_TwoDer_DataEntry
 ////
 void BG_TwoDer_DataEntry::_bind_methods()
@@ -1438,6 +1447,8 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_resource_type_details_by_id", "resource_id"), &BG_Booker_DB::get_resource_type_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_audio_data"), &BG_Booker_DB::get_audio_data);
 	ClassDB::bind_method(D_METHOD("get_audio_details", "id", "act"), &BG_Booker_DB::get_audio_details);
+	ClassDB::bind_method(D_METHOD("get_icon_details"), &BG_Booker_DB::get_icon_details);
+	ClassDB::bind_method(D_METHOD("get_icon_details_by_id", "id"), &BG_Booker_DB::get_icon_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_booker_skill_tree_details"), &BG_Booker_DB::get_booker_skill_tree_details);
 	ClassDB::bind_method(D_METHOD("get_jobs"), &BG_Booker_DB::get_jobs);
 	ClassDB::bind_method(D_METHOD("get_items"), &BG_Booker_DB::get_items);
@@ -1591,6 +1602,15 @@ TypedArray<BG_AudioDataDetails> BG_Booker_DB::get_audio_details(const StringName
 		break;
 	}
 	return result;
+}
+
+BG_IconDetails *BG_Booker_DB::get_icon_details_by_id(const StringName &id) const {
+	for (int i = 0; i < icon_details.size(); ++i) {
+		BG_IconDetails *icon_dets = cast_to<BG_IconDetails>(icon_details[i]);
+		if (icon_dets->get_id() == id)
+			return icon_dets;
+	}
+	return nullptr;
 }
 
 BG_PuzzleDetails *BG_Booker_DB::get_puzzle_details_by_id(const StringName &id) const {
@@ -3133,6 +3153,19 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		}
 	}
 
+	{ // Icons
+		const Array lines = get_sheet_by_name("Icons", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+
+			BG_IconDetails *new_icons_class = memnew(BG_IconDetails);
+			new_icons_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_icons_class->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
+
+			icon_details.append(new_icons_class);
+		}
+	}
+
 	{ // Item Slot Types
 		const Array lines = get_sheet_by_name("Item_Slot_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
@@ -3457,6 +3490,12 @@ void BG_Booker_DB::free_all_params()
 			memdelete(d);
 	}
 	audio_data.clear();
+	for (int i = 0; i < icon_details.size(); ++i) {
+		BG_IconDetails *d = cast_to<BG_IconDetails>(icon_details[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	icon_details.clear();
 	for (int i = 0; i < booker_skill_tree_details.size(); ++i) {
 		BG_BookerSkillTreeSlotDetails *d = cast_to<BG_BookerSkillTreeSlotDetails>(booker_skill_tree_details[i]);
 		if (BG_Booker_DB::bg_is_instance_valid(d))
