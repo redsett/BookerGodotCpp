@@ -13,6 +13,90 @@
 
 using namespace godot;
 
+
+////
+//// BG_StoryboardCharacterDefaultTextLocationDetails
+////
+class BG_StoryboardCharacterDefaultTextLocationDetails : public Resource
+{
+	GDCLASS(BG_StoryboardCharacterDefaultTextLocationDetails, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName character_key;
+	StringName get_character_key() const { return character_key; }
+
+	Vector2 default_location;
+	Vector2 get_default_location() const { return default_location; }
+};
+
+////
+//// BG_StoryboardDataDetails
+////
+class BG_StoryboardDataDetails : public Resource
+{
+	GDCLASS(BG_StoryboardDataDetails, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName character_key;
+	StringName get_character_key() const { return character_key; }
+
+	StringName text_key;
+	StringName get_text_key() const { return text_key; }
+
+	Vector2 location_override = Vector2();
+	Vector2 get_location_override() const { return location_override; }
+
+	bool display_at_top = false;
+	bool get_display_at_top() const { return display_at_top; }
+
+	bool display_next_page_icon = false;
+	bool get_display_next_page_icon() const { return display_next_page_icon; }
+	
+	bool show_character_name = false;
+	bool get_show_character_name() const { return show_character_name; }
+	
+	StringName code;
+	StringName get_code() const { return code; }
+
+	StringName texture_path;
+	StringName get_texture_path() const { return texture_path; }
+	
+	StringName sfx_id;
+	StringName get_sfx_id() const { return sfx_id; }
+};
+
+////
+//// BG_StoryboardDetails
+////
+class BG_StoryboardDetails : public Resource
+{
+	GDCLASS(BG_StoryboardDetails, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	// ~BG_StoryboardDetails();
+
+	StringName id;
+	StringName get_id() const { return id; }
+
+	StringName localization_sheet;
+	StringName get_localization_sheet() const { return localization_sheet; }
+	
+	TypedArray<BG_StoryboardDataDetails> data;
+	TypedArray<BG_StoryboardDataDetails> get_data() const { return data; }
+	
+	TypedArray<BG_StoryboardCharacterDefaultTextLocationDetails> character_default_text_locations;
+	TypedArray<BG_StoryboardCharacterDefaultTextLocationDetails> get_character_default_text_locations() const { return character_default_text_locations; }
+};
+
 ////
 //// BG_IconDetails
 ////
@@ -2076,6 +2160,8 @@ public:
 
 	BG_Booker_Globals *globals = nullptr;
 	BG_Booker_Globals *get_globals() const { return globals; }
+
+	Ref<BG_StoryboardDetails> import_and_get_storyboard_details_by_id(const StringName &id);
 
 	TypedArray<BG_ObjectiveDetails> objectives;
 	TypedArray<BG_ObjectiveDetails> get_objectives() const { return objectives; }	

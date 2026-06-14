@@ -91,6 +91,82 @@ static fraction_struct get_fract(double input)
     // std::cout << numerator << " / " << denominator << std::endl;
 }
 
+static auto get_find_data_by_param_name = [](const String &param_name, const Array &array_to_parse) -> Dictionary {
+	for (int i = 0; i < array_to_parse.size(); ++i) {
+		const Dictionary entry = array_to_parse[i];
+		const String para_name = entry["param_name"];
+		if (param_name == para_name) {
+			return entry;
+		}
+	}
+	return {};
+};
+
+static auto get_sheet_by_name = [](const String &name, const Dictionary &d) -> Array {
+	const Array lines = Array(d["sheets"]);
+	for (int i = 0; i < lines.size(); ++i) {
+		const Dictionary sheet = lines[i];
+		const String sheet_name = String(sheet["param_name"]);
+		if (name != sheet_name) continue;
+		return sheet["array_values"];
+	}
+	return {};
+};
+
+static auto ensure_clean_path = [](const String &path) -> StringName {
+	return StringName(path.trim_prefix("/"));
+};
+
+////
+//// BG_StoryboardCharacterDefaultTextLocationDetails
+////
+void BG_StoryboardCharacterDefaultTextLocationDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_character_key"), &BG_StoryboardCharacterDefaultTextLocationDetails::get_character_key);
+	ClassDB::bind_method(D_METHOD("get_default_location"), &BG_StoryboardCharacterDefaultTextLocationDetails::get_default_location);
+}
+
+////
+//// BG_StoryboardDataDetails
+////
+void BG_StoryboardDataDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_character_key"), &BG_StoryboardDataDetails::get_character_key);
+	ClassDB::bind_method(D_METHOD("get_text_key"), &BG_StoryboardDataDetails::get_text_key);
+	ClassDB::bind_method(D_METHOD("get_location_override"), &BG_StoryboardDataDetails::get_location_override);
+	ClassDB::bind_method(D_METHOD("get_display_at_top"), &BG_StoryboardDataDetails::get_display_at_top);
+	ClassDB::bind_method(D_METHOD("get_display_next_page_icon"), &BG_StoryboardDataDetails::get_display_next_page_icon);
+	ClassDB::bind_method(D_METHOD("get_show_character_name"), &BG_StoryboardDataDetails::get_show_character_name);
+	ClassDB::bind_method(D_METHOD("get_code"), &BG_StoryboardDataDetails::get_code);
+	ClassDB::bind_method(D_METHOD("get_texture_path"), &BG_StoryboardDataDetails::get_texture_path);
+	ClassDB::bind_method(D_METHOD("get_sfx_id"), &BG_StoryboardDataDetails::get_sfx_id);
+}
+
+////
+//// BG_StoryboardDetails
+////
+void BG_StoryboardDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_StoryboardDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_localization_sheet"), &BG_StoryboardDetails::get_localization_sheet);
+	ClassDB::bind_method(D_METHOD("get_data"), &BG_StoryboardDetails::get_data);
+	ClassDB::bind_method(D_METHOD("get_character_default_text_locations"), &BG_StoryboardDetails::get_character_default_text_locations);
+}
+
+// BG_StoryboardDetails::~BG_StoryboardDetails()
+// {
+// 	for (int i = 0; i < data.size(); ++i) {
+// 		BG_StoryboardDataDetails *d = cast_to<BG_StoryboardDataDetails>(data[i]);
+// 		if (BG_Booker_DB::bg_is_instance_valid(d))
+// 			memdelete(d);
+// 	}
+// 	for (int i = 0; i < character_default_text_locations.size(); ++i) {
+// 		BG_StoryboardCharacterDefaultTextLocationDetails *d = cast_to<BG_StoryboardCharacterDefaultTextLocationDetails>(character_default_text_locations[i]);
+// 		if (BG_Booker_DB::bg_is_instance_valid(d))
+// 			memdelete(d);
+// 	}
+// }
+
 ////
 //// BG_IconDetails
 ////
@@ -1434,6 +1510,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_modding_path"), &BG_Booker_DB::get_modding_path);
 	ClassDB::bind_method(D_METHOD("get_globals"), &BG_Booker_DB::get_globals);
 	ClassDB::bind_method(D_METHOD("get_base_stats"), &BG_Booker_DB::get_base_stats);
+	ClassDB::bind_method(D_METHOD("import_and_get_storyboard_details_by_id", "id"), &BG_Booker_DB::import_and_get_storyboard_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_objectives"), &BG_Booker_DB::get_objectives);
 	ClassDB::bind_method(D_METHOD("get_battle_boards_details"), &BG_Booker_DB::get_battle_boards_details);
 	ClassDB::bind_method(D_METHOD("get_battle_board_by_id", "id"), &BG_Booker_DB::get_battle_board_by_id);
@@ -1471,6 +1548,68 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_localize_data", "sheet_name", "key", "language"), &BG_Booker_DB::get_localize_data);
 	ClassDB::bind_method(D_METHOD("get_localize_string", "sheet_name", "key", "language", "ignore_code_data"), &BG_Booker_DB::get_localize_string);
 	ClassDB::bind_method(D_METHOD("get_stat_from_stat_id_name", "stat_id_name"), &BG_Booker_DB::get_stat_from_stat_id_name);
+}
+
+Ref<BG_StoryboardDetails> BG_Booker_DB::import_and_get_storyboard_details_by_id(const StringName &id)
+{
+	const String booker_dber_data_file_name = "booker_dber_data.json";
+	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
+
+	Ref<BG_StoryboardDetails> result = memnew(BG_StoryboardDetails);
+
+	// Storyboards
+	const Array lines = get_sheet_by_name("Storyboards", data);
+	for (int i = 0; i < lines.size(); ++i) {
+		const Array entry = lines[i];
+
+		const StringName sb_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+		if (sb_id != id) continue;
+
+		result->id = sb_id;
+		result->localization_sheet = StringName(get_find_data_by_param_name("localization_sheet", entry)["value"]);
+
+		// Data
+		const Dictionary data_values = get_find_data_by_param_name("data", entry);
+		const Array data_array = data_values["array_values"];
+		for (int x = 0; x < data_array.size(); ++x) {
+			const Array data_entry = data_array[x];
+
+			Ref<BG_StoryboardDataDetails> sb_dets = memnew(BG_StoryboardDataDetails);
+			sb_dets->character_key = StringName(get_find_data_by_param_name("character_key", data_entry)["value"]);
+			sb_dets->text_key = StringName(get_find_data_by_param_name("text_key", data_entry)["value"]);
+			
+			const Dictionary location_override_xy = get_find_data_by_param_name("location_override", data_entry);
+			sb_dets->location_override = Vector2(float(location_override_xy["value_x"]), float(location_override_xy["value_y"]));
+			
+			sb_dets->display_at_top = bool(get_find_data_by_param_name("display_at_top", data_entry)["value"]);
+			sb_dets->display_next_page_icon = bool(get_find_data_by_param_name("display_next_page_icon", data_entry)["value"]);
+			sb_dets->show_character_name = bool(get_find_data_by_param_name("show_character_name", data_entry)["value"]);
+			sb_dets->code = StringName(get_find_data_by_param_name("code", data_entry)["value"]);
+			sb_dets->texture_path = ensure_clean_path(get_find_data_by_param_name("texture_path", data_entry)["path"]);
+			sb_dets->sfx_id = StringName(get_find_data_by_param_name("sfx_id", data_entry)["element_id_name_value"]);
+
+			result->data.append(sb_dets);
+		}
+
+		// Character Default Text Locations
+		const Dictionary character_default_text_locations_values = get_find_data_by_param_name("character_default_text_locations", entry);
+		const Array character_default_text_locations_array = character_default_text_locations_values["array_values"];
+		for (int x = 0; x < character_default_text_locations_array.size(); ++x) {
+			const Array character_default_text_locations_entry = character_default_text_locations_array[x];
+
+			Ref<BG_StoryboardCharacterDefaultTextLocationDetails> sb_dets = memnew(BG_StoryboardCharacterDefaultTextLocationDetails);
+			sb_dets->character_key = StringName(get_find_data_by_param_name("character_key", character_default_text_locations_entry)["value"]);
+			
+			const Dictionary default_location_xy = get_find_data_by_param_name("default_location", character_default_text_locations_entry);
+			sb_dets->default_location = Vector2(float(default_location_xy["value_x"]), float(default_location_xy["value_y"]));
+
+			result->character_default_text_locations.append(sb_dets);
+		}
+	}
+
+	if (!result->get_id().is_empty())
+		return result;
+	return nullptr;
 }
 
 BG_BattleBoardDetails *BG_Booker_DB::get_battle_board_by_id(const StringName &id) const {
@@ -2339,32 +2478,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 {
 	const Dictionary data = BG_JsonUtils::ParseJsonFile(file_path);
 	// UtilityFunctions::prints(data["all_base_stats"]);
-
-	auto get_find_data_by_param_name = [](const String &param_name, const Array &array_to_parse) -> Dictionary {
-		for (int i = 0; i < array_to_parse.size(); ++i) {
-			const Dictionary entry = array_to_parse[i];
-			const String para_name = entry["param_name"];
-			if (param_name == para_name) {
-				return entry;
-			}
-		}
-		return {};
-	};
-
-	auto get_sheet_by_name = [](const String &name, const Dictionary &d) -> Array {
-		const Array lines = Array(d["sheets"]);
-		for (int i = 0; i < lines.size(); ++i) {
-			const Dictionary sheet = lines[i];
-			const String sheet_name = String(sheet["param_name"]);
-			if (name != sheet_name) continue;
-			return sheet["array_values"];
-		}
-		return {};
-	};
-
-	auto ensure_clean_path = [](const String &path) -> StringName {
-		return StringName(path.trim_prefix("/"));
-	};
 
 	HashMap<String, TypedArray<StringName>> global_enums;
 	{ // Global Enums

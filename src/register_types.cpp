@@ -32,6 +32,9 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		// ClassDB::register_class<BG_ReactiveString>();
 		// ClassDB::register_class<BG_ReactiveArray>();
 		ClassDB::register_class<BG_AnimatedAtlasTextureRect>();
+		ClassDB::register_class<BG_StoryboardCharacterDefaultTextLocationDetails>();
+		ClassDB::register_class<BG_StoryboardDataDetails>();
+		ClassDB::register_class<BG_StoryboardDetails>();
 		ClassDB::register_class<BG_IconDetails>();
 		ClassDB::register_class<BG_TwoDer_DataEntry>();
 		ClassDB::register_class<BG_LocalizeEntryData>();
