@@ -118,6 +118,58 @@ static auto ensure_clean_path = [](const String &path) -> StringName {
 };
 
 ////
+//// BG_PortraitDetails
+////
+void BG_PortraitDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_portrait_type"), &BG_PortraitDetails::get_portrait_type);
+	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_PortraitDetails::get_icon_path);
+
+	BIND_ENUM_CONSTANT(DEFAULT);
+	BIND_ENUM_CONSTANT(HAPPY);
+	BIND_ENUM_CONSTANT(SAD);
+	BIND_ENUM_CONSTANT(ANGER);
+	BIND_ENUM_CONSTANT(SUPRISE);
+	BIND_ENUM_CONSTANT(FEAR);
+	BIND_ENUM_CONSTANT(DISGUST);
+	BIND_ENUM_CONSTANT(CONTEMPT);
+}
+
+////
+//// BG_CharacterDetails
+////
+void BG_CharacterDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_CharacterDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_portraits"), &BG_CharacterDetails::get_portraits);
+	ClassDB::bind_method(D_METHOD("get_portrait_icon_by_type", "portrait_type"), &BG_CharacterDetails::get_portrait_icon_by_type);
+}
+
+BG_CharacterDetails::~BG_CharacterDetails()
+{
+	for (int i = 0; i < portraits.size(); ++i) {
+		BG_PortraitDetails *d = cast_to<BG_PortraitDetails>(portraits[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+}
+
+StringName BG_CharacterDetails::get_portrait_icon_by_type(BG_PortraitDetails::PortraitType portrait_type) const
+{
+	for (int i = 0; i < portraits.size(); ++i) {
+		BG_PortraitDetails *p = cast_to<BG_PortraitDetails>(portraits[i]);
+		if (p->get_portrait_type() == portrait_type)
+			return p->get_icon_path();
+	}
+	// If the type doesn't exist, then just return the first one.
+	if (!portraits.is_empty()) {
+		BG_PortraitDetails *p = cast_to<BG_PortraitDetails>(portraits[0]);
+		return p->get_icon_path();
+	}
+	return StringName("");
+}
+
+////
 //// BG_StoryboardCharacterDefaultTextLocationDetails
 ////
 void BG_StoryboardCharacterDefaultTextLocationDetails::_bind_methods()
@@ -132,11 +184,11 @@ void BG_StoryboardCharacterDefaultTextLocationDetails::_bind_methods()
 void BG_StoryboardDataDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_character_key"), &BG_StoryboardDataDetails::get_character_key);
+	ClassDB::bind_method(D_METHOD("get_character_emotion"), &BG_StoryboardDataDetails::get_character_emotion);
 	ClassDB::bind_method(D_METHOD("get_text_key"), &BG_StoryboardDataDetails::get_text_key);
 	ClassDB::bind_method(D_METHOD("get_location_override"), &BG_StoryboardDataDetails::get_location_override);
 	ClassDB::bind_method(D_METHOD("get_display_at_top"), &BG_StoryboardDataDetails::get_display_at_top);
 	ClassDB::bind_method(D_METHOD("get_display_next_page_icon"), &BG_StoryboardDataDetails::get_display_next_page_icon);
-	ClassDB::bind_method(D_METHOD("get_show_character_name"), &BG_StoryboardDataDetails::get_show_character_name);
 	ClassDB::bind_method(D_METHOD("get_code"), &BG_StoryboardDataDetails::get_code);
 	ClassDB::bind_method(D_METHOD("get_texture_path"), &BG_StoryboardDataDetails::get_texture_path);
 	ClassDB::bind_method(D_METHOD("get_sfx_id"), &BG_StoryboardDataDetails::get_sfx_id);
@@ -151,6 +203,17 @@ void BG_StoryboardDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_localization_sheet"), &BG_StoryboardDetails::get_localization_sheet);
 	ClassDB::bind_method(D_METHOD("get_data"), &BG_StoryboardDetails::get_data);
 	ClassDB::bind_method(D_METHOD("get_character_default_text_locations"), &BG_StoryboardDetails::get_character_default_text_locations);
+	ClassDB::bind_method(D_METHOD("get_character_default_text_location_by_key", "key"), &BG_StoryboardDetails::get_character_default_text_location_by_key);
+}
+
+Vector2 BG_StoryboardDetails::get_character_default_text_location_by_key(const StringName &key) const
+{
+	for (int i = 0; i < character_default_text_locations.size(); ++i) {
+		Ref<BG_StoryboardCharacterDefaultTextLocationDetails> cdtl = cast_to<BG_StoryboardCharacterDefaultTextLocationDetails>(character_default_text_locations[i]);
+		if (cdtl->get_character_key() == key)
+			return cdtl->get_default_location();
+	}
+	return Vector2();
 }
 
 // BG_StoryboardDetails::~BG_StoryboardDetails()
@@ -1509,6 +1572,8 @@ void BG_Booker_DB::_bind_methods()
 
 	ClassDB::bind_method(D_METHOD("get_modding_path"), &BG_Booker_DB::get_modding_path);
 	ClassDB::bind_method(D_METHOD("get_globals"), &BG_Booker_DB::get_globals);
+	ClassDB::bind_method(D_METHOD("get_character_details"), &BG_Booker_DB::get_character_details);
+	ClassDB::bind_method(D_METHOD("get_character_details_by_id", "id"), &BG_Booker_DB::get_character_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_base_stats"), &BG_Booker_DB::get_base_stats);
 	ClassDB::bind_method(D_METHOD("import_and_get_storyboard_details_by_id", "id"), &BG_Booker_DB::import_and_get_storyboard_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_objectives"), &BG_Booker_DB::get_objectives);
@@ -1550,6 +1615,16 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_stat_from_stat_id_name", "stat_id_name"), &BG_Booker_DB::get_stat_from_stat_id_name);
 }
 
+BG_CharacterDetails *BG_Booker_DB::get_character_details_by_id(const StringName &id) const
+{
+	for (int i = 0; i < character_details.size(); ++i) {
+		BG_CharacterDetails *cd = cast_to<BG_CharacterDetails>(character_details[i]);
+		if (cd->get_id() == id)
+			return cd;
+	}
+	return nullptr;
+}
+
 Ref<BG_StoryboardDetails> BG_Booker_DB::import_and_get_storyboard_details_by_id(const StringName &id)
 {
 	const String booker_dber_data_file_name = "booker_dber_data.json";
@@ -1575,15 +1650,15 @@ Ref<BG_StoryboardDetails> BG_Booker_DB::import_and_get_storyboard_details_by_id(
 			const Array data_entry = data_array[x];
 
 			Ref<BG_StoryboardDataDetails> sb_dets = memnew(BG_StoryboardDataDetails);
-			sb_dets->character_key = StringName(get_find_data_by_param_name("character_key", data_entry)["value"]);
-			sb_dets->text_key = StringName(get_find_data_by_param_name("text_key", data_entry)["value"]);
+			sb_dets->character_key = StringName(get_find_data_by_param_name("character_key", data_entry)["element_id_name_value"]);
+			sb_dets->character_emotion = static_cast<BG_PortraitDetails::PortraitType>(int(get_find_data_by_param_name("character_emotion", data_entry)["value"]));;
+			sb_dets->text_key = StringName(UtilityFunctions::str(int(get_find_data_by_param_name("text_key", data_entry)["value"])));
 			
 			const Dictionary location_override_xy = get_find_data_by_param_name("location_override", data_entry);
 			sb_dets->location_override = Vector2(float(location_override_xy["value_x"]), float(location_override_xy["value_y"]));
 			
 			sb_dets->display_at_top = bool(get_find_data_by_param_name("display_at_top", data_entry)["value"]);
 			sb_dets->display_next_page_icon = bool(get_find_data_by_param_name("display_next_page_icon", data_entry)["value"]);
-			sb_dets->show_character_name = bool(get_find_data_by_param_name("show_character_name", data_entry)["value"]);
 			sb_dets->code = StringName(get_find_data_by_param_name("code", data_entry)["value"]);
 			sb_dets->texture_path = ensure_clean_path(get_find_data_by_param_name("texture_path", data_entry)["path"]);
 			sb_dets->sfx_id = StringName(get_find_data_by_param_name("sfx_id", data_entry)["element_id_name_value"]);
@@ -1598,7 +1673,7 @@ Ref<BG_StoryboardDetails> BG_Booker_DB::import_and_get_storyboard_details_by_id(
 			const Array character_default_text_locations_entry = character_default_text_locations_array[x];
 
 			Ref<BG_StoryboardCharacterDefaultTextLocationDetails> sb_dets = memnew(BG_StoryboardCharacterDefaultTextLocationDetails);
-			sb_dets->character_key = StringName(get_find_data_by_param_name("character_key", character_default_text_locations_entry)["value"]);
+			sb_dets->character_key = StringName(get_find_data_by_param_name("character_key", character_default_text_locations_entry)["element_id_name_value"]);
 			
 			const Dictionary default_location_xy = get_find_data_by_param_name("default_location", character_default_text_locations_entry);
 			sb_dets->default_location = Vector2(float(default_location_xy["value_x"]), float(default_location_xy["value_y"]));
@@ -3152,6 +3227,31 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		}
 	}
 
+	{ // Characters
+		const Array lines = get_sheet_by_name("Characters", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+
+			BG_CharacterDetails *new_char_class = memnew(BG_CharacterDetails);
+			new_char_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+
+			// Portraits
+			const Dictionary portraits_values = get_find_data_by_param_name("portraits", entry);
+			const Array portraits_array = portraits_values["array_values"];
+			for (int x = 0; x < portraits_array.size(); ++x) {
+				const Array portraits_entry = portraits_array[x];
+
+				BG_PortraitDetails *new_portrait_class = memnew(BG_PortraitDetails);
+				new_portrait_class->portrait_type = static_cast<BG_PortraitDetails::PortraitType>(int(get_find_data_by_param_name("type", portraits_entry)["value"]));
+				new_portrait_class->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", portraits_entry)["path"]);
+
+				new_char_class->portraits.append(new_portrait_class);
+			}
+
+			character_details.append(new_char_class);
+		}
+	}
+
 	{ // City Info
 		const Array lines = get_sheet_by_name("City_Info", data);
 		for (int i = 0; i < lines.size(); ++i) {
@@ -3562,6 +3662,12 @@ void BG_Booker_DB::free_all_params()
 		memdelete(globals);
 	}
 	globals = nullptr;
+	for (int i = 0; i < character_details.size(); ++i) {
+		BG_CharacterDetails *d = cast_to<BG_CharacterDetails>(character_details[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	character_details.clear();
 	for (int i = 0; i < objectives.size(); ++i) {
 		BG_ObjectiveDetails *d = cast_to<BG_ObjectiveDetails>(objectives[i]);
 		if (BG_Booker_DB::bg_is_instance_valid(d))

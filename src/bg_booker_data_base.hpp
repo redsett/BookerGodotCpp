@@ -15,6 +15,58 @@ using namespace godot;
 
 
 ////
+//// BG_PortraitDetails
+////
+class BG_PortraitDetails : public Object
+{
+	GDCLASS(BG_PortraitDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	enum PortraitType : int32_t {
+		DEFAULT,
+		HAPPY,
+		SAD,
+		ANGER,
+		SUPRISE,
+		FEAR,
+		DISGUST,
+		CONTEMPT
+	};
+
+	PortraitType portrait_type;
+	PortraitType get_portrait_type() const { return portrait_type; }
+
+	StringName icon_path;
+	StringName get_icon_path() const { return icon_path; }
+};
+VARIANT_ENUM_CAST(BG_PortraitDetails::PortraitType);
+
+////
+//// BG_CharacterDetails
+////
+class BG_CharacterDetails : public Object
+{
+	GDCLASS(BG_CharacterDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	~BG_CharacterDetails();
+
+	StringName id;
+	StringName get_id() const { return id; }
+
+	TypedArray<BG_PortraitDetails> portraits;
+	TypedArray<BG_PortraitDetails> get_portraits() const { return portraits; }
+
+	StringName get_portrait_icon_by_type(BG_PortraitDetails::PortraitType portrait_type) const;
+};
+
+////
 //// BG_StoryboardCharacterDefaultTextLocationDetails
 ////
 class BG_StoryboardCharacterDefaultTextLocationDetails : public Resource
@@ -45,6 +97,9 @@ protected:
 public:
 	StringName character_key;
 	StringName get_character_key() const { return character_key; }
+	
+	BG_PortraitDetails::PortraitType character_emotion = BG_PortraitDetails::PortraitType::DEFAULT;
+	BG_PortraitDetails::PortraitType get_character_emotion() const { return character_emotion; }
 
 	StringName text_key;
 	StringName get_text_key() const { return text_key; }
@@ -57,9 +112,6 @@ public:
 
 	bool display_next_page_icon = false;
 	bool get_display_next_page_icon() const { return display_next_page_icon; }
-	
-	bool show_character_name = false;
-	bool get_show_character_name() const { return show_character_name; }
 	
 	StringName code;
 	StringName get_code() const { return code; }
@@ -95,6 +147,7 @@ public:
 	
 	TypedArray<BG_StoryboardCharacterDefaultTextLocationDetails> character_default_text_locations;
 	TypedArray<BG_StoryboardCharacterDefaultTextLocationDetails> get_character_default_text_locations() const { return character_default_text_locations; }
+	Vector2 get_character_default_text_location_by_key(const StringName &key) const;
 };
 
 ////
@@ -2160,6 +2213,10 @@ public:
 
 	BG_Booker_Globals *globals = nullptr;
 	BG_Booker_Globals *get_globals() const { return globals; }
+
+	TypedArray<BG_CharacterDetails> character_details;
+	TypedArray<BG_CharacterDetails> get_character_details() const { return character_details; }
+	BG_CharacterDetails *get_character_details_by_id(const StringName &id) const;
 
 	Ref<BG_StoryboardDetails> import_and_get_storyboard_details_by_id(const StringName &id);
 
