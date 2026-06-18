@@ -191,7 +191,7 @@ void BG_StoryboardDataDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_display_next_page_icon"), &BG_StoryboardDataDetails::get_display_next_page_icon);
 	ClassDB::bind_method(D_METHOD("get_code"), &BG_StoryboardDataDetails::get_code);
 	ClassDB::bind_method(D_METHOD("get_texture_path"), &BG_StoryboardDataDetails::get_texture_path);
-	ClassDB::bind_method(D_METHOD("get_sfx_id"), &BG_StoryboardDataDetails::get_sfx_id);
+	ClassDB::bind_method(D_METHOD("get_audio_id"), &BG_StoryboardDataDetails::get_audio_id);
 }
 
 ////
@@ -1661,7 +1661,7 @@ Ref<BG_StoryboardDetails> BG_Booker_DB::import_and_get_storyboard_details_by_id(
 			sb_dets->display_next_page_icon = bool(get_find_data_by_param_name("display_next_page_icon", data_entry)["value"]);
 			sb_dets->code = StringName(get_find_data_by_param_name("code", data_entry)["value"]);
 			sb_dets->texture_path = ensure_clean_path(get_find_data_by_param_name("texture_path", data_entry)["path"]);
-			sb_dets->sfx_id = StringName(get_find_data_by_param_name("sfx_id", data_entry)["element_id_name_value"]);
+			sb_dets->audio_id = StringName(get_find_data_by_param_name("audio_id", data_entry)["element_id_name_value"]);
 
 			result->data.append(sb_dets);
 		}

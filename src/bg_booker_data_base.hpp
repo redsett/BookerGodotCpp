@@ -119,8 +119,8 @@ public:
 	StringName texture_path;
 	StringName get_texture_path() const { return texture_path; }
 	
-	StringName sfx_id;
-	StringName get_sfx_id() const { return sfx_id; }
+	StringName audio_id;
+	StringName get_audio_id() const { return audio_id; }
 };
 
 ////
