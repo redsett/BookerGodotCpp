@@ -19,10 +19,10 @@ protected:
 public:
     static bool bg_is_instance_valid(const Object *obj) {
         try {
-            return UtilityFunctions::is_instance_id_valid(obj->get_instance_id());
+            return (obj && UtilityFunctions::is_instance_id_valid(obj->get_instance_id()));
+			// return (obj && ObjectDB::get_instance(obj->get_instance_id()) != nullptr);
         }
-        catch (...) {
-        }
+        catch (...) { }
         return false;
     };
 

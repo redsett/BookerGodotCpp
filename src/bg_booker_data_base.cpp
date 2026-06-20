@@ -1925,51 +1925,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 	//UtilityFunctions::print(BG_JsonUtils::GetCBDSheet(data, "globals"));
 
 	/////
-	///// Marketplace
-	/////
-	{
-		const Dictionary marketplace_data_sheet = BG_JsonUtils::GetCBDSheet(data, "marketplace");
-		if (marketplace_data_sheet.has("lines"))
-		{
-			market_place_data = memnew(BG_MarketplaceData);
-
-			const Array lines = Array(marketplace_data_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++)
-			{
-				const Dictionary entry = lines[i];
-
-				// Items Per Month
-				const Array items_per_month_lines = Array(entry["items_per_month"]);
-				for (int y = 0; y < items_per_month_lines.size(); y++)
-				{
-					const Dictionary items_per_month_lines_entry = items_per_month_lines[y];
-					market_place_data->items_per_month_min_max = Vector2i(int(items_per_month_lines_entry["min"]), int(items_per_month_lines_entry["max"]));
-				}
-
-				// Entries
-				const Array entries_lines = Array(entry["entries"]);
-				for (int y = 0; y < entries_lines.size(); y++)
-				{
-					const Dictionary entries_entry = entries_lines[y];
-
-					BG_MarketplaceEntryData *new_marketplace_entry_data = memnew(BG_MarketplaceEntryData);
-					new_marketplace_entry_data->act = int(entries_entry["act"]);
-					new_marketplace_entry_data->starting_month = int(entries_entry["starting_month"]);
-
-					const Array item_drop_pool_lines = Array(entries_entry["item_drop_pools"]);
-					for (int x = 0; x < item_drop_pool_lines.size(); x++)
-					{
-						const Dictionary item_drop_pool_entry = item_drop_pool_lines[x];
-						new_marketplace_entry_data->item_drop_pool_ids.append(item_drop_pool_entry["pool"]);
-					}
-
-					market_place_data->entries.append(new_marketplace_entry_data);
-				}
-			}
-		}
-	}
-
-	/////
 	///// Monster Types
 	/////
 	{
@@ -2429,121 +2384,6 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 				}
 
 				equipment_animation_details.append(new_anim_details_class);
-			}
-		}
-	}
-
-	/////
-	///// Objectives
-	/////
-	{
-		const Dictionary objectives_sheet = BG_JsonUtils::GetCBDSheet(data, "objectives");
-		if (objectives_sheet.has("lines"))
-		{
-			const Array lines = Array(objectives_sheet["lines"]);
-			for (int i = 0; i < lines.size(); i++)
-			{
-				const Dictionary entry = lines[i];
-				if (bool(entry["disabled"]))
-					continue;
-				
-				BG_ObjectiveDetails *new_objective_class = memnew(BG_ObjectiveDetails);
-				new_objective_class->id = entry["id"];
-				new_objective_class->localization_key = entry["localization_key"];
-				if (new_objective_class->localization_key.is_empty()) {
-					new_objective_class->localization_key = new_objective_class->id;
-				}
-				new_objective_class->is_main_objective = bool(entry["is_main_objective"]);
-				new_objective_class->is_scripted = bool(entry["is_scripted"]);
-				new_objective_class->objective_repeatable_type = static_cast<BG_ObjectiveDetails::ObjectiveRepeatableType>(int(entry["repeatable_type"]));
-				new_objective_class->is_auto_complete = bool(entry["is_auto_complete"]);
-				new_objective_class->expires_in = int(entry["expires_in"]);
-				new_objective_class->is_turn_in = bool(entry["is_turn_in"]);
-				new_objective_class->is_event = bool(entry["is_event"]);
-				new_objective_class->script_path = entry["script_path"];
-
-				// Timeline Attributes
-				const Array timeline_lines = Array(entry["timeline"]);
-				for (int y = 0; y < timeline_lines.size(); y++)
-				{
-					const Dictionary timeline_entry = timeline_lines[y];
-					BG_ObjectiveTimeline *new_objective_timeline_class = memnew(BG_ObjectiveTimeline);
-					new_objective_timeline_class->act = int(timeline_entry["act"]);
-					new_objective_timeline_class->min_week = int(timeline_entry["min_week"]);
-					new_objective_timeline_class->max_week = int(timeline_entry["max_week"]);
-
-					new_objective_class->timeline = new_objective_timeline_class;
-					break;
-				}
-
-				// Rewards
-				const Array reward_lines = Array(entry["rewards"]);
-				for (int y = 0; y < reward_lines.size(); y++)
-				{
-					const Dictionary reward_entry = reward_lines[y];
-
-					new_objective_class->reputation_drop = int(reward_entry["reputation"]);
-					new_objective_class->maelstrite_drop = int(reward_entry["maelstrite"]);
-					new_objective_class->beast_part_drop_count = int(reward_entry["beast_part_drop_count"]);
-					new_objective_class->equipment_drop_count = int(reward_entry["equipment_drop_count"]);
-
-					if (!reward_entry.has("item_drop_pool")) continue;
-					const StringName item_drop_pool_id = reward_entry["item_drop_pool"];
-					if (item_drop_pool_id.is_empty()) continue;
-
-					for (int pool_index = 0; pool_index < item_drop_pools.size(); pool_index++)
-					{
-						const BG_ItemDropPool *pool = cast_to<BG_ItemDropPool>(item_drop_pools[pool_index]);
-						if (pool == nullptr || String(pool->id) != String(item_drop_pool_id))
-							continue;
-						
-						for (int item_index = 0; item_index < pool->item_drops.size(); item_index++)
-						{
-							const BG_RewardItem *reward_item = cast_to<BG_RewardItem>(pool->item_drops[item_index]);
-							if (reward_item == nullptr) continue;
-
-							BG_RewardItem *new_job_reward_item_class = memnew(BG_RewardItem);
-							new_job_reward_item_class->id = reward_item->id;
-							new_job_reward_item_class->drop_weight = reward_item->drop_weight;
-
-							const Array forced_rarity_availabilities_lines = Array(reward_entry["forced_rarity_availabilities"]);
-							if (forced_rarity_availabilities_lines.size() > 0)
-							{
-								for (int f = 0; f < forced_rarity_availabilities_lines.size(); f++)
-								{
-									const Dictionary forced_rarity_availabilities_entry = forced_rarity_availabilities_lines[f];
-									new_job_reward_item_class->rarity_availabilities.append(forced_rarity_availabilities_entry["rarity_id"]);
-								}
-							}
-							else
-								new_job_reward_item_class->rarity_availabilities = reward_item->rarity_availabilities.duplicate();
-
-							new_objective_class->drops.append(new_job_reward_item_class);
-						}
-						break;
-					}
-				}
-
-				// Misc Attributes
-				const Array misc_attributes_lines = Array(entry["misc_attributes"]);
-				for (int y = 0; y < misc_attributes_lines.size(); y++)
-				{
-					const Dictionary misc_attributes_entry = misc_attributes_lines[y];
-
-					String name = misc_attributes_entry["name"];
-					String value1 = misc_attributes_entry["value_1"];
-					String value2 = misc_attributes_entry["value_2"];
-
-					Array values;
-					if (!value1.is_empty())
-						values.append(value1);
-					if (!value2.is_empty())
-						values.append(value2);
-
-					new_objective_class->misc_attributes[name] = values;
-				}
-
-				objectives.append(new_objective_class);
 			}
 		}
 	}
@@ -3538,6 +3378,48 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 					globals->day_cycle_offset_per_act.append(int(get_find_data_by_param_name("offset", day_cycle_offset_per_act_entry)["value"]));
 				}
 			}
+
+			// Marketplace
+			market_place_data = memnew(BG_MarketplaceData);
+
+			const Dictionary marketplace = get_find_data_by_param_name("marketplace", entry);
+			const Array marketplace_array = marketplace["array_values"];
+			for (int x = 0; x < marketplace_array.size(); ++x) {
+				const Array marketplace_entry = marketplace_array[x];
+
+				const Dictionary items_per_month = get_find_data_by_param_name("items_per_month", marketplace_entry);
+				const Array items_per_month_array = items_per_month["array_values"];
+				for (int y = 0; y < items_per_month_array.size(); ++y) {
+					const Array items_per_month_entry = items_per_month_array[y];
+
+					market_place_data->items_per_month_min_max = Vector2i(
+						int(get_find_data_by_param_name("min", items_per_month_entry)["value"]), 
+						int(get_find_data_by_param_name("max", items_per_month_entry)["value"])
+					);
+				}
+
+				// Entries
+				const Dictionary entries = get_find_data_by_param_name("entries", marketplace_entry);
+				const Array entries_array = entries["array_values"];
+				for (int x = 0; x < entries_array.size(); ++x) {
+					const Array entries_entry = entries_array[x];
+
+					BG_MarketplaceEntryData *new_marketplace_entry_data = memnew(BG_MarketplaceEntryData);
+					new_marketplace_entry_data->act = int(get_find_data_by_param_name("act", entries_entry)["value"]);
+					new_marketplace_entry_data->starting_month = int(get_find_data_by_param_name("starting_month", entries_entry)["value"]);
+
+					const Dictionary item_drop_pools = get_find_data_by_param_name("item_drop_pools", entries_entry);
+					const Array item_drop_pools_array = item_drop_pools["array_values"];
+					for (int y = 0; y < item_drop_pools_array.size(); ++y) {
+						const Array item_drop_pools_entry = item_drop_pools_array[y];
+
+						new_marketplace_entry_data->item_drop_pool_ids.append(
+							StringName(get_find_data_by_param_name("pool", item_drop_pools_entry)["element_id_name_value"])
+						);
+					}
+					market_place_data->entries.append(new_marketplace_entry_data);
+				}
+			}
 		}
 	}
 
@@ -3565,6 +3447,115 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			}
 
 			puzzles.append(new_data);
+		}
+	}
+
+	{ // Objectives
+		const Array lines = get_sheet_by_name("Objectives", data);
+		for (int i = 0; i < lines.size(); ++i) {
+			const Array entry = lines[i];
+
+			if (bool(get_find_data_by_param_name("disabled", entry)["value"]))
+				continue;
+			
+			BG_ObjectiveDetails *new_objective_class = memnew(BG_ObjectiveDetails);
+			new_objective_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_objective_class->localization_key = StringName(get_find_data_by_param_name("localization_key", entry)["value"]);
+			if (new_objective_class->localization_key.is_empty()) {
+				new_objective_class->localization_key = new_objective_class->id;
+			}
+			new_objective_class->is_main_objective = bool(get_find_data_by_param_name("is_main_objective", entry)["value"]);
+			new_objective_class->is_scripted = bool(get_find_data_by_param_name("is_scripted", entry)["value"]);
+			new_objective_class->objective_repeatable_type = static_cast<BG_ObjectiveDetails::ObjectiveRepeatableType>(int(get_find_data_by_param_name("repeatable_type", entry)["value"]));
+			new_objective_class->is_auto_complete = bool(get_find_data_by_param_name("is_auto_complete", entry)["value"]);
+			new_objective_class->expires_in = int(get_find_data_by_param_name("expires_in", entry)["value"]);
+			new_objective_class->is_turn_in = bool(get_find_data_by_param_name("expireis_turn_ins_in", entry)["value"]);
+			new_objective_class->is_event = bool(get_find_data_by_param_name("is_event", entry)["value"]);
+			new_objective_class->script_path = ensure_clean_path(get_find_data_by_param_name("script_path", entry)["path"]);
+
+			// Rewards
+			const Dictionary rewards_values = get_find_data_by_param_name("rewards", entry);
+			const Array rewards_array = rewards_values["array_values"];
+			for (int x = 0; x < rewards_array.size(); ++x) {
+				const Array rewards_entry = rewards_array[x];
+
+				new_objective_class->reputation_drop = int(get_find_data_by_param_name("reputation", rewards_entry)["value"]);
+				new_objective_class->maelstrite_drop = int(get_find_data_by_param_name("maelstrite", rewards_entry)["value"]);
+				new_objective_class->beast_part_drop_count = int(get_find_data_by_param_name("beast_part_drop_count", rewards_entry)["value"]);
+				new_objective_class->equipment_drop_count = int(get_find_data_by_param_name("equipment_drop_count", rewards_entry)["value"]);
+
+				const StringName item_drop_pool_id = StringName(get_find_data_by_param_name("item_drop_pool", rewards_entry)["element_id_name_value"]);
+				if (item_drop_pool_id.is_empty()) continue;
+
+				for (int pool_index = 0; pool_index < item_drop_pools.size(); pool_index++)
+				{
+					const BG_ItemDropPool *pool = cast_to<BG_ItemDropPool>(item_drop_pools[pool_index]);
+					if (pool == nullptr || String(pool->id) != String(item_drop_pool_id))
+						continue;
+					
+					for (int item_index = 0; item_index < pool->item_drops.size(); item_index++)
+					{
+						const BG_RewardItem *reward_item = cast_to<BG_RewardItem>(pool->item_drops[item_index]);
+						if (reward_item == nullptr) continue;
+
+						BG_RewardItem *new_job_reward_item_class = memnew(BG_RewardItem);
+						new_job_reward_item_class->id = reward_item->id;
+						new_job_reward_item_class->drop_weight = reward_item->drop_weight;
+
+						const Dictionary rarity_values = get_find_data_by_param_name("forced_rarity_availabilities", rewards_entry);
+						const Array forced_rarity_availabilities_lines = rarity_values["array_values"];
+						if (forced_rarity_availabilities_lines.size() > 0)
+						{
+							for (int f = 0; f < forced_rarity_availabilities_lines.size(); f++)
+							{
+								const int forced_rarity_availabilities_entry = forced_rarity_availabilities_lines[f];
+								new_job_reward_item_class->rarity_availabilities.append(global_enums["rarity_types"][forced_rarity_availabilities_entry]);
+							}
+						}
+						else
+							new_job_reward_item_class->rarity_availabilities = reward_item->rarity_availabilities.duplicate();
+
+						new_objective_class->drops.append(new_job_reward_item_class);
+					}
+					break;
+				}
+			}
+
+			// Timeline
+			const Dictionary timeline_values = get_find_data_by_param_name("timeline", entry);
+			const Array timeline_array = timeline_values["array_values"];
+			for (int x = 0; x < timeline_array.size(); ++x) {
+				const Array timeline_entry = timeline_array[x];
+
+					BG_ObjectiveTimeline *new_objective_timeline_class = memnew(BG_ObjectiveTimeline);
+					new_objective_timeline_class->act = int(get_find_data_by_param_name("act", timeline_entry)["value"]);
+					new_objective_timeline_class->min_week = int(get_find_data_by_param_name("min_week", timeline_entry)["value"]);
+					new_objective_timeline_class->max_week = int(get_find_data_by_param_name("max_week", timeline_entry)["value"]);
+
+					new_objective_class->timeline = new_objective_timeline_class;
+					break;
+			}
+
+			// Misc Attributes
+			const Dictionary misc_attributes_values = get_find_data_by_param_name("misc_attributes", entry);
+			const Array misc_attributes_array = misc_attributes_values["array_values"];
+			for (int x = 0; x < misc_attributes_array.size(); ++x) {
+				const Array misc_attributes_entry = misc_attributes_array[x];
+
+				String name = get_find_data_by_param_name("name", misc_attributes_entry)["value"];
+				String value1 = get_find_data_by_param_name("value_1", misc_attributes_entry)["value"];
+				String value2 = get_find_data_by_param_name("value_2", misc_attributes_entry)["value"];
+
+				Array values;
+				if (!value1.is_empty())
+					values.append(value1);
+				if (!value2.is_empty())
+					values.append(value2);
+
+				new_objective_class->misc_attributes[name] = values;
+			}
+
+			objectives.append(new_objective_class);
 		}
 	}
 
