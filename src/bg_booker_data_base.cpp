@@ -1492,6 +1492,7 @@ void BG_CityInfo::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_nice_name"), &BG_CityInfo::get_nice_name);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_CityInfo::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_scene_path"), &BG_CityInfo::get_scene_path);
+	ClassDB::bind_method(D_METHOD("get_game_script_path"), &BG_CityInfo::get_game_script_path);
 	ClassDB::bind_method(D_METHOD("get_game_map_id"), &BG_CityInfo::get_game_map_id);
 	ClassDB::bind_method(D_METHOD("get_misc_attributes"), &BG_CityInfo::get_misc_attributes);
 }
@@ -3102,6 +3103,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			new_city_info->nice_name = StringName(get_find_data_by_param_name("name", entry)["value"]);
 			new_city_info->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
 			new_city_info->scene_path = ensure_clean_path(get_find_data_by_param_name("scene_path", entry)["path"]);
+			new_city_info->game_script_path = ensure_clean_path(get_find_data_by_param_name("game_script_path", entry)["path"]);
 			new_city_info->game_map_id = StringName(get_find_data_by_param_name("game_map_id", entry)["element_id_name_value"]);
 
 			// Misc Attributes

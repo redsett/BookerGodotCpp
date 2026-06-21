@@ -2046,6 +2046,9 @@ public:
 	StringName scene_path;
 	StringName get_scene_path() const { return scene_path; }
 
+	StringName game_script_path;
+	StringName get_game_script_path() const { return game_script_path; }
+
 	StringName game_map_id;
 	StringName get_game_map_id() const { return game_map_id; }
 
