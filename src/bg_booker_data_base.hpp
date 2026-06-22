@@ -151,6 +151,42 @@ public:
 };
 
 ////
+//// BG_TutorialCardDetails
+////
+class BG_TutorialCardDetails : public Resource
+{
+	GDCLASS(BG_TutorialCardDetails, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName description_key;
+	StringName get_description_key() const { return description_key; }
+
+	StringName image_path;
+	StringName get_image_path() const { return image_path; }
+};
+
+////
+//// BG_TutorialCardsDetails
+////
+class BG_TutorialCardsDetails : public Resource
+{
+	GDCLASS(BG_TutorialCardsDetails, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	TypedArray<BG_TutorialCardDetails> cards;
+	TypedArray<BG_TutorialCardDetails> get_cards() const { return cards; }
+};
+
+////
 //// BG_IconDetails
 ////
 class BG_IconDetails : public Object
@@ -2222,6 +2258,8 @@ public:
 	BG_CharacterDetails *get_character_details_by_id(const StringName &id) const;
 
 	Ref<BG_StoryboardDetails> import_and_get_storyboard_details_by_id(const StringName &id);
+
+	Ref<BG_TutorialCardsDetails> import_and_get_tutorial_cards_details_by_id(const StringName &id);
 
 	TypedArray<BG_ObjectiveDetails> objectives;
 	TypedArray<BG_ObjectiveDetails> get_objectives() const { return objectives; }	

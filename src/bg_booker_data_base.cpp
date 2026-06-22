@@ -231,6 +231,24 @@ Vector2 BG_StoryboardDetails::get_character_default_text_location_by_key(const S
 // }
 
 ////
+//// BG_TutorialCardDetails
+////
+void BG_TutorialCardDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_description_key"), &BG_TutorialCardDetails::get_description_key);
+	ClassDB::bind_method(D_METHOD("get_image_path"), &BG_TutorialCardDetails::get_image_path);
+}
+
+////
+//// BG_TutorialCardsDetails
+////
+void BG_TutorialCardsDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_TutorialCardsDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_cards"), &BG_TutorialCardsDetails::get_cards);
+}
+
+////
 //// BG_IconDetails
 ////
 void BG_IconDetails::_bind_methods()
@@ -1577,6 +1595,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_character_details_by_id", "id"), &BG_Booker_DB::get_character_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_base_stats"), &BG_Booker_DB::get_base_stats);
 	ClassDB::bind_method(D_METHOD("import_and_get_storyboard_details_by_id", "id"), &BG_Booker_DB::import_and_get_storyboard_details_by_id);
+	ClassDB::bind_method(D_METHOD("import_and_get_tutorial_cards_details_by_id", "id"), &BG_Booker_DB::import_and_get_tutorial_cards_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_objectives"), &BG_Booker_DB::get_objectives);
 	ClassDB::bind_method(D_METHOD("get_battle_boards_details"), &BG_Booker_DB::get_battle_boards_details);
 	ClassDB::bind_method(D_METHOD("get_battle_board_by_id", "id"), &BG_Booker_DB::get_battle_board_by_id);
@@ -1680,6 +1699,42 @@ Ref<BG_StoryboardDetails> BG_Booker_DB::import_and_get_storyboard_details_by_id(
 			sb_dets->default_location = Vector2(float(default_location_xy["value_x"]), float(default_location_xy["value_y"]));
 
 			result->character_default_text_locations.append(sb_dets);
+		}
+	}
+
+	if (!result->get_id().is_empty())
+		return result;
+	return nullptr;
+}
+
+Ref<BG_TutorialCardsDetails> BG_Booker_DB::import_and_get_tutorial_cards_details_by_id(const StringName &id)
+{
+	const String booker_dber_data_file_name = "booker_dber_data.json";
+	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
+
+	Ref<BG_TutorialCardsDetails> result = memnew(BG_TutorialCardsDetails);
+
+	// Tutorial Cards
+	const Array lines = get_sheet_by_name("Tutorial_Cards", data);
+	for (int i = 0; i < lines.size(); ++i) {
+		const Array entry = lines[i];
+
+		const StringName sb_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+		if (sb_id != id) continue;
+
+		result->id = sb_id;
+
+		// Cards
+		const Dictionary cards_values = get_find_data_by_param_name("cards", entry);
+		const Array cards_array = cards_values["array_values"];
+		for (int x = 0; x < cards_array.size(); ++x) {
+			const Array card_entry = cards_array[x];
+
+			Ref<BG_TutorialCardDetails> t_dets = memnew(BG_TutorialCardDetails);
+			t_dets->description_key = StringName(get_find_data_by_param_name("description_key", card_entry)["value"]);
+			t_dets->image_path = ensure_clean_path(get_find_data_by_param_name("image_path", card_entry)["path"]);
+
+			result->cards.append(t_dets);
 		}
 	}
 
