@@ -172,10 +172,10 @@ StringName BG_CharacterDetails::get_portrait_icon_by_type(BG_PortraitDetails::Po
 ////
 //// BG_StoryboardCharacterDefaultTextLocationDetails
 ////
-void BG_StoryboardCharacterDefaultTextLocationDetails::_bind_methods()
+void BG_StoryboardCharacterTextLocationDetails::_bind_methods()
 {
-	ClassDB::bind_method(D_METHOD("get_character_key"), &BG_StoryboardCharacterDefaultTextLocationDetails::get_character_key);
-	ClassDB::bind_method(D_METHOD("get_default_location"), &BG_StoryboardCharacterDefaultTextLocationDetails::get_default_location);
+	ClassDB::bind_method(D_METHOD("get_character_key"), &BG_StoryboardCharacterTextLocationDetails::get_character_key);
+	ClassDB::bind_method(D_METHOD("get_txt_locations"), &BG_StoryboardCharacterTextLocationDetails::get_txt_locations);
 }
 
 ////
@@ -186,7 +186,7 @@ void BG_StoryboardDataDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_character_key"), &BG_StoryboardDataDetails::get_character_key);
 	ClassDB::bind_method(D_METHOD("get_character_emotion"), &BG_StoryboardDataDetails::get_character_emotion);
 	ClassDB::bind_method(D_METHOD("get_text_key"), &BG_StoryboardDataDetails::get_text_key);
-	ClassDB::bind_method(D_METHOD("get_location_override"), &BG_StoryboardDataDetails::get_location_override);
+	ClassDB::bind_method(D_METHOD("get_txt_location_index"), &BG_StoryboardDataDetails::get_txt_location_index);
 	ClassDB::bind_method(D_METHOD("get_display_at_top"), &BG_StoryboardDataDetails::get_display_at_top);
 	ClassDB::bind_method(D_METHOD("get_display_next_page_icon"), &BG_StoryboardDataDetails::get_display_next_page_icon);
 	ClassDB::bind_method(D_METHOD("get_code"), &BG_StoryboardDataDetails::get_code);
@@ -202,18 +202,18 @@ void BG_StoryboardDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_StoryboardDetails::get_id);
 	ClassDB::bind_method(D_METHOD("get_localization_sheet"), &BG_StoryboardDetails::get_localization_sheet);
 	ClassDB::bind_method(D_METHOD("get_data"), &BG_StoryboardDetails::get_data);
-	ClassDB::bind_method(D_METHOD("get_character_default_text_locations"), &BG_StoryboardDetails::get_character_default_text_locations);
-	ClassDB::bind_method(D_METHOD("get_character_default_text_location_by_key", "key"), &BG_StoryboardDetails::get_character_default_text_location_by_key);
+	ClassDB::bind_method(D_METHOD("get_character_text_locations"), &BG_StoryboardDetails::get_character_text_locations);
+	ClassDB::bind_method(D_METHOD("get_character_text_locations_by_key", "key"), &BG_StoryboardDetails::get_character_text_locations_by_key);
 }
 
-Vector2 BG_StoryboardDetails::get_character_default_text_location_by_key(const StringName &key) const
+TypedArray<Vector2> BG_StoryboardDetails::get_character_text_locations_by_key(const StringName &key) const
 {
-	for (int i = 0; i < character_default_text_locations.size(); ++i) {
-		Ref<BG_StoryboardCharacterDefaultTextLocationDetails> cdtl = cast_to<BG_StoryboardCharacterDefaultTextLocationDetails>(character_default_text_locations[i]);
+	for (int i = 0; i < character_text_locations.size(); ++i) {
+		Ref<BG_StoryboardCharacterTextLocationDetails> cdtl = cast_to<BG_StoryboardCharacterTextLocationDetails>(character_text_locations[i]);
 		if (cdtl->get_character_key() == key)
-			return cdtl->get_default_location();
+			return cdtl->get_txt_locations();
 	}
-	return Vector2();
+	return {};
 }
 
 // BG_StoryboardDetails::~BG_StoryboardDetails()
@@ -1494,8 +1494,7 @@ void BG_BookerSkillTreeSlotDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_BookerSkillTreeSlotDetails::get_id);
 	ClassDB::bind_method(D_METHOD("get_is_parent_button"), &BG_BookerSkillTreeSlotDetails::get_is_parent_button);
-	ClassDB::bind_method(D_METHOD("get_skill_name"), &BG_BookerSkillTreeSlotDetails::get_skill_name);
-	ClassDB::bind_method(D_METHOD("get_skill_description"), &BG_BookerSkillTreeSlotDetails::get_skill_description);
+	ClassDB::bind_method(D_METHOD("get_skill_description_key"), &BG_BookerSkillTreeSlotDetails::get_skill_description_key);
 	ClassDB::bind_method(D_METHOD("get_required_rep"), &BG_BookerSkillTreeSlotDetails::get_required_rep);
 	ClassDB::bind_method(D_METHOD("get_parent_skill_id"), &BG_BookerSkillTreeSlotDetails::get_parent_skill_id);
 	ClassDB::bind_method(D_METHOD("get_value_attributes"), &BG_BookerSkillTreeSlotDetails::get_value_attributes);
@@ -1673,9 +1672,7 @@ Ref<BG_StoryboardDetails> BG_Booker_DB::import_and_get_storyboard_details_by_id(
 			sb_dets->character_key = StringName(get_find_data_by_param_name("character_key", data_entry)["element_id_name_value"]);
 			sb_dets->character_emotion = static_cast<BG_PortraitDetails::PortraitType>(int(get_find_data_by_param_name("character_emotion", data_entry)["value"]));;
 			sb_dets->text_key = StringName(UtilityFunctions::str(int(get_find_data_by_param_name("text_key", data_entry)["value"])));
-			
-			const Dictionary location_override_xy = get_find_data_by_param_name("location_override", data_entry);
-			sb_dets->location_override = Vector2(float(location_override_xy["value_x"]), float(location_override_xy["value_y"]));
+			sb_dets->txt_location_index = int(get_find_data_by_param_name("txt_location_index", data_entry)["value"]);
 			
 			sb_dets->display_at_top = bool(get_find_data_by_param_name("display_at_top", data_entry)["value"]);
 			sb_dets->display_next_page_icon = bool(get_find_data_by_param_name("display_next_page_icon", data_entry)["value"]);
@@ -1686,20 +1683,28 @@ Ref<BG_StoryboardDetails> BG_Booker_DB::import_and_get_storyboard_details_by_id(
 			result->data.append(sb_dets);
 		}
 
-		// Character Default Text Locations
-		const Dictionary character_default_text_locations_values = get_find_data_by_param_name("character_default_text_locations", entry);
-		const Array character_default_text_locations_array = character_default_text_locations_values["array_values"];
-		for (int x = 0; x < character_default_text_locations_array.size(); ++x) {
-			const Array character_default_text_locations_entry = character_default_text_locations_array[x];
+		// Character Text Locations
+		const Dictionary character_text_locations_values = get_find_data_by_param_name("character_text_locations", entry);
+		const Array character_text_locations_array = character_text_locations_values["array_values"];
+		for (int x = 0; x < character_text_locations_array.size(); ++x) {
+			const Array character_text_locations_entry = character_text_locations_array[x];
 
-			Ref<BG_StoryboardCharacterDefaultTextLocationDetails> sb_dets = memnew(BG_StoryboardCharacterDefaultTextLocationDetails);
-			sb_dets->character_key = StringName(get_find_data_by_param_name("character_key", character_default_text_locations_entry)["element_id_name_value"]);
-			
-			const Dictionary default_location_xy = get_find_data_by_param_name("default_location", character_default_text_locations_entry);
-			sb_dets->default_location = Vector2(float(default_location_xy["value_x"]), float(default_location_xy["value_y"]));
+			Ref<BG_StoryboardCharacterTextLocationDetails> sb_dets = memnew(BG_StoryboardCharacterTextLocationDetails);
+			sb_dets->character_key = StringName(get_find_data_by_param_name("character_key", character_text_locations_entry)["element_id_name_value"]);
 
-			result->character_default_text_locations.append(sb_dets);
+			// Text Locations
+			const Dictionary txt_locs_values = get_find_data_by_param_name("txt_locations", character_text_locations_entry);
+			const Array txt_locs_array = txt_locs_values["array_values"];
+			for (int x = 0; x < txt_locs_array.size(); ++x) {
+				const Array txt_locs_entry = txt_locs_array[x];
+
+				const Dictionary txt_location = get_find_data_by_param_name("txt_location", txt_locs_entry);
+				sb_dets->txt_locations.append(Vector2(float(txt_location["value_x"]), float(txt_location["value_y"])));
+			}
+
+			result->character_text_locations.append(sb_dets);
 		}
+		break;
 	}
 
 	if (!result->get_id().is_empty())
@@ -2551,8 +2556,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		const Array lines = get_sheet_by_name("Stat_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
-			if (bool(get_find_data_by_param_name("disabled", entry)["value"]))
-				continue;
 			
 			BG_UnitStatDetails *new_stat_types = memnew(BG_UnitStatDetails);
 			new_stat_types->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
@@ -2881,8 +2884,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			const Array hex_types_values_array = hex_types_values["array_values"];
 			for (int x = 0; x < hex_types_values_array.size(); ++x) {
 				const Array hex_types_entry = hex_types_values_array[x];
-				if (bool(get_find_data_by_param_name("disabled", hex_types_entry)["value"]))
-					continue;
 				
 				BG_BattleBoard_HexTypeDetails *new_hex_type_class = memnew(BG_BattleBoard_HexTypeDetails);
 				new_hex_type_class->id = StringName(get_find_data_by_param_name("id", hex_types_entry)["value"]);
@@ -2989,14 +2990,11 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		const Array lines = get_sheet_by_name("Booker_Skill_Tree", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
-			if (bool(get_find_data_by_param_name("disabled", entry)["value"]))
-				continue;
 			
 			BG_BookerSkillTreeSlotDetails *new_booker_skill_tree_slot_details_class = memnew(BG_BookerSkillTreeSlotDetails);
 			new_booker_skill_tree_slot_details_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
 			new_booker_skill_tree_slot_details_class->is_parent_button = bool(get_find_data_by_param_name("is_parent_btn", entry)["value"]);
-			new_booker_skill_tree_slot_details_class->skill_name = StringName(get_find_data_by_param_name("skill_name", entry)["value"]);
-			new_booker_skill_tree_slot_details_class->skill_description = StringName(get_find_data_by_param_name("skill_description", entry)["value"]);
+			new_booker_skill_tree_slot_details_class->skill_description_key = StringName(get_find_data_by_param_name("skill_description_key", entry)["value"]);
 			new_booker_skill_tree_slot_details_class->required_rep = int(get_find_data_by_param_name("required_rep", entry)["value"]);
 			StringName parent_skill = StringName(get_find_data_by_param_name("parent_skill", entry)["element_id_name_value"]);
 			if (!parent_skill.is_empty())
@@ -3022,8 +3020,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		const Array lines = get_sheet_by_name("Caste_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
-			if (bool(get_find_data_by_param_name("disabled", entry)["value"]))
-				continue;
 
 			BG_UnitCaste *new_unit_caste = memnew(BG_UnitCaste);
 			new_unit_caste->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
@@ -3188,8 +3184,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		const Array lines = get_sheet_by_name("Effects", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
-			if (bool(get_find_data_by_param_name("disabled", entry)["value"]))
-				continue;
 
 			BG_Effect *new_effect_class = memnew(BG_Effect);
 			new_effect_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
@@ -3511,9 +3505,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		const Array lines = get_sheet_by_name("Objectives", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Array entry = lines[i];
-
-			if (bool(get_find_data_by_param_name("disabled", entry)["value"]))
-				continue;
 			
 			BG_ObjectiveDetails *new_objective_class = memnew(BG_ObjectiveDetails);
 			new_objective_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);

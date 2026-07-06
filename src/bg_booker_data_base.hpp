@@ -69,9 +69,9 @@ public:
 ////
 //// BG_StoryboardCharacterDefaultTextLocationDetails
 ////
-class BG_StoryboardCharacterDefaultTextLocationDetails : public Resource
+class BG_StoryboardCharacterTextLocationDetails : public Resource
 {
-	GDCLASS(BG_StoryboardCharacterDefaultTextLocationDetails, Resource);
+	GDCLASS(BG_StoryboardCharacterTextLocationDetails, Resource);
 
 protected:
 	static void _bind_methods();
@@ -80,8 +80,8 @@ public:
 	StringName character_key;
 	StringName get_character_key() const { return character_key; }
 
-	Vector2 default_location;
-	Vector2 get_default_location() const { return default_location; }
+	TypedArray<Vector2> txt_locations;
+	TypedArray<Vector2> get_txt_locations() const { return txt_locations; }
 };
 
 ////
@@ -104,8 +104,8 @@ public:
 	StringName text_key;
 	StringName get_text_key() const { return text_key; }
 
-	Vector2 location_override = Vector2();
-	Vector2 get_location_override() const { return location_override; }
+	int txt_location_index = 0;
+	int get_txt_location_index() const { return txt_location_index; }
 
 	bool display_at_top = false;
 	bool get_display_at_top() const { return display_at_top; }
@@ -145,9 +145,9 @@ public:
 	TypedArray<BG_StoryboardDataDetails> data;
 	TypedArray<BG_StoryboardDataDetails> get_data() const { return data; }
 	
-	TypedArray<BG_StoryboardCharacterDefaultTextLocationDetails> character_default_text_locations;
-	TypedArray<BG_StoryboardCharacterDefaultTextLocationDetails> get_character_default_text_locations() const { return character_default_text_locations; }
-	Vector2 get_character_default_text_location_by_key(const StringName &key) const;
+	TypedArray<BG_StoryboardCharacterTextLocationDetails> character_text_locations;
+	TypedArray<BG_StoryboardCharacterTextLocationDetails> get_character_text_locations() const { return character_text_locations; }
+	TypedArray<Vector2> get_character_text_locations_by_key(const StringName &key) const;
 };
 
 ////
@@ -2043,11 +2043,8 @@ public:
 	bool is_parent_button;
 	bool get_is_parent_button() const { return is_parent_button; }
 
-	StringName skill_name;
-	StringName get_skill_name() const { return skill_name; }
-
-	StringName skill_description;
-	StringName get_skill_description() const { return skill_description; }
+	StringName skill_description_key;
+	StringName get_skill_description_key() const { return skill_description_key; }
 
 	int required_rep;
 	int get_required_rep() const { return required_rep; }
