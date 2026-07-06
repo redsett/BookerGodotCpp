@@ -446,6 +446,7 @@ void BG_BattleBoardDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_board_path"), &BG_BattleBoardDetails::get_board_path);
 	ClassDB::bind_method(D_METHOD("get_default_hex_visual_path"), &BG_BattleBoardDetails::get_default_hex_visual_path);
 	ClassDB::bind_method(D_METHOD("get_hex_types"), &BG_BattleBoardDetails::get_hex_types);
+	ClassDB::bind_method(D_METHOD("get_parent_data_id"), &BG_BattleBoardDetails::get_parent_data_id);
 
 	ClassDB::bind_method(D_METHOD("get_hex_types_by_type", "type"), &BG_BattleBoardDetails::get_hex_types_by_type);
 	ClassDB::bind_method(D_METHOD("get_hex_type_by_id", "id"), &BG_BattleBoardDetails::get_hex_type_by_id);
@@ -1598,9 +1599,9 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_objectives"), &BG_Booker_DB::get_objectives);
 	ClassDB::bind_method(D_METHOD("get_battle_boards_details"), &BG_Booker_DB::get_battle_boards_details);
 	ClassDB::bind_method(D_METHOD("get_battle_board_by_id", "id"), &BG_Booker_DB::get_battle_board_by_id);
-	ClassDB::bind_method(D_METHOD("get_battle_board_details_for_bb", "parent_bb_id", "bb_id"), &BG_Booker_DB::get_battle_board_details_for_bb);
-	ClassDB::bind_method(D_METHOD("get_battle_board_hex_types_by_type", "parent_bb_id", "bb_id", "type"), &BG_Booker_DB::get_battle_board_hex_types_by_type);
-	ClassDB::bind_method(D_METHOD("get_battle_board_hex_type_by_id", "parent_bb_id", "bb_id", "id"), &BG_Booker_DB::get_battle_board_hex_type_by_id);
+	ClassDB::bind_method(D_METHOD("get_battle_board_details_for_bb", "bb_id"), &BG_Booker_DB::get_battle_board_details_for_bb);
+	ClassDB::bind_method(D_METHOD("get_battle_board_hex_types_by_type", "bb_id", "type"), &BG_Booker_DB::get_battle_board_hex_types_by_type);
+	ClassDB::bind_method(D_METHOD("get_battle_board_hex_type_by_id", "bb_id", "id"), &BG_Booker_DB::get_battle_board_hex_type_by_id);
 	ClassDB::bind_method(D_METHOD("get_game_map_node_details"), &BG_Booker_DB::get_game_map_node_details);
 	ClassDB::bind_method(D_METHOD("get_game_map_node_details_by_id", "id"), &BG_Booker_DB::get_game_map_node_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_game_map_details"), &BG_Booker_DB::get_game_map_details);
@@ -1757,24 +1758,27 @@ BG_BattleBoardDetails *BG_Booker_DB::get_battle_board_by_id(const StringName &id
 	return nullptr;
 }
 
-TypedArray<BG_BattleBoard_HexTypeDetails> BG_Booker_DB::get_battle_board_details_for_bb(const StringName &parent_bb_id, const StringName &bb_id) const
+TypedArray<BG_BattleBoard_HexTypeDetails> BG_Booker_DB::get_battle_board_details_for_bb(const StringName &bb_id) const
 {
-	// Add all of the parent battle board hex details.
 	HashMap<StringName, TypedArray<BG_BattleBoard_HexTypeDetails>> sorted;
-	const BG_BattleBoardDetails *bb = get_battle_board_by_id(parent_bb_id);
-	if (bb != nullptr) {
-		for (int i = 0; i < bb->get_hex_types().size(); ++i) {
-			BG_BattleBoard_HexTypeDetails *hex_type_details = cast_to<BG_BattleBoard_HexTypeDetails>(bb->get_hex_types()[i]);
-			if (!sorted.has(hex_type_details->get_id())) {
-				TypedArray<BG_BattleBoard_HexTypeDetails> a;
-				sorted[hex_type_details->get_id()] = a;
-			}
-			sorted[hex_type_details->get_id()].append(hex_type_details);
-		}
+	get_battle_board_details_for_bb_from_sorted(bb_id, sorted);
+
+	TypedArray<BG_BattleBoard_HexTypeDetails> result;
+	for (const auto &pair : sorted) {
+		result.append_array(pair.value);
 	}
 
-	// Add the child battle board details. If the child has an existing Id from the parent, then override it.
-	bb = get_battle_board_by_id(bb_id);
+	return result;
+}
+
+void BG_Booker_DB::get_battle_board_details_for_bb_from_sorted(const StringName &bb_id, HashMap<StringName, TypedArray<BG_BattleBoard_HexTypeDetails>> &sorted) const
+{
+	const BG_BattleBoardDetails *bb = get_battle_board_by_id(bb_id);
+	if (bb != nullptr && !bb->get_parent_data_id().is_empty()) {
+		get_battle_board_details_for_bb_from_sorted(bb->get_parent_data_id(), sorted);
+	}
+
+	// Add battle board details. If the child has an existing Id from the parent, then override it.
 	if (bb != nullptr) {
 		TypedArray<StringName> child_ids_hit;
 		for (int i = 0; i < bb->get_hex_types().size(); ++i) {
@@ -1789,37 +1793,30 @@ TypedArray<BG_BattleBoard_HexTypeDetails> BG_Booker_DB::get_battle_board_details
 			child_ids_hit.append(hex_type_details->get_id());
 		}
 	}
-
-	TypedArray<BG_BattleBoard_HexTypeDetails> result;
-	for (const auto &pair : sorted) {
-		result.append_array(pair.value);
-	}
-
-	return result;
 }
 
-TypedArray<BG_BattleBoard_HexTypeDetails> BG_Booker_DB::get_battle_board_hex_types_by_type(const StringName &parent_bb_id, const StringName &bb_id, int type, bool is_game_type) const {
+TypedArray<BG_BattleBoard_HexTypeDetails> BG_Booker_DB::get_battle_board_hex_types_by_type(const StringName &bb_id, int type, bool is_game_type) const {
 	TypedArray<BG_BattleBoard_HexTypeDetails> result;
 	const BG_BattleBoardDetails *bb = get_battle_board_by_id(bb_id);
-	if (bb != nullptr)
+	if (bb != nullptr) {
 		result = bb->get_hex_types_by_type(type, is_game_type);
-	if (result.is_empty()) {
-		bb = get_battle_board_by_id(parent_bb_id);
-		if (bb != nullptr)
-			result = bb->get_hex_types_by_type(type, is_game_type);
+
+		if (result.is_empty() && !bb->get_parent_data_id().is_empty()) {
+			result = get_battle_board_hex_types_by_type(bb->get_parent_data_id(), type, is_game_type);
+		}
 	}
 	return result;
 }
 
-BG_BattleBoard_HexTypeDetails *BG_Booker_DB::get_battle_board_hex_type_by_id(const StringName &parent_bb_id, const StringName &bb_id, const StringName &id) const {
+BG_BattleBoard_HexTypeDetails *BG_Booker_DB::get_battle_board_hex_type_by_id(const StringName &bb_id, const StringName &id) const {
 	BG_BattleBoard_HexTypeDetails *result = nullptr;
 	const BG_BattleBoardDetails *bb = get_battle_board_by_id(bb_id);
-	if (bb != nullptr)
+	if (bb != nullptr) {
 		result = bb->get_hex_type_by_id(id);
-	if (result == nullptr) {
-		bb = get_battle_board_by_id(parent_bb_id);
-		if (bb != nullptr)
-			result = bb->get_hex_type_by_id(id);
+
+		if (result == nullptr && !bb->get_parent_data_id().is_empty()) {
+			result = get_battle_board_hex_type_by_id(bb->get_parent_data_id(), id);
+		}
 	}
 	// if (result == nullptr) {
 	// 	UtilityFunctions::prints(parent_bb_id, bb_id, id);
@@ -2878,6 +2875,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			new_class->unique_save_name = StringName(get_find_data_by_param_name("unique_save_name", entry)["value"]);
 			new_class->board_path = ensure_clean_path(get_find_data_by_param_name("board_path", entry)["path"]);
 			new_class->default_hex_visual_path = ensure_clean_path(get_find_data_by_param_name("default_hex_visual_path", entry)["path"]);
+			new_class->parent_data_id = StringName(get_find_data_by_param_name("parent_data_id", entry)["element_id_name_value"]);
 
 			// Hex Types
 			const Dictionary hex_types_values = get_find_data_by_param_name("hex_types", entry);

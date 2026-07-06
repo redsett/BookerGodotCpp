@@ -222,10 +222,8 @@ public:
 
     int get_asset_type_cost() const { return 0; }
 
-    StringName parent_bb_id;
     StringName bb_id;
-    void init(const StringName &_parent_bb_id, const StringName &_bb_id) {
-        parent_bb_id = _parent_bb_id;
+    void init(const StringName &_bb_id) {
         bb_id = _bb_id;
         _update_dyn_hex_type_details();
 
@@ -326,7 +324,7 @@ public:
         if (asset_type_dyn.is_empty()) return;
         const BG_Booker_DB *bdb = BG_Booker_DB::get_singleton();
         if (bdb == nullptr) return;
-        dyn_hex_type_details = bdb->get_battle_board_hex_type_by_id(parent_bb_id, bb_id, asset_type_dyn);
+        dyn_hex_type_details = bdb->get_battle_board_hex_type_by_id(bb_id, asset_type_dyn);
     }
 
     bool get_is_dynamic_type() { return dyn_hex_type_details != nullptr; }

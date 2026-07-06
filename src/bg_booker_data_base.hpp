@@ -493,6 +493,9 @@ public:
 	TypedArray<BG_BattleBoard_HexTypeDetails> hex_types;
 	TypedArray<BG_BattleBoard_HexTypeDetails> get_hex_types() const { return hex_types; }
 
+	StringName parent_data_id;
+	StringName get_parent_data_id() const { return parent_data_id; }
+
 	TypedArray<BG_BattleBoard_HexTypeDetails> get_hex_types_by_type(int type, bool is_game_type = true) const;
 	BG_BattleBoard_HexTypeDetails *get_hex_type_by_id(const StringName &id) const;
 };
@@ -2267,9 +2270,10 @@ public:
 	TypedArray<BG_BattleBoardDetails> battle_boards_details;
 	TypedArray<BG_BattleBoardDetails> get_battle_boards_details() const { return battle_boards_details; }
 	BG_BattleBoardDetails *get_battle_board_by_id(const StringName &id) const;
-	TypedArray<BG_BattleBoard_HexTypeDetails> get_battle_board_details_for_bb(const StringName &parent_bb_id, const StringName &bb_id) const;
-	TypedArray<BG_BattleBoard_HexTypeDetails> get_battle_board_hex_types_by_type(const StringName &parent_bb_id, const StringName &bb_id, int type, bool is_game_type = true) const;
-	BG_BattleBoard_HexTypeDetails *get_battle_board_hex_type_by_id(const StringName &parent_bb_id, const StringName &bb_id, const StringName &id) const;
+	TypedArray<BG_BattleBoard_HexTypeDetails> get_battle_board_details_for_bb(const StringName &bb_id) const;
+	void get_battle_board_details_for_bb_from_sorted(const StringName &bb_id, HashMap<StringName, TypedArray<BG_BattleBoard_HexTypeDetails>> &sorted) const;
+	TypedArray<BG_BattleBoard_HexTypeDetails> get_battle_board_hex_types_by_type(const StringName &bb_id, int type, bool is_game_type = true) const;
+	BG_BattleBoard_HexTypeDetails *get_battle_board_hex_type_by_id(const StringName &bb_id, const StringName &id) const;
 
 	TypedArray<BG_GameMapNodeDetails> game_map_node_details;
 	TypedArray<BG_GameMapNodeDetails> get_game_map_node_details() const { return game_map_node_details; }

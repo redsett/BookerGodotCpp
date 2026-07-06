@@ -136,7 +136,7 @@ void BG_HexGameSaveData::_bind_methods()
     ClassDB::bind_static_method("BG_HexGameSaveData", D_METHOD("map_game_type_to_asset_type", "type"), &BG_HexGameSaveData::map_game_type_to_asset_type);
     ClassDB::bind_static_method("BG_HexGameSaveData", D_METHOD("prep_data_to_move_to_another_board", "old_data", "new_data"), &BG_HexGameSaveData::prep_data_to_move_to_another_board);
 
-	ClassDB::bind_method(D_METHOD("init", "parent_bb_id", "bb_id"), &BG_HexGameSaveData::init);
+	ClassDB::bind_method(D_METHOD("init", "bb_id"), &BG_HexGameSaveData::init);
 	ClassDB::bind_method(D_METHOD("get_asset_type"), &BG_HexGameSaveData::get_asset_type);
 	ClassDB::bind_method(D_METHOD("set_asset_type"), &BG_HexGameSaveData::set_asset_type);
 	ClassDB::bind_method(D_METHOD("get_asset_type_dyn"), &BG_HexGameSaveData::get_asset_type_dyn);
