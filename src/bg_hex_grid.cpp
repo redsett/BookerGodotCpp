@@ -315,6 +315,8 @@ void BG_Hex::_bind_methods()
 ////
 void BG_HexGrid::_bind_methods()
 {
+	ClassDB::bind_method(D_METHOD("get_grid_size_min"), &BG_HexGrid::get_grid_size_min);
+	ClassDB::bind_method(D_METHOD("get_grid_size_max"), &BG_HexGrid::get_grid_size_max);
 	ClassDB::bind_method(D_METHOD("get_direction_difference", "hex", "direction"), &BG_HexGrid::get_direction_difference);
 	ClassDB::bind_method(D_METHOD("get_offset_type"), &BG_HexGrid::get_offset_type);
 	ClassDB::bind_method(D_METHOD("set_offset_type"), &BG_HexGrid::set_offset_type);
@@ -636,6 +638,16 @@ void BG_HexGrid::add_hex_from_qr(const Vector2i &qr, bool is_empty)
     // add_hex(new_hex);
     grid_map[new_hex->get_qr()] = new_hex;
     grid.append(new_hex);
+
+    if (qr.x < grid_size_min.x)
+        grid_size_min.x = qr.x;
+    else if (qr.x > grid_size_max.x)
+        grid_size_max.x = qr.x;
+    
+    if (qr.y < grid_size_min.y)
+        grid_size_min.y = qr.y;
+    else if (qr.y > grid_size_max.y)
+        grid_size_max.y = qr.y;
 }
 
 void BG_HexGrid::add_row(int column_index, int initial_emptys, int count)
