@@ -315,9 +315,7 @@ void BG_Hex::_bind_methods()
 ////
 void BG_HexGrid::_bind_methods()
 {
-	ClassDB::bind_method(D_METHOD("get_grid_size_min"), &BG_HexGrid::get_grid_size_min);
-	ClassDB::bind_method(D_METHOD("get_grid_size_max"), &BG_HexGrid::get_grid_size_max);
-	ClassDB::bind_method(D_METHOD("get_direction_difference", "hex", "direction"), &BG_HexGrid::get_direction_difference);
+    ClassDB::bind_method(D_METHOD("get_direction_difference", "hex", "direction"), &BG_HexGrid::get_direction_difference);
 	ClassDB::bind_method(D_METHOD("get_offset_type"), &BG_HexGrid::get_offset_type);
 	ClassDB::bind_method(D_METHOD("set_offset_type"), &BG_HexGrid::set_offset_type);
 	ClassDB::bind_method(D_METHOD("get_grid"), &BG_HexGrid::get_grid);
@@ -327,6 +325,8 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_game_data"), &BG_HexGrid::get_game_data);
 	ClassDB::bind_method(D_METHOD("set_game_data"), &BG_HexGrid::set_game_data);
 	ClassDB::bind_method(D_METHOD("get_game_data_from_qr", "qr"), &BG_HexGrid::get_game_data_from_qr);
+	ClassDB::bind_method(D_METHOD("get_grid_size_min"), &BG_HexGrid::get_grid_size_min);
+	ClassDB::bind_method(D_METHOD("get_grid_size_max"), &BG_HexGrid::get_grid_size_max);
 	ClassDB::bind_method(D_METHOD("get_hex_cost", "from_hex", "qr", "do_friendly_check"), &BG_HexGrid::get_hex_cost);
 	ClassDB::bind_method(D_METHOD("get_hex_size"), &BG_HexGrid::get_hex_size);
 	ClassDB::bind_method(D_METHOD("set_hex_size"), &BG_HexGrid::set_hex_size);
@@ -638,16 +638,6 @@ void BG_HexGrid::add_hex_from_qr(const Vector2i &qr, bool is_empty)
     // add_hex(new_hex);
     grid_map[new_hex->get_qr()] = new_hex;
     grid.append(new_hex);
-
-    if (qr.x < grid_size_min.x)
-        grid_size_min.x = qr.x;
-    else if (qr.x > grid_size_max.x)
-        grid_size_max.x = qr.x;
-    
-    if (qr.y < grid_size_min.y)
-        grid_size_min.y = qr.y;
-    else if (qr.y > grid_size_max.y)
-        grid_size_max.y = qr.y;
 }
 
 void BG_HexGrid::add_row(int column_index, int initial_emptys, int count)
@@ -806,6 +796,32 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> &instigator, const Vector2
     }
 
     return 1;
+}
+
+Vector2i BG_HexGrid::get_grid_size_min() const
+{
+    Vector2i result = Vector2i(9999, 9999);
+    for (const auto &pair : grid_map) {
+        const Vector2i &qr = pair.key;
+        if (qr.x < result.x)
+            result.x = qr.x;
+        if (qr.y < result.y)
+            result.y = qr.y;
+    }
+    return result;
+}
+
+Vector2i BG_HexGrid::get_grid_size_max() const
+{
+    Vector2i result = Vector2i(-9999, -9999);
+    for (const auto &pair : grid_map) {
+        const Vector2i &qr = pair.key;
+        if (qr.x > result.x)
+            result.x = qr.x;
+        if (qr.y > result.y)
+            result.y = qr.y;
+    }
+    return result;
 }
 
 Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_job_attackable(const Ref<BG_Hex> &from_job_hex, const TypedArray<int> &attackable_types, const TypedArray<BG_Band> &bands) const

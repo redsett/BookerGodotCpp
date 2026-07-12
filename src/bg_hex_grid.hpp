@@ -399,9 +399,6 @@ protected:
     float x_offset_percent = 0.0;
     float y_offset_percent = 0.0;
 
-    Vector2i grid_size_min = Vector2i(9999, 9999);
-    Vector2i grid_size_max = Vector2i(-9999, -9999);
-
 public:
     BG_HexGrid();
     
@@ -420,9 +417,6 @@ public:
         LEFT,
         TOP_LEFT
 	};
-
-    Vector2i get_grid_size_min() const { return grid_size_min; }
-    Vector2i get_grid_size_max() const { return grid_size_max; }
 
     Vector2i get_direction_difference(const Ref<BG_Hex> &hex, const Vector2i &d) const;
     
@@ -463,6 +457,9 @@ public:
         return nullptr;
     }
 
+    Vector2i get_grid_size_min() const;
+    Vector2i get_grid_size_max() const;
+    
     int get_hex_cost(const Ref<BG_Hex> &from_hex, const Vector2i &qr, bool do_pass_through_check) const;
     
     Vector2 hex_size = Vector2();
