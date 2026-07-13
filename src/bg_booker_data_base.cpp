@@ -494,6 +494,9 @@ void BG_GameMapNodeDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_type"), &BG_GameMapNodeDetails::get_type);
 	ClassDB::bind_method(D_METHOD("get_script_path"), &BG_GameMapNodeDetails::get_script_path);
 	ClassDB::bind_method(D_METHOD("get_battle_board_id"), &BG_GameMapNodeDetails::get_battle_board_id);
+	ClassDB::bind_method(D_METHOD("get_storyboard_id_pre"), &BG_GameMapNodeDetails::get_storyboard_id_pre);
+	ClassDB::bind_method(D_METHOD("get_storyboard_id_post"), &BG_GameMapNodeDetails::get_storyboard_id_post);
+	ClassDB::bind_method(D_METHOD("get_enable_nodes_on_complete"), &BG_GameMapNodeDetails::get_enable_nodes_on_complete);
 }
 
 BG_GameMapNodeDetails::~BG_GameMapNodeDetails()
@@ -3250,6 +3253,18 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			new_game_map_node_class->type = int(get_find_data_by_param_name("type", entry)["value"]);
 			new_game_map_node_class->script_path = ensure_clean_path(get_find_data_by_param_name("script_path", entry)["path"]);
 			new_game_map_node_class->battle_board_id = StringName(get_find_data_by_param_name("battle_board_id", entry)["element_id_name_value"]);
+			new_game_map_node_class->storyboard_id_pre = StringName(get_find_data_by_param_name("storyboard_id_pre", entry)["element_id_name_value"]);
+			new_game_map_node_class->storyboard_id_post = StringName(get_find_data_by_param_name("storyboard_id_post", entry)["element_id_name_value"]);
+
+			// Enable Nodes On Complete
+			const Dictionary enable_nodes_on_complete_values = get_find_data_by_param_name("enable_nodes_on_complete", entry);
+			const Array enable_nodes_on_complete_array = enable_nodes_on_complete_values["array_values"];
+			for (int x = 0; x < enable_nodes_on_complete_array.size(); ++x) {
+				const Array enable_nodes_on_complete_entry = enable_nodes_on_complete_array[x];
+
+				new_game_map_node_class->enable_nodes_on_complete[
+					StringName(get_find_data_by_param_name("node", enable_nodes_on_complete_entry)["element_id_name_value"])] = bool(get_find_data_by_param_name("enable", enable_nodes_on_complete_entry)["value"]);
+			}
 
 			game_map_node_details.append(new_game_map_node_class);
 		}

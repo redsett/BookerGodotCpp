@@ -524,6 +524,15 @@ public:
 	
 	StringName battle_board_id;
 	StringName get_battle_board_id() const { return battle_board_id; }
+	
+	StringName storyboard_id_pre;
+	StringName get_storyboard_id_pre() const { return storyboard_id_pre; }
+	
+	StringName storyboard_id_post;
+	StringName get_storyboard_id_post() const { return storyboard_id_post; }
+
+	Dictionary enable_nodes_on_complete; // StringName (Game Map Node ID) : bool (enabled or not)
+	Dictionary get_enable_nodes_on_complete() const { return enable_nodes_on_complete; }
 };
 
 ////
