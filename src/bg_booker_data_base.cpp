@@ -191,7 +191,7 @@ void BG_StoryboardDataDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_display_next_page_icon"), &BG_StoryboardDataDetails::get_display_next_page_icon);
 	ClassDB::bind_method(D_METHOD("get_code"), &BG_StoryboardDataDetails::get_code);
 	ClassDB::bind_method(D_METHOD("get_texture_path"), &BG_StoryboardDataDetails::get_texture_path);
-	ClassDB::bind_method(D_METHOD("get_audio_id"), &BG_StoryboardDataDetails::get_audio_id);
+	ClassDB::bind_method(D_METHOD("get_audio_ids"), &BG_StoryboardDataDetails::get_audio_ids);
 }
 
 ////
@@ -447,6 +447,8 @@ void BG_BattleBoardDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_default_hex_visual_path"), &BG_BattleBoardDetails::get_default_hex_visual_path);
 	ClassDB::bind_method(D_METHOD("get_hex_types"), &BG_BattleBoardDetails::get_hex_types);
 	ClassDB::bind_method(D_METHOD("get_parent_data_id"), &BG_BattleBoardDetails::get_parent_data_id);
+	ClassDB::bind_method(D_METHOD("get_music_id"), &BG_BattleBoardDetails::get_music_id);
+	ClassDB::bind_method(D_METHOD("get_ambient_id"), &BG_BattleBoardDetails::get_ambient_id);
 
 	ClassDB::bind_method(D_METHOD("get_hex_types_by_type", "type"), &BG_BattleBoardDetails::get_hex_types_by_type);
 	ClassDB::bind_method(D_METHOD("get_hex_type_by_id", "id"), &BG_BattleBoardDetails::get_hex_type_by_id);
@@ -1605,6 +1607,8 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_battle_board_details_for_bb", "bb_id"), &BG_Booker_DB::get_battle_board_details_for_bb);
 	ClassDB::bind_method(D_METHOD("get_battle_board_hex_types_by_type", "bb_id", "type"), &BG_Booker_DB::get_battle_board_hex_types_by_type);
 	ClassDB::bind_method(D_METHOD("get_battle_board_hex_type_by_id", "bb_id", "id"), &BG_Booker_DB::get_battle_board_hex_type_by_id);
+	ClassDB::bind_method(D_METHOD("get_battle_board_music_id", "bb_id"), &BG_Booker_DB::get_battle_board_music_id);
+	ClassDB::bind_method(D_METHOD("get_battle_board_ambient_id", "bb_id"), &BG_Booker_DB::get_battle_board_ambient_id);
 	ClassDB::bind_method(D_METHOD("get_game_map_node_details"), &BG_Booker_DB::get_game_map_node_details);
 	ClassDB::bind_method(D_METHOD("get_game_map_node_details_by_id", "id"), &BG_Booker_DB::get_game_map_node_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_game_map_details"), &BG_Booker_DB::get_game_map_details);
@@ -1682,7 +1686,15 @@ Ref<BG_StoryboardDetails> BG_Booker_DB::import_and_get_storyboard_details_by_id(
 			sb_dets->display_next_page_icon = bool(get_find_data_by_param_name("display_next_page_icon", data_entry)["value"]);
 			sb_dets->code = StringName(get_find_data_by_param_name("code", data_entry)["value"]);
 			sb_dets->texture_path = ensure_clean_path(get_find_data_by_param_name("texture_path", data_entry)["path"]);
-			sb_dets->audio_id = StringName(get_find_data_by_param_name("audio_id", data_entry)["element_id_name_value"]);
+
+			// Audio IDs
+			const Dictionary audio_ids_values = get_find_data_by_param_name("audio_ids", data_entry);
+			const Array audio_ids_array = audio_ids_values["array_values"];
+			for (int x = 0; x < audio_ids_array.size(); ++x) {
+				const Array audio_ids_entry = audio_ids_array[x];
+
+				sb_dets->audio_ids.append( StringName(get_find_data_by_param_name("audio_id", audio_ids_entry)["element_id_name_value"]) );
+			}		
 
 			result->data.append(sb_dets);
 		}
@@ -1825,6 +1837,31 @@ BG_BattleBoard_HexTypeDetails *BG_Booker_DB::get_battle_board_hex_type_by_id(con
 	// 	UtilityFunctions::prints(parent_bb_id, bb_id, id);
 	// 	UtilityFunctions::prints("uh oh");
 	// }
+	return result;
+}
+
+StringName BG_Booker_DB::get_battle_board_music_id(const StringName &bb_id) const
+{
+	StringName result;
+	const BG_BattleBoardDetails *bb = get_battle_board_by_id(bb_id);
+	if (bb != nullptr) {
+		result = bb->get_music_id();
+		if (result.is_empty() && !bb->get_parent_data_id().is_empty()) {
+			result = get_battle_board_music_id(bb->get_parent_data_id());
+		}
+	}
+	return result;
+}
+StringName BG_Booker_DB::get_battle_board_ambient_id(const StringName &bb_id) const
+{
+	StringName result;
+	const BG_BattleBoardDetails *bb = get_battle_board_by_id(bb_id);
+	if (bb != nullptr) {
+		result = bb->get_ambient_id();
+		if (result.is_empty() && !bb->get_parent_data_id().is_empty()) {
+			result = get_battle_board_ambient_id(bb->get_parent_data_id());
+		}
+	}
 	return result;
 }
 
@@ -2981,6 +3018,17 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				}
 
 				new_class->hex_types.append(new_hex_type_class);
+			}
+
+			// Audio
+			const Dictionary audio_values = get_find_data_by_param_name("audio", entry);
+			const Array audio_array = audio_values["array_values"];
+			for (int x = 0; x < audio_array.size(); ++x) {
+				const Array audio_entry = audio_array[x];
+				
+				new_class->music_id = StringName(get_find_data_by_param_name("music_id", audio_entry)["element_id_name_value"]);
+				new_class->ambient_id = StringName(get_find_data_by_param_name("ambient_id", audio_entry)["element_id_name_value"]);
+				break;
 			}
 
 			battle_boards_details.append(new_class);

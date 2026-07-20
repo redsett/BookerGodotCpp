@@ -119,8 +119,8 @@ public:
 	StringName texture_path;
 	StringName get_texture_path() const { return texture_path; }
 	
-	StringName audio_id;
-	StringName get_audio_id() const { return audio_id; }
+	TypedArray<StringName> audio_ids;
+	TypedArray<StringName> get_audio_ids() const { return audio_ids; }
 };
 
 ////
@@ -495,6 +495,12 @@ public:
 
 	StringName parent_data_id;
 	StringName get_parent_data_id() const { return parent_data_id; }
+
+	StringName music_id;
+	StringName get_music_id() const { return music_id; }
+
+	StringName ambient_id;
+	StringName get_ambient_id() const { return ambient_id; }
 
 	TypedArray<BG_BattleBoard_HexTypeDetails> get_hex_types_by_type(int type, bool is_game_type = true) const;
 	BG_BattleBoard_HexTypeDetails *get_hex_type_by_id(const StringName &id) const;
@@ -2283,6 +2289,8 @@ public:
 	void get_battle_board_details_for_bb_from_sorted(const StringName &bb_id, HashMap<StringName, TypedArray<BG_BattleBoard_HexTypeDetails>> &sorted) const;
 	TypedArray<BG_BattleBoard_HexTypeDetails> get_battle_board_hex_types_by_type(const StringName &bb_id, int type, bool is_game_type = true) const;
 	BG_BattleBoard_HexTypeDetails *get_battle_board_hex_type_by_id(const StringName &bb_id, const StringName &id) const;
+	StringName get_battle_board_music_id(const StringName &bb_id) const;
+	StringName get_battle_board_ambient_id(const StringName &bb_id) const;
 
 	TypedArray<BG_GameMapNodeDetails> game_map_node_details;
 	TypedArray<BG_GameMapNodeDetails> get_game_map_node_details() const { return game_map_node_details; }
