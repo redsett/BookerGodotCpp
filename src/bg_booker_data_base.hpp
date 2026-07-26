@@ -487,6 +487,9 @@ public:
 	StringName board_path;
 	StringName get_board_path() const { return board_path; }
 
+	StringName battle_board_game_script_path;
+	StringName get_battle_board_game_script_path() const { return battle_board_game_script_path; }
+
 	StringName default_hex_visual_path;
 	StringName get_default_hex_visual_path() const { return default_hex_visual_path; }
 

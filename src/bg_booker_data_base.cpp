@@ -444,6 +444,7 @@ void BG_BattleBoardDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_BattleBoardDetails::get_id);
 	ClassDB::bind_method(D_METHOD("get_unique_save_name"), &BG_BattleBoardDetails::get_unique_save_name);
 	ClassDB::bind_method(D_METHOD("get_board_path"), &BG_BattleBoardDetails::get_board_path);
+	ClassDB::bind_method(D_METHOD("get_battle_board_game_script_path"), &BG_BattleBoardDetails::get_battle_board_game_script_path);
 	ClassDB::bind_method(D_METHOD("get_default_hex_visual_path"), &BG_BattleBoardDetails::get_default_hex_visual_path);
 	ClassDB::bind_method(D_METHOD("get_hex_types"), &BG_BattleBoardDetails::get_hex_types);
 	ClassDB::bind_method(D_METHOD("get_parent_data_id"), &BG_BattleBoardDetails::get_parent_data_id);
@@ -2914,6 +2915,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			new_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
 			new_class->unique_save_name = StringName(get_find_data_by_param_name("unique_save_name", entry)["value"]);
 			new_class->board_path = ensure_clean_path(get_find_data_by_param_name("board_path", entry)["path"]);
+			new_class->battle_board_game_script_path = ensure_clean_path(get_find_data_by_param_name("battle_board_game_script_path", entry)["path"]);
 			new_class->default_hex_visual_path = ensure_clean_path(get_find_data_by_param_name("default_hex_visual_path", entry)["path"]);
 			new_class->parent_data_id = StringName(get_find_data_by_param_name("parent_data_id", entry)["element_id_name_value"]);
 
