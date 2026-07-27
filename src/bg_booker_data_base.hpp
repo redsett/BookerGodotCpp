@@ -1359,9 +1359,6 @@ public:
 	int get_durability_value_tier() const { return durability_value_tier; }
 	
 	// New DBer Data
-	bool use_dber_data = false;
-	bool get_use_dber_data() const { return use_dber_data; }
-	
 	float effectiveness = 0.0;
 	float get_effectiveness() const { return effectiveness; }
 
@@ -1946,9 +1943,6 @@ public:
 
 
 	// New DBer Data
-	bool use_dber_data = false;
-	bool get_use_dber_data() const { return use_dber_data; }
-	
 	float effectiveness = 0.0;
 	float get_effectiveness() const { return effectiveness; }
 
@@ -2024,27 +2018,6 @@ public:
 
 	StringName job_handout_curve_path;
 	StringName get_job_handout_curve_path() const { return job_handout_curve_path; }
-};
-
-////
-//// BG_EquipmentAnimationDetails
-////
-class BG_EquipmentAnimationDetails : public Object
-{
-	GDCLASS(BG_EquipmentAnimationDetails, Object);
-
-protected:
-	static void _bind_methods();
-
-public:
-	StringName caste_id;
-	StringName get_caste_id() const { return caste_id; }
-
-	TypedArray<StringName> equipment_ids;
-	TypedArray<StringName> get_equipment_ids() const { return equipment_ids; }
-
-	StringName in_game_animation_name;
-	StringName get_in_game_animation_name() const { return in_game_animation_name; }
 };
 
 ////
@@ -2329,9 +2302,6 @@ public:
 
 	TypedArray<BG_Effect> effects;
 	TypedArray<BG_Effect> get_effects() const { return effects; }
-
-	TypedArray<BG_EquipmentAnimationDetails> equipment_animation_details;
-	TypedArray<BG_EquipmentAnimationDetails> get_equipment_animation_details() const { return equipment_animation_details; }
 
 	BG_BandInfo *band_info = nullptr;
 	BG_BandInfo *get_band_info() const { return band_info; }
