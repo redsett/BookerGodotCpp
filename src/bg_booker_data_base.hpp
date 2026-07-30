@@ -2205,6 +2205,8 @@ class BG_Booker_DB : public Object
 protected:
 	static void _bind_methods();
 
+	const String booker_dber_data_file_name = "booker_dber_data.json";
+
 public:
 	BG_Booker_DB();
 	~BG_Booker_DB();
@@ -2295,6 +2297,10 @@ public:
 
 	TypedArray<BG_ItemDetails> items;
 	TypedArray<BG_ItemDetails> get_items() const { return items; }
+	BG_ItemDetails *get_item_details_by_id(const StringName &id) const;
+	float get_item_max_durability(Ref<BG_Item> item, bool full_value) const;
+	Ref<BG_Item> create_preset_item_by_id(const StringName &id) const;
+	Ref<BG_Item> create_preset_item_by_id_interal(const StringName &id, const Dictionary &data) const;
 
 	TypedArray<BG_ItemDropPool> item_drop_pools;
 	TypedArray<BG_ItemDropPool> get_item_drop_pools() const { return item_drop_pools; }
@@ -2305,15 +2311,18 @@ public:
 
 	BG_BandInfo *band_info = nullptr;
 	BG_BandInfo *get_band_info() const { return band_info; }
+	Ref<BG_Band> create_preset_band_by_id(const StringName &id) const;
 
 	TypedArray<BG_ItemSlotType> item_slot_types;
 	TypedArray<BG_ItemSlotType> get_item_slot_types() const { return item_slot_types; }
 
 	TypedArray<BG_RarityDetails> rarity_types;
 	TypedArray<BG_RarityDetails> get_rarity_types() const { return rarity_types; }
+	int get_rarity_index(const StringName &id) const;
 
 	TypedArray<BG_UnitStatDetails> stat_types;
 	TypedArray<BG_UnitStatDetails> get_stat_types() const { return stat_types; }
+	int get_base_health_stat(const TypedArray<BG_UnitStat> &stats) const;
 
 	BG_MarketplaceData *market_place_data = nullptr;
 	BG_MarketplaceData *get_market_place_data() const { return market_place_data; }

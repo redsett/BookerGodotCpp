@@ -117,6 +117,24 @@ static auto ensure_clean_path = [](const String &path) -> StringName {
 	return StringName(path.trim_prefix("/"));
 };
 
+static HashMap<String, TypedArray<StringName>> get_global_enums(const Dictionary &data) { // Global Enums
+	HashMap<String, TypedArray<StringName>> global_enums;
+	const Array lines = Array(data["global_enums"]);
+	for (int i = 0; i < lines.size(); ++i) {
+		const Dictionary entry = lines[i];
+		TypedArray<StringName> enums;
+		
+		const Array value_line = Array(entry["values"]);
+		for (int y = 0; y < value_line.size(); ++y) {
+			const StringName v = StringName(value_line[y]);
+			enums.append(v);
+		}
+
+		global_enums[entry["enum_name"]] = enums;
+	}
+	return global_enums;
+}
+
 ////
 //// BG_PortraitDetails
 ////
@@ -1610,13 +1628,19 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_booker_skill_tree_details"), &BG_Booker_DB::get_booker_skill_tree_details);
 	ClassDB::bind_method(D_METHOD("get_jobs"), &BG_Booker_DB::get_jobs);
 	ClassDB::bind_method(D_METHOD("get_items"), &BG_Booker_DB::get_items);
+	ClassDB::bind_method(D_METHOD("get_item_max_durability", "item", "full_value"), &BG_Booker_DB::get_item_max_durability);
+	ClassDB::bind_method(D_METHOD("get_item_details_by_id"), &BG_Booker_DB::get_item_details_by_id);
+	ClassDB::bind_method(D_METHOD("create_preset_item_by_id", "id"), &BG_Booker_DB::create_preset_item_by_id);
 	ClassDB::bind_method(D_METHOD("get_item_drop_pools"), &BG_Booker_DB::get_item_drop_pools);
 	ClassDB::bind_method(D_METHOD("get_item_drop_pool_by_id"), &BG_Booker_DB::get_item_drop_pool_by_id);
 	ClassDB::bind_method(D_METHOD("get_effects"), &BG_Booker_DB::get_effects);
 	ClassDB::bind_method(D_METHOD("get_band_info"), &BG_Booker_DB::get_band_info);
+	ClassDB::bind_method(D_METHOD("create_preset_band_by_id", "id"), &BG_Booker_DB::create_preset_band_by_id);
 	ClassDB::bind_method(D_METHOD("get_item_slot_types"), &BG_Booker_DB::get_item_slot_types);
 	ClassDB::bind_method(D_METHOD("get_rarity_types"), &BG_Booker_DB::get_rarity_types);
+	ClassDB::bind_method(D_METHOD("get_rarity_index", "id"), &BG_Booker_DB::get_rarity_index);
 	ClassDB::bind_method(D_METHOD("get_stat_types"), &BG_Booker_DB::get_stat_types);
+	ClassDB::bind_method(D_METHOD("get_base_health_stat", "stats"), &BG_Booker_DB::get_base_health_stat);
 	ClassDB::bind_method(D_METHOD("get_market_place_data"), &BG_Booker_DB::get_market_place_data);
 	ClassDB::bind_method(D_METHOD("get_monster_types"), &BG_Booker_DB::get_monster_types);
 	ClassDB::bind_method(D_METHOD("get_mail_data"), &BG_Booker_DB::get_mail_data);
@@ -1642,7 +1666,6 @@ BG_CharacterDetails *BG_Booker_DB::get_character_details_by_id(const StringName 
 
 Ref<BG_StoryboardDetails> BG_Booker_DB::import_and_get_storyboard_details_by_id(const StringName &id)
 {
-	const String booker_dber_data_file_name = "booker_dber_data.json";
 	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
 
 	Ref<BG_StoryboardDetails> result = memnew(BG_StoryboardDetails);
@@ -1718,7 +1741,6 @@ Ref<BG_StoryboardDetails> BG_Booker_DB::import_and_get_storyboard_details_by_id(
 
 Ref<BG_TutorialCardsDetails> BG_Booker_DB::import_and_get_tutorial_cards_details_by_id(const StringName &id)
 {
-	const String booker_dber_data_file_name = "booker_dber_data.json";
 	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
 
 	Ref<BG_TutorialCardsDetails> result = memnew(BG_TutorialCardsDetails);
@@ -1913,6 +1935,175 @@ BG_IconDetails *BG_Booker_DB::get_icon_details_by_id(const StringName &id) const
 	return nullptr;
 }
 
+BG_ItemDetails *BG_Booker_DB::get_item_details_by_id(const StringName &id) const {
+	for (int i = 0; i < items.size(); ++i) {
+		BG_ItemDetails *dets = cast_to<BG_ItemDetails>(items[i]);
+		if (dets->get_id() == id)
+			return dets;
+	}
+	return nullptr;
+}
+
+float BG_Booker_DB::get_item_max_durability(Ref<BG_Item> item, bool full_value) const {
+	if (!item.is_valid()) return 0.0;
+	BG_ItemDetails *item_details = get_item_details_by_id(item->get_id());
+	if (item_details == nullptr) return 0.0;
+
+	float result = float( get_globals()->get_durability_teir_values()[item_details->get_durability_value_tier()] );
+	if (item_details->is_beast_part()) {
+		result *= float( get_globals()->get_beast_part_durability_rarity_multiplier()[get_rarity_index(item->get_rarity_id())] );
+	} else {
+		result *= float( get_globals()->get_equipment_durability_rarity_multiplier()[get_rarity_index(item->get_rarity_id())] );
+	}
+	
+	if (!full_value)
+		return result;
+	
+	for (int i = 0; i < item->get_grafts().size(); ++i) {
+		Ref<BG_Item> g = cast_to<BG_Item>(item->get_grafts()[i]);
+		if (!g.is_valid()) continue;
+		BG_ItemDetails *graft_item_details = get_item_details_by_id(g->get_id());
+		float graft_value = float( get_globals()->get_durability_teir_values()[graft_item_details->get_durability_value_tier()] );
+		graft_value *= float( get_globals()->get_beast_part_durability_rarity_multiplier()[get_rarity_index(g->get_rarity_id())] );
+		result += graft_value;
+	}
+	
+	return result;
+}
+
+Ref<BG_Item> BG_Booker_DB::create_preset_item_by_id(const StringName &id) const {
+	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
+	return create_preset_item_by_id_interal(id, data);
+}
+
+Ref<BG_Item> BG_Booker_DB::create_preset_item_by_id_interal(const StringName &id, const Dictionary &data) const {
+	// Preset Items
+	const Array lines = get_sheet_by_name("Preset_Items", data);
+	for (int i = 0; i < lines.size(); ++i) {
+		const Array entry = lines[i];
+
+		const StringName i_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+		if (i_id != id) continue;
+
+		Ref<BG_Item> result = memnew(BG_Item);
+		result->id = StringName(get_find_data_by_param_name("item_id", entry)["value"]);
+		result->random_variation = int(get_find_data_by_param_name("variation", entry)["value"]);
+
+		const HashMap<String, TypedArray<StringName>> global_enums = get_global_enums(data);
+		const int rarity_index = int(get_find_data_by_param_name("rarity", entry)["value"]);
+		result->rarity_id = global_enums["rarity_types"][rarity_index];
+
+		result->current_durability = get_item_max_durability(result, true);
+
+		
+		// Grafts
+		result->grafts.clear();
+		for (int x = 0; x < 4; ++x)
+			result->grafts.append(nullptr);
+		const Dictionary grafts_values = get_find_data_by_param_name("grafts", entry);
+		const Array grafts_array = grafts_values["array_values"];
+		for (int x = 0; x < grafts_array.size(); ++x) {
+			const Array grafts_entry = grafts_array[x];
+
+			Ref<BG_Item> new_graft = memnew(BG_Item);
+			new_graft->id = StringName(get_find_data_by_param_name("beast_part_id", grafts_entry)["value"]);
+			new_graft->random_variation = int(get_find_data_by_param_name("variation", grafts_entry)["value"]);
+
+			const int graft_rarity_index = int(get_find_data_by_param_name("rarity", grafts_entry)["value"]);
+			new_graft->rarity_id = global_enums["rarity_types"][graft_rarity_index];
+
+			result->current_durability += get_item_max_durability(new_graft, false);
+			result->grafts[x] = new_graft;
+		}
+		return result;
+	}
+
+	return nullptr;
+
+}
+
+Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id) const {
+	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
+
+	// Preset Bands
+	const Array lines = get_sheet_by_name("Preset_Bands", data);
+	for (int i = 0; i < lines.size(); ++i) {
+		const Array entry = lines[i];
+
+		const StringName i_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+		if (i_id != id) continue;
+
+		const HashMap<String, TypedArray<StringName>> global_enums = get_global_enums(data);
+
+		Ref<BG_Band> result = memnew(BG_Band);
+		result->name = StringName(get_find_data_by_param_name("band_name", entry)["value"]);
+
+		// Band Members
+		const Dictionary band_members_values = get_find_data_by_param_name("band_members", entry);
+		const Array band_members_array = band_members_values["array_values"];
+		for (int x = 0; x < band_members_array.size(); ++x) {
+			const Array band_members_entry = band_members_array[x];
+
+			Ref<BG_BandMember> new_bm = memnew(BG_BandMember);
+			result->band_members.append(new_bm);
+
+			const int caste_index = int(get_find_data_by_param_name("caste", band_members_entry)["value"]);
+			new_bm->caste_id = global_enums["caste_types"][caste_index];
+			new_bm->random_variation = int(get_find_data_by_param_name("variation", band_members_entry)["value"]);
+			BG_UnitCaste *unit_caste = get_band_info()->get_caste_by_id(new_bm->get_caste_id());
+			new_bm->current_health = get_base_health_stat(unit_caste->get_stats());
+			result->band_formation[new_bm] = int(get_find_data_by_param_name("formation_index", band_members_entry)["value"]);
+
+			// Band Member Name
+			const Dictionary name_values = get_find_data_by_param_name("name", band_members_entry);
+			const Array name_array = name_values["array_values"];
+			for (int y = 0; y < name_array.size(); ++y) {
+				const Array name_entry = name_array[y];
+
+				new_bm->set_name(
+					StringName(String(get_find_data_by_param_name("first_name", name_entry)["value"]) + " " + String(get_find_data_by_param_name("last_name", name_entry)["value"]))
+				);
+				break;
+			}
+
+			// Item Presets
+			new_bm->equipment.clear();
+			for (int x = 0; x < 3; ++x)
+				new_bm->equipment.append(nullptr);
+			const Dictionary item_presets_values = get_find_data_by_param_name("item_presets", band_members_entry);
+			const Array item_presets_array = item_presets_values["array_values"];
+			for (int y = 0; y < item_presets_array.size(); ++y) {
+				const Array item_presets_entry = item_presets_array[y];
+
+				const int slot_type = int(get_find_data_by_param_name("slot_type", item_presets_entry)["value"]);
+				const StringName item_preset_id = StringName(get_find_data_by_param_name("item_preset", item_presets_entry)["value"]);
+				const Ref<BG_Item> new_item = create_preset_item_by_id_interal(item_preset_id, data);
+
+				if (slot_type == 0)
+					new_bm->equipment[1] = new_item;
+				else if (slot_type == 1)
+					new_bm->equipment[2] = new_item;
+				else if (slot_type == 2)
+					new_bm->equipment[0] = new_item;
+			}
+		}
+
+		return result;
+	}
+
+	return nullptr;
+}
+
+int BG_Booker_DB::get_rarity_index(const StringName &id) const {
+	for (int i = 0; i < rarity_types.size(); ++i) {
+		BG_RarityDetails *dets = cast_to<BG_RarityDetails>(rarity_types[i]);
+		if (dets->get_id() == id)
+			return i;
+	}
+	ERR_FAIL_COND_V_EDMSG(false, 0, "ERROR : BG_Booker_DB::get_rarity_index could not find index for:" + id);
+	return 0;
+}
+
 BG_PuzzleDetails *BG_Booker_DB::get_puzzle_details_by_id(const StringName &id) const {
 	for (int i = 0; i < puzzles.size(); ++i) {
 		BG_PuzzleDetails *puzzle_dets = cast_to<BG_PuzzleDetails>(puzzles[i]);
@@ -1929,6 +2120,20 @@ BG_TwoDer_DataEntry *BG_Booker_DB::get_two_der_data_from_id(const StringName &id
 		if (data->get_id() == id) return data;
 	}
 	return nullptr;
+}
+
+int BG_Booker_DB::get_base_health_stat(const TypedArray<BG_UnitStat> &stats) const {
+	for (int i = 0; i < stats.size(); ++i) {
+		const BG_UnitStat *s = cast_to<BG_UnitStat>(stats[i]);
+		for (int x = 0; x < stat_types.size(); ++x) {
+			const BG_UnitStatDetails *st = cast_to<BG_UnitStatDetails>(stat_types[x]);
+			if (s->get_id() == st->get_id() && !st->get_is_damage_type()) {
+				return s->get_defensive_value() + int(s->get_defensive_value() * s->get_bonus_percentage());
+			}
+		}
+	}
+	ERR_FAIL_COND_V_EDMSG(false, -1, "ERROR : BG_Booker_DB::get_base_health_stat could not find health stat.");
+	return -1;
 }
 
 BG_BaseStat *BG_Booker_DB::get_stat_from_stat_id_name(const StringName &stat_id_name) const {
@@ -1983,7 +2188,6 @@ void BG_Booker_DB::refresh_data()
 	//
 	// Parse Booker DBer data.
 	//
-	const String booker_dber_data_file_name = "booker_dber_data.json";
 	const String modding_dber_data_path = modding_path + booker_dber_data_file_name;
 
 	try_parse_bder_data("res://" + booker_dber_data_file_name);
@@ -2156,22 +2360,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	const Dictionary data = BG_JsonUtils::ParseJsonFile(file_path);
 	// UtilityFunctions::prints(data["all_base_stats"]);
 
-	HashMap<String, TypedArray<StringName>> global_enums;
-	{ // Global Enums
-		const Array lines = Array(data["global_enums"]);
-		for (int i = 0; i < lines.size(); ++i) {
-			const Dictionary entry = lines[i];
-			TypedArray<StringName> enums;
-			
-			const Array value_line = Array(entry["values"]);
-			for (int y = 0; y < value_line.size(); ++y) {
-				const StringName v = StringName(value_line[y]);
-				enums.append(v);
-			}
-
-			global_enums[entry["enum_name"]] = enums;
-		}
-	}
+	HashMap<String, TypedArray<StringName>> global_enums = get_global_enums(data);
 
 	{ // Global Curves
 		const Array lines = Array(data["global_curves"]);
