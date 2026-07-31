@@ -1574,6 +1574,8 @@ public:
 
 	TypedArray<StringName> element_availability_ids;
 	TypedArray<StringName> get_element_availability_ids() const { return element_availability_ids; }
+
+	float get_random_unit_caste_scale(bool x_z) const;
 };
 
 ////

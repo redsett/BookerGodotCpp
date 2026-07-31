@@ -1215,6 +1215,23 @@ void BG_UnitCaste::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_UnitCaste::get_stats);
 	ClassDB::bind_method(D_METHOD("get_starting_item_ids"), &BG_UnitCaste::get_starting_item_ids);
 	ClassDB::bind_method(D_METHOD("get_element_availability_ids"), &BG_UnitCaste::get_element_availability_ids);
+	ClassDB::bind_method(D_METHOD("get_random_unit_caste_scale", "x_z"), &BG_UnitCaste::get_random_unit_caste_scale);
+}
+
+float BG_UnitCaste::get_random_unit_caste_scale(bool x_z) const {
+	if (UtilityFunctions::randf() > 0.75) { // 25% chance of allowing the chance of being extreme.
+		if (x_z) {
+			return UtilityFunctions::randf_range(get_scale_min_extreme().x, get_scale_max_extreme().x);
+		} else {
+			return UtilityFunctions::randf_range(get_scale_min_extreme().y, get_scale_max_extreme().y);
+		}
+	} else {
+		if (x_z) {
+			return UtilityFunctions::randf_range(get_scale_min().x, get_scale_max().x);
+		} else {
+			return UtilityFunctions::randf_range(get_scale_min().y, get_scale_max().y);
+		}
+	}
 }
 
 BG_UnitCaste::~BG_UnitCaste()
@@ -1978,7 +1995,7 @@ Ref<BG_Item> BG_Booker_DB::create_preset_item_by_id(const StringName &id) const 
 
 Ref<BG_Item> BG_Booker_DB::create_preset_item_by_id_interal(const StringName &id, const Dictionary &data) const {
 	// Preset Items
-	const Array lines = get_sheet_by_name("Preset_Items", data);
+	const Array lines = get_sheet_by_name("Presets_Items", data);
 	for (int i = 0; i < lines.size(); ++i) {
 		const Array entry = lines[i];
 
@@ -2026,7 +2043,7 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id) const 
 	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
 
 	// Preset Bands
-	const Array lines = get_sheet_by_name("Preset_Bands", data);
+	const Array lines = get_sheet_by_name("Presets_Bands", data);
 	for (int i = 0; i < lines.size(); ++i) {
 		const Array entry = lines[i];
 
@@ -2053,6 +2070,10 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id) const 
 			BG_UnitCaste *unit_caste = get_band_info()->get_caste_by_id(new_bm->get_caste_id());
 			new_bm->current_health = get_base_health_stat(unit_caste->get_stats());
 			result->band_formation[new_bm] = int(get_find_data_by_param_name("formation_index", band_members_entry)["value"]);
+			new_bm->band = result;
+
+			float scale_x_z = unit_caste->get_random_unit_caste_scale(true);
+			new_bm->set_scale(Vector3(scale_x_z, unit_caste->get_random_unit_caste_scale(false), scale_x_z));
 
 			// Band Member Name
 			const Dictionary name_values = get_find_data_by_param_name("name", band_members_entry);
