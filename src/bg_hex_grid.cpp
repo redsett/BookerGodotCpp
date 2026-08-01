@@ -714,6 +714,7 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> &instigator, const Vector2
     {
         const Ref<BG_HexVisualData> h = base_grid_visual_data[qr];
         if (h.is_valid()) {
+            if (h->hex_asset_datas.is_empty()) return 0; // If there's no data, then let's assume we don't want to move in this space...
             for (int i = 0; i < h->hex_asset_datas.size(); ++i) {
                 const Ref<BG_HexVisualAssetData> hvad = h->hex_asset_datas[i];
                 if (hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::CITY || 

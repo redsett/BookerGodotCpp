@@ -2068,6 +2068,7 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id) const 
 			new_bm->caste_id = global_enums["caste_types"][caste_index];
 			new_bm->random_variation = int(get_find_data_by_param_name("variation", band_members_entry)["value"]);
 			BG_UnitCaste *unit_caste = get_band_info()->get_caste_by_id(new_bm->get_caste_id());
+			ERR_FAIL_COND_V_EDMSG(unit_caste == nullptr, nullptr, "ERROR : BG_Booker_DB::create_preset_band_by_id no unit caste found for:" + id);
 			new_bm->current_health = get_base_health_stat(unit_caste->get_stats());
 			result->band_formation[new_bm] = int(get_find_data_by_param_name("formation_index", band_members_entry)["value"]);
 			new_bm->band = result;
@@ -2106,6 +2107,8 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id) const 
 					new_bm->equipment[2] = new_item;
 				else if (slot_type == 2)
 					new_bm->equipment[0] = new_item;
+				else
+					godot::print_error("ERROR: BG_Booker_DB::create_preset_band_by_id could not slot type for item:" + String(item_preset_id));
 			}
 		}
 
@@ -2121,7 +2124,7 @@ int BG_Booker_DB::get_rarity_index(const StringName &id) const {
 		if (dets->get_id() == id)
 			return i;
 	}
-	ERR_FAIL_COND_V_EDMSG(false, 0, "ERROR : BG_Booker_DB::get_rarity_index could not find index for:" + id);
+	ERR_FAIL_COND_V_EDMSG(true, 0, "ERROR : BG_Booker_DB::get_rarity_index could not find index for:" + id);
 	return 0;
 }
 
@@ -2153,7 +2156,7 @@ int BG_Booker_DB::get_base_health_stat(const TypedArray<BG_UnitStat> &stats) con
 			}
 		}
 	}
-	ERR_FAIL_COND_V_EDMSG(false, -1, "ERROR : BG_Booker_DB::get_base_health_stat could not find health stat.");
+	ERR_FAIL_COND_V_EDMSG(true, -1, "ERROR : BG_Booker_DB::get_base_health_stat could not find health stat.");
 	return -1;
 }
 
