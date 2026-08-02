@@ -1324,6 +1324,7 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_effectiveness_stats"), &BG_Monster::get_effectiveness_stats);
 	ClassDB::bind_method(D_METHOD("get_level_range"), &BG_Monster::get_level_range);
 	ClassDB::bind_method(D_METHOD("get_animations"), &BG_Monster::get_animations);
+	ClassDB::bind_method(D_METHOD("get_drops"), &BG_Monster::get_drops);
 	
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
@@ -1660,6 +1661,9 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_base_health_stat", "stats"), &BG_Booker_DB::get_base_health_stat);
 	ClassDB::bind_method(D_METHOD("get_market_place_data"), &BG_Booker_DB::get_market_place_data);
 	ClassDB::bind_method(D_METHOD("get_monster_types"), &BG_Booker_DB::get_monster_types);
+	ClassDB::bind_method(D_METHOD("get_monster_by_id", "id"), &BG_Booker_DB::get_monster_by_id);
+	ClassDB::bind_method(D_METHOD("create_preset_monster_group_by_id", "id"), &BG_Booker_DB::create_preset_monster_group_by_id);
+	ClassDB::bind_method(D_METHOD("get_drop_rewards_from_monster_group_preset", "job"), &BG_Booker_DB::get_drop_rewards_from_monster_group_preset);
 	ClassDB::bind_method(D_METHOD("get_mail_data"), &BG_Booker_DB::get_mail_data);
 	ClassDB::bind_method(D_METHOD("get_puzzles"), &BG_Booker_DB::get_puzzles);
 	ClassDB::bind_method(D_METHOD("get_puzzle_details_by_id", "id"), &BG_Booker_DB::get_puzzle_details_by_id);
@@ -2126,6 +2130,218 @@ int BG_Booker_DB::get_rarity_index(const StringName &id) const {
 	}
 	ERR_FAIL_COND_V_EDMSG(true, 0, "ERROR : BG_Booker_DB::get_rarity_index could not find index for:" + id);
 	return 0;
+}
+
+Ref<BG_Monster> BG_Booker_DB::get_monster_by_id(const StringName &id) const {
+	for (int i = 0; i < monster_types.size(); ++i) {
+		Ref<BG_Monster> dets = cast_to<BG_Monster>(monster_types[i]);
+		if (dets->get_id() == id)
+			return dets;
+	}
+	return nullptr;
+}
+
+Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id(const StringName &id) const {
+	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
+	const HashMap<String, TypedArray<StringName>> global_enums = get_global_enums(data);
+	return create_preset_monster_group_by_id_interal(id, Vector2i(0, 0), data, global_enums);
+}
+
+Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id_interal(const StringName &id, Vector2i &level_range, const Dictionary &data, const HashMap<String, TypedArray<StringName>> &global_enums) const {
+	RandomNumberGenerator *rnd_gen = memnew(RandomNumberGenerator);
+
+	// Preset Monster Groups
+	const Array lines = get_sheet_by_name("Presets_Monster_Groups", data);
+	for (int i = 0; i < lines.size(); ++i) {
+		const Array entry = lines[i];
+
+		const StringName i_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+		if (i_id != id) continue;
+
+		Ref<BG_Job> result = memnew(BG_Job);
+
+		// Level Range
+		const Dictionary level_range_dict = get_find_data_by_param_name("level_range", entry);
+		const Vector2i level_range_this = Vector2i(int(level_range_dict["value_x"]), int(level_range_dict["value_y"]));
+		if (level_range.x == 0 && level_range_this.x != 0) {
+			level_range = level_range_this;
+		}
+
+		// Seed
+		if (result->random_seed == 0) {
+			const Dictionary seed_values = get_find_data_by_param_name("seed", entry);
+			const Array seed_array = seed_values["array_values"];
+			for (int x = 0; x < seed_array.size(); ++x) {
+				const Array seed_entry = seed_array[x];
+
+				const int seed = int(get_find_data_by_param_name("seed", seed_entry)["value"]);
+				if (seed != 0) {
+					result->random_seed = seed;
+				}
+				const bool randomize_seed = bool(get_find_data_by_param_name("randomize_seed", seed_entry)["value"]);
+				if (randomize_seed) {
+					result->random_seed = UtilityFunctions::randi_range(1000, 9999);
+				}
+			}
+		}
+
+		// Parent Monster Group
+		const StringName parent_monster_group_id = StringName(get_find_data_by_param_name("parent", entry)["value"]);
+		if (!parent_monster_group_id.is_empty()) {
+			result = create_preset_monster_group_by_id_interal(parent_monster_group_id, level_range, data, global_enums);
+		}
+
+		result->job_id = id;
+
+		rnd_gen->set_seed(result->random_seed);
+		
+		// Monsters		
+		const Dictionary monsters_values = get_find_data_by_param_name("monsters", entry);
+		const Array monsters_array = monsters_values["array_values"];
+
+		if (monsters_array.size() > 0)
+			result->monsters.clear();
+		
+		for (int x = 0; x < monsters_array.size(); ++x) {
+			const Array monsters_entry = monsters_array[x];
+
+			// Level Range
+			const Dictionary spawn_count_range_dict = get_find_data_by_param_name("spawn_count_range", monsters_entry);
+			const Vector2i spawn_count_range = Vector2i(int(spawn_count_range_dict["value_x"]), int(spawn_count_range_dict["value_y"]));
+			const int spawn_count = rnd_gen->randi_range(spawn_count_range.x, spawn_count_range.y);
+			for (int y = 0; y < spawn_count; ++y) {
+
+				BG_Monster *m = memnew(BG_Monster);
+				result->monsters.append(m);
+				m->id = StringName(get_find_data_by_param_name("monster", monsters_entry)["value"]);
+
+				const int seed_override = int(get_find_data_by_param_name("seed_override", monsters_entry)["value"]);
+				if (seed_override != 0) {
+					m->random_variation = seed_override;
+				} else {
+					rnd_gen->randi_range(1000, 9999);
+				}
+
+				const int level_override = int(get_find_data_by_param_name("level_override", monsters_entry)["value"]);
+				if (level_override != 0) {
+					m->level = level_override;
+				} else {
+					m->level = rnd_gen->randi_range(level_range.x, level_range.y);
+				}
+			}
+		}
+
+		return result;
+	}
+
+	return nullptr;
+}
+
+TypedArray<BG_RewardItem> BG_Booker_DB::get_drop_rewards_from_monster_group_preset(Ref<BG_Job> job) const {
+	if (!job.is_valid()) return {};
+	if (job->get_job_id().is_empty()) return {};
+	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
+	const HashMap<String, TypedArray<StringName>> global_enums = get_global_enums(data);
+	return get_drop_rewards_from_monster_group_preset_interal(job, job->get_job_id(), data, global_enums);
+}
+
+TypedArray<BG_RewardItem> BG_Booker_DB::get_drop_rewards_from_monster_group_preset_interal(const Ref<BG_Job> &job, const StringName &id, const Dictionary &data, const HashMap<String, TypedArray<StringName>> &global_enums) const {
+	TypedArray<BG_RewardItem> result;
+
+	// Preset Monster Groups
+	const Array lines = get_sheet_by_name("Presets_Monster_Groups", data);
+	for (int i = 0; i < lines.size(); ++i) {
+		const Array entry = lines[i];
+
+		const StringName i_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+		if (i_id != id) continue;
+
+		// Parent Monster Group
+		const StringName parent_monster_group_id = StringName(get_find_data_by_param_name("parent", entry)["value"]);
+		if (!parent_monster_group_id.is_empty()) {
+			result = get_drop_rewards_from_monster_group_preset_interal(job, parent_monster_group_id, data, global_enums);
+		}
+
+		// Base Monster Drops
+		if (job->get_job_id() == id) {
+			for (int x = 0; x < job->get_monsters().size(); ++x) {
+				const Ref<BG_Monster> monster = cast_to<BG_Monster>(job->get_monsters()[x]);
+				if (monster == nullptr) continue;
+				const Ref<BG_Monster> global_monster = get_monster_by_id(monster->get_id());
+
+				for (int y = 0; y < global_monster->get_drops().size(); ++y) {
+					const BG_RewardItem *reward_item = cast_to<BG_RewardItem>(global_monster->get_drops()[y]);
+					if (reward_item == nullptr) continue;
+					result.append(reward_item);
+				}
+			}
+		}
+
+		// Drops
+		const Dictionary drops_values = get_find_data_by_param_name("drops", entry);
+		const Array drops_array = drops_values["array_values"];
+		for (int x = 0; x < drops_array.size(); ++x) {
+			const Array drops_entry = drops_array[x];
+
+			const float drop_weight = float(get_find_data_by_param_name("drop_weight", drops_entry)["value"]);
+
+			const StringName item_id = StringName(get_find_data_by_param_name("item_id", drops_entry)["value"]);
+			if (!item_id.is_empty()) {
+				BG_RewardItem *new_job_reward = memnew(BG_RewardItem);
+				new_job_reward->drop_weight = drop_weight;
+
+				// Forced Rarity Availabilities
+				const Dictionary forced_rarity_availabilities_values = get_find_data_by_param_name("forced_rarity_availabilities", drops_entry);
+				const Array forced_rarity_availabilities_array = drops_values["array_values"];
+				for (int y = 0; y < forced_rarity_availabilities_array.size(); ++y) {
+					const Array forced_rarity_availabilities_entry = forced_rarity_availabilities_array[y];
+
+					const int rarity_index = int(get_find_data_by_param_name("rarity", forced_rarity_availabilities_entry)["value"]);
+					new_job_reward->rarity_availabilities.append(global_enums["rarity_types"][rarity_index]);
+				}
+
+				result.append(new_job_reward);
+			}
+
+			// Item Drop Pool Items
+			const StringName item_drop_pool_id = StringName(get_find_data_by_param_name("item_drop_pool_id", drops_entry)["value"]);
+			if (item_drop_pool_id.is_empty()) continue;
+			for (int pool_index = 0; pool_index < item_drop_pools.size(); ++pool_index)
+			{
+				const BG_ItemDropPool *pool = cast_to<BG_ItemDropPool>(item_drop_pools[pool_index]);
+				if (pool == nullptr || pool->id != item_drop_pool_id) continue;
+				
+				for (int item_index = 0; item_index < pool->item_drops.size(); ++item_index)
+				{
+					const BG_RewardItem *reward_item = cast_to<BG_RewardItem>(pool->item_drops[item_index]);
+					if (reward_item == nullptr) continue;
+
+					BG_RewardItem *new_job_reward = memnew(BG_RewardItem);
+					new_job_reward->id = reward_item->id;
+					new_job_reward->drop_weight = drop_weight;
+
+					// Forced Rarity Availabilities
+					const Dictionary forced_rarity_availabilities_values = get_find_data_by_param_name("forced_rarity_availabilities", drops_entry);
+					const Array forced_rarity_availabilities_array = drops_values["array_values"];
+					for (int y = 0; y < forced_rarity_availabilities_array.size(); ++y) {
+						const Array forced_rarity_availabilities_entry = forced_rarity_availabilities_array[y];
+
+						const int rarity_index = int(get_find_data_by_param_name("rarity", forced_rarity_availabilities_entry)["value"]);
+						new_job_reward->rarity_availabilities.append(global_enums["rarity_types"][rarity_index]);
+					}
+					if (new_job_reward->rarity_availabilities.is_empty())
+						new_job_reward->rarity_availabilities = reward_item->rarity_availabilities.duplicate();
+
+					result.append(new_job_reward);
+				}
+				break;
+			}
+		}
+
+		break;
+	}
+
+	return result;
 }
 
 BG_PuzzleDetails *BG_Booker_DB::get_puzzle_details_by_id(const StringName &id) const {
@@ -2683,6 +2899,18 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 						}
 						
 						monster_details->effect_ids = effect_ids;
+					}
+				}
+
+				{ // Drops
+					const Array drops_lines = Array(get_find_data_by_param_name("drops", misc_params)["array_values"]);
+					for (int x = 0; x < drops_lines.size(); ++x) {
+						const Array drops_entry = drops_lines[x];
+
+						BG_RewardItem *new_class = memnew(BG_RewardItem);
+						new_class->id = StringName(get_find_data_by_param_name("item_id", drops_entry)["value"]);
+						new_class->drop_weight = float(get_find_data_by_param_name("drop_weight", drops_entry)["value"]);
+						monster_details->drops.append(new_class);
 					}
 				}
 			}

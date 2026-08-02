@@ -1943,8 +1943,6 @@ public:
 
 	bool is_dead() { return current_health <= 0; }
 
-
-	// New DBer Data
 	float effectiveness = 0.0;
 	float get_effectiveness() const { return effectiveness; }
 
@@ -1956,6 +1954,9 @@ public:
 
 	TypedArray<BG_AnimationDetails> animations;
 	TypedArray<BG_AnimationDetails> get_animations() const { return animations; }
+
+	TypedArray<BG_RewardItem> drops;
+	TypedArray<BG_RewardItem> get_drops() const { return drops; }
 };
 
 ////
@@ -2331,6 +2332,11 @@ public:
 
 	TypedArray<BG_Monster> monster_types;
 	TypedArray<BG_Monster> get_monster_types() const { return monster_types; }
+	Ref<BG_Monster> get_monster_by_id(const StringName &id) const;
+	Ref<BG_Job> create_preset_monster_group_by_id(const StringName &id) const;
+	Ref<BG_Job> create_preset_monster_group_by_id_interal(const StringName &id, Vector2i &level_range, const Dictionary &data, const HashMap<String, TypedArray<StringName>> &global_enums) const;
+	TypedArray<BG_RewardItem> get_drop_rewards_from_monster_group_preset(Ref<BG_Job> job) const;
+	TypedArray<BG_RewardItem> get_drop_rewards_from_monster_group_preset_interal(const Ref<BG_Job> &job, const StringName &id, const Dictionary &data, const HashMap<String, TypedArray<StringName>> &global_enums) const;
 
 	TypedArray<BG_MailData> mail_data;
 	TypedArray<BG_MailData> get_mail_data() const { return mail_data; }
