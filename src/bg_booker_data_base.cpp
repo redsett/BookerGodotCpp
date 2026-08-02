@@ -2214,6 +2214,7 @@ Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id_interal(const String
 				BG_Monster *m = memnew(BG_Monster);
 				result->monsters.append(m);
 				m->id = StringName(get_find_data_by_param_name("monster", monsters_entry)["value"]);
+				m->set_job(result);
 
 				const int seed_override = int(get_find_data_by_param_name("seed_override", monsters_entry)["value"]);
 				if (seed_override != 0) {

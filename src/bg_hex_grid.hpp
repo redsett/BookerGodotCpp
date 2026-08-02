@@ -491,7 +491,7 @@ public:
 
     void update_locations(float x_offset_percent, float y_offset_percent);
 
-    Ref<BG_HexGameSaveData> get_nearest_job_attackable(const Ref<BG_Hex> &from_job_hex, const TypedArray<int> &attackable_types, const TypedArray<BG_Band> &bands) const;
+    Ref<BG_HexGameSaveData> get_nearest_attackable(const Ref<BG_Hex> &from_job_hex, const TypedArray<int> &attackable_types, const TypedArray<BG_Band> &bands) const;
     Ref<BG_Hex> get_nearest_empty_cell_neighoring_target(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &target) const;
     Ref<BG_Hex> get_nearest_empty_cell(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &target, const TypedArray<BG_Hex> &cells_to_check) const;
 

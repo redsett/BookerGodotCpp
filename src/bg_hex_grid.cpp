@@ -344,7 +344,7 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("add_hex_from_qr", "qr", "is_empty"), &BG_HexGrid::add_hex_from_qr);
 	ClassDB::bind_method(D_METHOD("add_row", "column_index", "initial_emptys", "count"), &BG_HexGrid::add_row);
 	ClassDB::bind_method(D_METHOD("update_locations", "x_offset_percent", "y_offset_percent"), &BG_HexGrid::update_locations);
-	ClassDB::bind_method(D_METHOD("get_nearest_job_attackable", "from_job_hex", "attackable_types", "bands"), &BG_HexGrid::get_nearest_job_attackable);
+	ClassDB::bind_method(D_METHOD("get_nearest_attackable", "from_job_hex", "attackable_types", "bands"), &BG_HexGrid::get_nearest_attackable);
 	ClassDB::bind_method(D_METHOD("get_nearest_empty_cell", "instigator", "target", "cells_to_check"), &BG_HexGrid::get_nearest_empty_cell);
 	ClassDB::bind_method(D_METHOD("find_path", "instigator", "start", "goal", "include_start", "travel_distance"), &BG_HexGrid::find_path);
 	ClassDB::bind_method(D_METHOD("comp_priority_item"), &BG_HexGrid::comp_priority_item);
@@ -825,7 +825,7 @@ Vector2i BG_HexGrid::get_grid_size_max() const
     return result;
 }
 
-Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_job_attackable(const Ref<BG_Hex> &from_job_hex, const TypedArray<int> &attackable_types, const TypedArray<BG_Band> &bands) const
+Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_attackable(const Ref<BG_Hex> &from_job_hex, const TypedArray<int> &attackable_types, const TypedArray<BG_Band> &bands) const
 {
     if (from_job_hex.is_null()) return nullptr;
 
@@ -866,6 +866,13 @@ Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_job_attackable(const Ref<BG_Hex>
                 continue;
             }
         }
+        // else if (data->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::JOB) {
+        //     for (uint32_t y = 0; y < jobs.size(); ++y) {
+        //         const Ref<BG_Job> job = jobs[y];
+        //         if (band.is_null()) continue;
+        //         if (band->get_unique_id() != data->get_unique_id_reference()) continue;
+        //     }
+        // }
 
         const int d = hex_distance(from_job_hex->get_full_qr(), get_hex_by_qr(data->get_qr())->get_full_qr(), offset_type);
         if (d < nearest_distance) {
