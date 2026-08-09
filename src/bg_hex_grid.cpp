@@ -174,6 +174,8 @@ void BG_HexGameSaveData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_force_pass_through_by_enemy"), &BG_HexGameSaveData::set_force_pass_through_by_enemy);
 	ClassDB::bind_method(D_METHOD("get_force_disable_is_actionable"), &BG_HexGameSaveData::get_force_disable_is_actionable);
 	ClassDB::bind_method(D_METHOD("set_force_disable_is_actionable"), &BG_HexGameSaveData::set_force_disable_is_actionable);
+	ClassDB::bind_method(D_METHOD("get_ai_controller_script"), &BG_HexGameSaveData::get_ai_controller_script);
+	ClassDB::bind_method(D_METHOD("set_ai_controller_script"), &BG_HexGameSaveData::set_ai_controller_script);
 	ClassDB::bind_method(D_METHOD("get_misc_data"), &BG_HexGameSaveData::get_misc_data);
 	ClassDB::bind_method(D_METHOD("set_misc_data"), &BG_HexGameSaveData::set_misc_data);
 	ClassDB::bind_method(D_METHOD("get_dyn_hex_type_details"), &BG_HexGameSaveData::get_dyn_hex_type_details);

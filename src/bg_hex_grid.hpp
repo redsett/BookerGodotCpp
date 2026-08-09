@@ -309,6 +309,10 @@ public:
     bool get_force_disable_is_actionable() const { return force_disable_is_actionable; }
     void set_force_disable_is_actionable(bool v) { force_disable_is_actionable = v; }
 
+    Object *ai_controller_script = nullptr;
+    Object *get_ai_controller_script() const { return ai_controller_script; }
+    void set_ai_controller_script(Object *v) { ai_controller_script = v; }
+
     Dictionary misc_data;
     Dictionary get_misc_data() { return misc_data; }
     void set_misc_data(const Dictionary &v) { misc_data = v; }

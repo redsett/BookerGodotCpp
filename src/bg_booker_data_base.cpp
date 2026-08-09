@@ -1146,6 +1146,8 @@ void BG_Band::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_unique_id"), &BG_Band::set_unique_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_Band::get_name);
 	ClassDB::bind_method(D_METHOD("set_name"), &BG_Band::set_name);
+	ClassDB::bind_method(D_METHOD("get_preset_band_id"), &BG_Band::get_preset_band_id);
+	ClassDB::bind_method(D_METHOD("set_preset_band_id"), &BG_Band::set_preset_band_id);
 	ClassDB::bind_method(D_METHOD("get_resting"), &BG_Band::get_resting);
 	ClassDB::bind_method(D_METHOD("set_resting"), &BG_Band::set_resting);
 	ClassDB::bind_method(D_METHOD("get_is_on_battle_board"), &BG_Band::get_is_on_battle_board);
@@ -1171,6 +1173,7 @@ void BG_Band::_bind_methods()
 
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "unique_id"), "set_unique_id", "get_unique_id");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "preset_band_id"), "set_preset_band_id", "get_preset_band_id");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "resting"), "set_resting", "get_resting");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_on_battle_board"), "set_is_on_battle_board", "get_is_on_battle_board");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "distance_traveled_this_turn"), "set_distance_traveled_this_turn", "get_distance_traveled_this_turn");
@@ -1269,6 +1272,7 @@ void BG_Job::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_is_on_battle_board"), &BG_Job::get_is_on_battle_board);
 	ClassDB::bind_method(D_METHOD("set_is_on_battle_board"), &BG_Job::set_is_on_battle_board);
 	ClassDB::bind_method(D_METHOD("try_set_all_monsters_to_stoned", "is_stoned"), &BG_Job::try_set_all_monsters_to_stoned);
+	ClassDB::bind_method(D_METHOD("is_job_alive"), &BG_Job::is_job_alive);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "job_id"), "set_job_id", "get_job_id");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "unique_job_id"), "set_unique_job_id", "get_unique_job_id");
@@ -1285,6 +1289,17 @@ void BG_Job::try_set_all_monsters_to_stoned(bool stoned)
 		BG_Monster *m = cast_to<BG_Monster>(monsters[i]);
 		m->set_is_turned_to_stone(stoned);
 	}
+}
+
+bool BG_Job::is_job_alive() const
+{
+	for (int i = 0; i < monsters.size(); ++i) {
+		const BG_Monster *m = cast_to<BG_Monster>(monsters[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(m) && m->get_current_health() > 0) {
+			return true;
+		}
+	}
+	return false;
 }
 
 ////
@@ -1654,6 +1669,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_effects"), &BG_Booker_DB::get_effects);
 	ClassDB::bind_method(D_METHOD("get_band_info"), &BG_Booker_DB::get_band_info);
 	ClassDB::bind_method(D_METHOD("create_preset_band_by_id", "id"), &BG_Booker_DB::create_preset_band_by_id);
+	ClassDB::bind_method(D_METHOD("get_preset_band_ai_controller_path_by_id", "id"), &BG_Booker_DB::get_preset_band_ai_controller_path_by_id);
 	ClassDB::bind_method(D_METHOD("get_item_slot_types"), &BG_Booker_DB::get_item_slot_types);
 	ClassDB::bind_method(D_METHOD("get_rarity_types"), &BG_Booker_DB::get_rarity_types);
 	ClassDB::bind_method(D_METHOD("get_rarity_index", "id"), &BG_Booker_DB::get_rarity_index);
@@ -1664,6 +1680,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_monster_by_id", "id"), &BG_Booker_DB::get_monster_by_id);
 	ClassDB::bind_method(D_METHOD("create_preset_monster_group_by_id", "id"), &BG_Booker_DB::create_preset_monster_group_by_id);
 	ClassDB::bind_method(D_METHOD("get_drop_rewards_from_monster_group_preset", "job"), &BG_Booker_DB::get_drop_rewards_from_monster_group_preset);
+	ClassDB::bind_method(D_METHOD("get_preset_monster_group_ai_controller_path_by_id", "id"), &BG_Booker_DB::get_preset_monster_group_ai_controller_path_by_id);
 	ClassDB::bind_method(D_METHOD("get_mail_data"), &BG_Booker_DB::get_mail_data);
 	ClassDB::bind_method(D_METHOD("get_puzzles"), &BG_Booker_DB::get_puzzles);
 	ClassDB::bind_method(D_METHOD("get_puzzle_details_by_id", "id"), &BG_Booker_DB::get_puzzle_details_by_id);
@@ -2058,6 +2075,7 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id) const 
 
 		Ref<BG_Band> result = memnew(BG_Band);
 		result->name = StringName(get_find_data_by_param_name("band_name", entry)["value"]);
+		result->preset_band_id = id;
 
 		// Band Members
 		const Dictionary band_members_values = get_find_data_by_param_name("band_members", entry);
@@ -2120,6 +2138,23 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id) const 
 	}
 
 	return nullptr;
+}
+
+StringName BG_Booker_DB::get_preset_band_ai_controller_path_by_id(const StringName &id) const {
+	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
+
+	// Preset Bands
+	const Array lines = get_sheet_by_name("Presets_Bands", data);
+	for (int i = 0; i < lines.size(); ++i) {
+		const Array entry = lines[i];
+
+		const StringName i_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+		if (i_id != id) continue;
+		
+		return ensure_clean_path(get_find_data_by_param_name("ai_controller_script", entry)["path"]);
+	}
+
+	return StringName("");
 }
 
 int BG_Booker_DB::get_rarity_index(const StringName &id) const {
@@ -2236,6 +2271,37 @@ Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id_interal(const String
 	}
 
 	return nullptr;
+}
+
+StringName BG_Booker_DB::get_preset_monster_group_ai_controller_path_by_id(const StringName &id) const {
+	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
+	return get_preset_monster_group_ai_controller_path_by_id_interal(id, data);
+}
+
+StringName BG_Booker_DB::get_preset_monster_group_ai_controller_path_by_id_interal(const StringName &id, const Dictionary &data) const {
+	// Preset Monster Groups
+	const Array lines = get_sheet_by_name("Presets_Monster_Groups", data);
+	for (int i = 0; i < lines.size(); ++i) {
+		const Array entry = lines[i];
+
+		const StringName i_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+		if (i_id != id) continue;
+
+		const StringName script_path = ensure_clean_path(get_find_data_by_param_name("ai_controller_script", entry)["path"]);
+		if (!script_path.is_empty()) {
+			return script_path;
+		}
+
+		// Parent Monster Group
+		const StringName parent_monster_group_id = StringName(get_find_data_by_param_name("parent", entry)["value"]);
+		if (!parent_monster_group_id.is_empty()) {
+			return get_preset_monster_group_ai_controller_path_by_id_interal(parent_monster_group_id, data);
+		}
+
+		break;
+	}
+
+	return StringName("");
 }
 
 TypedArray<BG_RewardItem> BG_Booker_DB::get_drop_rewards_from_monster_group_preset(Ref<BG_Job> job) const {

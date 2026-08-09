@@ -1741,6 +1741,10 @@ public:
 	StringName get_name() const { return name; }
 	void set_name(const StringName &value) { name = value; }
 
+	StringName preset_band_id;
+	StringName get_preset_band_id() const { return preset_band_id; }
+	void set_preset_band_id(const StringName &value) { preset_band_id = value; }
+
 	bool resting = false;
 	bool get_resting() const { return resting; }
 	void set_resting(bool value) { resting = value; }
@@ -1863,6 +1867,8 @@ public:
 	void set_is_on_battle_board(bool value) { is_on_battle_board = value; }
 
 	void try_set_all_monsters_to_stoned(bool stoned);
+
+	bool is_job_alive() const;
 };
 
 ////
@@ -2315,6 +2321,7 @@ public:
 	BG_BandInfo *band_info = nullptr;
 	BG_BandInfo *get_band_info() const { return band_info; }
 	Ref<BG_Band> create_preset_band_by_id(const StringName &id) const;
+	StringName get_preset_band_ai_controller_path_by_id(const StringName &id) const;
 
 	TypedArray<BG_ItemSlotType> item_slot_types;
 	TypedArray<BG_ItemSlotType> get_item_slot_types() const { return item_slot_types; }
@@ -2337,6 +2344,8 @@ public:
 	Ref<BG_Job> create_preset_monster_group_by_id_interal(const StringName &id, Vector2i &level_range, const Dictionary &data, const HashMap<String, TypedArray<StringName>> &global_enums) const;
 	TypedArray<BG_RewardItem> get_drop_rewards_from_monster_group_preset(Ref<BG_Job> job) const;
 	TypedArray<BG_RewardItem> get_drop_rewards_from_monster_group_preset_interal(const Ref<BG_Job> &job, const StringName &id, const Dictionary &data, const HashMap<String, TypedArray<StringName>> &global_enums) const;
+	StringName get_preset_monster_group_ai_controller_path_by_id(const StringName &id) const;
+	StringName get_preset_monster_group_ai_controller_path_by_id_interal(const StringName &id, const Dictionary &data) const;
 
 	TypedArray<BG_MailData> mail_data;
 	TypedArray<BG_MailData> get_mail_data() const { return mail_data; }
