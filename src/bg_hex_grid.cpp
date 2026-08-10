@@ -346,7 +346,7 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("add_hex_from_qr", "qr", "is_empty"), &BG_HexGrid::add_hex_from_qr);
 	ClassDB::bind_method(D_METHOD("add_row", "column_index", "initial_emptys", "count"), &BG_HexGrid::add_row);
 	ClassDB::bind_method(D_METHOD("update_locations", "x_offset_percent", "y_offset_percent"), &BG_HexGrid::update_locations);
-	ClassDB::bind_method(D_METHOD("get_nearest_attackable", "from_job_hex", "attackable_types", "bands"), &BG_HexGrid::get_nearest_attackable);
+	ClassDB::bind_method(D_METHOD("get_nearest_attackable", "from_job_hex", "attackable_types", "dyn_types_filter", "bands"), &BG_HexGrid::get_nearest_attackable);
 	ClassDB::bind_method(D_METHOD("get_nearest_empty_cell", "instigator", "target", "cells_to_check"), &BG_HexGrid::get_nearest_empty_cell);
 	ClassDB::bind_method(D_METHOD("find_path", "instigator", "start", "goal", "include_start", "travel_distance"), &BG_HexGrid::find_path);
 	ClassDB::bind_method(D_METHOD("comp_priority_item"), &BG_HexGrid::comp_priority_item);
@@ -827,7 +827,7 @@ Vector2i BG_HexGrid::get_grid_size_max() const
     return result;
 }
 
-Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_attackable(const Ref<BG_Hex> &from_job_hex, const TypedArray<int> &attackable_types, const TypedArray<BG_Band> &bands) const
+Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_attackable(const Ref<BG_Hex> &from_job_hex, const TypedArray<int> &attackable_types, const TypedArray<StringName> &dyn_types_filter, const TypedArray<BG_Band> &bands) const
 {
     if (from_job_hex.is_null()) return nullptr;
 
@@ -849,6 +849,11 @@ Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_attackable(const Ref<BG_Hex> &fr
                 static_cast<BG_HexVisualAssetData::HexVisualAssetTypes>(data->get_dyn_hex_type_details()->get_hex_type())
             );
             if (!attackable_types_converted.has(game_type)) continue;
+            if (!dyn_types_filter.is_empty() && 
+                ( !dyn_types_filter.has( data->get_dyn_hex_type_details()->get_id()) || !data->get_dyn_hex_type_details()->get_is_actionable() )
+            ) {
+                continue;
+            }
         }
         else {
             if (!attackable_types_converted.has(data->get_asset_type())) continue;

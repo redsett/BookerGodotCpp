@@ -1853,7 +1853,7 @@ public:
 	int weeks_remaining_unless_removed = 0;
 	int get_weeks_remaining_unless_removed() const { return weeks_remaining_unless_removed; }
 	void set_weeks_remaining_unless_removed(int value) { weeks_remaining_unless_removed = value; }
-	
+
 	TypedArray<class BG_Monster> monsters;
 	TypedArray<BG_Monster> get_monsters() const { return monsters; }
 	void set_monsters(const TypedArray<BG_Monster> &value) { monsters = value; }
@@ -2321,7 +2321,7 @@ public:
 	BG_BandInfo *band_info = nullptr;
 	BG_BandInfo *get_band_info() const { return band_info; }
 	Ref<BG_Band> create_preset_band_by_id(const StringName &id) const;
-	StringName get_preset_band_ai_controller_path_by_id(const StringName &id) const;
+	Dictionary get_preset_band_params_by_id(const StringName &id) const;
 
 	TypedArray<BG_ItemSlotType> item_slot_types;
 	TypedArray<BG_ItemSlotType> get_item_slot_types() const { return item_slot_types; }
@@ -2344,8 +2344,8 @@ public:
 	Ref<BG_Job> create_preset_monster_group_by_id_interal(const StringName &id, Vector2i &level_range, const Dictionary &data, const HashMap<String, TypedArray<StringName>> &global_enums) const;
 	TypedArray<BG_RewardItem> get_drop_rewards_from_monster_group_preset(Ref<BG_Job> job) const;
 	TypedArray<BG_RewardItem> get_drop_rewards_from_monster_group_preset_interal(const Ref<BG_Job> &job, const StringName &id, const Dictionary &data, const HashMap<String, TypedArray<StringName>> &global_enums) const;
-	StringName get_preset_monster_group_ai_controller_path_by_id(const StringName &id) const;
-	StringName get_preset_monster_group_ai_controller_path_by_id_interal(const StringName &id, const Dictionary &data) const;
+	Dictionary get_preset_monster_group_params_by_id(const StringName &id) const;
+	void get_preset_monster_group_params_by_id_interal(const StringName &id, Dictionary &output, const Dictionary &data) const;
 
 	TypedArray<BG_MailData> mail_data;
 	TypedArray<BG_MailData> get_mail_data() const { return mail_data; }

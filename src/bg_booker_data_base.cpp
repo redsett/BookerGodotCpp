@@ -1669,7 +1669,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_effects"), &BG_Booker_DB::get_effects);
 	ClassDB::bind_method(D_METHOD("get_band_info"), &BG_Booker_DB::get_band_info);
 	ClassDB::bind_method(D_METHOD("create_preset_band_by_id", "id"), &BG_Booker_DB::create_preset_band_by_id);
-	ClassDB::bind_method(D_METHOD("get_preset_band_ai_controller_path_by_id", "id"), &BG_Booker_DB::get_preset_band_ai_controller_path_by_id);
+	ClassDB::bind_method(D_METHOD("get_preset_band_params_by_id", "id"), &BG_Booker_DB::get_preset_band_params_by_id);
 	ClassDB::bind_method(D_METHOD("get_item_slot_types"), &BG_Booker_DB::get_item_slot_types);
 	ClassDB::bind_method(D_METHOD("get_rarity_types"), &BG_Booker_DB::get_rarity_types);
 	ClassDB::bind_method(D_METHOD("get_rarity_index", "id"), &BG_Booker_DB::get_rarity_index);
@@ -1680,7 +1680,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_monster_by_id", "id"), &BG_Booker_DB::get_monster_by_id);
 	ClassDB::bind_method(D_METHOD("create_preset_monster_group_by_id", "id"), &BG_Booker_DB::create_preset_monster_group_by_id);
 	ClassDB::bind_method(D_METHOD("get_drop_rewards_from_monster_group_preset", "job"), &BG_Booker_DB::get_drop_rewards_from_monster_group_preset);
-	ClassDB::bind_method(D_METHOD("get_preset_monster_group_ai_controller_path_by_id", "id"), &BG_Booker_DB::get_preset_monster_group_ai_controller_path_by_id);
+	ClassDB::bind_method(D_METHOD("get_preset_monster_group_params_by_id", "id"), &BG_Booker_DB::get_preset_monster_group_params_by_id);
 	ClassDB::bind_method(D_METHOD("get_mail_data"), &BG_Booker_DB::get_mail_data);
 	ClassDB::bind_method(D_METHOD("get_puzzles"), &BG_Booker_DB::get_puzzles);
 	ClassDB::bind_method(D_METHOD("get_puzzle_details_by_id", "id"), &BG_Booker_DB::get_puzzle_details_by_id);
@@ -2140,8 +2140,57 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id) const 
 	return nullptr;
 }
 
-StringName BG_Booker_DB::get_preset_band_ai_controller_path_by_id(const StringName &id) const {
+static void get_shared_behavior_params(Dictionary &output, const Array &behavior_entry) {
+	const StringName ai_controller_script_name = StringName("ai_controller_script");
+	const StringName ai_controller_script = ensure_clean_path(get_find_data_by_param_name("ai_controller_script", behavior_entry)["path"]);
+	if (!ai_controller_script.is_empty() || !output.has(ai_controller_script_name)) {
+		output[ai_controller_script_name] = ai_controller_script;
+	}
+
+	const StringName aggro_distance_name = StringName("aggro_distance_start_end");
+	const Dictionary aggro_distance_dict = get_find_data_by_param_name("aggro_distance_start_end", behavior_entry);
+	const Vector2i aggro_distance = Vector2i(int(aggro_distance_dict["value_x"]), int(aggro_distance_dict["value_y"]));
+	if (aggro_distance.x > 0 || !output.has(aggro_distance_name)) {
+		output[aggro_distance_name] = aggro_distance;
+	}
+
+	{ // Targetable Types
+		TypedArray<int> targetable_types;
+		const Dictionary targetable_types_values = get_find_data_by_param_name("targetable_types", behavior_entry);
+		const Array targetable_types_array = targetable_types_values["array_values"];
+		for (int y = 0; y < targetable_types_array.size(); ++y) {
+			const Array targetable_types_entry = targetable_types_array[y];
+			
+			const int hex_type_index = int(get_find_data_by_param_name("hex_type", targetable_types_entry)["value"]);
+			targetable_types.append(hex_type_index);
+		}
+
+		const StringName targetable_types_name = StringName("targetable_types");
+		if (!targetable_types.is_empty() || !output.has(targetable_types_name)) {
+			output[targetable_types_name] = targetable_types;
+		}
+	}
+
+	{ // Dyn Targetable Types
+		TypedArray<StringName> dyn_targetable_types_types;
+		const Dictionary dyn_targetable_types_values = get_find_data_by_param_name("dyn_targetable_types", behavior_entry);
+		const Array dyn_targetable_types_array = dyn_targetable_types_values["array_values"];
+		for (int y = 0; y < dyn_targetable_types_array.size(); ++y) {
+			const Array dyn_targetable_types_entry = dyn_targetable_types_array[y];
+			
+			dyn_targetable_types_types.append(StringName(get_find_data_by_param_name("dyn_type_id", dyn_targetable_types_entry)["value"]));
+		}
+
+		const StringName dyn_targetable_types_name = StringName("dyn_targetable_types");
+		if (!dyn_targetable_types_types.is_empty() || !output.has(dyn_targetable_types_name)) {
+			output[dyn_targetable_types_name] = dyn_targetable_types_types;
+		}
+	}
+}
+
+Dictionary BG_Booker_DB::get_preset_band_params_by_id(const StringName &id) const {
 	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
+	Dictionary result;
 
 	// Preset Bands
 	const Array lines = get_sheet_by_name("Presets_Bands", data);
@@ -2150,11 +2199,20 @@ StringName BG_Booker_DB::get_preset_band_ai_controller_path_by_id(const StringNa
 
 		const StringName i_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
 		if (i_id != id) continue;
+
+		// Behavior
+		const Dictionary behavior_values = get_find_data_by_param_name("behavior", entry);
+		const Array behavior_array = behavior_values["array_values"];
+		for (int x = 0; x < behavior_array.size(); ++x) {
+			const Array behavior_entry = behavior_array[x];
+
+			get_shared_behavior_params(result, behavior_entry);
+		}
 		
-		return ensure_clean_path(get_find_data_by_param_name("ai_controller_script", entry)["path"]);
+		break;
 	}
 
-	return StringName("");
+	return result;
 }
 
 int BG_Booker_DB::get_rarity_index(const StringName &id) const {
@@ -2273,12 +2331,14 @@ Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id_interal(const String
 	return nullptr;
 }
 
-StringName BG_Booker_DB::get_preset_monster_group_ai_controller_path_by_id(const StringName &id) const {
+Dictionary BG_Booker_DB::get_preset_monster_group_params_by_id(const StringName &id) const {
 	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
-	return get_preset_monster_group_ai_controller_path_by_id_interal(id, data);
+	Dictionary result;
+	get_preset_monster_group_params_by_id_interal(id, result, data);
+	return result;
 }
 
-StringName BG_Booker_DB::get_preset_monster_group_ai_controller_path_by_id_interal(const StringName &id, const Dictionary &data) const {
+void BG_Booker_DB::get_preset_monster_group_params_by_id_interal(const StringName &id, Dictionary &output, const Dictionary &data) const {
 	// Preset Monster Groups
 	const Array lines = get_sheet_by_name("Presets_Monster_Groups", data);
 	for (int i = 0; i < lines.size(); ++i) {
@@ -2287,21 +2347,23 @@ StringName BG_Booker_DB::get_preset_monster_group_ai_controller_path_by_id_inter
 		const StringName i_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
 		if (i_id != id) continue;
 
-		const StringName script_path = ensure_clean_path(get_find_data_by_param_name("ai_controller_script", entry)["path"]);
-		if (!script_path.is_empty()) {
-			return script_path;
-		}
-
 		// Parent Monster Group
 		const StringName parent_monster_group_id = StringName(get_find_data_by_param_name("parent", entry)["value"]);
 		if (!parent_monster_group_id.is_empty()) {
-			return get_preset_monster_group_ai_controller_path_by_id_interal(parent_monster_group_id, data);
+			get_preset_monster_group_params_by_id_interal(parent_monster_group_id, output, data);
+		}
+
+		// Behavior
+		const Dictionary behavior_values = get_find_data_by_param_name("behavior", entry);
+		const Array behavior_array = behavior_values["array_values"];
+		for (int x = 0; x < behavior_array.size(); ++x) {
+			const Array behavior_entry = behavior_array[x];
+
+			get_shared_behavior_params(output, behavior_entry);
 		}
 
 		break;
 	}
-
-	return StringName("");
 }
 
 TypedArray<BG_RewardItem> BG_Booker_DB::get_drop_rewards_from_monster_group_preset(Ref<BG_Job> job) const {
