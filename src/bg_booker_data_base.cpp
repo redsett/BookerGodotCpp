@@ -1060,8 +1060,10 @@ void BG_BandMember::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_BandMember::get_name);
 	ClassDB::bind_method(D_METHOD("set_name"), &BG_BandMember::set_name);
-	ClassDB::bind_method(D_METHOD("get_current_health"), &BG_BandMember::get_current_health);
-	ClassDB::bind_method(D_METHOD("set_current_health"), &BG_BandMember::set_current_health);
+	ClassDB::bind_method(D_METHOD("get_current_percent_health"), &BG_BandMember::get_current_percent_health);
+	ClassDB::bind_method(D_METHOD("set_current_percent_health"), &BG_BandMember::set_current_percent_health);
+	ClassDB::bind_method(D_METHOD("get_percent_health_additive"), &BG_BandMember::get_percent_health_additive);
+	ClassDB::bind_method(D_METHOD("set_percent_health_additive"), &BG_BandMember::set_percent_health_additive);
 	ClassDB::bind_method(D_METHOD("get_slot_index"), &BG_BandMember::get_slot_index);
 	ClassDB::bind_method(D_METHOD("set_slot_index"), &BG_BandMember::set_slot_index);
 	ClassDB::bind_method(D_METHOD("get_random_variation"), &BG_BandMember::get_random_variation);
@@ -1093,7 +1095,8 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("is_dead"), &BG_BandMember::is_dead);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_health"), "set_current_percent_health", "get_current_percent_health");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "percent_health_additive"), "set_percent_health_additive", "get_percent_health_additive");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "slot_index"), "set_slot_index", "get_slot_index");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_band_leader"), "set_is_band_leader", "get_is_band_leader");
@@ -1192,7 +1195,7 @@ bool BG_Band::is_band_alive() const
 	for (uint32_t i = 0; i < get_band_members().size(); ++i) {
 		const Ref<BG_BandMember> band_member = get_band_members()[i];
 		if (band_member.is_null()) continue;
-		if (band_member->get_current_health() > 0) {
+		if (!band_member->is_dead()) {
 			return true;
 		}
 	}
@@ -1295,7 +1298,7 @@ bool BG_Job::is_job_alive() const
 {
 	for (int i = 0; i < monsters.size(); ++i) {
 		const BG_Monster *m = cast_to<BG_Monster>(monsters[i]);
-		if (BG_Booker_DB::bg_is_instance_valid(m) && m->get_current_health() > 0) {
+		if (BG_Booker_DB::bg_is_instance_valid(m) && !m->is_dead()) {
 			return true;
 		}
 	}
@@ -1313,8 +1316,10 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_preferred_row"), &BG_Monster::get_preferred_row);
 	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_Monster::get_max_health);
 	ClassDB::bind_method(D_METHOD("get_travel_distance"), &BG_Monster::get_travel_distance);
-	ClassDB::bind_method(D_METHOD("get_current_health"), &BG_Monster::get_current_health);
-	ClassDB::bind_method(D_METHOD("set_current_health"), &BG_Monster::set_current_health);
+	ClassDB::bind_method(D_METHOD("get_current_percent_health"), &BG_Monster::get_current_percent_health);
+	ClassDB::bind_method(D_METHOD("set_current_percent_health"), &BG_Monster::set_current_percent_health);
+	ClassDB::bind_method(D_METHOD("get_percent_health_additive"), &BG_Monster::get_percent_health_additive);
+	ClassDB::bind_method(D_METHOD("set_percent_health_additive"), &BG_Monster::set_percent_health_additive);
 	ClassDB::bind_method(D_METHOD("get_random_variation"), &BG_Monster::get_random_variation);
 	ClassDB::bind_method(D_METHOD("set_random_variation"), &BG_Monster::set_random_variation);
 	ClassDB::bind_method(D_METHOD("get_level"), &BG_Monster::get_level);
@@ -1342,7 +1347,8 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_drops"), &BG_Monster::get_drops);
 	
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_health"), "set_current_health", "get_current_health");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_health"), "set_current_percent_health", "get_current_percent_health");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "percent_health_additive"), "set_percent_health_additive", "get_percent_health_additive");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_turned_to_stone"), "set_is_turned_to_stone", "get_is_turned_to_stone");
@@ -2091,7 +2097,6 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id) const 
 			new_bm->random_variation = int(get_find_data_by_param_name("variation", band_members_entry)["value"]);
 			BG_UnitCaste *unit_caste = get_band_info()->get_caste_by_id(new_bm->get_caste_id());
 			ERR_FAIL_COND_V_EDMSG(unit_caste == nullptr, nullptr, "ERROR : BG_Booker_DB::create_preset_band_by_id no unit caste found for:" + id);
-			new_bm->current_health = get_base_health_stat(unit_caste->get_stats());
 			result->band_formation[new_bm] = int(get_find_data_by_param_name("formation_index", band_members_entry)["value"]);
 			new_bm->band = result;
 

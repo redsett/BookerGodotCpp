@@ -1602,9 +1602,13 @@ public:
 	StringName get_name() const { return name; }
 	void set_name(const StringName &value) { name = value; }
 
-	int current_health = 0;
-	int get_current_health() const { return current_health; }
-	void set_current_health(int value) { current_health = value; }
+	float current_percent_health = 1.0;
+	float get_current_percent_health() const { return current_percent_health; }
+	void set_current_percent_health(float value) { current_percent_health = value; }
+
+	float percent_health_additive = 0.0;
+	float get_percent_health_additive() const { return percent_health_additive; }
+	void set_percent_health_additive(float value) { percent_health_additive = value; }
 
 	int slot_index = 0;
 	int get_slot_index() const { return slot_index; }
@@ -1662,7 +1666,7 @@ public:
 	Dictionary get_consumable_upgrades() const { return consumable_upgrades; }
 	void set_consumable_upgrades(const Dictionary &v) { consumable_upgrades = v; }
 
-	bool is_dead() { return current_health <= 0; }
+	bool is_dead() const { return current_percent_health <= 0.0; }
 };
 
 ////
@@ -1900,9 +1904,13 @@ public:
 	int travel_distance = 0;
 	int get_travel_distance() const { return travel_distance; }
 
-	int current_health = 0;
-	int get_current_health() const { return current_health; }
-	void set_current_health(int value) { current_health = value; }
+	float current_percent_health = 1.0;
+	float get_current_percent_health() const { return current_percent_health; }
+	void set_current_percent_health(float value) { current_percent_health = value; }
+
+	float percent_health_additive = 0.0;
+	float get_percent_health_additive() const { return percent_health_additive; }
+	void set_percent_health_additive(float value) { percent_health_additive = value; }
 
 	int random_variation = 0;
 	int get_random_variation() const { return random_variation; }
@@ -1947,7 +1955,7 @@ public:
 	bool get_is_turned_to_stone() const { return is_turned_to_stone; }
 	void set_is_turned_to_stone(bool v);
 
-	bool is_dead() { return current_health <= 0; }
+	bool is_dead() const { return current_percent_health <= 0.0; }
 
 	float effectiveness = 0.0;
 	float get_effectiveness() const { return effectiveness; }
