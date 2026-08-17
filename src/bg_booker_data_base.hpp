@@ -867,6 +867,9 @@ public:
 	StringName script_path;
 	StringName get_script_path() const { return script_path; }
 
+	int action_points_cost = 0;
+	int get_action_points_cost() const { return action_points_cost; }
+
 	Dictionary value_attributes;
 	Dictionary get_value_attributes() const { return value_attributes; }
 };
@@ -1006,8 +1009,8 @@ public:
 	StringName nice_name;
 	StringName get_nice_name() const { return nice_name; }
 
-	String icon_path = "";
-	String get_icon_path() const { return icon_path; }
+	StringName icon_id;
+	StringName get_icon_id() const { return icon_id; }
 
 	bool is_damage_type = false;
 	bool get_is_damage_type() const { return is_damage_type; }
@@ -1371,6 +1374,12 @@ public:
 	TypedArray<BG_ContentStat> item_stat_requirements;
 	TypedArray<BG_ContentStat> get_item_stat_requirements() const { return item_stat_requirements; }
 
+	int base_action_points = 0;
+	int get_base_action_points() const { return base_action_points; }
+
+	int base_action_points_cost = 0;
+	int get_base_action_points_cost() const { return base_action_points_cost; }
+
 	Vector2 level_range = Vector2(1, 1);
 	Vector2 get_level_range() const { return level_range; }
 
@@ -1609,6 +1618,10 @@ public:
 	float percent_health_additive = 0.0;
 	float get_percent_health_additive() const { return percent_health_additive; }
 	void set_percent_health_additive(float value) { percent_health_additive = value; }
+
+	float current_percent_action_points = 1.0;
+	float get_current_percent_action_points() const { return current_percent_action_points; }
+	void set_current_percent_action_points(float value) { current_percent_action_points = value; }
 
 	int slot_index = 0;
 	int get_slot_index() const { return slot_index; }
@@ -1900,6 +1913,16 @@ public:
 
 	int max_health = 0;
 	int get_max_health() const { return max_health; }
+
+	int base_action_points = 0;
+	int get_base_action_points() const { return base_action_points; }
+
+	int base_action_points_cost = 0;
+	int get_base_action_points_cost() const { return base_action_points_cost; }
+
+	float current_percent_action_points = 1.0;
+	float get_current_percent_action_points() const { return current_percent_action_points; }
+	void set_current_percent_action_points(float value) { current_percent_action_points = value; }
 
 	int travel_distance = 0;
 	int get_travel_distance() const { return travel_distance; }
@@ -2340,7 +2363,6 @@ public:
 
 	TypedArray<BG_UnitStatDetails> stat_types;
 	TypedArray<BG_UnitStatDetails> get_stat_types() const { return stat_types; }
-	int get_base_health_stat(const TypedArray<BG_UnitStat> &stats) const;
 
 	BG_MarketplaceData *market_place_data = nullptr;
 	BG_MarketplaceData *get_market_place_data() const { return market_place_data; }

@@ -695,6 +695,7 @@ void BG_EffectRarityDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_rarity_id"), &BG_EffectRarityDetails::get_rarity_id);
 	ClassDB::bind_method(D_METHOD("get_description"), &BG_EffectRarityDetails::get_description);
 	ClassDB::bind_method(D_METHOD("get_script_path"), &BG_EffectRarityDetails::get_script_path);
+	ClassDB::bind_method(D_METHOD("get_action_points_cost"), &BG_EffectRarityDetails::get_action_points_cost);
 	ClassDB::bind_method(D_METHOD("get_value_attributes"), &BG_EffectRarityDetails::get_value_attributes);
 }
 
@@ -774,7 +775,7 @@ void BG_UnitStatDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitStatDetails::get_id);
 	ClassDB::bind_method(D_METHOD("get_nice_name"), &BG_UnitStatDetails::get_nice_name);
-	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_UnitStatDetails::get_icon_path);
+	ClassDB::bind_method(D_METHOD("get_icon_id"), &BG_UnitStatDetails::get_icon_id);
 	ClassDB::bind_method(D_METHOD("get_is_damage_type"), &BG_UnitStatDetails::get_is_damage_type);
 	ClassDB::bind_method(D_METHOD("get_weak_to_element"), &BG_UnitStatDetails::get_weak_to_element);
 	ClassDB::bind_method(D_METHOD("get_widget_color"), &BG_UnitStatDetails::get_widget_color);
@@ -998,6 +999,8 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_effectiveness"), &BG_ItemDetails::get_effectiveness);
 	ClassDB::bind_method(D_METHOD("get_use_stat_requirements"), &BG_ItemDetails::get_use_stat_requirements);
 	ClassDB::bind_method(D_METHOD("get_item_stat_requirements"), &BG_ItemDetails::get_item_stat_requirements);
+	ClassDB::bind_method(D_METHOD("get_base_action_points"), &BG_ItemDetails::get_base_action_points);
+	ClassDB::bind_method(D_METHOD("get_base_action_points_cost"), &BG_ItemDetails::get_base_action_points_cost);
 	ClassDB::bind_method(D_METHOD("get_level_range"), &BG_ItemDetails::get_level_range);
 	ClassDB::bind_method(D_METHOD("get_item_animations"), &BG_ItemDetails::get_item_animations);
 
@@ -1064,6 +1067,8 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_current_percent_health"), &BG_BandMember::set_current_percent_health);
 	ClassDB::bind_method(D_METHOD("get_percent_health_additive"), &BG_BandMember::get_percent_health_additive);
 	ClassDB::bind_method(D_METHOD("set_percent_health_additive"), &BG_BandMember::set_percent_health_additive);
+	ClassDB::bind_method(D_METHOD("get_current_percent_action_points"), &BG_BandMember::get_current_percent_action_points);
+	ClassDB::bind_method(D_METHOD("set_current_percent_action_points"), &BG_BandMember::set_current_percent_action_points);
 	ClassDB::bind_method(D_METHOD("get_slot_index"), &BG_BandMember::get_slot_index);
 	ClassDB::bind_method(D_METHOD("set_slot_index"), &BG_BandMember::set_slot_index);
 	ClassDB::bind_method(D_METHOD("get_random_variation"), &BG_BandMember::get_random_variation);
@@ -1097,6 +1102,7 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_health"), "set_current_percent_health", "get_current_percent_health");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "percent_health_additive"), "set_percent_health_additive", "get_percent_health_additive");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_action_points"), "set_current_percent_action_points", "get_current_percent_action_points");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "slot_index"), "set_slot_index", "get_slot_index");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_band_leader"), "set_is_band_leader", "get_is_band_leader");
@@ -1315,6 +1321,10 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_Monster::get_name);
 	ClassDB::bind_method(D_METHOD("get_preferred_row"), &BG_Monster::get_preferred_row);
 	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_Monster::get_max_health);
+	ClassDB::bind_method(D_METHOD("get_base_action_points"), &BG_Monster::get_base_action_points);
+	ClassDB::bind_method(D_METHOD("get_base_action_points_cost"), &BG_Monster::get_base_action_points_cost);
+	ClassDB::bind_method(D_METHOD("get_current_percent_action_points"), &BG_Monster::get_current_percent_action_points);
+	ClassDB::bind_method(D_METHOD("set_current_percent_action_points"), &BG_Monster::set_current_percent_action_points);
 	ClassDB::bind_method(D_METHOD("get_travel_distance"), &BG_Monster::get_travel_distance);
 	ClassDB::bind_method(D_METHOD("get_current_percent_health"), &BG_Monster::get_current_percent_health);
 	ClassDB::bind_method(D_METHOD("set_current_percent_health"), &BG_Monster::set_current_percent_health);
@@ -1347,6 +1357,7 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_drops"), &BG_Monster::get_drops);
 	
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
+	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_action_points"), "set_current_percent_action_points", "get_current_percent_action_points");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_health"), "set_current_percent_health", "get_current_percent_health");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "percent_health_additive"), "set_percent_health_additive", "get_percent_health_additive");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
@@ -1680,7 +1691,6 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_rarity_types"), &BG_Booker_DB::get_rarity_types);
 	ClassDB::bind_method(D_METHOD("get_rarity_index", "id"), &BG_Booker_DB::get_rarity_index);
 	ClassDB::bind_method(D_METHOD("get_stat_types"), &BG_Booker_DB::get_stat_types);
-	ClassDB::bind_method(D_METHOD("get_base_health_stat", "stats"), &BG_Booker_DB::get_base_health_stat);
 	ClassDB::bind_method(D_METHOD("get_market_place_data"), &BG_Booker_DB::get_market_place_data);
 	ClassDB::bind_method(D_METHOD("get_monster_types"), &BG_Booker_DB::get_monster_types);
 	ClassDB::bind_method(D_METHOD("get_monster_by_id", "id"), &BG_Booker_DB::get_monster_by_id);
@@ -2496,20 +2506,6 @@ BG_TwoDer_DataEntry *BG_Booker_DB::get_two_der_data_from_id(const StringName &id
 	return nullptr;
 }
 
-int BG_Booker_DB::get_base_health_stat(const TypedArray<BG_UnitStat> &stats) const {
-	for (int i = 0; i < stats.size(); ++i) {
-		const BG_UnitStat *s = cast_to<BG_UnitStat>(stats[i]);
-		for (int x = 0; x < stat_types.size(); ++x) {
-			const BG_UnitStatDetails *st = cast_to<BG_UnitStatDetails>(stat_types[x]);
-			if (s->get_id() == st->get_id() && !st->get_is_damage_type()) {
-				return s->get_defensive_value() + int(s->get_defensive_value() * s->get_bonus_percentage());
-			}
-		}
-	}
-	ERR_FAIL_COND_V_EDMSG(true, -1, "ERROR : BG_Booker_DB::get_base_health_stat could not find health stat.");
-	return -1;
-}
-
 BG_BaseStat *BG_Booker_DB::get_stat_from_stat_id_name(const StringName &stat_id_name) const {
 	for (int i = 0; i < base_stats.size(); ++i) {
 		BG_BaseStat *stat = cast_to<BG_BaseStat>(base_stats[i]);
@@ -2824,7 +2820,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			BG_UnitStatDetails *new_stat_types = memnew(BG_UnitStatDetails);
 			new_stat_types->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
 			new_stat_types->nice_name = StringName(get_find_data_by_param_name("name", entry)["value"]);
-			new_stat_types->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
+			new_stat_types->icon_id = StringName(get_find_data_by_param_name("icon_id", entry)["value"]);
 			new_stat_types->is_damage_type = bool(get_find_data_by_param_name("is_damage_type", entry)["value"]);
 			StringName weak_to_element = StringName(get_find_data_by_param_name("weak_to_element", entry)["value"]);
 			if (!weak_to_element.is_empty())
@@ -2875,6 +2871,8 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				if (level_range.has("value_x")) item_details->level_range = Vector2(int(level_range["value_x"]), int(level_range["value_y"]));
 				item_details->sell_value_tier = int(get_find_data_by_param_name("sell_value_tier", misc_params)["value"]);
 				item_details->fame_value_tier = int(get_find_data_by_param_name("fame_value_tier", misc_params)["value"]);
+				item_details->base_action_points = int(get_find_data_by_param_name("action_points", misc_params)["value"]);
+				item_details->base_action_points_cost = int(get_find_data_by_param_name("action_points_cost", misc_params)["value"]);
 
 				{ // Available Castes
 					item_details->caste_ids.clear();
@@ -2992,6 +2990,8 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				monster_details->can_be_turned_to_stone = bool(get_find_data_by_param_name("can_be_turned_to_stone", misc_params)["value"]);
 				monster_details->travel_distance = int(get_find_data_by_param_name("travel_distance", misc_params)["value"]);
 				monster_details->preferred_row = int(get_find_data_by_param_name("preferred_row", misc_params)["value"]);
+				monster_details->base_action_points = int(get_find_data_by_param_name("action_points", misc_params)["value"]);
+				monster_details->base_action_points_cost = int(get_find_data_by_param_name("action_points_cost", misc_params)["value"]);
 
 				{ // Effectiveness Stats
 					const Array effectiveness_stats_lines = Array(entry["effectiveness_stats"]);
@@ -3072,6 +3072,8 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				// if (level_range.has("value_x")) item_details->level_range = Vector2(int(level_range["value_x"]), int(level_range["value_y"]));
 				item_details->sell_value_tier = int(get_find_data_by_param_name("sell_value_tier", misc_params)["value"]);
 				item_details->fame_value_tier = int(get_find_data_by_param_name("fame_value_tier", misc_params)["value"]);
+				item_details->base_action_points = int(get_find_data_by_param_name("action_points", misc_params)["value"]);
+				item_details->base_action_points_cost = int(get_find_data_by_param_name("action_points_cost", misc_params)["value"]);
 
 				{ // Item Effectiveness Stats
 					const bool randomize_damage_type = bool(entry["randomize_damage_type"]);
@@ -3447,16 +3449,16 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				new_unit_caste->inventory_space = int(get_find_data_by_param_name("inventory_space", misc_stats_values_entry)["value"]);
 			}
 
-			// Base Damage Type Stats
-			const Dictionary base_damage_type_stats_values = get_find_data_by_param_name("base_damage_type_stats", entry);
-			const Array base_damage_type_stats_values_array = base_damage_type_stats_values["array_values"];
-			for (int x = 0; x < base_damage_type_stats_values_array.size(); ++x) {
-				const Array base_damage_type_stats_values_entry = base_damage_type_stats_values_array[x];
+			// Base Stat Type Values
+			const Dictionary base_stat_type_values = get_find_data_by_param_name("base_stat_type_values", entry);
+			const Array base_stat_type_values_array = base_stat_type_values["array_values"];
+			for (int x = 0; x < base_stat_type_values_array.size(); ++x) {
+				const Array base_stat_type_values_entry = base_stat_type_values_array[x];
 
 				BG_UnitStat *new_stat = memnew(BG_UnitStat);
-				new_stat->id = StringName(get_find_data_by_param_name("damage_type", base_damage_type_stats_values_entry)["value"]);
-				new_stat->bonus_percentage = float(get_find_data_by_param_name("base_bonus_percentage", base_damage_type_stats_values_entry)["value"]);
-				new_stat->defensive_value = int(get_find_data_by_param_name("starting_value", base_damage_type_stats_values_entry)["value"]);
+				new_stat->id = StringName(get_find_data_by_param_name("damage_type", base_stat_type_values_entry)["value"]);
+				new_stat->bonus_percentage = float(get_find_data_by_param_name("base_bonus_percentage", base_stat_type_values_entry)["value"]);
+				new_stat->defensive_value = int(get_find_data_by_param_name("starting_value", base_stat_type_values_entry)["value"]);
 
 				new_unit_caste->stats.append(new_stat);
 			}
@@ -3567,6 +3569,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 
 				new_rarity_class->rarity_id = StringName(get_find_data_by_param_name("rarity", rarity_entry)["value"]);
 				new_rarity_class->description = StringName(get_find_data_by_param_name("description", rarity_entry)["value"]);
+				new_rarity_class->action_points_cost = int(get_find_data_by_param_name("action_points_cost", rarity_entry)["value"]);
 				new_rarity_class->script_path = ensure_clean_path(get_find_data_by_param_name("script_path", rarity_entry)["path"]);
 
 				// Value Attributes
