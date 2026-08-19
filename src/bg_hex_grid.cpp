@@ -148,6 +148,8 @@ void BG_HexGameSaveData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_has_attacked"), &BG_HexGameSaveData::set_has_attacked);
 	ClassDB::bind_method(D_METHOD("get_can_move"), &BG_HexGameSaveData::get_can_move);
 	ClassDB::bind_method(D_METHOD("set_can_move"), &BG_HexGameSaveData::set_can_move);
+	ClassDB::bind_method(D_METHOD("get_resting"), &BG_HexGameSaveData::get_resting);
+	ClassDB::bind_method(D_METHOD("set_resting"), &BG_HexGameSaveData::set_resting);
 	ClassDB::bind_method(D_METHOD("get_qr"), &BG_HexGameSaveData::get_qr);
 	ClassDB::bind_method(D_METHOD("set_qr"), &BG_HexGameSaveData::set_qr);
 	ClassDB::bind_method(D_METHOD("get_use_moved_from_qr"), &BG_HexGameSaveData::get_use_moved_from_qr);
@@ -191,6 +193,7 @@ void BG_HexGameSaveData::_bind_methods()
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_newly_added_to_board"), "set_is_newly_added_to_board", "get_is_newly_added_to_board");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "has_attacked"), "set_has_attacked", "get_has_attacked");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "can_move"), "set_can_move", "get_can_move");
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "resting"), "set_resting", "get_resting");
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "qr"), "set_qr", "get_qr");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "use_moved_from_qr"), "set_use_moved_from_qr", "get_use_moved_from_qr");
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "moved_from_qr"), "set_moved_from_qr", "get_moved_from_qr");

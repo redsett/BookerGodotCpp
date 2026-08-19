@@ -255,6 +255,10 @@ public:
     bool get_can_move() const { return can_move; }
     void set_can_move(bool v) { can_move = v; }
 
+	bool resting = false;
+	bool get_resting() const { return resting; }
+	void set_resting(bool value) { resting = value; }
+
     Vector2i qr = Vector2i();
     Vector2i get_qr() const { return qr; }
     void set_qr(const Vector2i &v) { qr = v; }

@@ -1623,6 +1623,10 @@ public:
 	float get_current_percent_action_points() const { return current_percent_action_points; }
 	void set_current_percent_action_points(float value) { current_percent_action_points = value; }
 
+	float current_percent_action_points_fatigue = 0.0;
+	float get_current_percent_action_points_fatigue() const { return current_percent_action_points_fatigue; }
+	void set_current_percent_action_points_fatigue(float value) { current_percent_action_points_fatigue = value; }
+
 	int slot_index = 0;
 	int get_slot_index() const { return slot_index; }
 	void set_slot_index(int value) { slot_index = value; }
@@ -1871,6 +1875,10 @@ public:
 	int get_weeks_remaining_unless_removed() const { return weeks_remaining_unless_removed; }
 	void set_weeks_remaining_unless_removed(int value) { weeks_remaining_unless_removed = value; }
 
+	bool resting = false;
+	bool get_resting() const { return resting; }
+	void set_resting(bool value) { resting = value; }
+
 	TypedArray<class BG_Monster> monsters;
 	TypedArray<BG_Monster> get_monsters() const { return monsters; }
 	void set_monsters(const TypedArray<BG_Monster> &value) { monsters = value; }
@@ -1923,6 +1931,10 @@ public:
 	float current_percent_action_points = 1.0;
 	float get_current_percent_action_points() const { return current_percent_action_points; }
 	void set_current_percent_action_points(float value) { current_percent_action_points = value; }
+
+	float current_percent_action_points_fatigue = 0.0;
+	float get_current_percent_action_points_fatigue() const { return current_percent_action_points_fatigue; }
+	void set_current_percent_action_points_fatigue(float value) { current_percent_action_points_fatigue = value; }
 
 	int travel_distance = 0;
 	int get_travel_distance() const { return travel_distance; }
@@ -1994,6 +2006,9 @@ public:
 
 	TypedArray<BG_RewardItem> drops;
 	TypedArray<BG_RewardItem> get_drops() const { return drops; }
+
+	float action_points_fatigue_rate_multiplier = 1.0;
+	float get_action_points_fatigue_rate_multiplier() const { return action_points_fatigue_rate_multiplier; }
 };
 
 ////
@@ -2231,6 +2246,15 @@ public:
 
 	TypedArray<int> day_cycle_offset_per_act;
 	TypedArray<int> get_day_cycle_offset_per_act() const { return day_cycle_offset_per_act; }
+
+	float band_action_points_fatigue_rate = 0.0;
+	float get_band_action_points_fatigue_rate() const { return band_action_points_fatigue_rate; }
+
+	float monster_action_points_fatigue_rate = 0.0;
+	float get_monster_action_points_fatigue_rate() const { return monster_action_points_fatigue_rate; }
+
+	float action_points_rest_rate = 0.0;
+	float get_action_points_rest_rate() const { return action_points_rest_rate; }
 };
 
 ////
