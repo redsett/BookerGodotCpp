@@ -1376,6 +1376,9 @@ public:
 
 	int base_action_points = 0;
 	int get_base_action_points() const { return base_action_points; }
+	
+	int bonus_action_points = 0;
+	int get_bonus_action_points() const { return bonus_action_points; }
 
 	int base_action_points_cost = 0;
 	int get_base_action_points_cost() const { return base_action_points_cost; }
@@ -1627,6 +1630,10 @@ public:
 	float get_current_percent_action_points_fatigue() const { return current_percent_action_points_fatigue; }
 	void set_current_percent_action_points_fatigue(float value) { current_percent_action_points_fatigue = value; }
 
+	int current_action_points_fatigue = 0;
+	int get_current_action_points_fatigue() const { return current_action_points_fatigue; }
+	void set_current_action_points_fatigue(int value) { current_action_points_fatigue = value; }
+
 	int slot_index = 0;
 	int get_slot_index() const { return slot_index; }
 	void set_slot_index(int value) { slot_index = value; }
@@ -1875,10 +1882,6 @@ public:
 	int get_weeks_remaining_unless_removed() const { return weeks_remaining_unless_removed; }
 	void set_weeks_remaining_unless_removed(int value) { weeks_remaining_unless_removed = value; }
 
-	bool resting = false;
-	bool get_resting() const { return resting; }
-	void set_resting(bool value) { resting = value; }
-
 	TypedArray<class BG_Monster> monsters;
 	TypedArray<BG_Monster> get_monsters() const { return monsters; }
 	void set_monsters(const TypedArray<BG_Monster> &value) { monsters = value; }
@@ -1924,6 +1927,9 @@ public:
 
 	int base_action_points = 0;
 	int get_base_action_points() const { return base_action_points; }
+	
+	int bonus_action_points = 0;
+	int get_bonus_action_points() const { return bonus_action_points; }
 
 	int base_action_points_cost = 0;
 	int get_base_action_points_cost() const { return base_action_points_cost; }
@@ -1935,6 +1941,10 @@ public:
 	float current_percent_action_points_fatigue = 0.0;
 	float get_current_percent_action_points_fatigue() const { return current_percent_action_points_fatigue; }
 	void set_current_percent_action_points_fatigue(float value) { current_percent_action_points_fatigue = value; }
+
+	int current_action_points_fatigue = 0;
+	int get_current_action_points_fatigue() const { return current_action_points_fatigue; }
+	void set_current_action_points_fatigue(int value) { current_action_points_fatigue = value; }
 
 	int travel_distance = 0;
 	int get_travel_distance() const { return travel_distance; }

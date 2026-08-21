@@ -1000,6 +1000,7 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_use_stat_requirements"), &BG_ItemDetails::get_use_stat_requirements);
 	ClassDB::bind_method(D_METHOD("get_item_stat_requirements"), &BG_ItemDetails::get_item_stat_requirements);
 	ClassDB::bind_method(D_METHOD("get_base_action_points"), &BG_ItemDetails::get_base_action_points);
+	ClassDB::bind_method(D_METHOD("get_bonus_action_points"), &BG_ItemDetails::get_bonus_action_points);
 	ClassDB::bind_method(D_METHOD("get_base_action_points_cost"), &BG_ItemDetails::get_base_action_points_cost);
 	ClassDB::bind_method(D_METHOD("get_level_range"), &BG_ItemDetails::get_level_range);
 	ClassDB::bind_method(D_METHOD("get_item_animations"), &BG_ItemDetails::get_item_animations);
@@ -1071,6 +1072,8 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_current_percent_action_points"), &BG_BandMember::set_current_percent_action_points);
 	ClassDB::bind_method(D_METHOD("get_current_percent_action_points_fatigue"), &BG_BandMember::get_current_percent_action_points_fatigue);
 	ClassDB::bind_method(D_METHOD("set_current_percent_action_points_fatigue"), &BG_BandMember::set_current_percent_action_points_fatigue);
+	ClassDB::bind_method(D_METHOD("get_current_action_points_fatigue"), &BG_BandMember::get_current_action_points_fatigue);
+	ClassDB::bind_method(D_METHOD("set_current_action_points_fatigue"), &BG_BandMember::set_current_action_points_fatigue);
 	ClassDB::bind_method(D_METHOD("get_slot_index"), &BG_BandMember::get_slot_index);
 	ClassDB::bind_method(D_METHOD("set_slot_index"), &BG_BandMember::set_slot_index);
 	ClassDB::bind_method(D_METHOD("get_random_variation"), &BG_BandMember::get_random_variation);
@@ -1106,6 +1109,7 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "percent_health_additive"), "set_percent_health_additive", "get_percent_health_additive");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_action_points"), "set_current_percent_action_points", "get_current_percent_action_points");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_action_points_fatigue"), "set_current_percent_action_points_fatigue", "get_current_percent_action_points_fatigue");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_action_points_fatigue"), "set_current_action_points_fatigue", "get_current_action_points_fatigue");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "slot_index"), "set_slot_index", "get_slot_index");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_band_leader"), "set_is_band_leader", "get_is_band_leader");
@@ -1277,8 +1281,6 @@ void BG_Job::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_random_seed"), &BG_Job::set_random_seed);
 	ClassDB::bind_method(D_METHOD("get_weeks_remaining_unless_removed"), &BG_Job::get_weeks_remaining_unless_removed);
 	ClassDB::bind_method(D_METHOD("set_weeks_remaining_unless_removed"), &BG_Job::set_weeks_remaining_unless_removed);
-	ClassDB::bind_method(D_METHOD("get_resting"), &BG_Job::get_resting);
-	ClassDB::bind_method(D_METHOD("set_resting"), &BG_Job::set_resting);
 	ClassDB::bind_method(D_METHOD("get_monsters"), &BG_Job::get_monsters);
 	ClassDB::bind_method(D_METHOD("set_monsters"), &BG_Job::set_monsters);
 	ClassDB::bind_method(D_METHOD("get_formation"), &BG_Job::get_formation);
@@ -1292,7 +1294,6 @@ void BG_Job::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "unique_job_id"), "set_unique_job_id", "get_unique_job_id");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_seed"), "set_random_seed", "get_random_seed");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "weeks_remaining_unless_removed"), "set_weeks_remaining_unless_removed", "get_weeks_remaining_unless_removed");
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "resting"), "set_resting", "get_resting");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "monsters"), "set_monsters", "get_monsters");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "formation"), "set_formation", "get_formation");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_on_battle_board"), "set_is_on_battle_board", "get_is_on_battle_board");
@@ -1328,11 +1329,14 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_preferred_row"), &BG_Monster::get_preferred_row);
 	ClassDB::bind_method(D_METHOD("get_max_health"), &BG_Monster::get_max_health);
 	ClassDB::bind_method(D_METHOD("get_base_action_points"), &BG_Monster::get_base_action_points);
+	ClassDB::bind_method(D_METHOD("get_bonus_action_points"), &BG_Monster::get_bonus_action_points);
 	ClassDB::bind_method(D_METHOD("get_base_action_points_cost"), &BG_Monster::get_base_action_points_cost);
 	ClassDB::bind_method(D_METHOD("get_current_percent_action_points"), &BG_Monster::get_current_percent_action_points);
 	ClassDB::bind_method(D_METHOD("set_current_percent_action_points"), &BG_Monster::set_current_percent_action_points);
 	ClassDB::bind_method(D_METHOD("get_current_percent_action_points_fatigue"), &BG_Monster::get_current_percent_action_points_fatigue);
 	ClassDB::bind_method(D_METHOD("set_current_percent_action_points_fatigue"), &BG_Monster::set_current_percent_action_points_fatigue);
+	ClassDB::bind_method(D_METHOD("get_current_action_points_fatigue"), &BG_Monster::get_current_action_points_fatigue);
+	ClassDB::bind_method(D_METHOD("set_current_action_points_fatigue"), &BG_Monster::set_current_action_points_fatigue);
 	ClassDB::bind_method(D_METHOD("get_travel_distance"), &BG_Monster::get_travel_distance);
 	ClassDB::bind_method(D_METHOD("get_current_percent_health"), &BG_Monster::get_current_percent_health);
 	ClassDB::bind_method(D_METHOD("set_current_percent_health"), &BG_Monster::set_current_percent_health);
@@ -1368,6 +1372,7 @@ void BG_Monster::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_action_points"), "set_current_percent_action_points", "get_current_percent_action_points");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_action_points_fatigue"), "set_current_percent_action_points_fatigue", "get_current_percent_action_points_fatigue");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_action_points_fatigue"), "set_current_action_points_fatigue", "get_current_action_points_fatigue");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_health"), "set_current_percent_health", "get_current_percent_health");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "percent_health_additive"), "set_percent_health_additive", "get_percent_health_additive");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
@@ -2886,6 +2891,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				item_details->sell_value_tier = int(get_find_data_by_param_name("sell_value_tier", misc_params)["value"]);
 				item_details->fame_value_tier = int(get_find_data_by_param_name("fame_value_tier", misc_params)["value"]);
 				item_details->base_action_points = int(get_find_data_by_param_name("action_points", misc_params)["value"]);
+				item_details->bonus_action_points = int(get_find_data_by_param_name("bonus_action_points", misc_params)["value"]);
 				item_details->base_action_points_cost = int(get_find_data_by_param_name("action_points_cost", misc_params)["value"]);
 
 				{ // Available Castes
@@ -3005,6 +3011,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				monster_details->travel_distance = int(get_find_data_by_param_name("travel_distance", misc_params)["value"]);
 				monster_details->preferred_row = int(get_find_data_by_param_name("preferred_row", misc_params)["value"]);
 				monster_details->base_action_points = int(get_find_data_by_param_name("action_points", misc_params)["value"]);
+				monster_details->bonus_action_points = int(get_find_data_by_param_name("bonus_action_points", misc_params)["value"]);
 				monster_details->base_action_points_cost = int(get_find_data_by_param_name("action_points_cost", misc_params)["value"]);
 				monster_details->action_points_fatigue_rate_multiplier = float(get_find_data_by_param_name("action_points_fatigue_rate_multiplier", misc_params)["value"]);
 
@@ -3088,6 +3095,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				item_details->sell_value_tier = int(get_find_data_by_param_name("sell_value_tier", misc_params)["value"]);
 				item_details->fame_value_tier = int(get_find_data_by_param_name("fame_value_tier", misc_params)["value"]);
 				item_details->base_action_points = int(get_find_data_by_param_name("action_points", misc_params)["value"]);
+				item_details->bonus_action_points = int(get_find_data_by_param_name("bonus_action_points", misc_params)["value"]);
 				item_details->base_action_points_cost = int(get_find_data_by_param_name("action_points_cost", misc_params)["value"]);
 
 				{ // Item Effectiveness Stats
