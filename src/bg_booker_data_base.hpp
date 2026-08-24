@@ -1548,14 +1548,14 @@ public:
 	StringName id;
 	StringName get_id() const { return id; }
 
-	StringName name;
-	StringName get_name() const { return name; }
+	StringName parent_caste;
+	StringName get_parent_caste() const { return parent_caste; }
 
 	StringName icon_path;
 	StringName get_icon_path() const { return icon_path; }
 
-	BG_HueShiftData *hue_shift_data = nullptr;
-	BG_HueShiftData *get_hue_shift_data() const { return hue_shift_data; };
+	bool is_unique_caste;
+	bool get_is_unique_caste() const { return is_unique_caste; }
 
 	TypedArray<StringName> lod_mesh_paths;
 	TypedArray<StringName> get_lod_mesh_paths() const { return lod_mesh_paths; }
@@ -1610,9 +1610,13 @@ public:
 	// 	}
 	// }
 
-	StringName name;
-	StringName get_name() const { return name; }
-	void set_name(const StringName &value) { name = value; }
+	StringName first_name_id;
+	StringName get_first_name_id() const { return first_name_id; }
+	void set_first_name_id(const StringName &value) { first_name_id = value; }
+
+	StringName last_name_id;
+	StringName get_last_name_id() const { return last_name_id; }
+	void set_last_name_id(const StringName &value) { last_name_id = value; }
 
 	float current_percent_health = 1.0;
 	float get_current_percent_health() const { return current_percent_health; }
@@ -1625,10 +1629,6 @@ public:
 	float current_percent_action_points = 1.0;
 	float get_current_percent_action_points() const { return current_percent_action_points; }
 	void set_current_percent_action_points(float value) { current_percent_action_points = value; }
-
-	float current_percent_action_points_fatigue = 0.0;
-	float get_current_percent_action_points_fatigue() const { return current_percent_action_points_fatigue; }
-	void set_current_percent_action_points_fatigue(float value) { current_percent_action_points_fatigue = value; }
 
 	int current_action_points_fatigue = 0;
 	int get_current_action_points_fatigue() const { return current_action_points_fatigue; }
@@ -1691,6 +1691,11 @@ public:
 	void set_consumable_upgrades(const Dictionary &v) { consumable_upgrades = v; }
 
 	bool is_dead() const { return current_percent_health <= 0.0; }
+
+	StringName cached_name;
+	StringName get_name();
+	StringName get_first_name();
+	StringName get_last_name();
 };
 
 ////
@@ -1765,8 +1770,13 @@ public:
 	int get_unique_id() const { return unique_id; }
 	void set_unique_id(int value) { unique_id = value; }
 
+	StringName id;
+	StringName get_id() const { return id; }
+	void set_id(const StringName &value) { id = value; }
+
+	StringName cached_name;
 	StringName name;
-	StringName get_name() const { return name; }
+	StringName get_name();
 	void set_name(const StringName &value) { name = value; }
 
 	StringName preset_band_id;
@@ -1848,11 +1858,11 @@ protected:
 	static void _bind_methods();
 
 public:
-	StringName band_name;
-	StringName get_band_name() const { return band_name; }
+	StringName name;
+	StringName get_name() const { return name; }
 
-	TypedArray<String> hiring_dialogue_choices;
-	TypedArray<String> get_hiring_dialogue_choices() const { return hiring_dialogue_choices; }
+	bool allowed_in_random = false;
+	bool get_allowed_in_random() const { return allowed_in_random; }
 };
 
 ////
@@ -1937,10 +1947,6 @@ public:
 	float current_percent_action_points = 1.0;
 	float get_current_percent_action_points() const { return current_percent_action_points; }
 	void set_current_percent_action_points(float value) { current_percent_action_points = value; }
-
-	float current_percent_action_points_fatigue = 0.0;
-	float get_current_percent_action_points_fatigue() const { return current_percent_action_points_fatigue; }
-	void set_current_percent_action_points_fatigue(float value) { current_percent_action_points_fatigue = value; }
 
 	int current_action_points_fatigue = 0;
 	int get_current_action_points_fatigue() const { return current_action_points_fatigue; }
@@ -2040,11 +2046,11 @@ public:
 	TypedArray<StringName> icon_paths;
 	TypedArray<StringName> get_icon_paths() const { return icon_paths; }
 
-	TypedArray<StringName> first_names;
-	TypedArray<StringName> get_first_names() const { return first_names; }
+	TypedArray<BG_BandNameInfo> first_names;
+	TypedArray<BG_BandNameInfo> get_first_names() const { return first_names; }
 
-	TypedArray<StringName> last_names;
-	TypedArray<StringName> get_last_names() const { return last_names; }
+	TypedArray<BG_BandNameInfo> last_names;
+	TypedArray<BG_BandNameInfo> get_last_names() const { return last_names; }
 
 	Vector2 band_size_min_max;
 	Vector2 get_band_size_min_max() const { return band_size_min_max; }
@@ -2054,7 +2060,7 @@ public:
 
 	TypedArray<BG_UnitCaste> unit_castes;
 	TypedArray<BG_UnitCaste> get_unit_castes() const { return unit_castes; }
-	BG_UnitCaste *get_caste_by_id(const StringName &id) const;
+	BG_UnitCaste *get_caste_by_id(const StringName &id, bool return_parent) const;
 
 	float rest_recovery_speed = 0.0;
 	float get_rest_recovery_speed() const { return rest_recovery_speed; }
@@ -2313,6 +2319,10 @@ public:
 	void refresh_data();
 
 	static void timer_test(const Callable &callable);
+
+	StringName current_language_key = "en";
+	StringName get_current_language_key() const { return current_language_key; }
+	void set_current_language_key(const StringName &v) { current_language_key = v; }
 
 	String modding_path = "";
 	String get_modding_path() const { return modding_path; }

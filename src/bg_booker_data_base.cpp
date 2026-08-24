@@ -1062,16 +1062,16 @@ StringName BG_ItemDetails::get_audio_id_by_id(const StringName &id) const {
 ////
 void BG_BandMember::_bind_methods()
 {
-	ClassDB::bind_method(D_METHOD("get_name"), &BG_BandMember::get_name);
-	ClassDB::bind_method(D_METHOD("set_name"), &BG_BandMember::set_name);
+	ClassDB::bind_method(D_METHOD("get_first_name_id"), &BG_BandMember::get_first_name_id);
+	ClassDB::bind_method(D_METHOD("set_first_name_id"), &BG_BandMember::set_first_name_id);
+	ClassDB::bind_method(D_METHOD("get_last_name_id"), &BG_BandMember::get_last_name_id);
+	ClassDB::bind_method(D_METHOD("set_last_name_id"), &BG_BandMember::set_last_name_id);
 	ClassDB::bind_method(D_METHOD("get_current_percent_health"), &BG_BandMember::get_current_percent_health);
 	ClassDB::bind_method(D_METHOD("set_current_percent_health"), &BG_BandMember::set_current_percent_health);
 	ClassDB::bind_method(D_METHOD("get_percent_health_additive"), &BG_BandMember::get_percent_health_additive);
 	ClassDB::bind_method(D_METHOD("set_percent_health_additive"), &BG_BandMember::set_percent_health_additive);
 	ClassDB::bind_method(D_METHOD("get_current_percent_action_points"), &BG_BandMember::get_current_percent_action_points);
 	ClassDB::bind_method(D_METHOD("set_current_percent_action_points"), &BG_BandMember::set_current_percent_action_points);
-	ClassDB::bind_method(D_METHOD("get_current_percent_action_points_fatigue"), &BG_BandMember::get_current_percent_action_points_fatigue);
-	ClassDB::bind_method(D_METHOD("set_current_percent_action_points_fatigue"), &BG_BandMember::set_current_percent_action_points_fatigue);
 	ClassDB::bind_method(D_METHOD("get_current_action_points_fatigue"), &BG_BandMember::get_current_action_points_fatigue);
 	ClassDB::bind_method(D_METHOD("set_current_action_points_fatigue"), &BG_BandMember::set_current_action_points_fatigue);
 	ClassDB::bind_method(D_METHOD("get_slot_index"), &BG_BandMember::get_slot_index);
@@ -1103,12 +1103,15 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_consumable_upgrades"), &BG_BandMember::get_consumable_upgrades);
 	ClassDB::bind_method(D_METHOD("set_consumable_upgrades"), &BG_BandMember::set_consumable_upgrades);
 	ClassDB::bind_method(D_METHOD("is_dead"), &BG_BandMember::is_dead);
+	ClassDB::bind_method(D_METHOD("get_name"), &BG_BandMember::get_name);
+	ClassDB::bind_method(D_METHOD("get_first_name"), &BG_BandMember::get_first_name);
+	ClassDB::bind_method(D_METHOD("get_last_name"), &BG_BandMember::get_last_name);
 
-	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "first_name_id"), "set_first_name_id", "get_first_name_id");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "last_name_id"), "set_last_name_id", "get_last_name_id");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_health"), "set_current_percent_health", "get_current_percent_health");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "percent_health_additive"), "set_percent_health_additive", "get_percent_health_additive");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_action_points"), "set_current_percent_action_points", "get_current_percent_action_points");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_action_points_fatigue"), "set_current_percent_action_points_fatigue", "get_current_percent_action_points_fatigue");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_action_points_fatigue"), "set_current_action_points_fatigue", "get_current_action_points_fatigue");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "slot_index"), "set_slot_index", "get_slot_index");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
@@ -1121,6 +1124,48 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "inventory"), "set_inventory", "get_inventory");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "element_upgrades"), "set_element_upgrades", "get_element_upgrades");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "consumable_upgrades"), "set_consumable_upgrades", "get_consumable_upgrades");
+}
+
+StringName BG_BandMember::get_name()
+{
+	if (!cached_name.is_empty()) return cached_name;
+
+	BG_Booker_DB *booker_db = BG_Booker_DB::get_singleton();
+	if (!BG_Booker_DB::bg_is_instance_valid(booker_db)) return "";
+	
+	String first_name = "";
+	if (!get_first_name_id().is_empty())
+		first_name = booker_db->get_localize_string(StringName("band_member"), get_first_name_id(), booker_db->get_current_language_key(), true);
+	String last_name = "";
+	if (!get_last_name_id().is_empty())
+		last_name = booker_db->get_localize_string(StringName("band_member"), get_last_name_id(), booker_db->get_current_language_key(), true);
+	
+	cached_name = StringName(first_name + " " + last_name);
+	return cached_name;
+}
+
+StringName BG_BandMember::get_first_name()
+{
+	BG_Booker_DB *booker_db = BG_Booker_DB::get_singleton();
+	if (!BG_Booker_DB::bg_is_instance_valid(booker_db)) return "";
+	
+	StringName first_name;
+	if (!get_first_name_id().is_empty())
+		first_name = StringName(booker_db->get_localize_string(StringName("band_member"), get_first_name_id(), booker_db->get_current_language_key(), true));
+	
+	return first_name;
+}
+
+StringName BG_BandMember::get_last_name()
+{
+	BG_Booker_DB *booker_db = BG_Booker_DB::get_singleton();
+	if (!BG_Booker_DB::bg_is_instance_valid(booker_db)) return "";
+	
+	StringName last_name;
+	if (!get_last_name_id().is_empty())
+		last_name = StringName(booker_db->get_localize_string(StringName("band_member"), get_last_name_id(), booker_db->get_current_language_key(), true));
+	
+	return last_name;
 }
 
 BG_BandMember::~BG_BandMember()
@@ -1160,6 +1205,8 @@ void BG_Band::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_unique_id"), &BG_Band::get_unique_id);
 	ClassDB::bind_method(D_METHOD("set_unique_id"), &BG_Band::set_unique_id);
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_Band::get_id);
+	ClassDB::bind_method(D_METHOD("set_id"), &BG_Band::set_id);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_Band::get_name);
 	ClassDB::bind_method(D_METHOD("set_name"), &BG_Band::set_name);
 	ClassDB::bind_method(D_METHOD("get_preset_band_id"), &BG_Band::get_preset_band_id);
@@ -1188,6 +1235,7 @@ void BG_Band::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_band_leader", "band_member"), &BG_Band::set_band_leader);
 
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "unique_id"), "set_unique_id", "get_unique_id");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "name"), "set_name", "get_name");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "preset_band_id"), "set_preset_band_id", "get_preset_band_id");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "resting"), "set_resting", "get_resting");
@@ -1198,6 +1246,20 @@ void BG_Band::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "band_members"), "set_band_members", "get_band_members");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_unique_job_id"), "set_current_unique_job_id", "get_current_unique_job_id");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "band_formation"), "set_band_formation", "get_band_formation");
+}
+
+StringName BG_Band::get_name()
+{
+	if (!cached_name.is_empty()) return cached_name;
+	if (!name.is_empty()) return name;
+
+	BG_Booker_DB *booker_db = BG_Booker_DB::get_singleton();
+	if (!BG_Booker_DB::bg_is_instance_valid(booker_db)) return "";
+	
+	if (!get_id().is_empty())
+		cached_name = StringName(booker_db->get_localize_string(StringName("band_member"), get_id(), booker_db->get_current_language_key(), true));
+	
+	return cached_name;
 }
 
 bool BG_Band::is_band_alive() const
@@ -1221,9 +1283,9 @@ bool BG_Band::is_band_alive() const
 void BG_UnitCaste::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_UnitCaste::get_id);
-	ClassDB::bind_method(D_METHOD("get_name"), &BG_UnitCaste::get_name);
+	ClassDB::bind_method(D_METHOD("get_parent_caste"), &BG_UnitCaste::get_parent_caste);
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_UnitCaste::get_icon_path);
-	ClassDB::bind_method(D_METHOD("get_hue_shift_data"), &BG_UnitCaste::get_hue_shift_data);
+	ClassDB::bind_method(D_METHOD("get_is_unique_caste"), &BG_UnitCaste::get_is_unique_caste);
 	ClassDB::bind_method(D_METHOD("get_lod_mesh_paths"), &BG_UnitCaste::get_lod_mesh_paths);
 	ClassDB::bind_method(D_METHOD("get_scale_min"), &BG_UnitCaste::get_scale_min);
 	ClassDB::bind_method(D_METHOD("get_scale_max"), &BG_UnitCaste::get_scale_max);
@@ -1255,8 +1317,6 @@ float BG_UnitCaste::get_random_unit_caste_scale(bool x_z) const {
 
 BG_UnitCaste::~BG_UnitCaste()
 {
-	if (BG_Booker_DB::bg_is_instance_valid(hue_shift_data))
-		memdelete(hue_shift_data);
 }
 
 ////
@@ -1264,8 +1324,8 @@ BG_UnitCaste::~BG_UnitCaste()
 ////
 void BG_BandNameInfo::_bind_methods()
 {
-	ClassDB::bind_method(D_METHOD("get_band_name"), &BG_BandNameInfo::get_band_name);
-	ClassDB::bind_method(D_METHOD("get_hiring_dialogue_choices"), &BG_BandNameInfo::get_hiring_dialogue_choices);
+	ClassDB::bind_method(D_METHOD("get_name"), &BG_BandNameInfo::get_name);
+	ClassDB::bind_method(D_METHOD("get_allowed_in_random"), &BG_BandNameInfo::get_allowed_in_random);
 }
 
 ////
@@ -1333,8 +1393,6 @@ void BG_Monster::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_base_action_points_cost"), &BG_Monster::get_base_action_points_cost);
 	ClassDB::bind_method(D_METHOD("get_current_percent_action_points"), &BG_Monster::get_current_percent_action_points);
 	ClassDB::bind_method(D_METHOD("set_current_percent_action_points"), &BG_Monster::set_current_percent_action_points);
-	ClassDB::bind_method(D_METHOD("get_current_percent_action_points_fatigue"), &BG_Monster::get_current_percent_action_points_fatigue);
-	ClassDB::bind_method(D_METHOD("set_current_percent_action_points_fatigue"), &BG_Monster::set_current_percent_action_points_fatigue);
 	ClassDB::bind_method(D_METHOD("get_current_action_points_fatigue"), &BG_Monster::get_current_action_points_fatigue);
 	ClassDB::bind_method(D_METHOD("set_current_action_points_fatigue"), &BG_Monster::set_current_action_points_fatigue);
 	ClassDB::bind_method(D_METHOD("get_travel_distance"), &BG_Monster::get_travel_distance);
@@ -1371,7 +1429,6 @@ void BG_Monster::_bind_methods()
 	
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_action_points"), "set_current_percent_action_points", "get_current_percent_action_points");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_action_points_fatigue"), "set_current_percent_action_points_fatigue", "get_current_percent_action_points_fatigue");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_action_points_fatigue"), "set_current_action_points_fatigue", "get_current_action_points_fatigue");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_health"), "set_current_percent_health", "get_current_percent_health");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "percent_health_additive"), "set_percent_health_additive", "get_percent_health_additive");
@@ -1440,12 +1497,16 @@ BG_BandInfo::~BG_BandInfo()
 	}
 }
 
-BG_UnitCaste *BG_BandInfo::get_caste_by_id(const StringName &id) const
+BG_UnitCaste *BG_BandInfo::get_caste_by_id(const StringName &id, bool return_parent) const
 {
 	for (int i = 0; i < unit_castes.size(); ++i) {
 		BG_UnitCaste *caste = cast_to<BG_UnitCaste>(unit_castes[i]);
-		if (caste->id == id)
+		if (caste->id == id) {
+			if (return_parent && !caste->get_parent_caste().is_empty()) {
+				return get_caste_by_id(caste->get_parent_caste(), true);
+			}
 			return caste;
+		}
 	}
 	return nullptr;
 }
@@ -1670,6 +1731,8 @@ void BG_Booker_DB::_bind_methods()
         PropertyInfo(Variant::BOOL, "is_stoned")
     ));
 
+	ClassDB::bind_method(D_METHOD("get_current_language_key"), &BG_Booker_DB::get_current_language_key);
+	ClassDB::bind_method(D_METHOD("set_current_language_key"), &BG_Booker_DB::set_current_language_key);
 	ClassDB::bind_method(D_METHOD("get_modding_path"), &BG_Booker_DB::get_modding_path);
 	ClassDB::bind_method(D_METHOD("get_globals"), &BG_Booker_DB::get_globals);
 	ClassDB::bind_method(D_METHOD("get_character_details"), &BG_Booker_DB::get_character_details);
@@ -2109,7 +2172,7 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id) const 
 		const HashMap<String, TypedArray<StringName>> global_enums = get_global_enums(data);
 
 		Ref<BG_Band> result = memnew(BG_Band);
-		result->name = StringName(get_find_data_by_param_name("band_name", entry)["value"]);
+		result->id = StringName(get_find_data_by_param_name("band_name", entry)["value"]);
 		result->preset_band_id = id;
 
 		// Band Members
@@ -2124,7 +2187,7 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id) const 
 			const int caste_index = int(get_find_data_by_param_name("caste", band_members_entry)["value"]);
 			new_bm->caste_id = global_enums["caste_types"][caste_index];
 			new_bm->random_variation = int(get_find_data_by_param_name("variation", band_members_entry)["value"]);
-			BG_UnitCaste *unit_caste = get_band_info()->get_caste_by_id(new_bm->get_caste_id());
+			BG_UnitCaste *unit_caste = get_band_info()->get_caste_by_id(new_bm->get_caste_id(), false);
 			ERR_FAIL_COND_V_EDMSG(unit_caste == nullptr, nullptr, "ERROR : BG_Booker_DB::create_preset_band_by_id no unit caste found for:" + id);
 			result->band_formation[new_bm] = int(get_find_data_by_param_name("formation_index", band_members_entry)["value"]);
 			new_bm->band = result;
@@ -2138,9 +2201,8 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id) const 
 			for (int y = 0; y < name_array.size(); ++y) {
 				const Array name_entry = name_array[y];
 
-				new_bm->set_name(
-					StringName(String(get_find_data_by_param_name("first_name", name_entry)["value"]) + " " + String(get_find_data_by_param_name("last_name", name_entry)["value"]))
-				);
+				new_bm->set_first_name_id(StringName(get_find_data_by_param_name("first_name", name_entry)["value"]));
+				new_bm->set_last_name_id(StringName(get_find_data_by_param_name("last_name", name_entry)["value"]));
 				break;
 			}
 
@@ -3222,14 +3284,22 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			const Array first_names_array = first_names["array_values"];
 			for (int x = 0; x < first_names_array.size(); ++x) {
 				const Array first_names_entry = first_names_array[x];
-				band_info->first_names.append(StringName(get_find_data_by_param_name("name", first_names_entry)["value"]));
+
+				BG_BandNameInfo *new_band_name_info = memnew(BG_BandNameInfo);
+				new_band_name_info->name = StringName(get_find_data_by_param_name("name", first_names_entry)["value"]);
+				new_band_name_info->allowed_in_random = bool(get_find_data_by_param_name("allowed_in_random", first_names_entry)["value"]);
+				band_info->first_names.append(new_band_name_info);
 			}
 			
 			const Dictionary last_names = get_find_data_by_param_name("last_names", entry);
 			const Array last_names_array = last_names["array_values"];
 			for (int x = 0; x < last_names_array.size(); ++x) {
 				const Array last_names_entry = last_names_array[x];
-				band_info->last_names.append(StringName(get_find_data_by_param_name("name", last_names_entry)["value"]));
+
+				BG_BandNameInfo *new_band_name_info = memnew(BG_BandNameInfo);
+				new_band_name_info->name = StringName(get_find_data_by_param_name("name", last_names_entry)["value"]);
+				new_band_name_info->allowed_in_random = bool(get_find_data_by_param_name("allowed_in_random", last_names_entry)["value"]);
+				band_info->last_names.append(new_band_name_info);
 			}
 			
 			const Dictionary bands = get_find_data_by_param_name("bands", entry);
@@ -3238,9 +3308,8 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				const Array bands_entry = bands_array[x];
 
 				BG_BandNameInfo *new_band_name_info = memnew(BG_BandNameInfo);
-				new_band_name_info->band_name = StringName(get_find_data_by_param_name("name", bands_entry)["value"]);
+				new_band_name_info->name = StringName(get_find_data_by_param_name("name", bands_entry)["value"]);
 				band_info->band_names.append(new_band_name_info);
-
 				band_info->icon_paths.append(ensure_clean_path(get_find_data_by_param_name("icon_path", bands_entry)["path"]));
 			}
 		}
@@ -3414,21 +3483,9 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 
 			BG_UnitCaste *new_unit_caste = memnew(BG_UnitCaste);
 			new_unit_caste->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_unit_caste->name = StringName(get_find_data_by_param_name("name", entry)["value"]);
+			new_unit_caste->parent_caste = StringName(get_find_data_by_param_name("parent_caste", entry)["value"]);
+			new_unit_caste->is_unique_caste = bool(get_find_data_by_param_name("is_unique_caste", entry)["value"]);
 			new_unit_caste->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
-			
-			// Hue Shifting
-			const Dictionary hue_shifting_values = get_find_data_by_param_name("hue_shifting", entry);
-			const Array hue_shifting_values_array = hue_shifting_values["array_values"];
-			for (int x = 0; x < hue_shifting_values_array.size(); ++x) {
-				const Array hue_shifting_values_entry = hue_shifting_values_array[x];
-
-				BG_HueShiftData *new_hue_shift_data = memnew(BG_HueShiftData);
-				new_hue_shift_data->mask_path = ensure_clean_path(get_find_data_by_param_name("mask_path", hue_shifting_values_entry)["path"]);
-				new_hue_shift_data->from_color = convert_hex_to_color(get_find_data_by_param_name("from_color", hue_shifting_values_entry)["value"]);
-				new_hue_shift_data->multiplier = float(get_find_data_by_param_name("multiplier", hue_shifting_values_entry)["value"]);
-				new_unit_caste->hue_shift_data = new_hue_shift_data;
-			}
 
 			// LOD Mesh Paths
 			new_unit_caste->lod_mesh_paths.clear();
