@@ -1610,13 +1610,22 @@ public:
 	// 	}
 	// }
 
+	enum BandMemberTypes : int32_t {
+        DEFAULT,
+		MAIN_CHARACTER
+	};
+
 	StringName first_name_id;
 	StringName get_first_name_id() const { return first_name_id; }
 	void set_first_name_id(const StringName &value) { first_name_id = value; }
-
+	
 	StringName last_name_id;
 	StringName get_last_name_id() const { return last_name_id; }
 	void set_last_name_id(const StringName &value) { last_name_id = value; }
+
+	BandMemberTypes band_member_type = BandMemberTypes::DEFAULT;
+	BandMemberTypes get_band_member_type() const { return band_member_type; }
+	void set_band_member_type(BandMemberTypes value) { band_member_type = value; }
 
 	float current_percent_health = 1.0;
 	float get_current_percent_health() const { return current_percent_health; }
@@ -1697,6 +1706,7 @@ public:
 	StringName get_first_name();
 	StringName get_last_name();
 };
+VARIANT_ENUM_CAST(BG_BandMember::BandMemberTypes);
 
 ////
 //// BG_Formation

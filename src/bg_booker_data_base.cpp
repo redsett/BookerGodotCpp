@@ -1066,6 +1066,8 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_first_name_id"), &BG_BandMember::set_first_name_id);
 	ClassDB::bind_method(D_METHOD("get_last_name_id"), &BG_BandMember::get_last_name_id);
 	ClassDB::bind_method(D_METHOD("set_last_name_id"), &BG_BandMember::set_last_name_id);
+	ClassDB::bind_method(D_METHOD("get_band_member_type"), &BG_BandMember::get_band_member_type);
+	ClassDB::bind_method(D_METHOD("set_band_member_type"), &BG_BandMember::set_band_member_type);
 	ClassDB::bind_method(D_METHOD("get_current_percent_health"), &BG_BandMember::get_current_percent_health);
 	ClassDB::bind_method(D_METHOD("set_current_percent_health"), &BG_BandMember::set_current_percent_health);
 	ClassDB::bind_method(D_METHOD("get_percent_health_additive"), &BG_BandMember::get_percent_health_additive);
@@ -1109,6 +1111,9 @@ void BG_BandMember::_bind_methods()
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "first_name_id"), "set_first_name_id", "get_first_name_id");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "last_name_id"), "set_last_name_id", "get_last_name_id");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "band_member_type", PROPERTY_HINT_ENUM, 
+        "DEFAULT:0,MAIN_CHARACTER:1"), 
+        "set_band_member_type", "get_band_member_type");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_health"), "set_current_percent_health", "get_current_percent_health");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "percent_health_additive"), "set_percent_health_additive", "get_percent_health_additive");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_action_points"), "set_current_percent_action_points", "get_current_percent_action_points");
@@ -1124,6 +1129,9 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "inventory"), "set_inventory", "get_inventory");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "element_upgrades"), "set_element_upgrades", "get_element_upgrades");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "consumable_upgrades"), "set_consumable_upgrades", "get_consumable_upgrades");
+
+	BIND_ENUM_CONSTANT(DEFAULT);
+	BIND_ENUM_CONSTANT(MAIN_CHARACTER);
 }
 
 StringName BG_BandMember::get_name()
@@ -1487,6 +1495,16 @@ BG_BandInfo::~BG_BandInfo()
 {
 	for (int i = 0; i < band_names.size(); ++i) {
 		BG_BandNameInfo *d = cast_to<BG_BandNameInfo>(band_names[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	for (int i = 0; i < first_names.size(); ++i) {
+		BG_BandNameInfo *d = cast_to<BG_BandNameInfo>(first_names[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	for (int i = 0; i < last_names.size(); ++i) {
+		BG_BandNameInfo *d = cast_to<BG_BandNameInfo>(last_names[i]);
 		if (BG_Booker_DB::bg_is_instance_valid(d))
 			memdelete(d);
 	}
@@ -2183,6 +2201,9 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id) const 
 
 			Ref<BG_BandMember> new_bm = memnew(BG_BandMember);
 			result->band_members.append(new_bm);
+			if (x == 0) {
+				result->set_band_leader(new_bm);
+			}
 
 			const int caste_index = int(get_find_data_by_param_name("caste", band_members_entry)["value"]);
 			new_bm->caste_id = global_enums["caste_types"][caste_index];
