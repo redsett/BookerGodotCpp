@@ -1855,6 +1855,8 @@ public:
 		}
 		p_band_member->set_is_band_leader(true);
 	}
+
+	static int get_unique_band_id(const TypedArray<BG_Band> &existing_bands);
 };
 
 ////
@@ -2405,7 +2407,7 @@ public:
 
 	BG_BandInfo *band_info = nullptr;
 	BG_BandInfo *get_band_info() const { return band_info; }
-	Ref<BG_Band> create_preset_band_by_id(const StringName &id) const;
+	Ref<BG_Band> create_preset_band_by_id(const StringName &id, const TypedArray<BG_Band> &existing_bands) const;
 	Dictionary get_preset_band_params_by_id(const StringName &id) const;
 
 	TypedArray<BG_ItemSlotType> item_slot_types;

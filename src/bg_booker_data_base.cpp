@@ -1211,6 +1211,8 @@ void BG_DefaultFormations::_bind_methods()
 ////
 void BG_Band::_bind_methods()
 {
+	ClassDB::bind_static_method("BG_Band", D_METHOD("get_unique_band_id", "existing_bands"), &BG_Band::get_unique_band_id);
+
 	ClassDB::bind_method(D_METHOD("get_unique_id"), &BG_Band::get_unique_id);
 	ClassDB::bind_method(D_METHOD("set_unique_id"), &BG_Band::set_unique_id);
 	ClassDB::bind_method(D_METHOD("get_id"), &BG_Band::get_id);
@@ -1283,6 +1285,27 @@ bool BG_Band::is_band_alive() const
 		}
 	}
 	return false;
+}
+
+/* static */ int BG_Band::get_unique_band_id(const TypedArray<BG_Band> &existing_bands)
+{
+	// Randomly pick a unique id.
+	int unique_id = 0;
+	while (unique_id == 0) {
+		int random_id = UtilityFunctions::randi_range(100, 99999);
+		for (uint32_t i = 0; i < existing_bands.size(); ++i) {
+			const Ref<BG_Band> b = existing_bands[i];
+			if (b->get_unique_id() == random_id) {
+				random_id = 0;
+				break;
+			}
+		}
+		if (random_id != 0) {
+			unique_id = random_id;
+		}
+	}
+	
+	return unique_id;
 }
 
 ////
@@ -1785,7 +1808,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_item_drop_pool_by_id"), &BG_Booker_DB::get_item_drop_pool_by_id);
 	ClassDB::bind_method(D_METHOD("get_effects"), &BG_Booker_DB::get_effects);
 	ClassDB::bind_method(D_METHOD("get_band_info"), &BG_Booker_DB::get_band_info);
-	ClassDB::bind_method(D_METHOD("create_preset_band_by_id", "id"), &BG_Booker_DB::create_preset_band_by_id);
+	ClassDB::bind_method(D_METHOD("create_preset_band_by_id", "id", "existing_bands"), &BG_Booker_DB::create_preset_band_by_id);
 	ClassDB::bind_method(D_METHOD("get_preset_band_params_by_id", "id"), &BG_Booker_DB::get_preset_band_params_by_id);
 	ClassDB::bind_method(D_METHOD("get_item_slot_types"), &BG_Booker_DB::get_item_slot_types);
 	ClassDB::bind_method(D_METHOD("get_rarity_types"), &BG_Booker_DB::get_rarity_types);
@@ -2176,7 +2199,7 @@ Ref<BG_Item> BG_Booker_DB::create_preset_item_by_id_interal(const StringName &id
 
 }
 
-Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id) const {
+Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id, const TypedArray<BG_Band> &existing_bands) const {
 	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
 
 	// Preset Bands
@@ -2192,6 +2215,7 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id) const 
 		Ref<BG_Band> result = memnew(BG_Band);
 		result->id = StringName(get_find_data_by_param_name("band_name", entry)["value"]);
 		result->preset_band_id = id;
+		result->set_unique_id(BG_Band::get_unique_band_id(existing_bands));
 
 		// Band Members
 		const Dictionary band_members_values = get_find_data_by_param_name("band_members", entry);
