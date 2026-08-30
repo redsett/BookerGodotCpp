@@ -1612,7 +1612,9 @@ public:
 
 	enum BandMemberTypes : int32_t {
         DEFAULT,
-		MAIN_CHARACTER
+        PROTAGONIST,
+		ALLY_MAIN_CHARACTER,
+		ENEMY_MAIN_CHARACTER
 	};
 
 	StringName first_name_id;

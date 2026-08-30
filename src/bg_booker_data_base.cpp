@@ -1112,7 +1112,7 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "first_name_id"), "set_first_name_id", "get_first_name_id");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "last_name_id"), "set_last_name_id", "get_last_name_id");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "band_member_type", PROPERTY_HINT_ENUM, 
-        "DEFAULT:0,MAIN_CHARACTER:1"), 
+        "DEFAULT:0,PROTAGONIST:1,ALLY_MAIN_CHARACTER:2,ENEMY_MAIN_CHARACTER:3"), 
         "set_band_member_type", "get_band_member_type");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "current_percent_health"), "set_current_percent_health", "get_current_percent_health");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "percent_health_additive"), "set_percent_health_additive", "get_percent_health_additive");
@@ -1131,7 +1131,9 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "consumable_upgrades"), "set_consumable_upgrades", "get_consumable_upgrades");
 
 	BIND_ENUM_CONSTANT(DEFAULT);
-	BIND_ENUM_CONSTANT(MAIN_CHARACTER);
+	BIND_ENUM_CONSTANT(PROTAGONIST);
+	BIND_ENUM_CONSTANT(ALLY_MAIN_CHARACTER);
+	BIND_ENUM_CONSTANT(ENEMY_MAIN_CHARACTER);
 }
 
 StringName BG_BandMember::get_name()
@@ -2232,6 +2234,7 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id, const 
 			const int caste_index = int(get_find_data_by_param_name("caste", band_members_entry)["value"]);
 			new_bm->caste_id = global_enums["caste_types"][caste_index];
 			new_bm->random_variation = int(get_find_data_by_param_name("variation", band_members_entry)["value"]);
+			new_bm->band_member_type = static_cast<BG_BandMember::BandMemberTypes>(int(get_find_data_by_param_name("band_member_type", band_members_entry)["value"]));
 			BG_UnitCaste *unit_caste = get_band_info()->get_caste_by_id(new_bm->get_caste_id(), false);
 			ERR_FAIL_COND_V_EDMSG(unit_caste == nullptr, nullptr, "ERROR : BG_Booker_DB::create_preset_band_by_id no unit caste found for:" + id);
 			result->band_formation[new_bm] = int(get_find_data_by_param_name("formation_index", band_members_entry)["value"]);
