@@ -2381,10 +2381,12 @@ Ref<BG_Monster> BG_Booker_DB::get_monster_by_id(const StringName &id) const {
 Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id(const StringName &id) const {
 	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
 	const HashMap<String, TypedArray<StringName>> global_enums = get_global_enums(data);
-	return create_preset_monster_group_by_id_interal(id, Vector2i(0, 0), data, global_enums);
+	Ref<BG_Job> result = memnew(BG_Job);
+	create_preset_monster_group_by_id_interal(result, id, Vector2i(0, 0), data, global_enums);
+	return result;
 }
 
-Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id_interal(const StringName &id, Vector2i &level_range, const Dictionary &data, const HashMap<String, TypedArray<StringName>> &global_enums) const {
+Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id_interal(Ref<BG_Job> &result_out, const StringName &id, Vector2i &level_range, const Dictionary &data, const HashMap<String, TypedArray<StringName>> &global_enums) const {
 	RandomNumberGenerator *rnd_gen = memnew(RandomNumberGenerator);
 
 	// Preset Monster Groups
@@ -2395,8 +2397,6 @@ Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id_interal(const String
 		const StringName i_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
 		if (i_id != id) continue;
 
-		Ref<BG_Job> result = memnew(BG_Job);
-
 		// Level Range
 		const Dictionary level_range_dict = get_find_data_by_param_name("level_range", entry);
 		const Vector2i level_range_this = Vector2i(int(level_range_dict["value_x"]), int(level_range_dict["value_y"]));
@@ -2405,7 +2405,7 @@ Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id_interal(const String
 		}
 
 		// Seed
-		if (result->random_seed == 0) {
+		if (result_out->random_seed == 0) {
 			const Dictionary seed_values = get_find_data_by_param_name("seed", entry);
 			const Array seed_array = seed_values["array_values"];
 			for (int x = 0; x < seed_array.size(); ++x) {
@@ -2413,11 +2413,11 @@ Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id_interal(const String
 
 				const int seed = int(get_find_data_by_param_name("seed", seed_entry)["value"]);
 				if (seed != 0) {
-					result->random_seed = seed;
+					result_out->random_seed = seed;
 				}
 				const bool randomize_seed = bool(get_find_data_by_param_name("randomize_seed", seed_entry)["value"]);
 				if (randomize_seed) {
-					result->random_seed = UtilityFunctions::randi_range(1000, 9999);
+					result_out->random_seed = UtilityFunctions::randi_range(1000, 9999);
 				}
 			}
 		}
@@ -2425,19 +2425,19 @@ Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id_interal(const String
 		// Parent Monster Group
 		const StringName parent_monster_group_id = StringName(get_find_data_by_param_name("parent", entry)["value"]);
 		if (!parent_monster_group_id.is_empty()) {
-			result = create_preset_monster_group_by_id_interal(parent_monster_group_id, level_range, data, global_enums);
+			result_out = create_preset_monster_group_by_id_interal(result_out, parent_monster_group_id, level_range, data, global_enums);
 		}
 
-		result->job_id = id;
+		result_out->job_id = id;
 
-		rnd_gen->set_seed(result->random_seed);
+		rnd_gen->set_seed(result_out->random_seed);
 		
 		// Monsters		
 		const Dictionary monsters_values = get_find_data_by_param_name("monsters", entry);
 		const Array monsters_array = monsters_values["array_values"];
 
 		if (monsters_array.size() > 0)
-			result->monsters.clear();
+			result_out->monsters.clear();
 		
 		for (int x = 0; x < monsters_array.size(); ++x) {
 			const Array monsters_entry = monsters_array[x];
@@ -2449,9 +2449,9 @@ Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id_interal(const String
 			for (int y = 0; y < spawn_count; ++y) {
 
 				BG_Monster *m = memnew(BG_Monster);
-				result->monsters.append(m);
+				result_out->monsters.append(m);
 				m->id = StringName(get_find_data_by_param_name("monster", monsters_entry)["value"]);
-				m->set_job(result);
+				m->set_job(result_out);
 
 				const int seed_override = int(get_find_data_by_param_name("seed_override", monsters_entry)["value"]);
 				if (seed_override != 0) {
@@ -2469,7 +2469,7 @@ Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id_interal(const String
 			}
 		}
 
-		return result;
+		return result_out;
 	}
 
 	return nullptr;
@@ -2532,7 +2532,7 @@ TypedArray<BG_RewardItem> BG_Booker_DB::get_drop_rewards_from_monster_group_pres
 		// Parent Monster Group
 		const StringName parent_monster_group_id = StringName(get_find_data_by_param_name("parent", entry)["value"]);
 		if (!parent_monster_group_id.is_empty()) {
-			result = get_drop_rewards_from_monster_group_preset_interal(job, parent_monster_group_id, data, global_enums);
+			result.append_array(get_drop_rewards_from_monster_group_preset_interal(job, parent_monster_group_id, data, global_enums));
 		}
 
 		// Base Monster Drops
