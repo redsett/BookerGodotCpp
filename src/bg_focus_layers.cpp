@@ -89,6 +89,10 @@ void BG_Focus_Layers::try_set_focused_control(Control *p_ctrl)
 {
 	if (_focus_layer_stack.is_empty())
 		return;
+    if (!BG_Focus_Layer_Properties::bg_is_instance_valid(p_ctrl)) {
+        // UtilityFunctions::print("ERROR: BG_Focus_Layers::try_set_focused_control() Trying to set focus on an invalid object.");
+        return;
+    }
 
     for (int i = 0; i < _focus_layers.size(); ++i)
     {
