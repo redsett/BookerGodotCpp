@@ -103,15 +103,6 @@ public:
 
 	StringName text_key;
 	StringName get_text_key() const { return text_key; }
-
-	int txt_location_index = 0;
-	int get_txt_location_index() const { return txt_location_index; }
-
-	bool display_at_top = false;
-	bool get_display_at_top() const { return display_at_top; }
-
-	bool display_next_page_icon = false;
-	bool get_display_next_page_icon() const { return display_next_page_icon; }
 	
 	StringName code;
 	StringName get_code() const { return code; }

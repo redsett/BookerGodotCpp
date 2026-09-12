@@ -204,9 +204,6 @@ void BG_StoryboardDataDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_character_key"), &BG_StoryboardDataDetails::get_character_key);
 	ClassDB::bind_method(D_METHOD("get_character_emotion"), &BG_StoryboardDataDetails::get_character_emotion);
 	ClassDB::bind_method(D_METHOD("get_text_key"), &BG_StoryboardDataDetails::get_text_key);
-	ClassDB::bind_method(D_METHOD("get_txt_location_index"), &BG_StoryboardDataDetails::get_txt_location_index);
-	ClassDB::bind_method(D_METHOD("get_display_at_top"), &BG_StoryboardDataDetails::get_display_at_top);
-	ClassDB::bind_method(D_METHOD("get_display_next_page_icon"), &BG_StoryboardDataDetails::get_display_next_page_icon);
 	ClassDB::bind_method(D_METHOD("get_code"), &BG_StoryboardDataDetails::get_code);
 	ClassDB::bind_method(D_METHOD("get_texture_path"), &BG_StoryboardDataDetails::get_texture_path);
 	ClassDB::bind_method(D_METHOD("get_audio_ids"), &BG_StoryboardDataDetails::get_audio_ids);
@@ -1870,10 +1867,7 @@ Ref<BG_StoryboardDetails> BG_Booker_DB::import_and_get_storyboard_details_by_id(
 			sb_dets->character_key = StringName(get_find_data_by_param_name("character_key", data_entry)["value"]);
 			sb_dets->character_emotion = static_cast<BG_PortraitDetails::PortraitType>(int(get_find_data_by_param_name("character_emotion", data_entry)["value"]));;
 			sb_dets->text_key = StringName(UtilityFunctions::str(int(get_find_data_by_param_name("text_key", data_entry)["value"])));
-			sb_dets->txt_location_index = int(get_find_data_by_param_name("txt_location_index", data_entry)["value"]);
 			
-			sb_dets->display_at_top = bool(get_find_data_by_param_name("display_at_top", data_entry)["value"]);
-			sb_dets->display_next_page_icon = bool(get_find_data_by_param_name("display_next_page_icon", data_entry)["value"]);
 			sb_dets->code = StringName(get_find_data_by_param_name("code", data_entry)["value"]);
 			sb_dets->texture_path = ensure_clean_path(get_find_data_by_param_name("texture_path", data_entry)["path"]);
 
