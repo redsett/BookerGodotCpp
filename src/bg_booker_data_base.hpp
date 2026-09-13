@@ -2257,6 +2257,12 @@ public:
 
 	float parry_good_timing_multiplier = 0.0;
 	float get_parry_good_timing_multiplier() const { return parry_good_timing_multiplier; }
+
+	float crit_qte_perfect_window = 0.0;
+	float get_crit_qte_perfect_window() const { return crit_qte_perfect_window; }
+
+	float crit_qte_window_additive = 0.0;
+	float get_crit_qte_window_additive() const { return crit_qte_window_additive; }
 	
 	// Day Night Cycle
 	int day_night_cycle_turns_per_day = 0;

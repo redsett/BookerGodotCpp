@@ -1730,6 +1730,8 @@ void BG_Booker_Globals::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_hit_good_timing_multiplier"), &BG_Booker_Globals::get_hit_good_timing_multiplier);
 	ClassDB::bind_method(D_METHOD("get_parry_perfect_timing_multiplier"), &BG_Booker_Globals::get_parry_perfect_timing_multiplier);
 	ClassDB::bind_method(D_METHOD("get_parry_good_timing_multiplier"), &BG_Booker_Globals::get_parry_good_timing_multiplier);
+	ClassDB::bind_method(D_METHOD("get_crit_qte_perfect_window"), &BG_Booker_Globals::get_crit_qte_perfect_window);
+	ClassDB::bind_method(D_METHOD("get_crit_qte_window_additive"), &BG_Booker_Globals::get_crit_qte_window_additive);
 
 	ClassDB::bind_method(D_METHOD("get_day_night_cycle_turns_per_day"), &BG_Booker_Globals::get_day_night_cycle_turns_per_day);
 	ClassDB::bind_method(D_METHOD("get_percentage_of_day_is_day_time"), &BG_Booker_Globals::get_percentage_of_day_is_day_time);
@@ -3890,6 +3892,8 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				globals->hit_good_timing_multiplier = float(get_find_data_by_param_name("hit_good_timing_multiplier", qte_values_entry)["value"]);
 				globals->parry_perfect_timing_multiplier = float(get_find_data_by_param_name("parry_perfect_timing_multiplier", qte_values_entry)["value"]);
 				globals->parry_good_timing_multiplier = float(get_find_data_by_param_name("parry_good_timing_multiplier", qte_values_entry)["value"]);
+				globals->crit_qte_perfect_window = float(get_find_data_by_param_name("crit_qte_perfect_window", qte_values_entry)["value"]);
+				globals->crit_qte_window_additive = float(get_find_data_by_param_name("crit_qte_window_additive", qte_values_entry)["value"]);
 			}
 
 			// Monster Element Distribution
