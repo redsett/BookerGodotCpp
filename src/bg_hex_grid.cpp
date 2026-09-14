@@ -62,7 +62,7 @@ void BG_HexVisualAssetData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_misc_data"), &BG_HexVisualAssetData::set_misc_data);
 
     ADD_PROPERTY(PropertyInfo(Variant::INT, "hex_type", PROPERTY_HINT_ENUM, 
-        "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3,SECTION:4,TOWN:5,RESOURCE:6,BAND_SPAWN:7,BARRICADE:8,TURRET:9,NO_STOP_CELL:10,MISC_VISUAL_1:11,COMBAT_ENVIRONMENT:12,NONE:13"), 
+        "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3,SECTION:4,TOWN:5,RESOURCE:6,BAND_SPAWN:7,BARRICADE:8,TURRET:9,NO_STOP_CELL:10,MISC_VISUAL_1:11,COMBAT_ENVIRONMENT:12,NONE:13, PLAY_SPACE:14"), 
         "set_hex_type", "get_hex_type");
     ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "hex_type_dyn"), "set_hex_type_dyn", "get_hex_type_dyn");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "rotation"), "set_rotation", "get_rotation");
@@ -90,6 +90,7 @@ void BG_HexVisualAssetData::_bind_methods()
 	BIND_ENUM_CONSTANT(MISC_VISUAL_1);
 	BIND_ENUM_CONSTANT(COMBAT_ENVIRONMENT);
 	BIND_ENUM_CONSTANT(NONE);
+	BIND_ENUM_CONSTANT(PLAY_SPACE);
 }
 
 ////
@@ -103,6 +104,7 @@ void BG_HexVisualData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_hex_asset_datas"), &BG_HexVisualData::set_hex_asset_datas);
 	ClassDB::bind_method(D_METHOD("get_hex_visual_asset_data_by_type", "type"), &BG_HexVisualData::get_hex_visual_asset_data_by_type);
 	ClassDB::bind_method(D_METHOD("get_hex_visual_asset_data_by_id", "id"), &BG_HexVisualData::get_hex_visual_asset_data_by_id);
+	ClassDB::bind_method(D_METHOD("get_hex_visual_types"), &BG_HexVisualData::get_hex_visual_types);
 
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "qr"), "set_qr", "get_qr");
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "hex_asset_datas"), "set_hex_asset_datas", "get_hex_asset_datas");
@@ -124,6 +126,17 @@ Ref<BG_HexVisualAssetData> BG_HexVisualData::get_hex_visual_asset_data_by_id(con
         if (!hvad.is_null() && hvad->get_hex_type_dyn() == id) return hvad;
     }
     return nullptr;
+}
+
+TypedArray<int> BG_HexVisualData::get_hex_visual_types() const
+{
+    TypedArray<int> result;
+	for (int i = 0; i < hex_asset_datas.size(); ++i) {
+		const Ref<BG_HexVisualAssetData> hvad = cast_to<BG_HexVisualAssetData>(hex_asset_datas[i]);
+        if (hvad.is_null()) continue;
+        result.append(hvad->get_hex_type());
+    }
+    return result;
 }
 
 ////
@@ -310,6 +323,8 @@ void BG_Hex::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_qr"), &BG_Hex::get_qr);
 	ClassDB::bind_method(D_METHOD("get_empty"), &BG_Hex::get_empty);
 	ClassDB::bind_method(D_METHOD("set_empty"), &BG_Hex::set_empty);
+	ClassDB::bind_method(D_METHOD("get_is_playable_space"), &BG_Hex::get_is_playable_space);
+	ClassDB::bind_method(D_METHOD("set_is_playable_space"), &BG_Hex::set_is_playable_space);
 	ClassDB::bind_method(D_METHOD("get_is_forced_wall"), &BG_Hex::get_is_forced_wall);
 	ClassDB::bind_method(D_METHOD("set_is_forced_wall"), &BG_Hex::set_is_forced_wall);
 	ClassDB::bind_method(D_METHOD("get_location"), &BG_Hex::get_location);
@@ -523,7 +538,7 @@ Ref<BG_Hex> BG_HexGrid::get_hex_in_direction(const Ref<BG_Hex> &from_hex, const 
 	{
 		Ref<BG_Hex> h = grid[i];
         if (h->q == v.y && h->r == v.x) {
-            // if (h->get_empty()) return nullptr;
+            // if (!h->get_is_playable_space()) return nullptr;
             return h;
         }
     }
@@ -563,7 +578,7 @@ Dictionary BG_HexGrid::get_hex_neighbors_qr(const Ref<BG_Hex> &instigator, const
 
         for (uint16_t i = 0; i < cells.size(); ++i) {
             const Ref<BG_Hex> h = cells[i];
-            if (h->get_empty()) continue;
+            if (!h->get_is_playable_space()) continue;
             result[h->get_qr()] = h;
         }
         return result;
@@ -708,7 +723,7 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> &instigator, const Vector2
     const bool is_job = instigator_hgsd.is_valid() ? instigator_hgsd->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::JOB : false;
 
     const Ref<BG_Hex> hex = get_hex_by_qr(qr);
-    if (hex.is_null() || hex->get_empty() || hex->get_is_forced_wall()) return 0;
+    if (hex.is_null() || !hex->get_is_playable_space() || hex->get_is_forced_wall()) return 0;
 
     // If the instigator is on this cell, then it's good.
     if (instigator_hgsd.is_valid() && instigator == hex) {

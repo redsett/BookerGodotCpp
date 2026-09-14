@@ -76,6 +76,7 @@ public:
         MISC_VISUAL_1,
         COMBAT_ENVIRONMENT,
         NONE,
+        PLAY_SPACE,
 	};
 
     static PackedStringArray get_hex_type_names() {
@@ -94,6 +95,7 @@ public:
         result.append("MISC_VISUAL_1");
         result.append("COMBAT_ENVIRONMENT");
         result.append("NONE");
+        result.append("PLAY_SPACE");
         return result;
     }
 
@@ -173,6 +175,8 @@ public:
 
     Ref<BG_HexVisualAssetData> get_hex_visual_asset_data_by_type(BG_HexVisualAssetData::HexVisualAssetTypes t) const;
     Ref<BG_HexVisualAssetData> get_hex_visual_asset_data_by_id(const StringName &id) const;
+
+    TypedArray<int> get_hex_visual_types() const; // Returns TypedArray<BG_HexVisualAssetData::HexVisualAssetTypes>, but had to return an Array because enums are now allowed in TypedArray.
 };
 
 ////
@@ -385,6 +389,10 @@ public:
     bool empty = false;
     bool get_empty() const { return empty; }
     void set_empty(bool v) { empty = v; }
+
+    bool is_playable_space = false;
+    bool get_is_playable_space() const { return is_playable_space; }
+    void set_is_playable_space(bool v) { is_playable_space = v; }
 
     bool is_forced_wall = false;
     bool get_is_forced_wall() const { return is_forced_wall; }
