@@ -62,7 +62,7 @@ void BG_HexVisualAssetData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_misc_data"), &BG_HexVisualAssetData::set_misc_data);
 
     ADD_PROPERTY(PropertyInfo(Variant::INT, "hex_type", PROPERTY_HINT_ENUM, 
-        "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3,SECTION:4,TOWN:5,RESOURCE:6,BAND_SPAWN:7,BARRICADE:8,TURRET:9,NO_STOP_CELL:10,MISC_VISUAL_1:11,COMBAT_ENVIRONMENT:12,NONE:13, PLAY_SPACE:14"), 
+        "CITY:0,REST:1,MONSTER_SPAWN:2,WALL:3,SECTION:4,TOWN:5,RESOURCE:6,BAND_SPAWN:7,BARRICADE:8,TURRET:9,NO_STOP_CELL:10,MISC_VISUAL_1:11,COMBAT_ENVIRONMENT:12,NONE:13, PLAY_SPACE:14, OUT_OF_BOUNDS:15"), 
         "set_hex_type", "get_hex_type");
     ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "hex_type_dyn"), "set_hex_type_dyn", "get_hex_type_dyn");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "rotation"), "set_rotation", "get_rotation");
@@ -91,6 +91,7 @@ void BG_HexVisualAssetData::_bind_methods()
 	BIND_ENUM_CONSTANT(COMBAT_ENVIRONMENT);
 	BIND_ENUM_CONSTANT(NONE);
 	BIND_ENUM_CONSTANT(PLAY_SPACE);
+	BIND_ENUM_CONSTANT(OUT_OF_BOUNDS);
 }
 
 ////

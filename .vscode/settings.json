@@ -98,5 +98,6 @@
     "tuple": "cpp",
     "utility": "cpp",
     "xmemory": "cpp"
-  }
+  },
+  "cmake.sourceDirectory": "E:/Personal/Godot/BookerGodotCpp/godot-cpp"
 }

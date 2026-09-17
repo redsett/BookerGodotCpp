@@ -77,6 +77,7 @@ public:
         COMBAT_ENVIRONMENT,
         NONE,
         PLAY_SPACE,
+        OUT_OF_BOUNDS,
 	};
 
     static PackedStringArray get_hex_type_names() {
@@ -96,6 +97,7 @@ public:
         result.append("COMBAT_ENVIRONMENT");
         result.append("NONE");
         result.append("PLAY_SPACE");
+        result.append("OUT_OF_BOUNDS");
         return result;
     }
 

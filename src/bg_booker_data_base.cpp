@@ -2666,19 +2666,19 @@ void BG_Booker_DB::refresh_data()
 	globals = memnew(BG_Booker_Globals);
 	band_info = memnew(BG_BandInfo);
 
-	const String booker_data_file_name = "bookerData.cdb";
+	// const String booker_data_file_name = "bookerData.cdb";
 	const String exe_path = OS::get_singleton()->get_executable_path().get_base_dir() + "/";
 	modding_path = exe_path + String("mod/");
-	const String modding_data_path = modding_path + booker_data_file_name;
+	// const String modding_data_path = modding_path + booker_data_file_name;
 
-	try_parse_data("res://" + booker_data_file_name);
+	// try_parse_data("res://" + booker_data_file_name);
 
 	// If the mod data exists, then let it override any data that it has.
-	if (FileAccess::file_exists(modding_data_path))
-	{
-		UtilityFunctions::print("Log - Using modding booker data.");
-		try_parse_data(modding_data_path);
-	}
+	// if (FileAccess::file_exists(modding_data_path))
+	// {
+	// 	UtilityFunctions::print("Log - Using modding booker data.");
+	// 	try_parse_data(modding_data_path);
+	// }
 
 	//
 	// Parse Booker DBer data.
@@ -2688,11 +2688,11 @@ void BG_Booker_DB::refresh_data()
 	try_parse_bder_data("res://" + booker_dber_data_file_name);
 
 	// If the mod data exists, then let it override any data that it has.
-	if (FileAccess::file_exists(modding_dber_data_path))
-	{
-		UtilityFunctions::print("Log - Using modding booker data.");
-		try_parse_data(modding_dber_data_path);
-	}
+	// if (FileAccess::file_exists(modding_dber_data_path))
+	// {
+	// 	UtilityFunctions::print("Log - Using modding booker data.");
+	// 	try_parse_bder_data(modding_dber_data_path);
+	// }
 
 	emit_signal(refreshed_data_signal_name);
 }
