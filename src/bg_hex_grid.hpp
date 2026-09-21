@@ -475,8 +475,8 @@ public:
         return nullptr;
     }
 
-    Vector2i get_grid_size_min() const;
-    Vector2i get_grid_size_max() const;
+    Vector2i get_grid_size_min(bool playable_space_only) const;
+    Vector2i get_grid_size_max(bool playable_space_only) const;
     
     int get_hex_cost(const Ref<BG_Hex> &from_hex, const Vector2i &qr, bool do_pass_through_check) const;
     

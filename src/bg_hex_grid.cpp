@@ -346,8 +346,8 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_game_data"), &BG_HexGrid::get_game_data);
 	ClassDB::bind_method(D_METHOD("set_game_data"), &BG_HexGrid::set_game_data);
 	ClassDB::bind_method(D_METHOD("get_game_data_from_qr", "qr"), &BG_HexGrid::get_game_data_from_qr);
-	ClassDB::bind_method(D_METHOD("get_grid_size_min"), &BG_HexGrid::get_grid_size_min);
-	ClassDB::bind_method(D_METHOD("get_grid_size_max"), &BG_HexGrid::get_grid_size_max);
+	ClassDB::bind_method(D_METHOD("get_grid_size_min", "playable_space_only"), &BG_HexGrid::get_grid_size_min);
+	ClassDB::bind_method(D_METHOD("get_grid_size_max", "playable_space_only"), &BG_HexGrid::get_grid_size_max);
 	ClassDB::bind_method(D_METHOD("get_hex_cost", "from_hex", "qr", "do_friendly_check"), &BG_HexGrid::get_hex_cost);
 	ClassDB::bind_method(D_METHOD("get_hex_size"), &BG_HexGrid::get_hex_size);
 	ClassDB::bind_method(D_METHOD("set_hex_size"), &BG_HexGrid::set_hex_size);
@@ -820,10 +820,15 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> &instigator, const Vector2
     return 1;
 }
 
-Vector2i BG_HexGrid::get_grid_size_min() const
+Vector2i BG_HexGrid::get_grid_size_min(bool playable_space_only) const
 {
     Vector2i result = Vector2i(9999, 9999);
     for (const auto &pair : grid_map) {
+        if (playable_space_only) {
+            const Ref<BG_Hex> &hex = pair.value;
+            if (!hex->get_is_playable_space()) continue;
+        }
+
         const Vector2i &qr = pair.key;
         if (qr.x < result.x)
             result.x = qr.x;
@@ -833,10 +838,15 @@ Vector2i BG_HexGrid::get_grid_size_min() const
     return result;
 }
 
-Vector2i BG_HexGrid::get_grid_size_max() const
+Vector2i BG_HexGrid::get_grid_size_max(bool playable_space_only) const
 {
     Vector2i result = Vector2i(-9999, -9999);
     for (const auto &pair : grid_map) {
+        if (playable_space_only) {
+            const Ref<BG_Hex> &hex = pair.value;
+            if (!hex->get_is_playable_space()) continue;
+        }
+
         const Vector2i &qr = pair.key;
         if (qr.x > result.x)
             result.x = qr.x;
