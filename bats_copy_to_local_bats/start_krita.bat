@@ -1,0 +1,1 @@
+call "C:\Users\MarkJudkins\Downloads\krita-x64-5.3.2.1\bin\krita.exe"

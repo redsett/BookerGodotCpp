@@ -65,6 +65,15 @@
 			"alignment": "right",
 			"skipTerminateQuickPick": false,
 			"priority": -14
+		},
+		{
+			"text": "🍎 Krita",
+			"color": "white",
+			"commandType":"palette",
+			"command": "workbench.action.tasks.runTask|Krita",
+			"alignment": "right",
+			"skipTerminateQuickPick": false,
+			"priority": -13
 		}
 	]
 }
