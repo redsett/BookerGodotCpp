@@ -4423,6 +4423,7 @@ TypedArray<BG_LocalizeEntryData> BG_Booker_DB::get_localize_data(const StringNam
 	while (!file->eof_reached()) {
 		const String line = file->get_line();
 		if (found_key && !line.contains("\t")) {
+			if (found_key && line == "--") break;
 			BG_LocalizeEntryData *d = cast_to<BG_LocalizeEntryData>(result[result.size() - 1]);
 			if (line == "\"")
 				d->text += line.replace("\"", "\n\n");
@@ -4458,9 +4459,7 @@ TypedArray<BG_LocalizeEntryData> BG_Booker_DB::get_localize_data(const StringNam
 			continue;
 		}
 		
-		if (found_key && !line_data[0].is_empty()) {
-			break;
-		}
+		if (found_key && !line_data[0].is_empty()) break;
 
 		if (!found_key && key_as_string != line_data[0]) continue; // Check if it's the correct key.
 		result.append(create_new_entry(line_data, language_index));
