@@ -1006,6 +1006,9 @@ public:
 	bool is_damage_type = false;
 	bool get_is_damage_type() const { return is_damage_type; }
 
+	bool is_attribute_type = false;
+	bool get_is_attribute_type() const { return is_attribute_type; }
+
 	StringName weak_to_element;
 	StringName get_weak_to_element() const { return weak_to_element; }
 

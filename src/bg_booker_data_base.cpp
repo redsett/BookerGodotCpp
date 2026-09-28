@@ -774,6 +774,7 @@ void BG_UnitStatDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_nice_name"), &BG_UnitStatDetails::get_nice_name);
 	ClassDB::bind_method(D_METHOD("get_icon_id"), &BG_UnitStatDetails::get_icon_id);
 	ClassDB::bind_method(D_METHOD("get_is_damage_type"), &BG_UnitStatDetails::get_is_damage_type);
+	ClassDB::bind_method(D_METHOD("get_is_attribute_type"), &BG_UnitStatDetails::get_is_attribute_type);
 	ClassDB::bind_method(D_METHOD("get_weak_to_element"), &BG_UnitStatDetails::get_weak_to_element);
 	ClassDB::bind_method(D_METHOD("get_widget_color"), &BG_UnitStatDetails::get_widget_color);
 	ClassDB::bind_method(D_METHOD("get_text_color"), &BG_UnitStatDetails::get_text_color);
@@ -2947,6 +2948,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			new_stat_types->nice_name = StringName(get_find_data_by_param_name("name", entry)["value"]);
 			new_stat_types->icon_id = StringName(get_find_data_by_param_name("icon_id", entry)["value"]);
 			new_stat_types->is_damage_type = bool(get_find_data_by_param_name("is_damage_type", entry)["value"]);
+			new_stat_types->is_attribute_type = bool(get_find_data_by_param_name("is_attribute_type", entry)["value"]);
 			StringName weak_to_element = StringName(get_find_data_by_param_name("weak_to_element", entry)["value"]);
 			if (!weak_to_element.is_empty())
 				new_stat_types->weak_to_element = weak_to_element;
