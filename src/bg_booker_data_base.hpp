@@ -895,44 +895,32 @@ public:
 };
 
 ////
-//// BG_Dice
+//// BG_DamageContainer
 ////
-class BG_Dice : public RefCounted
+class BG_DamageContainer : public RefCounted
 {
-	GDCLASS(BG_Dice, RefCounted);
+	GDCLASS(BG_DamageContainer, RefCounted);
 
 protected:
 	static void _bind_methods();
 
 public:
-	int roll_count = 0;
-	int get_roll_count() const { return roll_count; }
-	void set_roll_count(int value) { roll_count = value; }
+	int min = 0;
+	int get_min() const { return min; }
+	void set_min(int value) { min = value; }
 
-	int amount_of_sides = 0;
-	int get_amount_of_sides() const { return amount_of_sides; }
-	void set_amount_of_sides(int value) { amount_of_sides = value; }
+	int max = 0;
+	int get_max() const { return max; }
+	void set_max(int value) { max = value; }
 
-	int additive = 0;
-	int get_additive() const { return additive; }
-	void set_additive(int value) { additive = value; }
-
-	float multiplier = 1.0;
-	float get_multiplier() const { return multiplier; }
-	void set_multiplier(float value) { multiplier = value; }
-
-	bool use_raw_numbers = false;
-	bool get_use_raw_numbers() const { return use_raw_numbers; }
-	void set_use_raw_numbers(bool value) { use_raw_numbers = value; }
-
-	static int calculate_dice(const TypedArray<BG_Dice> &dice, RandomNumberGenerator *random_num_generator = nullptr);
-	static int get_dice_max_roll(const TypedArray<BG_Dice> &dice);
-	static int get_dice_average_roll(const TypedArray<BG_Dice> &dice);
-	static String dice_to_nice_name(const TypedArray<BG_Dice> &dice);
-	static String dice_to_string(const Ref<BG_Dice> &dice);
-	static Ref<BG_Dice> string_to_dice(const String &string);
-	static TypedArray<BG_Dice> string_to_dice_options(const String &string);
-	static Ref<BG_Dice> duplicate_dice(const Ref<BG_Dice> &dice);
+	static Vector2i get_damage_containers_min_max(const TypedArray<BG_DamageContainer> &damage_containers, float multiplier);
+	static int calculate_damage(const TypedArray<BG_DamageContainer> &damage_containers, float multiplier, RandomNumberGenerator *random_num_generator = nullptr);
+	static int get_damage_containers_max_damage(const TypedArray<BG_DamageContainer> &damage_containers, float multiplier);
+	static int get_average_damage_from_damage_containers(const TypedArray<BG_DamageContainer> &damage_containers, float multiplier);
+	static String damage_containers_to_nice_name(const TypedArray<BG_DamageContainer> &damage_containers, float multiplier);
+	static Ref<BG_DamageContainer> string_to_damage_container(const String &string);
+	static TypedArray<BG_DamageContainer> string_to_damage_containers(const String &string);
+	static Ref<BG_DamageContainer> duplicate_damage_container(const Ref<BG_DamageContainer> &damage_container);
 };
 
 ////
@@ -1052,24 +1040,16 @@ public:
 	int get_resistant_unsaved_stored_value() const { return resistant_unsaved_stored_value; }
 	void set_resistant_unsaved_stored_value(int v) { resistant_unsaved_stored_value = v; }
 
-	StringName resistant_value_text;
-	StringName get_resistant_value_text() const { return resistant_value_text; }
-
 	Vector2i resistant_value_min_max;
 	Vector2i get_resistant_value_min_max() const { return resistant_value_min_max; }
 	void set_resistant_value_min_max(Vector2i v) { resistant_value_min_max = v; }
 
-	StringName dice_string;
-	StringName get_dice_string() const { return dice_string; }
+	TypedArray<BG_DamageContainer> damage_containers;
+	TypedArray<BG_DamageContainer> get_damage_containers() const { return damage_containers; }
 
-	TypedArray<BG_Dice> dice_options;
-	TypedArray<BG_Dice> get_dice_options() const { return dice_options; }
-
-	Ref<BG_Dice> dice = nullptr;
-	Ref<BG_Dice> get_dice() const { return dice; }
-	void set_dice(const Ref<BG_Dice> &value) { dice = value; }
-
-	static Vector2i string_to_resistant_value_min_max(const String &string);
+	Ref<BG_DamageContainer> damage_container = nullptr;
+	Ref<BG_DamageContainer> get_damage_container() const { return damage_container; }
+	void set_damage_container(const Ref<BG_DamageContainer> &value) { damage_container = value; }
 };
 
 ////

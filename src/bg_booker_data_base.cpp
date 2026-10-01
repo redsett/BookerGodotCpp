@@ -718,29 +718,186 @@ BG_Effect::~BG_Effect()
 }
 
 ////
-//// BG_Dice
+//// BG_DamageContainer
 ////
-void BG_Dice::_bind_methods()
+void BG_DamageContainer::_bind_methods()
 {
-	ClassDB::bind_static_method("BG_Dice", D_METHOD("calculate_dice", "dice", "random_number_generator"), &BG_Dice::calculate_dice);
-	ClassDB::bind_static_method("BG_Dice", D_METHOD("get_dice_max_roll", "dice"), &BG_Dice::get_dice_max_roll);
-	ClassDB::bind_static_method("BG_Dice", D_METHOD("get_dice_average_roll", "dice"), &BG_Dice::get_dice_average_roll);
-	ClassDB::bind_static_method("BG_Dice", D_METHOD("dice_to_nice_name", "dice"), &BG_Dice::dice_to_nice_name);
-	ClassDB::bind_static_method("BG_Dice", D_METHOD("dice_to_string", "dice"), &BG_Dice::dice_to_string);
-	ClassDB::bind_static_method("BG_Dice", D_METHOD("string_to_dice", "string"), &BG_Dice::string_to_dice);
-	ClassDB::bind_static_method("BG_Dice", D_METHOD("string_to_dice_options", "string"), &BG_Dice::string_to_dice_options);
-	ClassDB::bind_static_method("BG_Dice", D_METHOD("duplicate_dice", "dice"), &BG_Dice::duplicate_dice);
+	ClassDB::bind_static_method("BG_DamageContainer", D_METHOD("get_damage_containers_min_max", "damage_containers", "multiplier"), &BG_DamageContainer::get_damage_containers_min_max);
+	ClassDB::bind_static_method("BG_DamageContainer", D_METHOD("calculate_damage", "damage_containers", "multiplier", "random_number_generator"), &BG_DamageContainer::calculate_damage);
+	ClassDB::bind_static_method("BG_DamageContainer", D_METHOD("get_damage_containers_max_damage", "damage_containers", "multiplier"), &BG_DamageContainer::get_damage_containers_max_damage);
+	ClassDB::bind_static_method("BG_DamageContainer", D_METHOD("get_average_damage_from_damage_containers", "damage_containers", "multiplier"), &BG_DamageContainer::get_average_damage_from_damage_containers);
+	ClassDB::bind_static_method("BG_DamageContainer", D_METHOD("damage_containers_to_nice_name", "damage_containers", "multiplier"), &BG_DamageContainer::damage_containers_to_nice_name);
+	ClassDB::bind_static_method("BG_DamageContainer", D_METHOD("string_to_damage_container", "string"), &BG_DamageContainer::string_to_damage_container);
+	ClassDB::bind_static_method("BG_DamageContainer", D_METHOD("string_to_damage_containers", "string"), &BG_DamageContainer::string_to_damage_containers);
+	ClassDB::bind_static_method("BG_DamageContainer", D_METHOD("duplicate_damage_container", "damage_container"), &BG_DamageContainer::duplicate_damage_container);
 
-	ClassDB::bind_method(D_METHOD("get_roll_count"), &BG_Dice::get_roll_count);
-	ClassDB::bind_method(D_METHOD("set_roll_count"), &BG_Dice::set_roll_count);
-	ClassDB::bind_method(D_METHOD("get_amount_of_sides"), &BG_Dice::get_amount_of_sides);
-	ClassDB::bind_method(D_METHOD("set_amount_of_sides"), &BG_Dice::set_amount_of_sides);
-	ClassDB::bind_method(D_METHOD("get_additive"), &BG_Dice::get_additive);
-	ClassDB::bind_method(D_METHOD("set_additive"), &BG_Dice::set_additive);
-	ClassDB::bind_method(D_METHOD("get_multiplier"), &BG_Dice::get_multiplier);
-	ClassDB::bind_method(D_METHOD("set_multiplier"), &BG_Dice::set_multiplier);
-	ClassDB::bind_method(D_METHOD("get_use_raw_numbers"), &BG_Dice::get_use_raw_numbers);
-	ClassDB::bind_method(D_METHOD("set_use_raw_numbers"), &BG_Dice::set_use_raw_numbers);
+	ClassDB::bind_method(D_METHOD("get_min"), &BG_DamageContainer::get_min);
+	ClassDB::bind_method(D_METHOD("set_min"), &BG_DamageContainer::set_min);
+	ClassDB::bind_method(D_METHOD("get_max"), &BG_DamageContainer::get_max);
+	ClassDB::bind_method(D_METHOD("set_max"), &BG_DamageContainer::set_max);
+}
+
+/* static */ Vector2i BG_DamageContainer::get_damage_containers_min_max(const TypedArray<BG_DamageContainer> &damage_containers, float multiplier)
+{
+	Vector2i min_max;
+	for (int i = 0; i < damage_containers.size(); ++i) {
+		const BG_DamageContainer *dmg_con = cast_to<BG_DamageContainer>(damage_containers[i]);
+		if (!BG_Booker_DB::bg_is_instance_valid(dmg_con))
+			continue;
+		
+		min_max.x += dmg_con->get_min();
+		min_max.y += dmg_con->get_max();
+	}
+
+	const float min_multiplied = float(min_max.x) * multiplier;
+	const float max_multiplied = float(min_max.y) * multiplier;	
+	min_max.x = int(Math::round(min_multiplied));
+	min_max.y = int(Math::round(max_multiplied));
+	return min_max;
+}
+
+/* static */ int BG_DamageContainer::calculate_damage(const TypedArray<BG_DamageContainer> &damage_containers, float multiplier, RandomNumberGenerator *random_num_generator)
+{
+	const Vector2i min_max = BG_DamageContainer::get_damage_containers_min_max(damage_containers, multiplier);
+	const int result_int = UtilityFunctions::randi_range(min_max.x, min_max.y);
+	return Math::max(0, result_int);
+}
+
+/* static */ int BG_DamageContainer::get_damage_containers_max_damage(const TypedArray<BG_DamageContainer> &damage_containers, float multiplier)
+{
+	const Vector2i min_max = BG_DamageContainer::get_damage_containers_min_max(damage_containers, multiplier);
+	return min_max.y;
+}
+
+/* static */ int BG_DamageContainer::get_average_damage_from_damage_containers(const TypedArray<BG_DamageContainer> &damage_containers, float multiplier)
+{
+	const Vector2i min_max = BG_DamageContainer::get_damage_containers_min_max(damage_containers, multiplier);
+	return int(Math::round((min_max.x + min_max.y) * 0.5f));
+}
+
+/* static */ String BG_DamageContainer::damage_containers_to_nice_name(const TypedArray<BG_DamageContainer> &damage_containers, float multiplier)
+{
+	const Vector2i min_max = BG_DamageContainer::get_damage_containers_min_max(damage_containers, multiplier);
+	if (min_max.x == min_max.y)
+		return String::num_int64(min_max.x);
+	return String::num_int64(min_max.x) + "-" + String::num_int64(min_max.y);
+}
+
+/* static */ Ref<BG_DamageContainer> BG_DamageContainer::string_to_damage_container(const String &string)
+{
+	if (string.is_empty())
+		return nullptr;
+	
+	Ref<BG_DamageContainer> result = memnew(BG_DamageContainer);
+	static const String splitter = "-";
+	if (string.contains(splitter)) {
+		result->set_min(string.split(splitter)[0].to_int());
+		result->set_max(string.split(splitter)[1].to_int());
+	} else {
+		result->set_min(string.to_int()); // I.e:    6
+		result->set_max(string.to_int()); // I.e:    6
+	}
+	
+	return result;
+}
+
+/* static */ TypedArray<BG_DamageContainer> BG_DamageContainer::string_to_damage_containers(const String &string)
+{
+	TypedArray<BG_DamageContainer> result;
+	if (string.is_empty())
+	{
+		return result;
+	}
+	if (!string.contains("[") && !string.contains("|"))
+	{
+		result.append(BG_DamageContainer::string_to_damage_container(string));
+		return result;
+	}
+	else // We're expecting raw numbers instead of dice. I.e    [6-8], meaning 6 through 8.
+	{
+		String bracets_removed = string;
+		if (string.contains("[")) {
+			bracets_removed = string.split("[")[1].split("]")[0].replace(" ", ""); // [6-8] to 6-8
+		}
+		const String left_side = bracets_removed.split("|")[0];
+		const String right_side = bracets_removed.split("|")[1];
+
+		static const String splitter = "-";
+		Vector2i left_side_min_max;
+		Vector2i right_side_min_max;
+		if (left_side.contains(splitter)) {
+			left_side_min_max = Vector2i(left_side.split(splitter)[0].to_int(), left_side.split(splitter)[1].to_int()); // 6-8 to Vector2(6, 8)
+		} else {
+			left_side_min_max = Vector2i(left_side.to_int(), left_side.to_int());
+		}
+		if (right_side.contains(splitter)) {
+			right_side_min_max = Vector2i(right_side.split(splitter)[0].to_int(), right_side.split(splitter)[1].to_int());
+		} else {
+			right_side_min_max = Vector2i(right_side.to_int(), right_side.to_int());
+		}
+
+		// Get how many variations we want to store. Since we don't want to store a variation for every single number.
+		static const int ideal_variations = 5;
+		int min_variation_count = 1;
+		int max_variation_count = 1;
+
+		// Get how many variations for the minimum.
+		const int min_difference = right_side_min_max.x - left_side_min_max.x;
+		if (min_difference > 0) {
+			int variation_count = ideal_variations + 1;
+			while (variation_count >= 1) {
+				variation_count -= 1;
+				const float split_amount = float(min_difference) / variation_count;
+				if (split_amount >= 1.0) {
+					min_variation_count = variation_count;
+					break;
+				}
+			}
+		}
+		const int min_split_amount = int(Math::round(float(min_difference) / float(min_variation_count)));
+
+		// Get how many variations for the maximum.
+		const int max_difference = right_side_min_max.y - left_side_min_max.y;
+		if (max_difference > 0) {
+			int variation_count = ideal_variations + 1;
+			while (variation_count >= 1) {
+				variation_count -= 1;
+				const float split_amount = float(max_difference) / variation_count;
+				if (split_amount >= 1.0) {
+					max_variation_count = variation_count;
+					break;
+				}
+			}
+		}
+		const int max_split_amount = int(Math::round(float(max_difference) / float(max_variation_count)));
+
+		const int best_variation_count = Math::max(min_variation_count, max_variation_count);
+		for (int i = 0; i < best_variation_count; ++i)
+		{
+			int min = 0;
+			int max = 0;
+			if (i > 0) {
+				min = int(Math::round(float(min_variation_count) / float(i)));
+				max = int(Math::round(float(max_variation_count) / float(i)));
+			}
+
+			Ref<BG_DamageContainer> new_dmg_con = memnew(BG_DamageContainer);
+			new_dmg_con->set_min(left_side_min_max.x + (min * min_split_amount));
+			new_dmg_con->set_max(left_side_min_max.y + (max * max_split_amount));
+			result.append(new_dmg_con);
+			// UtilityFunctions::prints(min, max, "min :", new_dmg_con->min, "max :", new_dmg_con->max, float(max_variation_count) / float(i));
+		}
+	}
+	return result;
+}
+
+/* static */ Ref<BG_DamageContainer> BG_DamageContainer::duplicate_damage_container(const Ref<BG_DamageContainer> &damage_container)
+{
+	if (!damage_container.is_valid() || !BG_Booker_DB::bg_is_instance_valid(damage_container.ptr())) return nullptr;
+	Ref<BG_DamageContainer> result = memnew(BG_DamageContainer);
+	result->set_min(damage_container->get_min());
+	result->set_max(damage_container->get_max());
+	return result;
 }
 
 ////
@@ -796,14 +953,12 @@ void BG_UnitStat::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_defensive_value"), &BG_UnitStat::set_defensive_value);
 	ClassDB::bind_method(D_METHOD("get_resistant_unsaved_stored_value"), &BG_UnitStat::get_resistant_unsaved_stored_value);
 	ClassDB::bind_method(D_METHOD("set_resistant_unsaved_stored_value"), &BG_UnitStat::set_resistant_unsaved_stored_value);
-	ClassDB::bind_method(D_METHOD("get_resistant_value_text"), &BG_UnitStat::get_resistant_value_text);
 	ClassDB::bind_method(D_METHOD("get_resistant_value_min_max"), &BG_UnitStat::get_resistant_value_min_max);
 	ClassDB::bind_method(D_METHOD("set_resistant_value_min_max"), &BG_UnitStat::set_resistant_value_min_max);
 
-	ClassDB::bind_method(D_METHOD("get_dice_string"), &BG_UnitStat::get_dice_string);
-	ClassDB::bind_method(D_METHOD("get_dice_options"), &BG_UnitStat::get_dice_options);
-	ClassDB::bind_method(D_METHOD("get_dice"), &BG_UnitStat::get_dice);
-	ClassDB::bind_method(D_METHOD("set_dice"), &BG_UnitStat::set_dice);
+	ClassDB::bind_method(D_METHOD("get_damage_containers"), &BG_UnitStat::get_damage_containers);
+	ClassDB::bind_method(D_METHOD("get_damage_container"), &BG_UnitStat::get_damage_container);
+	ClassDB::bind_method(D_METHOD("set_damage_container"), &BG_UnitStat::set_damage_container);
 }
 
 ////
@@ -4495,339 +4650,5 @@ String BG_Booker_DB::get_localize_string(const StringName &sheet_name, const Str
 		}
 	}
 
-	return result;
-}
-
-////
-//// BG_UnitStat
-////
-/* static */ Vector2i BG_UnitStat::string_to_resistant_value_min_max(const String &string)
-{
-	if (string.is_empty())
-	{
-		return Vector2i(0, 0);
-	}
-	if (!string.contains("["))
-	{
-		return Vector2i(string.to_int(), string.to_int());
-	}
-
-	const String with_bracets = string.split("[")[1].split("]")[0].replace(" ", ""); // I.e: [1-4] to 1-4
-	const PackedStringArray tilda_split = with_bracets.split("~"); // Using tilda here so that it's easier to use - for negative numbers.
-	return Vector2i(tilda_split[0].to_int(), tilda_split[1].to_int());;
-}
-
-////
-//// BG_Dice
-////
-/* static */ int BG_Dice::calculate_dice(const TypedArray<BG_Dice> &dice, RandomNumberGenerator *random_num_generator)
-{
-	float result = 0.0;
-	for (int i = 0; i < dice.size(); i++)
-	{
-		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
-		if (!BG_Focus_Layer_Properties::bg_is_instance_valid(dice[i]))
-			continue;
-		
-		float die_result = 0.0;
-		for (int x = 0; x < die->get_roll_count(); x++)
-		{
-			if ( (random_num_generator != nullptr) && UtilityFunctions::is_instance_id_valid(random_num_generator->get_instance_id()) )
-				die_result += random_num_generator->randf_range(1.0, float(die->get_amount_of_sides()));
-			else
-				die_result += UtilityFunctions::randf_range(1.0, float(die->get_amount_of_sides()));
-		}
-		die_result += float(die->get_additive());
-		die_result *= die->get_multiplier();
-		result += die_result;
-	}
-
-	const int result_int = int(Math::round(result));
-	return Math::max(0, result_int);
-}
-
-/* static */ int BG_Dice::get_dice_max_roll(const TypedArray<BG_Dice> &dice)
-{
-	float result = 0.0;
-	for (int i = 0; i < dice.size(); i++)
-	{
-		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
-		if (!BG_Focus_Layer_Properties::bg_is_instance_valid(die))
-			continue;
-		
-		float die_result = 0.0;
-		for (int x = 0; x < die->get_roll_count(); x++)
-		{
-			die_result += float(die->get_amount_of_sides());
-		}
-		die_result += float(die->get_additive());
-		die_result *= die->get_multiplier();
-		result += die_result;
-	}
-
-	const int result_int = int(Math::round(result));
-	return result_int;
-}
-
-/* static */ int BG_Dice::get_dice_average_roll(const TypedArray<BG_Dice> &dice)
-{
-	float max_roll = 0.0;
-	float additives = 0.0;
-	float roll_counts = 0.0;
-	for (int i = 0; i < dice.size(); i++)
-	{
-		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
-		if (!BG_Focus_Layer_Properties::bg_is_instance_valid(dice[i]))
-			continue;
-		
-		roll_counts += die->get_roll_count();
-		for (int x = 0; x < die->get_roll_count(); x++)
-		{
-			max_roll += (float(die->get_amount_of_sides()) * die->get_multiplier());
-		}
-		additives += (float(die->get_additive()) * die->get_multiplier());
-	}
-
-	return int(Math::round((max_roll + roll_counts * 0.5f) + additives));
-}
-
-/* static */ String BG_Dice::dice_to_nice_name(const TypedArray<BG_Dice> &dice)
-{
-	float minimum_damage = 0.0;
-	float maximum_damage = 0.0;
-	for (int i = 0; i < dice.size(); i++)
-	{
-		const BG_Dice *die = cast_to<BG_Dice>(dice[i]);
-		if (!BG_Focus_Layer_Properties::bg_is_instance_valid(dice[i]))
-			continue;
-		
-		if (die->get_use_raw_numbers()) {
-			minimum_damage += (float(die->get_amount_of_sides()) * die->get_multiplier());
-			maximum_damage += (float(die->get_roll_count()) * die->get_multiplier());
-		} else {
-			for (int x = 0; x < die->get_roll_count(); x++)
-			{
-				minimum_damage += (float(1) * die->get_multiplier());
-				maximum_damage += (float(die->get_amount_of_sides()) * die->get_multiplier());
-			}
-			minimum_damage += (float(die->get_additive()) * die->get_multiplier());
-			maximum_damage += (float(die->get_additive()) * die->get_multiplier());
-		}
-	}
-
-	const int minimum_damage_int = int(Math::round(minimum_damage));
-	const int maximum_damage_int = int(Math::round(maximum_damage));
-	if (minimum_damage_int == maximum_damage_int)
-	{
-		return String::num_int64(minimum_damage_int);
-	}
-	return String::num_int64(minimum_damage_int) + "~" + String::num_int64(maximum_damage_int);
-}
-
-/* static */ String BG_Dice::dice_to_string(const Ref<BG_Dice> &dice)
-{
-	if ( dice == nullptr || !BG_Focus_Layer_Properties::bg_is_instance_valid(dice.ptr()) )
-	{
-		return "-";
-	}
-	
-	const int roll_count = dice->get_roll_count();
-	const int amount_of_sides = int(Math::round(float(dice->get_amount_of_sides()) * dice->get_multiplier()));
-	String result = String::num_int64(roll_count) + "d" + String::num_int64(amount_of_sides);
-	if (dice->get_additive() > 0) {
-		const int additive = int(Math::round(float(dice->get_additive()) * dice->get_multiplier()));
-		result += "+" + String::num_int64(dice->get_additive());
-	}
-	else if (dice->get_additive() < 0) {
-		const int additive = int(Math::round(float(dice->get_additive()) * dice->get_multiplier()));
-		result += "-" + String::num_int64(abs(dice->get_additive()));
-	}
-	return result;
-}
-
-/* static */ Ref<BG_Dice> BG_Dice::string_to_dice(const String &string)
-{
-	if (string.is_empty()) {
-		return nullptr;
-	}
-	Ref<BG_Dice> result = memnew(BG_Dice);
-	if (string.contains("d")) {
-		
-		result->set_roll_count(string.split("d")[0].to_int());
-
-		const String after_d = string.split("d")[1].replace(" ", ""); // I.e:   6 or 6+1 or 6-1
-		if (after_d.contains("+") || after_d.contains("-")) {
-
-			if (after_d.contains("+")) {
-				result->set_amount_of_sides(after_d.split("+")[0].to_int());
-				result->set_additive(after_d.split("+")[1].to_int());
-			}
-			else {
-				result->set_amount_of_sides(after_d.split("-")[0].to_int());
-				result->set_additive(after_d.split("-")[1].to_int() * -1); // Negative the number since it's going to subtract.
-			}
-		}
-		// Not dice. Parse it like it's a base number instead.
-		else {
-			result->set_amount_of_sides(after_d.to_int());
-		}
-	}
-	else {
-		result->set_use_raw_numbers(true);
-
-		static const String splitter = "-";
-		if (string.contains(splitter)) {
-			result->set_amount_of_sides(string.split(splitter)[0].to_int());
-			result->set_roll_count(string.split(splitter)[1].to_int());
-		} else {
-			result->set_amount_of_sides(string.to_int()); // I.e:    6
-			result->set_roll_count(string.to_int()); // I.e:    6
-		}
-	}
-	
-	return result;}
-
-/* static */ TypedArray<BG_Dice> BG_Dice::string_to_dice_options(const String &string)
-{
-	TypedArray<BG_Dice> result;
-	if (string.is_empty())
-	{
-		return result;
-	}
-	if (!string.contains("[") && !string.contains("|"))
-	{
-		result.append(BG_Dice::string_to_dice(string));
-		return result;
-	}
-	else if (string.contains("d"))
-	{
-		const String bracets_removed = string.split("[")[1].split("]")[0].replace(" ", ""); // [1d3-1d6] to 1d3-1d6
-		const String start_dice = bracets_removed.split("-")[0];
-		const String end_dice = bracets_removed.split("-")[1];
-		// Roll count.
-		const int start_dice_rolls = start_dice.split("d")[0].to_int();
-		const int end_dice_rolls = end_dice.split("d")[0].to_int();
-		// Side count.
-		const int start_dice_sides = start_dice.split("d")[1].to_int();
-		const int end_dice_sides = end_dice.split("d")[1].to_int();
-
-		// Additive
-		int additive = 0;
-		const String after_d = string.split("d")[string.split("d").size() - 1].replace(" ", "");
-		if (after_d.contains("+") || after_d.contains("-"))
-		{
-			if (after_d.contains("+"))
-				additive = after_d.split("+")[1].to_int();
-			else
-				additive = after_d.split("-")[1].to_int() * -1;
-		}
-		const bool has_additive = additive != 0;
-
-		for (int r = start_dice_rolls; r <= end_dice_rolls; r++)
-		{
-			for (int s = start_dice_sides; s <= end_dice_sides; s++)
-			{
-				if (has_additive)
-				{
-					if (additive > 0)
-						result.append(BG_Dice::string_to_dice( String::num_int64(r) + "d" + String::num_int64(s) + "+" + String::num_int64(additive) ));
-					else
-						result.append(BG_Dice::string_to_dice( String::num_int64(r) + "d" + String::num_int64(s) + "-" + String::num_int64(abs(additive)) ));
-				}
-				else
-				{
-					result.append(BG_Dice::string_to_dice( String::num_int64(r) + "d" + String::num_int64(s) ));
-				}
-			}
-		}
-	}
-	else // We're expecting raw numbers instead of dice. I.e    [6-8], meaning 6 through 8.
-	{
-		String bracets_removed = string;
-		if (string.contains("[")) {
-			bracets_removed = string.split("[")[1].split("]")[0].replace(" ", ""); // [6-8] to 6-8
-		}
-		const String left_side = bracets_removed.split("|")[0];
-		const String right_side = bracets_removed.split("|")[1];
-
-		static const String splitter = "-";
-		Vector2i left_side_min_max;
-		Vector2i right_side_min_max;
-		if (left_side.contains(splitter)) {
-			left_side_min_max = Vector2i(left_side.split(splitter)[0].to_int(), left_side.split(splitter)[1].to_int()); // 6-8 to Vector2(6, 8)
-		} else {
-			left_side_min_max = Vector2i(left_side.to_int(), left_side.to_int());
-		}
-		if (right_side.contains(splitter)) {
-			right_side_min_max = Vector2i(right_side.split(splitter)[0].to_int(), right_side.split(splitter)[1].to_int());
-		} else {
-			right_side_min_max = Vector2i(right_side.to_int(), right_side.to_int());
-		}
-
-		// Get how many variations we want to store. Since we don't want to store a variation for every single number.
-		static const int ideal_variations = 5;
-		int min_variation_count = 1;
-		int max_variation_count = 1;
-
-		// Get how many variations for the minimum.
-		const int min_difference = right_side_min_max.x - left_side_min_max.x;
-		if (min_difference > 0) {
-			int variation_count = ideal_variations + 1;
-			while (variation_count >= 1) {
-				variation_count -= 1;
-				const float split_amount = float(min_difference) / variation_count;
-				if (split_amount >= 1.0) {
-					min_variation_count = variation_count;
-					break;
-				}
-			}
-		}
-		const int min_split_amount = int(Math::round(float(min_difference) / float(min_variation_count)));
-
-		// Get how many variations for the maximum.
-		const int max_difference = right_side_min_max.y - left_side_min_max.y;
-		if (max_difference > 0) {
-			int variation_count = ideal_variations + 1;
-			while (variation_count >= 1) {
-				variation_count -= 1;
-				const float split_amount = float(max_difference) / variation_count;
-				if (split_amount >= 1.0) {
-					max_variation_count = variation_count;
-					break;
-				}
-			}
-		}
-		const int max_split_amount = int(Math::round(float(max_difference) / float(max_variation_count)));
-
-		const int best_variation_count = Math::max(min_variation_count, max_variation_count);
-		for (int i = 0; i < best_variation_count; ++i)
-		{
-			int min = 0;
-			int max = 0;
-			if (i > 0) {
-				min = int(Math::round(float(min_variation_count) / float(i)));
-				max = int(Math::round(float(max_variation_count) / float(i)));
-			}
-
-			Ref<BG_Dice> new_dice = memnew(BG_Dice);
-			new_dice->set_use_raw_numbers(true);
-			new_dice->set_amount_of_sides(left_side_min_max.x + (min * min_split_amount));
-			new_dice->set_roll_count(left_side_min_max.y + (max * max_split_amount));
-			result.append(new_dice);
-			// UtilityFunctions::prints(min, max, "min :", new_dice->amount_of_sides, "max :", new_dice->roll_count, float(max_variation_count) / float(i));
-		}
-	}
-	return result;
-}
-
-/* static */ Ref<BG_Dice> BG_Dice::duplicate_dice(const Ref<BG_Dice> &dice)
-{
-	if (dice == nullptr || !BG_Focus_Layer_Properties::bg_is_instance_valid(dice.ptr())) return nullptr;
-	Ref<BG_Dice> result = memnew(BG_Dice);
-	result->roll_count = dice->roll_count;
-	result->amount_of_sides = dice->amount_of_sides;
-	result->additive = dice->additive;
-	result->multiplier = dice->multiplier;
-	result->use_raw_numbers = dice->use_raw_numbers;
 	return result;
 }
