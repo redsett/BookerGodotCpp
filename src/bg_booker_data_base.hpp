@@ -1635,9 +1635,9 @@ public:
 	int get_level() const { return level; }
 	void set_level(int v) { level = v; }
 
-	float experience = 0.0;
-	float get_experience() const { return experience; }
-	void set_experience(float v) { experience = v; }
+	int experience = 0;
+	int get_experience() const { return experience; }
+	void set_experience(int v) { experience = v; }
 
 	Vector3 scale;
 	Vector3 get_scale() const { return scale; }
@@ -2265,6 +2265,15 @@ public:
 
 	float action_points_rest_rate = 0.0;
 	float get_action_points_rest_rate() const { return action_points_rest_rate; }
+
+	int exp_when_source_unit_damaged = 0;
+	int get_exp_when_source_unit_damaged() const { return exp_when_source_unit_damaged; }
+
+	int exp_when_enemy_killed = 0;
+	int get_exp_when_enemy_killed() const { return exp_when_enemy_killed; }
+
+	int exp_when_ap_consumed = 0;
+	int get_exp_when_ap_consumed() const { return exp_when_ap_consumed; }
 };
 
 ////

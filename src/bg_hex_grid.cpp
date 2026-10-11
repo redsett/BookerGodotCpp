@@ -50,8 +50,6 @@ void BG_HexVisualAssetData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_seed"), &BG_HexVisualAssetData::set_seed);
 	ClassDB::bind_method(D_METHOD("get_seed2"), &BG_HexVisualAssetData::get_seed2);
 	ClassDB::bind_method(D_METHOD("set_seed2"), &BG_HexVisualAssetData::set_seed2);
-	ClassDB::bind_method(D_METHOD("get_combat_environment_seed"), &BG_HexVisualAssetData::get_combat_environment_seed);
-	ClassDB::bind_method(D_METHOD("set_combat_environment_seed"), &BG_HexVisualAssetData::set_combat_environment_seed);
 	ClassDB::bind_method(D_METHOD("get_asset_health_normalized_percent"), &BG_HexVisualAssetData::get_asset_health_normalized_percent);
 	ClassDB::bind_method(D_METHOD("set_asset_health_normalized_percent"), &BG_HexVisualAssetData::set_asset_health_normalized_percent);
 	ClassDB::bind_method(D_METHOD("get_force_disable_targeting"), &BG_HexVisualAssetData::get_force_disable_targeting);
@@ -70,7 +68,6 @@ void BG_HexVisualAssetData::_bind_methods()
     ADD_PROPERTY(PropertyInfo(Variant::INT, "section_index"), "set_section_index", "get_section_index");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "seed"), "set_seed", "get_seed");
     ADD_PROPERTY(PropertyInfo(Variant::INT, "seed2"), "set_seed2", "get_seed2");
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "combat_environment_seed"), "set_combat_environment_seed", "get_combat_environment_seed");
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "asset_health_normalized_percent"), "set_asset_health_normalized_percent", "get_asset_health_normalized_percent");
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "force_disable_targeting"), "set_force_disable_targeting", "get_force_disable_targeting");
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "messages"), "set_messages", "get_messages");

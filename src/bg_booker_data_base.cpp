@@ -1275,7 +1275,7 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_band_leader"), "set_is_band_leader", "get_is_band_leader");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "level"), "set_level", "get_level");
-	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "experience"), "set_experience", "get_experience");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "experience"), "set_experience", "get_experience");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "scale"), "set_scale", "get_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "caste_id"), "set_caste_id", "get_caste_id");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipment"), "set_equipment", "get_equipment");
@@ -1896,6 +1896,10 @@ void BG_Booker_Globals::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_band_action_points_fatigue_rate"), &BG_Booker_Globals::get_band_action_points_fatigue_rate);
 	ClassDB::bind_method(D_METHOD("get_monster_action_points_fatigue_rate"), &BG_Booker_Globals::get_monster_action_points_fatigue_rate);
 	ClassDB::bind_method(D_METHOD("get_action_points_rest_rate"), &BG_Booker_Globals::get_action_points_rest_rate);
+	
+	ClassDB::bind_method(D_METHOD("get_exp_when_source_unit_damaged"), &BG_Booker_Globals::get_exp_when_source_unit_damaged);
+	ClassDB::bind_method(D_METHOD("get_exp_when_enemy_killed"), &BG_Booker_Globals::get_exp_when_enemy_killed);
+	ClassDB::bind_method(D_METHOD("get_exp_when_ap_consumed"), &BG_Booker_Globals::get_exp_when_ap_consumed);
 }
 
 BG_Booker_Globals::~BG_Booker_Globals()
@@ -2385,6 +2389,8 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id, const 
 
 			const int caste_index = int(get_find_data_by_param_name("caste", band_members_entry)["value"]);
 			new_bm->caste_id = global_enums["caste_types"][caste_index];
+			new_bm->level = int(get_find_data_by_param_name("level", band_members_entry)["value"]);
+			new_bm->experience = int(get_find_data_by_param_name("experience_points", band_members_entry)["value"]);
 			new_bm->random_variation = int(get_find_data_by_param_name("variation", band_members_entry)["value"]);
 			new_bm->band_member_type = static_cast<BG_BandMember::BandMemberTypes>(int(get_find_data_by_param_name("band_member_type", band_members_entry)["value"]));
 			BG_UnitCaste *unit_caste = get_band_info()->get_caste_by_id(new_bm->get_caste_id(), false);
@@ -4178,6 +4184,17 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				globals->band_action_points_fatigue_rate = float(get_find_data_by_param_name("band_action_points_fatigue_rate", action_points_entry)["value"]);
 				globals->monster_action_points_fatigue_rate = float(get_find_data_by_param_name("monster_action_points_fatigue_rate", action_points_entry)["value"]);
 				globals->action_points_rest_rate = float(get_find_data_by_param_name("action_points_rest_rate", action_points_entry)["value"]);
+			}
+
+			// Experience Points
+			const Dictionary experience_points_values = get_find_data_by_param_name("experience_points", entry);
+			const Array experience_points_array = experience_points_values["array_values"];
+			for (int x = 0; x < experience_points_array.size(); ++x) {
+				const Array experience_points_entry = experience_points_array[x];
+
+				globals->exp_when_source_unit_damaged = int(get_find_data_by_param_name("exp_when_source_unit_damaged", experience_points_entry)["value"]);
+				globals->exp_when_enemy_killed = int(get_find_data_by_param_name("exp_when_enemy_killed", experience_points_entry)["value"]);
+				globals->exp_when_ap_consumed = int(get_find_data_by_param_name("exp_when_ap_consumed", experience_points_entry)["value"]);
 			}
 		}
 	}
