@@ -1253,8 +1253,8 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_band"), &BG_BandMember::set_band);
 	ClassDB::bind_method(D_METHOD("get_battle_board_hex_type_details"), &BG_BandMember::get_battle_board_hex_type_details);
 	ClassDB::bind_method(D_METHOD("set_battle_board_hex_type_details"), &BG_BandMember::set_battle_board_hex_type_details);
-	ClassDB::bind_method(D_METHOD("get_element_upgrades"), &BG_BandMember::get_element_upgrades);
-	ClassDB::bind_method(D_METHOD("set_element_upgrades"), &BG_BandMember::set_element_upgrades);
+	ClassDB::bind_method(D_METHOD("get_attribute_upgrades"), &BG_BandMember::get_attribute_upgrades);
+	ClassDB::bind_method(D_METHOD("set_attribute_upgrades"), &BG_BandMember::set_attribute_upgrades);
 	ClassDB::bind_method(D_METHOD("get_consumable_upgrades"), &BG_BandMember::get_consumable_upgrades);
 	ClassDB::bind_method(D_METHOD("set_consumable_upgrades"), &BG_BandMember::set_consumable_upgrades);
 	ClassDB::bind_method(D_METHOD("is_dead"), &BG_BandMember::is_dead);
@@ -1280,7 +1280,7 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "caste_id"), "set_caste_id", "get_caste_id");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipment"), "set_equipment", "get_equipment");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "inventory"), "set_inventory", "get_inventory");
-	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "element_upgrades"), "set_element_upgrades", "get_element_upgrades");
+	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "attribute_upgrades"), "set_attribute_upgrades", "get_attribute_upgrades");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "consumable_upgrades"), "set_consumable_upgrades", "get_consumable_upgrades");
 
 	BIND_ENUM_CONSTANT(DEFAULT);
@@ -1900,6 +1900,8 @@ void BG_Booker_Globals::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_exp_when_source_unit_damaged"), &BG_Booker_Globals::get_exp_when_source_unit_damaged);
 	ClassDB::bind_method(D_METHOD("get_exp_when_enemy_killed"), &BG_Booker_Globals::get_exp_when_enemy_killed);
 	ClassDB::bind_method(D_METHOD("get_exp_when_ap_consumed"), &BG_Booker_Globals::get_exp_when_ap_consumed);
+
+	ClassDB::bind_method(D_METHOD("get_attribute_points_per_level"), &BG_Booker_Globals::get_attribute_points_per_level);
 }
 
 BG_Booker_Globals::~BG_Booker_Globals()
@@ -4195,6 +4197,15 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				globals->exp_when_source_unit_damaged = int(get_find_data_by_param_name("exp_when_source_unit_damaged", experience_points_entry)["value"]);
 				globals->exp_when_enemy_killed = int(get_find_data_by_param_name("exp_when_enemy_killed", experience_points_entry)["value"]);
 				globals->exp_when_ap_consumed = int(get_find_data_by_param_name("exp_when_ap_consumed", experience_points_entry)["value"]);
+			}
+
+			// Level Up
+			const Dictionary level_up_values = get_find_data_by_param_name("level_up", entry);
+			const Array level_up_array = level_up_values["array_values"];
+			for (int x = 0; x < level_up_array.size(); ++x) {
+				const Array level_up_entry = level_up_array[x];
+
+				globals->attribute_points_per_level = int(get_find_data_by_param_name("attribute_points_per_level", level_up_entry)["value"]);
 			}
 		}
 	}

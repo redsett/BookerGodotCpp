@@ -1667,9 +1667,9 @@ public:
 	BG_BattleBoard_HexTypeDetails *get_battle_board_hex_type_details() const { return battle_board_hex_type_details; }
 	void set_battle_board_hex_type_details(BG_BattleBoard_HexTypeDetails *v) { battle_board_hex_type_details = v; }
 
-	Dictionary element_upgrades; //<StringName, int>
-	Dictionary get_element_upgrades() const { return element_upgrades; }
-	void set_element_upgrades(const Dictionary &v) { element_upgrades = v; }
+	Dictionary attribute_upgrades; //<StringName, int>
+	Dictionary get_attribute_upgrades() const { return attribute_upgrades; }
+	void set_attribute_upgrades(const Dictionary &v) { attribute_upgrades = v; }
 
 	Dictionary consumable_upgrades; //<StringName(consumable_id), int(how_many)>
 	Dictionary get_consumable_upgrades() const { return consumable_upgrades; }
@@ -2274,6 +2274,9 @@ public:
 
 	int exp_when_ap_consumed = 0;
 	int get_exp_when_ap_consumed() const { return exp_when_ap_consumed; }
+
+	int attribute_points_per_level = 0;
+	int get_attribute_points_per_level() const { return attribute_points_per_level; }
 };
 
 ////
