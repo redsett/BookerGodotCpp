@@ -3286,6 +3286,19 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				monster_details->base_action_points_cost = int(get_find_data_by_param_name("action_points_cost", misc_params)["value"]);
 				monster_details->action_points_fatigue_rate_multiplier = float(get_find_data_by_param_name("action_points_fatigue_rate_multiplier", misc_params)["value"]);
 
+				{ // Attributes
+					const Array attributes_lines = Array(get_find_data_by_param_name("attributes", misc_params)["array_values"]);
+					for (int x = 0; x < attributes_lines.size(); ++x) {
+						const Array attributes_entry = attributes_lines[x];
+
+						BG_UnitStat *new_class = memnew(BG_UnitStat);
+						new_class->id = StringName(get_find_data_by_param_name("stat_id", attributes_entry)["value"]);
+						new_class->defensive_value = int(get_find_data_by_param_name("value", attributes_entry)["value"]);
+
+						monster_details->stats.append(new_class);
+					}
+				}
+
 				{ // Effectiveness Stats
 					const Array effectiveness_stats_lines = Array(entry["effectiveness_stats"]);
 					for (int x = 0; x < effectiveness_stats_lines.size(); ++x) {
