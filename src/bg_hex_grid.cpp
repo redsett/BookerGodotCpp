@@ -1,6 +1,8 @@
 #include "bg_hex_grid.hpp"
 
 #include <queue>
+#include <vector>
+#include <godot_cpp/templates/hash_set.hpp>
 
 #include <godot_cpp/variant/variant.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -530,17 +532,11 @@ int BG_HexGrid::get_disance_between_hexes(const Ref<BG_Hex> &from_hex, const Ref
 
 Ref<BG_Hex> BG_HexGrid::get_hex_in_direction(const Ref<BG_Hex> &from_hex, const Vector2i &d) const
 {
+    if (from_hex.is_null()) return nullptr;
     const Vector2i direction_diff = get_direction_difference(from_hex, d);
-    const Vector2i v = direction_diff + from_hex->get_coords();
-	for (int i = 0; i < grid.size(); ++i)
-	{
-		Ref<BG_Hex> h = grid[i];
-        if (h->q == v.y && h->r == v.x) {
-            // if (!h->get_is_playable_space()) return nullptr;
-            return h;
-        }
-    }
-    return nullptr;
+    // coords are (r, q), so direction_diff.x moves r and direction_diff.y moves q.
+    // O(1) lookup through grid_map, instead of scanning the whole grid (this is called 6x per cell by every path/flood fill).
+    return get_hex_by_qr(Vector2i(from_hex->q + direction_diff.y, from_hex->r + direction_diff.x));
 }
 
 HashMap<BG_HexGrid::HexDirections, Ref<BG_Hex>> BG_HexGrid::get_hex_neighbors_fast(const Ref<BG_Hex> &from_hex) const
@@ -963,6 +959,35 @@ Ref<BG_Hex> BG_HexGrid::get_nearest_empty_cell(const Ref<BG_Hex> &instigator, co
     return result;
 }
 
+// --- find_path helpers ---
+namespace {
+struct FindPathNode {
+    Ref<BG_Hex> hex;
+    Vector2i parent_qr;
+    int g = 0;                  // Steps from start.
+    int pass_through_run = 0;   // How many cells in a row (ending here) the unit can walk through but not stop on.
+    bool has_landing = false;   // Does the path from start to here (excluding start) have a cell the unit can stop on?
+    bool closed = false;
+};
+
+struct FindPathOpenItem {
+    int f;          // g + h
+    int h;          // Distance left to the goal.
+    int g;          // Steps taken. Used to detect stale entries.
+    int order;      // Insertion order, keeps results deterministic on ties.
+    Vector2i qr;
+};
+
+// std::priority_queue is a max heap, so return true when 'a' should come out AFTER 'b'.
+struct FindPathOpenItemCompare {
+    bool operator()(const FindPathOpenItem &a, const FindPathOpenItem &b) const {
+        if (a.f != b.f) return a.f > b.f;
+        if (a.h != b.h) return a.h > b.h; // Prefer cells closer to the goal (fewer expansions).
+        return a.order > b.order;         // Then first in, first out.
+    }
+};
+}
+
 TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &start, const Ref<BG_Hex> &goal, bool include_start, int travel_distance) const
 {
     if (start.is_null()) return {};
@@ -981,82 +1006,132 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> &instigator, const Re
         }
     }
 
-    TypedArray<BG_Hex> frontier;
-    // std::priority_queue<int, std::vector<int>, std::greater<int>> minHeap;
-    frontier.append(start);
-    HashMap<Ref<BG_Hex>, Ref<BG_Hex>> came_from;
-    came_from[start] = start;
-    Ref<BG_Hex> result_goal = goal;
+    const int max_pass_through_run = travel_distance - 1;
+    const Vector3i goal_full_qr = goal->get_full_qr();
+    const Vector2i start_qr = start->get_qr();
 
-    int index = 0;
-    while (index < frontier.size())
+    // Same order as get_hex_neighbors_fast, so ties resolve the same way. Cached so we don't hit the HashMap per cell.
+    const Vector2i directions[6] = {
+        hex_directions[HexDirections::TOP],
+        hex_directions[HexDirections::RIGHT],
+        hex_directions[HexDirections::BOTTOM],
+        hex_directions[HexDirections::BOTTOM_LEFT],
+        hex_directions[HexDirections::LEFT],
+        hex_directions[HexDirections::TOP_LEFT],
+    };
+
+    // A cell any unit could actually stop on (friendlies block stopping, same check the end-of-path trim uses).
+    auto can_land_on = [&](const Ref<BG_Hex> &h) -> bool {
+        return get_hex_cost(/* from_hex */ nullptr, /* qr */ h->get_qr(), /* do_pass_through_check */ false) != 0;
+    };
+
+    HashMap<Vector2i, FindPathNode> nodes;
+    std::priority_queue<FindPathOpenItem, std::vector<FindPathOpenItem>, FindPathOpenItemCompare> open;
+    int push_order = 0;
+
     {
-        const Ref<BG_Hex> current_hex = frontier[index++];
-        if (current_hex == goal) break; // Early exit.
+        FindPathNode start_node;
+        start_node.hex = start;
+        start_node.parent_qr = start_qr;
+        nodes.insert(start_qr, start_node);
+        const int h = hex_distance(start->get_full_qr(), goal_full_qr, offset_type);
+        open.push({ h, h, 0, push_order++, start_qr });
+    }
 
-        const HashMap<HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(current_hex);
-        for (const auto &pair : neighbors) {
-            const Ref<BG_Hex> next_hex = pair.value;
-            if (!next_hex.is_valid()) continue;
+    bool found_goal = false;
+    Vector2i end_qr = start_qr;
 
-            // Check to see if we're trying to go through too many pass through cells. Which leads to a unit failing to move, since they can't actually land on the cells.
-            int previous_pass_through_count = 0;
-            {
-                Ref<BG_Hex> current_previous_pass_through_check_hex = current_hex;
-                while (current_previous_pass_through_check_hex != start) {
-                    if (get_hex_cost(/* from_hex */ instigator, /* qr */ current_previous_pass_through_check_hex->get_qr(), /* do_pass_through_check */ false) != 0) {
-                        break;
-                    }
-                    previous_pass_through_count++;
-                    if (previous_pass_through_count == (travel_distance - 1)) break; // Early out, already failed.
-                    current_previous_pass_through_check_hex = came_from[current_previous_pass_through_check_hex];
-                }
+    // Fallback if the goal can't be reached: the closest cell to the goal we can stop on (ties -> fewer steps).
+    // Starts as the start cell, so if we can't get any closer we just stay put.
+    Vector2i closest_qr = start_qr;
+    int closest_h = hex_distance(start->get_full_qr(), goal_full_qr, offset_type);
+    int closest_g = 0;
+
+    while (!open.empty() && !found_goal) {
+        const FindPathOpenItem item = open.top();
+        open.pop();
+
+        FindPathNode *current_node = nodes.getptr(item.qr);
+        if (current_node == nullptr || current_node->closed || item.g != current_node->g) continue; // Stale entry, a shorter route was found later.
+        current_node->closed = true;
+
+        // Copy out what we need, since inserting into 'nodes' below shouldn't be relied on to keep this pointer valid.
+        const Ref<BG_Hex> current_hex = current_node->hex;
+        const int current_g = current_node->g;
+        const int current_pass_through_run = current_node->pass_through_run;
+        const bool current_has_landing = current_node->has_landing;
+
+        if (current_hex == goal) { // Early exit.
+            found_goal = true;
+            end_qr = item.qr;
+            break;
+        }
+
+        if (item.qr != start_qr && item.h <= closest_h && can_land_on(current_hex)) {
+            if (item.h < closest_h || current_g < closest_g) {
+                closest_qr = item.qr;
+                closest_h = item.h;
+                closest_g = current_g;
             }
+        }
 
-            const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ next_hex->get_qr(), /* do_pass_through_check */ (travel_distance - 1) > previous_pass_through_count);
+        // Check to see if we're trying to go through too many pass through cells. Which leads to a unit failing to move, since they can't actually land on the cells.
+        const bool allow_pass_through = max_pass_through_run > current_pass_through_run;
 
+        for (int i = 0; i < 6; ++i) {
+            const Ref<BG_Hex> next_hex = get_hex_in_direction(current_hex, directions[i]);
+            if (!next_hex.is_valid()) continue;
+            const Vector2i next_qr = next_hex->get_qr();
+
+            const FindPathNode *existing = nodes.getptr(next_qr);
+            if (existing != nullptr && existing->closed) continue;
+
+            const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ next_qr, /* do_pass_through_check */ allow_pass_through);
             if (hex_cost == 0) { // Can't move into cell?
-                if (next_hex == goal) { // Is the cell the goal, if so, make the previous cell the goal.
-
-                    // Ensure the whole path isn't just walk throughs without any landings.
-                    bool has_valid_cell = false;
-                    Ref<BG_Hex> current_pass_through_check_hex = current_hex;
-                    int pass_through_count = 0;
-                    while (current_pass_through_check_hex != start) {
-                        pass_through_count++;
-                        if (get_hex_cost(/* from_hex */ nullptr, /* qr */ current_pass_through_check_hex->get_qr(), /* do_pass_through_check */ false) != 0) {
-                            has_valid_cell = true;
-                            break;
-                        }
-                        current_pass_through_check_hex = came_from[current_pass_through_check_hex];
-                    }
-                    if (!has_valid_cell && pass_through_count > 0) continue;
-
-                    // We have a valid path to the goal, so bail out.
-                    result_goal = current_hex;
-                    frontier.clear();
+                // Is the cell the goal? If so, make the current cell the end of the path.
+                // But ensure the whole path isn't just walk throughs without any landings.
+                if (next_hex == goal && (current_hex == start || current_has_landing)) {
+                    found_goal = true;
+                    end_qr = item.qr;
                     break;
                 }
                 continue;
             }
 
-            if (!came_from.has(next_hex)) {
-                const int priority = heuristic(goal, next_hex);
-                frontier.append(next_hex);
-                came_from[next_hex] = current_hex;
-            }
+            const int new_g = current_g + 1;
+            if (existing != nullptr && new_g >= existing->g) continue; // Already have an equal or shorter route here.
+
+            // Pass through only = we can walk through it, but not stop on it. Only possible if pass through was allowed.
+            const bool is_pass_through_only = allow_pass_through &&
+                get_hex_cost(/* from_hex */ instigator, /* qr */ next_qr, /* do_pass_through_check */ false) == 0;
+
+            FindPathNode next_node;
+            next_node.hex = next_hex;
+            next_node.parent_qr = item.qr;
+            next_node.g = new_g;
+            next_node.pass_through_run = is_pass_through_only ? current_pass_through_run + 1 : 0;
+            next_node.has_landing = current_has_landing || can_land_on(next_hex);
+            nodes.insert(next_qr, next_node);
+
+            const int h = hex_distance(next_hex->get_full_qr(), goal_full_qr, offset_type);
+            open.push({ new_g + h, h, new_g, push_order++, next_qr });
         }
     }
 
+    if (!found_goal) {
+        end_qr = closest_qr; // No path to the goal, get as close as we can.
+    }
+
     TypedArray<BG_Hex> result;
-    Ref<BG_Hex> current = result_goal;
-    while (current != start) {
-        if (!came_from.has(current)) {
+    Vector2i qr = end_qr;
+    while (qr != start_qr) {
+        const FindPathNode *n = nodes.getptr(qr);
+        if (n == nullptr) { // Should never happen, but don't hang/crash if it does.
             if (include_start) return {start};
             return {};
         }
-        result.append(current);
-        current = came_from[current];
+        result.append(n->hex);
+        qr = n->parent_qr;
     }
 
     // Since we allow building paths through friendlies, let's ensure that the path doesn't end on a friendly.
@@ -1076,63 +1151,59 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> &instigator, const Re
 
 TypedArray<BG_Hex> BG_HexGrid::find_reachable_cells_in_distance(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &start, int distance) const
 {
-    TypedArray<BG_Hex> frontier;
-    frontier.append(start);
-    HashMap<Ref<BG_Hex>, Ref<BG_Hex>> came_from;
-    came_from[start] = start;
+    TypedArray<BG_Hex> result;
+    if (start.is_null() || distance < 0) return result;
 
-    // Get all cells within the distance, that are not obstucted.
-    int index = 0;
-    while (index < frontier.size())
-    {
-        const Ref<BG_Hex> current_hex = frontier[index++];
+    // Same order as get_hex_neighbors_fast, so results come back in the same order as before.
+    const Vector2i directions[6] = {
+        hex_directions[HexDirections::TOP],
+        hex_directions[HexDirections::RIGHT],
+        hex_directions[HexDirections::BOTTOM],
+        hex_directions[HexDirections::BOTTOM_LEFT],
+        hex_directions[HexDirections::LEFT],
+        hex_directions[HexDirections::TOP_LEFT],
+    };
 
-        const HashMap<HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(current_hex);
-        for (const auto &pair : neighbors) {
-            const Ref<BG_Hex> next_hex = pair.value;
+    // Breadth first flood fill, stopping at 'distance' steps. BFS reaches every cell by its shortest route first,
+    // so a cell's depth is its step count and nothing deeper than 'distance' is ever explored.
+    // (This replaces "fill everything within hex distance, then walk each cell back to the start to count steps".
+    //  Same result, since a path of N steps can never leave the N hex radius.)
+    struct QueueItem {
+        Ref<BG_Hex> hex;
+        int depth;
+    };
+    std::vector<QueueItem> queue;
+    HashSet<Vector2i> visited;
 
+    queue.push_back({ start, 0 });
+    visited.insert(start->get_qr());
+
+    for (size_t index = 0; index < queue.size(); ++index) {
+        // Copy out, push_back below can reallocate the vector.
+        const Ref<BG_Hex> current_hex = queue[index].hex;
+        const int current_depth = queue[index].depth;
+
+        // Leave out cells we can't stop on (e.g. a friendly unit is there), but still walk through them.
+        if (get_hex_cost(/* from_hex */ nullptr, /* qr */ current_hex->get_qr(), /* do_pass_through_check */ false) != 0) {
+            result.append(current_hex);
+        }
+
+        if (current_depth >= distance) continue; // Don't expand past the max distance.
+
+        for (int i = 0; i < 6; ++i) {
+            const Ref<BG_Hex> next_hex = get_hex_in_direction(current_hex, directions[i]);
             if (!next_hex.is_valid()) continue;
-            const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ next_hex->get_qr(), /* do_pass_through_check */ true);
+
+            const Vector2i next_qr = next_hex->get_qr();
+            if (visited.has(next_qr)) continue;
+
+            const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ next_qr, /* do_pass_through_check */ true);
             if (hex_cost == 0) continue;
 
-            const int d = hex_distance(next_hex->get_full_qr(), start->get_full_qr(), offset_type);
-            if (d > distance) continue;
-
-            if (!came_from.has(next_hex)) {
-                frontier.append(next_hex);
-                came_from[next_hex] = current_hex;
-            }
+            visited.insert(next_qr);
+            queue.push_back({ next_hex, current_depth + 1 });
         }
     }
 
-    // Only pick the cells that are X distance from the start.
-    frontier.clear();
-    for (const auto &pair : came_from) {
-        Ref<BG_Hex> current_hex = pair.key;
-
-        int cell_distance = 0;
-        while (current_hex != start) {
-            cell_distance++;
-            if (cell_distance > distance) break;
-            current_hex = came_from[current_hex];
-        }
-
-        if (cell_distance <= distance) {
-            frontier.append(pair.key);
-        }
-    }
-
-    // Remove cells that are blocked. This would be the case for a cell with a friendly unit.
-    for (int i = (frontier.size() - 1); i >= 0; --i) {
-        const Ref<BG_Hex> h = frontier[i];
-        const int hex_cost = get_hex_cost(/* from_hex */ nullptr, /* qr */ h->get_qr(), /* do_pass_through_check */ false);
-        if (hex_cost == 0) {
-            frontier.remove_at(i);
-        }
-    }
-
-    // Remove the starting cell.
-    // if (frontier.has(start)) frontier.erase(start);
-
-    return frontier;
+    return result;
 }
