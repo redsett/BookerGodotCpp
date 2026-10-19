@@ -34,9 +34,6 @@ public:
 
     int condition_value = 0;
     int get_condition_value() const { return condition_value; }
-
-    bool is_passive = false;
-    bool get_is_passive() const { return is_passive; }
 };
 VARIANT_ENUM_CAST(BG_Skill_LockUnLock_Condition::ConditionTypes);
 
@@ -59,4 +56,7 @@ public:
 
     TypedArray<BG_Skill_LockUnLock_Condition> lock_conditions;
     TypedArray<BG_Skill_LockUnLock_Condition> get_lock_conditions() const { return lock_conditions; }
+
+    bool is_passive = false;
+    bool get_is_passive() const { return is_passive; }
 };

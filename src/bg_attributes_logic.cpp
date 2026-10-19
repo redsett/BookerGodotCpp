@@ -9,7 +9,6 @@ void BG_Skill_LockUnLock_Condition::_bind_methods()
     ClassDB::bind_method(D_METHOD("get_condition_type"), &BG_Skill_LockUnLock_Condition::get_condition_type);
     ClassDB::bind_method(D_METHOD("set_condition_type"), &BG_Skill_LockUnLock_Condition::set_condition_type);
     ClassDB::bind_method(D_METHOD("get_condition_value"), &BG_Skill_LockUnLock_Condition::get_condition_value);
-    ClassDB::bind_method(D_METHOD("get_is_passive"), &BG_Skill_LockUnLock_Condition::get_is_passive);
 
     ADD_PROPERTY(PropertyInfo(Variant::INT, "condition_type", PROPERTY_HINT_ENUM,
                               "EQUAL_TO_OR_GREATER_THAN:0,GREATER_THAN:1,EQUAL_TO_OR_LESSER_THAN:2,LESSER_THAN:3"),
@@ -29,4 +28,5 @@ void BG_AttributeTreeSkillData::_bind_methods()
     ClassDB::bind_method(D_METHOD("get_effect_id"), &BG_AttributeTreeSkillData::get_effect_id);
     ClassDB::bind_method(D_METHOD("get_unlock_conditions"), &BG_AttributeTreeSkillData::get_unlock_conditions);
     ClassDB::bind_method(D_METHOD("get_lock_conditions"), &BG_AttributeTreeSkillData::get_lock_conditions);
+    ClassDB::bind_method(D_METHOD("get_is_passive"), &BG_AttributeTreeSkillData::get_is_passive);
 }

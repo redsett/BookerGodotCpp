@@ -3795,6 +3795,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 
 				BG_AttributeTreeSkillData *attr_tree_skill_data = memnew(BG_AttributeTreeSkillData);
 				attr_tree_skill_data->effect_id = StringName(get_find_data_by_param_name("effect_id", attribute_skill_tree_entry)["value"]);
+				attr_tree_skill_data->is_passive = bool(get_find_data_by_param_name("is_passive", attribute_skill_tree_entry)["value"]);
 
 				// Conditions
 				const Dictionary conditions_values = get_find_data_by_param_name("conditions", attribute_skill_tree_entry);
@@ -3805,7 +3806,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 
 					BG_Skill_LockUnLock_Condition *lock_unlock_condition = memnew(BG_Skill_LockUnLock_Condition);
 
-					lock_unlock_condition->is_passive = bool(get_find_data_by_param_name("is_passive", conditions_entry)["value"]);
 					lock_unlock_condition->condition_attribute = StringName(get_find_data_by_param_name("condition_attribute", conditions_entry)["value"]);
 					lock_unlock_condition->condition_type = static_cast<BG_Skill_LockUnLock_Condition::ConditionTypes>(int(get_find_data_by_param_name("condition_type", conditions_entry)["value"]));
 					lock_unlock_condition->condition_value = int(get_find_data_by_param_name("condition_value", conditions_entry)["value"]);
