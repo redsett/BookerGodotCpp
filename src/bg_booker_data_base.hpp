@@ -9,7 +9,7 @@
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
 
-// #include <bg_hex_grid.hpp>
+#include "bg_attributes_logic.hpp"
 
 using namespace godot;
 
@@ -1560,6 +1560,9 @@ public:
 
 	TypedArray<StringName> element_availability_ids;
 	TypedArray<StringName> get_element_availability_ids() const { return element_availability_ids; }
+
+	TypedArray<BG_AttributeTreeSkillData> attribute_skill_tree_datas;
+	TypedArray<BG_AttributeTreeSkillData> get_attribute_skill_tree_datas() const { return attribute_skill_tree_datas; }
 
 	float get_random_unit_caste_scale(bool x_z) const;
 };

@@ -6,6 +6,7 @@
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/godot.hpp>
 
+#include "bg_attributes_logic.hpp"
 #include "bg_booker_data_base.hpp"
 #include "bg_focus_layers.hpp"
 #include "bg_hex_grid.hpp"
@@ -26,6 +27,8 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 	// }
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
 	{
+		ClassDB::register_class<BG_Skill_LockUnLock_Condition>();
+		ClassDB::register_class<BG_AttributeTreeSkillData>();
 		// ClassDB::register_class<BG_Reactive>();
 		// ClassDB::register_class<BG_ReactiveObject>();
 		// ClassDB::register_class<BG_ReactiveInt>();

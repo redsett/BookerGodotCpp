@@ -1482,6 +1482,7 @@ void BG_UnitCaste::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_UnitCaste::get_stats);
 	ClassDB::bind_method(D_METHOD("get_starting_item_ids"), &BG_UnitCaste::get_starting_item_ids);
 	ClassDB::bind_method(D_METHOD("get_element_availability_ids"), &BG_UnitCaste::get_element_availability_ids);
+	ClassDB::bind_method(D_METHOD("get_attribute_skill_tree_datas"), &BG_UnitCaste::get_attribute_skill_tree_datas);
 	ClassDB::bind_method(D_METHOD("get_random_unit_caste_scale", "x_z"), &BG_UnitCaste::get_random_unit_caste_scale);
 }
 
@@ -2029,7 +2030,7 @@ Ref<BG_StoryboardDetails> BG_Booker_DB::import_and_get_storyboard_details_by_id(
 
 			Ref<BG_StoryboardDataDetails> sb_dets = memnew(BG_StoryboardDataDetails);
 			sb_dets->character_key = StringName(get_find_data_by_param_name("character_key", data_entry)["value"]);
-			sb_dets->character_emotion = static_cast<BG_PortraitDetails::PortraitType>(int(get_find_data_by_param_name("character_emotion", data_entry)["value"]));;
+			sb_dets->character_emotion = static_cast<BG_PortraitDetails::PortraitType>(int(get_find_data_by_param_name("character_emotion", data_entry)["value"]));
 			sb_dets->text_key = StringName(UtilityFunctions::str(int(get_find_data_by_param_name("text_key", data_entry)["value"])));
 			
 			sb_dets->code = StringName(get_find_data_by_param_name("code", data_entry)["value"]);
@@ -3783,6 +3784,38 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				new_unit_caste->element_availability_ids.append(
 					StringName(get_find_data_by_param_name("element", element_availability_values_entry)["value"])
 				);
+			}
+
+			// Attribute Skill Tree
+			const Dictionary attribute_skill_tree_values = get_find_data_by_param_name("attribute_skill_tree", entry);
+			const Array attribute_skill_tree_array = attribute_skill_tree_values["array_values"];
+			for (int x = 0; x < attribute_skill_tree_array.size(); ++x)
+			{
+				const Array attribute_skill_tree_entry = attribute_skill_tree_array[x];
+
+				BG_AttributeTreeSkillData *attr_tree_skill_data = memnew(BG_AttributeTreeSkillData);
+				attr_tree_skill_data->effect_id = StringName(get_find_data_by_param_name("effect_id", attribute_skill_tree_entry)["value"]);
+
+				// Conditions
+				const Dictionary conditions_values = get_find_data_by_param_name("conditions", attribute_skill_tree_entry);
+				const Array conditions_array = conditions_values["array_values"];
+				for (int y = 0; y < conditions_array.size(); ++y)
+				{
+					const Array conditions_entry = conditions_array[y];
+
+					BG_Skill_LockUnLock_Condition *lock_unlock_condition = memnew(BG_Skill_LockUnLock_Condition);
+
+					lock_unlock_condition->condition_attribute = StringName(get_find_data_by_param_name("condition_attribute", conditions_entry)["value"]);
+					lock_unlock_condition->condition_type = static_cast<BG_Skill_LockUnLock_Condition::ConditionTypes>(int(get_find_data_by_param_name("condition_type", conditions_entry)["value"]));
+					lock_unlock_condition->condition_value = int(get_find_data_by_param_name("condition_value", conditions_entry)["value"]);
+
+					if (bool(get_find_data_by_param_name("is_unlock_condition", conditions_entry)["value"]))
+						attr_tree_skill_data->unlock_conditions.append(lock_unlock_condition);
+					else
+						attr_tree_skill_data->lock_conditions.append(lock_unlock_condition);
+				}
+
+				new_unit_caste->attribute_skill_tree_datas.append(attr_tree_skill_data);
 			}
 
 			band_info->unit_castes.append(new_unit_caste);
