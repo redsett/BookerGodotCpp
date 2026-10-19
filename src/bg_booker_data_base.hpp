@@ -1678,6 +1678,15 @@ public:
 	Dictionary get_consumable_upgrades() const { return consumable_upgrades; }
 	void set_consumable_upgrades(const Dictionary &v) { consumable_upgrades = v; }
 
+	// Loadout: effect ids per slot, &"" for an empty slot. The slot counts live in GDScript (they can change with gear).
+	TypedArray<StringName> equipped_ability_ids; // The same ability can be in more than one slot.
+	TypedArray<StringName> get_equipped_ability_ids() const { return equipped_ability_ids; }
+	void set_equipped_ability_ids(const TypedArray<StringName> &v) { equipped_ability_ids = v; }
+
+	TypedArray<StringName> equipped_passive_ids; // No duplicates.
+	TypedArray<StringName> get_equipped_passive_ids() const { return equipped_passive_ids; }
+	void set_equipped_passive_ids(const TypedArray<StringName> &v) { equipped_passive_ids = v; }
+
 	bool is_dead() const { return current_percent_health <= 0.0; }
 
 	StringName cached_name;

@@ -1257,6 +1257,10 @@ void BG_BandMember::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_attribute_upgrades"), &BG_BandMember::set_attribute_upgrades);
 	ClassDB::bind_method(D_METHOD("get_consumable_upgrades"), &BG_BandMember::get_consumable_upgrades);
 	ClassDB::bind_method(D_METHOD("set_consumable_upgrades"), &BG_BandMember::set_consumable_upgrades);
+	ClassDB::bind_method(D_METHOD("get_equipped_ability_ids"), &BG_BandMember::get_equipped_ability_ids);
+	ClassDB::bind_method(D_METHOD("set_equipped_ability_ids"), &BG_BandMember::set_equipped_ability_ids);
+	ClassDB::bind_method(D_METHOD("get_equipped_passive_ids"), &BG_BandMember::get_equipped_passive_ids);
+	ClassDB::bind_method(D_METHOD("set_equipped_passive_ids"), &BG_BandMember::set_equipped_passive_ids);
 	ClassDB::bind_method(D_METHOD("is_dead"), &BG_BandMember::is_dead);
 	ClassDB::bind_method(D_METHOD("get_name"), &BG_BandMember::get_name);
 	ClassDB::bind_method(D_METHOD("get_first_name"), &BG_BandMember::get_first_name);
@@ -1282,6 +1286,8 @@ void BG_BandMember::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "inventory"), "set_inventory", "get_inventory");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "attribute_upgrades"), "set_attribute_upgrades", "get_attribute_upgrades");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "consumable_upgrades"), "set_consumable_upgrades", "get_consumable_upgrades");
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipped_ability_ids", PROPERTY_HINT_ARRAY_TYPE, "StringName"), "set_equipped_ability_ids", "get_equipped_ability_ids");
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "equipped_passive_ids", PROPERTY_HINT_ARRAY_TYPE, "StringName"), "set_equipped_passive_ids", "get_equipped_passive_ids");
 
 	BIND_ENUM_CONSTANT(DEFAULT);
 	BIND_ENUM_CONSTANT(PROTAGONIST);
