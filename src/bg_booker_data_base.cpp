@@ -1297,10 +1297,12 @@ void BG_BandMember::_bind_methods()
 
 StringName BG_BandMember::get_name()
 {
-	if (!cached_name.is_empty()) return cached_name;
-
 	BG_Booker_DB *booker_db = BG_Booker_DB::get_singleton();
-	if (!BG_Booker_DB::bg_is_instance_valid(booker_db)) return "";
+	if (!BG_Booker_DB::bg_is_instance_valid(booker_db)) return cached_name;
+
+	// The cache is cleared when a name id changes, and redone when the language changes.
+	if (!cached_name.is_empty() && cached_name_language == booker_db->get_current_language_key()) return cached_name;
+	cached_name_language = booker_db->get_current_language_key();
 	
 	String first_name = "";
 	if (!get_first_name_id().is_empty())
@@ -1421,12 +1423,15 @@ void BG_Band::_bind_methods()
 
 StringName BG_Band::get_name()
 {
-	if (!cached_name.is_empty()) return cached_name;
-	if (!name.is_empty()) return name;
+	if (!name.is_empty()) return name; // A custom name always wins.
 
 	BG_Booker_DB *booker_db = BG_Booker_DB::get_singleton();
-	if (!BG_Booker_DB::bg_is_instance_valid(booker_db)) return "";
-	
+	if (!BG_Booker_DB::bg_is_instance_valid(booker_db)) return cached_name;
+
+	// The cache is cleared when the id changes, and redone when the language changes.
+	if (!cached_name.is_empty() && cached_name_language == booker_db->get_current_language_key()) return cached_name;
+	cached_name_language = booker_db->get_current_language_key();
+
 	if (!get_id().is_empty())
 		cached_name = StringName(booker_db->get_localize_string(StringName("band_member"), get_id(), booker_db->get_current_language_key(), true));
 	
@@ -1647,6 +1652,11 @@ BG_Monster::~BG_Monster()
 		if (BG_Booker_DB::bg_is_instance_valid(d))
 			memdelete(d);
 	}
+	for (int i = 0; i < drops.size(); ++i) {
+		BG_RewardItem *d = cast_to<BG_RewardItem>(drops[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
 }
 
 void BG_Monster::set_is_turned_to_stone(bool v) {
@@ -1702,16 +1712,28 @@ BG_BandInfo::~BG_BandInfo()
 
 BG_UnitCaste *BG_BandInfo::get_caste_by_id(const StringName &id, bool return_parent) const
 {
-	for (int i = 0; i < unit_castes.size(); ++i) {
-		BG_UnitCaste *caste = cast_to<BG_UnitCaste>(unit_castes[i]);
-		if (caste->id == id) {
-			if (return_parent && !caste->get_parent_caste().is_empty()) {
-				return get_caste_by_id(caste->get_parent_caste(), true);
-			}
+	auto find_caste = [this](const StringName &caste_id) -> BG_UnitCaste * {
+		for (int i = 0; i < unit_castes.size(); ++i) {
+			BG_UnitCaste *caste = cast_to<BG_UnitCaste>(unit_castes[i]);
+			if (caste != nullptr && caste->id == caste_id)
+				return caste;
+		}
+		return nullptr;
+	};
+
+	BG_UnitCaste *caste = find_caste(id);
+	if (!return_parent)
+		return caste;
+
+	// Walk up to the top parent. Capped, so a parent loop in the data (A -> B -> A) can't hang or overflow the stack.
+	for (int steps = 0; caste != nullptr && !caste->get_parent_caste().is_empty(); ++steps) {
+		if (steps > unit_castes.size()) {
+			UtilityFunctions::push_error("BG_BandInfo::get_caste_by_id - parent castes loop around for caste \"", id, "\". Check parent_caste in the data.");
 			return caste;
 		}
+		caste = find_caste(caste->get_parent_caste()); // nullptr if the parent doesn't exist, same as before.
 	}
-	return nullptr;
+	return caste;
 }
 
 ////
@@ -3793,6 +3815,14 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			}
 
 			// Attribute Skill Tree
+			auto is_attribute_stat_id = [this](const StringName &stat_id) -> bool {
+				for (int s = 0; s < stat_types.size(); ++s) {
+					const BG_UnitStatDetails *stat = cast_to<BG_UnitStatDetails>(stat_types[s]);
+					if (stat != nullptr && stat->is_attribute_type && stat->id == stat_id)
+						return true;
+				}
+				return false;
+			};
 			const Dictionary attribute_skill_tree_values = get_find_data_by_param_name("attribute_skill_tree", entry);
 			const Array attribute_skill_tree_array = attribute_skill_tree_values["array_values"];
 			for (int x = 0; x < attribute_skill_tree_array.size(); ++x)
@@ -3812,11 +3842,23 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 
 					BG_Skill_LockUnLock_Condition *lock_unlock_condition = memnew(BG_Skill_LockUnLock_Condition);
 
+					const String where = "caste \"" + String(new_unit_caste->id) + "\", skill \"" + String(attr_tree_skill_data->effect_id) + "\"";
+
 					lock_unlock_condition->condition_attribute = StringName(get_find_data_by_param_name("condition_attribute", conditions_entry)["value"]);
-					lock_unlock_condition->condition_type = static_cast<BG_Skill_LockUnLock_Condition::ConditionTypes>(int(get_find_data_by_param_name("condition_type", conditions_entry)["value"]));
+					if (!is_attribute_stat_id(lock_unlock_condition->condition_attribute))
+						UtilityFunctions::push_warning("Attribute tree: ", where, " has a condition on \"", lock_unlock_condition->condition_attribute, "\", which isn't an attribute stat id. It will never match.");
+
+					const int condition_type = int(get_find_data_by_param_name("condition_type", conditions_entry)["value"]);
+					if (condition_type < BG_Skill_LockUnLock_Condition::EQUAL_TO_OR_GREATER_THAN || condition_type > BG_Skill_LockUnLock_Condition::LESSER_THAN)
+						UtilityFunctions::push_warning("Attribute tree: ", where, " has an unknown condition_type ", condition_type, ". Using EQUAL_TO_OR_GREATER_THAN.");
+					else
+						lock_unlock_condition->condition_type = static_cast<BG_Skill_LockUnLock_Condition::ConditionTypes>(condition_type);
 					lock_unlock_condition->condition_value = int(get_find_data_by_param_name("condition_value", conditions_entry)["value"]);
 
-					if (bool(get_find_data_by_param_name("is_unlock_condition", conditions_entry)["value"]))
+					const Dictionary is_unlock_param = get_find_data_by_param_name("is_unlock_condition", conditions_entry);
+					if (!is_unlock_param.has("value"))
+						UtilityFunctions::push_warning("Attribute tree: ", where, " has a condition without is_unlock_condition. Treating it as an unlock condition.");
+					if (!is_unlock_param.has("value") || bool(is_unlock_param["value"]))
 						attr_tree_skill_data->unlock_conditions.append(lock_unlock_condition);
 					else
 						attr_tree_skill_data->lock_conditions.append(lock_unlock_condition);

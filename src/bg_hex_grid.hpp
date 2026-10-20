@@ -475,6 +475,13 @@ public:
     Vector2i get_grid_size_max(bool playable_space_only) const;
     
     int get_hex_cost(const Ref<BG_Hex> &from_hex, const Vector2i &qr, bool do_pass_through_check) const;
+
+    // Game data by qr, built once per search so get_hex_cost doesn't scan game_data for every neighbor.
+    using GameDataMap = HashMap<Vector2i, Ref<BG_HexGameSaveData>>;
+    GameDataMap _build_game_data_map() const;
+    Ref<BG_HexGameSaveData> _get_game_data(const Vector2i &qr, const GameDataMap *game_data_map) const;
+    // game_data_map can be nullptr, then it falls back to get_game_data_from_qr().
+    int _get_hex_cost(const Ref<BG_Hex> &from_hex, const Vector2i &qr, bool do_pass_through_check, const GameDataMap *game_data_map) const;
     
     Vector2 hex_size = Vector2();
     Vector2 get_hex_size() const { return hex_size; }
@@ -511,7 +518,6 @@ public:
 
     TypedArray<BG_Hex> find_path(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &start, const Ref<BG_Hex> &goal, bool include_start, int travel_distance) const;
     TypedArray<BG_Hex> find_reachable_cells_in_distance(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &start, int distance) const;
-    bool comp_priority_item(const Dictionary &a, const Dictionary &b) const;
 };
 
 VARIANT_ENUM_CAST(BG_HexGrid::OffsetType);

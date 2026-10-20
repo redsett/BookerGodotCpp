@@ -1596,11 +1596,11 @@ public:
 
 	StringName first_name_id;
 	StringName get_first_name_id() const { return first_name_id; }
-	void set_first_name_id(const StringName &value) { first_name_id = value; }
+	void set_first_name_id(const StringName &value) { first_name_id = value; cached_name = StringName(); }
 	
 	StringName last_name_id;
 	StringName get_last_name_id() const { return last_name_id; }
-	void set_last_name_id(const StringName &value) { last_name_id = value; }
+	void set_last_name_id(const StringName &value) { last_name_id = value; cached_name = StringName(); }
 
 	BandMemberTypes band_member_type = BandMemberTypes::DEFAULT;
 	BandMemberTypes get_band_member_type() const { return band_member_type; }
@@ -1690,6 +1690,7 @@ public:
 	bool is_dead() const { return current_percent_health <= 0.0; }
 
 	StringName cached_name;
+	StringName cached_name_language; // The language cached_name was made in.
 	StringName get_name();
 	StringName get_first_name();
 	StringName get_last_name();
@@ -1770,9 +1771,10 @@ public:
 
 	StringName id;
 	StringName get_id() const { return id; }
-	void set_id(const StringName &value) { id = value; }
+	void set_id(const StringName &value) { id = value; cached_name = StringName(); }
 
 	StringName cached_name;
+	StringName cached_name_language; // The language cached_name was made in.
 	StringName name;
 	StringName get_name();
 	void set_name(const StringName &value) { name = value; }

@@ -367,7 +367,6 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_nearest_attackable", "from_job_hex", "attackable_types", "dyn_types_filter", "bands"), &BG_HexGrid::get_nearest_attackable);
 	ClassDB::bind_method(D_METHOD("get_nearest_empty_cell", "instigator", "target", "cells_to_check"), &BG_HexGrid::get_nearest_empty_cell);
 	ClassDB::bind_method(D_METHOD("find_path", "instigator", "start", "goal", "include_start", "travel_distance"), &BG_HexGrid::find_path);
-	ClassDB::bind_method(D_METHOD("comp_priority_item"), &BG_HexGrid::comp_priority_item);
 
 	BIND_ENUM_CONSTANT(ODD_R);
 	BIND_ENUM_CONSTANT(EVEN_R);
@@ -457,6 +456,7 @@ Vector2i BG_HexGrid::get_direction_difference(const Ref<BG_Hex> &hex, const Vect
             } else {
                 return d;
             }
+            break;
         case EVEN_R:
             if (!column_is_odd) {
                 if (d == Vector2i(0, -1)) return Vector2i(1, -1);
@@ -473,6 +473,7 @@ Vector2i BG_HexGrid::get_direction_difference(const Ref<BG_Hex> &hex, const Vect
                 if (d == Vector2i(-1, 0)) return Vector2i(-1, 0);
                 if (d == Vector2i(-1, -1)) return Vector2i(-1, -1);
             }
+            break;
         case ODD_Q:
             if (row_is_odd) {
                 if (d == Vector2i(0, -1)) return Vector2i(0, -1);
@@ -489,6 +490,7 @@ Vector2i BG_HexGrid::get_direction_difference(const Ref<BG_Hex> &hex, const Vect
                 if (d == Vector2i(-1, 0)) return Vector2i(-1, 0);
                 if (d == Vector2i(-1, -1)) return Vector2i(-1, -1);
             }
+            break;
         case EVEN_Q:
             if (!row_is_odd) {
                 if (d == Vector2i(0, -1)) return Vector2i(0, -1);
@@ -505,6 +507,7 @@ Vector2i BG_HexGrid::get_direction_difference(const Ref<BG_Hex> &hex, const Vect
                 if (d == Vector2i(-1, 0)) return Vector2i(-1, 0);
                 if (d == Vector2i(-1, -1)) return Vector2i(-1, -1);
             }
+            break;
     }
     return d;
 }
@@ -570,9 +573,9 @@ Dictionary BG_HexGrid::get_hex_neighbors_qr(const Ref<BG_Hex> &instigator, const
     {
         TypedArray<BG_Hex> cells = find_reachable_cells_in_distance(instigator, from_hex, cell_distance);
 
-        for (uint16_t i = 0; i < cells.size(); ++i) {
+        for (int i = 0; i < cells.size(); ++i) {
             const Ref<BG_Hex> h = cells[i];
-            if (!h->get_is_playable_space()) continue;
+            if (h.is_null() || !h->get_is_playable_space()) continue;
             result[h->get_qr()] = h;
         }
         return result;
@@ -586,25 +589,17 @@ Dictionary BG_HexGrid::get_hex_neighbors_qr(const Ref<BG_Hex> &instigator, const
     }
 
     if (cell_distance > 1) {
-        for (uint8_t i = 1; i < cell_distance; ++i) {
+        for (int i = 1; i < cell_distance; ++i) {
             const TypedArray<Vector2i> keys = result.keys();
-            for (uint16_t v = 0; v < keys.size(); ++v)
+            for (int v = 0; v < keys.size(); ++v)
             {
                 const Ref<BG_Hex> h = result[keys[v]];
                 result.merge(get_hex_neighbors_qr(instigator, h, 1, false));
             }
         }
 
-        // Remove from_hex from the result.
-        for (uint16_t k = 0; k < result.keys().size(); ++k)
-        {
-            const Ref<BG_Hex> h = result[result.keys()[k]];
-            if (h == from_hex) {
-                const Vector2i key = result.keys()[k];
-                result.erase(key);
-                break;
-            }
-        }
+        // Remove from_hex from the result (keys are qr).
+        result.erase(from_hex->get_qr());
     }
 
     return result;
@@ -612,9 +607,8 @@ Dictionary BG_HexGrid::get_hex_neighbors_qr(const Ref<BG_Hex> &instigator, const
 
 void BG_HexGrid::add_hex(const Ref<BG_Hex> &hex)
 {
-    grid_map[hex->get_qr()] = hex;
-
     if (hex.is_null()) return;
+    grid_map[hex->get_qr()] = hex;
     if (grid.is_empty()) {
         grid.append(hex);
         return;
@@ -643,6 +637,7 @@ void BG_HexGrid::add_hex_from_qr(const Vector2i &qr, bool is_empty)
 {
     if (grid_map.has(qr)) {
         UtilityFunctions::print("Grid already has QR:", qr, "Skipped");
+        return;
     }
     Ref<BG_Hex> new_hex = memnew(BG_Hex);
     new_hex->q = qr.x;
@@ -697,22 +692,35 @@ void BG_HexGrid::update_locations(float p_x_offset_percent, float p_y_offset_per
     }
 }
 
-inline static Dictionary make_priority_item(const Ref<BG_Hex> &h, int priority)
+BG_HexGrid::GameDataMap BG_HexGrid::_build_game_data_map() const
 {
-    Dictionary result;
-    result["h"] = h;
-    result["p"] = priority;
+    GameDataMap result;
+    for (int i = 0; i < game_data.size(); ++i) {
+        const Ref<BG_HexGameSaveData> data = game_data[i];
+        if (data.is_null()) continue;
+        if (!result.has(data->get_qr())) // First one wins, same as get_game_data_from_qr().
+            result.insert(data->get_qr(), data);
+    }
     return result;
 }
 
-bool BG_HexGrid::comp_priority_item(const Dictionary &a, const Dictionary &b) const {
-	return int(a["p"]) < int(b["p"]);
+Ref<BG_HexGameSaveData> BG_HexGrid::_get_game_data(const Vector2i &qr, const GameDataMap *game_data_map) const
+{
+    if (game_data_map == nullptr)
+        return get_game_data_from_qr(qr);
+    const Ref<BG_HexGameSaveData> *data = game_data_map->getptr(qr);
+    return data ? *data : Ref<BG_HexGameSaveData>();
 }
 
-inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> &instigator, const Vector2i &qr, bool do_pass_through_check) const
+int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> &instigator, const Vector2i &qr, bool do_pass_through_check) const
 {
-    const Ref<BG_HexGameSaveData> hgsd = get_game_data_from_qr(qr);
-    const Ref<BG_HexGameSaveData> instigator_hgsd = instigator.is_valid() ? get_game_data_from_qr(instigator->get_qr()) : nullptr;
+    return _get_hex_cost(instigator, qr, do_pass_through_check, nullptr);
+}
+
+int BG_HexGrid::_get_hex_cost(const Ref<BG_Hex> &instigator, const Vector2i &qr, bool do_pass_through_check, const GameDataMap *game_data_map) const
+{
+    const Ref<BG_HexGameSaveData> hgsd = _get_game_data(qr, game_data_map);
+    const Ref<BG_HexGameSaveData> instigator_hgsd = instigator.is_valid() ? _get_game_data(instigator->get_qr(), game_data_map) : Ref<BG_HexGameSaveData>();
     const bool is_band = instigator_hgsd.is_valid() ? instigator_hgsd->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::BAND : false;
     const bool is_job = instigator_hgsd.is_valid() ? instigator_hgsd->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::JOB : false;
 
@@ -731,15 +739,16 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> &instigator, const Vector2
             if (h->hex_asset_datas.is_empty()) return 0; // If there's no data, then let's assume we don't want to move in this space...
             for (int i = 0; i < h->hex_asset_datas.size(); ++i) {
                 const Ref<BG_HexVisualAssetData> hvad = h->hex_asset_datas[i];
-                if (hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::CITY || 
+                if (hvad.is_null()) continue;
+                if (hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::CITY ||
                     hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::WALL) {
                     return 0;
                 }
 
                 // If this asset can be destroyed, then allow a job to pass through it if it is destroyed. Otherwise always allow bands to pass through it.
                 if (is_job) {
-                    if (hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::TOWN || 
-                        hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::BARRICADE || 
+                    if (hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::TOWN ||
+                        hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::BARRICADE ||
                         hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::TURRET) {
                         if (do_pass_through_check && hgsd.is_valid() && hgsd->get_asset_type_cost() == 0) {
                             if (hgsd->get_is_destroyed()) return 1;
@@ -749,9 +758,9 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> &instigator, const Vector2
                 }
 
                 if (!do_pass_through_check) {
-                    if (hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::BARRICADE || 
-                        hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::TURRET || 
-                        hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::TOWN || 
+                    if (hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::BARRICADE ||
+                        hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::TURRET ||
+                        hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::TOWN ||
                         hvad->get_hex_type() == BG_HexVisualAssetData::HexVisualAssetTypes::NO_STOP_CELL) {
                         return 0;
                     }
@@ -759,49 +768,51 @@ inline int BG_HexGrid::get_hex_cost(const Ref<BG_Hex> &instigator, const Vector2
             }
         }
     }
-    
+
     if (hgsd.is_valid() && hgsd->get_asset_type_cost() == 0) {
         // Pass through check.
         if (do_pass_through_check && instigator_hgsd.is_valid()) {
-            // Band
+            const BG_BattleBoard_HexTypeDetails *dyn_details = hgsd->get_is_dynamic_type() ? hgsd->get_dyn_hex_type_details() : nullptr;
+            const BG_HexGameSaveData::HexGameAssetTypes asset_type = hgsd->get_asset_type();
+            const bool is_town_barricade_or_turret =
+                asset_type == BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
+                asset_type == BG_HexGameSaveData::HexGameAssetTypes::BARRICADE ||
+                asset_type == BG_HexGameSaveData::HexGameAssetTypes::TURRET;
+
+            // Band: can pass through other bands, towns, barricades, turrets and the city.
             if (is_band) {
 
                 if (hgsd->get_force_pass_through_by_ally()) {
                 }
                 else if (hgsd->get_is_dynamic_type()) {
-                    if (!hgsd->get_dyn_hex_type_details()->get_pass_through_by_ally()) {
+                    if (dyn_details == nullptr || !dyn_details->get_pass_through_by_ally()) {
                         return 0;
                     }
                 }
-                else if (hgsd->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::BAND || // Allow these if band is moving.
-                    hgsd->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
-                    hgsd->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::BARRICADE ||
-                    hgsd->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::TURRET ||
-                    hgsd->get_asset_type() == BG_HexGameSaveData::HexGameAssetTypes::CITY) {
+                else if (asset_type == BG_HexGameSaveData::HexGameAssetTypes::BAND ||
+                    is_town_barricade_or_turret ||
+                    asset_type == BG_HexGameSaveData::HexGameAssetTypes::CITY) {
                     // Do nothing.
                 } else {
                     return 0;
                 }
-            // Job
+            // Job: can pass through other jobs. Towns, barricades and turrets only once they're destroyed.
             } else if (is_job) {
 
                 if (hgsd->get_force_pass_through_by_enemy()) {
                 }
                 else if (hgsd->get_is_dynamic_type()) {
-                    if (!hgsd->get_dyn_hex_type_details()->get_pass_through_by_enemy()) {
-                    }
-                    else if (!hgsd->get_is_destroyed()) { // Allow pass through if it's destroyed.
+                    const bool can_pass = dyn_details != nullptr && dyn_details->get_pass_through_by_enemy();
+                    if (!can_pass && !hgsd->get_is_destroyed()) { // Allow pass through if it's destroyed.
                         return 0;
                     }
                 }
-                else if (hgsd->get_asset_type() != BG_HexGameSaveData::HexGameAssetTypes::TOWN ||
-                    hgsd->get_asset_type() != BG_HexGameSaveData::HexGameAssetTypes::BARRICADE ||
-                    hgsd->get_asset_type() != BG_HexGameSaveData::HexGameAssetTypes::TURRET) {
+                else if (is_town_barricade_or_turret) {
                     if (!hgsd->get_is_destroyed()) { // Allow pass through if it's destroyed.
                         return 0;
                     }
                 }
-                else if (hgsd->get_asset_type() != BG_HexGameSaveData::HexGameAssetTypes::JOB) {
+                else if (asset_type != BG_HexGameSaveData::HexGameAssetTypes::JOB) {
                     return 0;
                 }
             }
@@ -867,6 +878,7 @@ Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_attackable(const Ref<BG_Hex> &fr
         if (data->get_is_destroyed()) continue;
 
         if (data->get_is_dynamic_type()) {
+            if (data->get_dyn_hex_type_details() == nullptr) continue;
             const BG_HexGameSaveData::HexGameAssetTypes game_type = BG_HexGameSaveData::map_asset_type_to_game_type(
                 static_cast<BG_HexVisualAssetData::HexVisualAssetTypes>(data->get_dyn_hex_type_details()->get_hex_type())
             );
@@ -903,7 +915,9 @@ Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_attackable(const Ref<BG_Hex> &fr
         //     }
         // }
 
-        const int d = hex_distance(from_job_hex->get_full_qr(), get_hex_by_qr(data->get_qr())->get_full_qr(), offset_type);
+        const Ref<BG_Hex> data_hex = get_hex_by_qr(data->get_qr());
+        if (data_hex.is_null()) continue; // Game data for a cell that isn't on the grid.
+        const int d = hex_distance(from_job_hex->get_full_qr(), data_hex->get_full_qr(), offset_type);
         if (d < nearest_distance) {
             nearest_distance = d;
             result = data;
@@ -930,10 +944,11 @@ Ref<BG_Hex> BG_HexGrid::get_nearest_empty_cell(const Ref<BG_Hex> &instigator, co
 {
     if (instigator.is_null()) return nullptr;
     if (target.is_null()) return nullptr;
+    const GameDataMap game_data_map = _build_game_data_map(); // One lookup table for the whole search.
 
     { // Bail out early if we're already next to the target cell and we can't move to it.
-        const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ target->get_qr(), /* do_pass_through_check */ false);
-        const int d = hex_distance(instigator->get_full_qr(), get_hex_by_qr(target->get_qr())->get_full_qr(), offset_type);
+        const int hex_cost = _get_hex_cost(/* from_hex */ instigator, /* qr */ target->get_qr(), /* do_pass_through_check */ false, &game_data_map);
+        const int d = hex_distance(instigator->get_full_qr(), target->get_full_qr(), offset_type);
         if (d == 1 && hex_cost == 0) return instigator;
     }
 
@@ -944,11 +959,11 @@ Ref<BG_Hex> BG_HexGrid::get_nearest_empty_cell(const Ref<BG_Hex> &instigator, co
         const Ref<BG_Hex> hex = cells_to_check[i];
 
         if (!hex.is_valid()) continue;
-        const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ hex->get_qr(), /* do_pass_through_check */ false);
+        const int hex_cost = _get_hex_cost(/* from_hex */ instigator, /* qr */ hex->get_qr(), /* do_pass_through_check */ false, &game_data_map);
         if (hex_cost == 0) continue; // Can't move into cell?
 
-        const int d1 = hex_distance(instigator->get_full_qr(), get_hex_by_qr(hex->get_qr())->get_full_qr(), offset_type);
-        const int d2 = hex_distance(target->get_full_qr(), get_hex_by_qr(hex->get_qr())->get_full_qr(), offset_type) * 100; // Weight getting to the target more.
+        const int d1 = hex_distance(instigator->get_full_qr(), hex->get_full_qr(), offset_type);
+        const int d2 = hex_distance(target->get_full_qr(), hex->get_full_qr(), offset_type) * 100; // Weight getting to the target more.
         const int dist = d1 + d2;
         if (dist < nearest_distance) {
             nearest_distance = dist;
@@ -992,13 +1007,14 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> &instigator, const Re
 {
     if (start.is_null()) return {};
     if (goal.is_null()) return {};
+    const GameDataMap game_data_map = _build_game_data_map(); // One lookup table for the whole search.
     if (start == goal) {
         if (include_start) return {start};
         return {};
     }
 
     // If the goal is not a empty cell, then find a neighoring one that is empty.
-    const int goal_hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ goal->get_qr(), /* do_pass_through_check */ false);
+    const int goal_hex_cost = _get_hex_cost(/* from_hex */ instigator, /* qr */ goal->get_qr(), /* do_pass_through_check */ false, &game_data_map);
     if (goal_hex_cost == 0) {
         Ref<BG_Hex> better_goal_cell = get_nearest_empty_cell_neighoring_target(instigator, goal);
         if (better_goal_cell.is_valid()) {
@@ -1022,7 +1038,7 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> &instigator, const Re
 
     // A cell any unit could actually stop on (friendlies block stopping, same check the end-of-path trim uses).
     auto can_land_on = [&](const Ref<BG_Hex> &h) -> bool {
-        return get_hex_cost(/* from_hex */ nullptr, /* qr */ h->get_qr(), /* do_pass_through_check */ false) != 0;
+        return _get_hex_cost(/* from_hex */ nullptr, /* qr */ h->get_qr(), /* do_pass_through_check */ false, &game_data_map) != 0;
     };
 
     HashMap<Vector2i, FindPathNode> nodes;
@@ -1086,7 +1102,7 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> &instigator, const Re
             const FindPathNode *existing = nodes.getptr(next_qr);
             if (existing != nullptr && existing->closed) continue;
 
-            const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ next_qr, /* do_pass_through_check */ allow_pass_through);
+            const int hex_cost = _get_hex_cost(/* from_hex */ instigator, /* qr */ next_qr, /* do_pass_through_check */ allow_pass_through, &game_data_map);
             if (hex_cost == 0) { // Can't move into cell?
                 // Is the cell the goal? If so, make the current cell the end of the path.
                 // But ensure the whole path isn't just walk throughs without any landings.
@@ -1103,7 +1119,7 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> &instigator, const Re
 
             // Pass through only = we can walk through it, but not stop on it. Only possible if pass through was allowed.
             const bool is_pass_through_only = allow_pass_through &&
-                get_hex_cost(/* from_hex */ instigator, /* qr */ next_qr, /* do_pass_through_check */ false) == 0;
+                _get_hex_cost(/* from_hex */ instigator, /* qr */ next_qr, /* do_pass_through_check */ false, &game_data_map) == 0;
 
             FindPathNode next_node;
             next_node.hex = next_hex;
@@ -1136,7 +1152,7 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> &instigator, const Re
 
     // Since we allow building paths through friendlies, let's ensure that the path doesn't end on a friendly.
     if (!result.is_empty()) {
-        while (get_hex_cost(/* from_hex */ nullptr, /* qr */ Ref<BG_Hex>(result[0])->get_qr(), /* do_pass_through_check */ false) == 0 && 
+        while (_get_hex_cost(/* from_hex */ nullptr, /* qr */ Ref<BG_Hex>(result[0])->get_qr(), /* do_pass_through_check */ false, &game_data_map) == 0 && 
                 Ref<BG_Hex>(result[0]) != instigator) {
             result.remove_at(0);
             if (result.is_empty()) break;
@@ -1153,6 +1169,7 @@ TypedArray<BG_Hex> BG_HexGrid::find_reachable_cells_in_distance(const Ref<BG_Hex
 {
     TypedArray<BG_Hex> result;
     if (start.is_null() || distance < 0) return result;
+    const GameDataMap game_data_map = _build_game_data_map(); // One lookup table for the whole search.
 
     // Same order as get_hex_neighbors_fast, so results come back in the same order as before.
     const Vector2i directions[6] = {
@@ -1184,7 +1201,7 @@ TypedArray<BG_Hex> BG_HexGrid::find_reachable_cells_in_distance(const Ref<BG_Hex
         const int current_depth = queue[index].depth;
 
         // Leave out cells we can't stop on (e.g. a friendly unit is there), but still walk through them.
-        if (get_hex_cost(/* from_hex */ nullptr, /* qr */ current_hex->get_qr(), /* do_pass_through_check */ false) != 0) {
+        if (_get_hex_cost(/* from_hex */ nullptr, /* qr */ current_hex->get_qr(), /* do_pass_through_check */ false, &game_data_map) != 0) {
             result.append(current_hex);
         }
 
@@ -1197,7 +1214,7 @@ TypedArray<BG_Hex> BG_HexGrid::find_reachable_cells_in_distance(const Ref<BG_Hex
             const Vector2i next_qr = next_hex->get_qr();
             if (visited.has(next_qr)) continue;
 
-            const int hex_cost = get_hex_cost(/* from_hex */ instigator, /* qr */ next_qr, /* do_pass_through_check */ true);
+            const int hex_cost = _get_hex_cost(/* from_hex */ instigator, /* qr */ next_qr, /* do_pass_through_check */ true, &game_data_map);
             if (hex_cost == 0) continue;
 
             visited.insert(next_qr);

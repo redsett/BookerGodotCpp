@@ -42,9 +42,13 @@ protected:
 public:
 	void _init(Object *initial_value, Ref<BG_Reactive> initial_owner = nullptr);
 
-	Object *value;
-	Object *get_value() const { return value; }
+	// Stored as an instance id (ObjectDB returns nullptr once the object is freed), plus a reference that keeps
+	// RefCounted values alive. A raw pointer could dangle, and was left uninitialized when made with .new().
+	uint64_t value_id = 0;
+	Ref<RefCounted> value_ref;
+	Object *get_value() const { return value_id == 0 ? nullptr : ObjectDB::get_instance(value_id); }
 	void set_value(Object *v);
+	void _store_value(Object *v);
 };
 
 ////

@@ -58,18 +58,24 @@ void BG_ReactiveObject::_bind_methods()
 void BG_ReactiveObject::_init(Object *initial_value, Ref<BG_Reactive> initial_owner)
 {
 	BG_Reactive::_init(initial_owner);
-	value = initial_value;
+	_store_value(initial_value);
+}
+
+void BG_ReactiveObject::_store_value(Object *v)
+{
+	value_id = v ? uint64_t(v->get_instance_id()) : 0;
+	value_ref = Ref<RefCounted>(cast_to<RefCounted>(v));
 }
 
 void BG_ReactiveObject::set_value(Object *v)
 {
-	Ref<BG_Reactive> reactive_ptr = cast_to<BG_Reactive>(value);
+	Ref<BG_Reactive> reactive_ptr = cast_to<BG_Reactive>(get_value());
 	if (reactive_ptr.is_valid()) {
 		disconnect_reactive_changed(reactive_ptr);
 	}
-	value = v;
+	_store_value(v);
 
-	Ref<BG_Reactive> reactive_ptrr = cast_to<BG_Reactive>(value);
+	Ref<BG_Reactive> reactive_ptrr = cast_to<BG_Reactive>(get_value());
 	if (reactive_ptrr.is_valid()) {
 		connect_reactive_changed(reactive_ptrr);
 	}

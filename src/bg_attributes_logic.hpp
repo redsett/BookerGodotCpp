@@ -32,6 +32,7 @@ public:
 
     StringName condition_attribute;
     StringName get_condition_attribute() const { return condition_attribute; }
+    void set_condition_attribute(const StringName &v) { condition_attribute = v; }
 
     ConditionTypes condition_type = ConditionTypes::EQUAL_TO_OR_GREATER_THAN;
     ConditionTypes get_condition_type() const { return condition_type; }
@@ -39,6 +40,7 @@ public:
 
     int condition_value = 0;
     int get_condition_value() const { return condition_value; }
+    void set_condition_value(int v) { condition_value = v; }
 
     // True if `value` meets this condition.
     bool is_met(int value) const;
@@ -72,15 +74,19 @@ public:
 
     StringName effect_id;
     StringName get_effect_id() const { return effect_id; }
+    void set_effect_id(const StringName &v) { effect_id = v; }
 
     TypedArray<BG_Skill_LockUnLock_Condition> unlock_conditions;
     TypedArray<BG_Skill_LockUnLock_Condition> get_unlock_conditions() const { return unlock_conditions; }
+    void set_unlock_conditions(const TypedArray<BG_Skill_LockUnLock_Condition> &v) { unlock_conditions = v; }
 
     TypedArray<BG_Skill_LockUnLock_Condition> lock_conditions;
     TypedArray<BG_Skill_LockUnLock_Condition> get_lock_conditions() const { return lock_conditions; }
+    void set_lock_conditions(const TypedArray<BG_Skill_LockUnLock_Condition> &v) { lock_conditions = v; }
 
     bool is_passive = false;
     bool get_is_passive() const { return is_passive; }
+    void set_is_passive(bool v) { is_passive = v; }
 
     bool are_unlock_conditions_met(const Dictionary &attributes) const;
     bool is_locked_out(const Dictionary &attributes) const;

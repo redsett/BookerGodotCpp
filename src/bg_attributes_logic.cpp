@@ -14,6 +14,8 @@ void BG_Skill_LockUnLock_Condition::_bind_methods()
     ClassDB::bind_method(D_METHOD("get_condition_type"), &BG_Skill_LockUnLock_Condition::get_condition_type);
     ClassDB::bind_method(D_METHOD("set_condition_type"), &BG_Skill_LockUnLock_Condition::set_condition_type);
     ClassDB::bind_method(D_METHOD("get_condition_value"), &BG_Skill_LockUnLock_Condition::get_condition_value);
+    ClassDB::bind_method(D_METHOD("set_condition_attribute", "value"), &BG_Skill_LockUnLock_Condition::set_condition_attribute);
+    ClassDB::bind_method(D_METHOD("set_condition_value", "value"), &BG_Skill_LockUnLock_Condition::set_condition_value);
     ClassDB::bind_method(D_METHOD("is_met", "value"), &BG_Skill_LockUnLock_Condition::is_met);
     ClassDB::bind_method(D_METHOD("is_met_by_attributes", "attributes"), &BG_Skill_LockUnLock_Condition::is_met_by_attributes);
     ClassDB::bind_method(D_METHOD("get_points_until_met", "value"), &BG_Skill_LockUnLock_Condition::get_points_until_met);
@@ -22,6 +24,8 @@ void BG_Skill_LockUnLock_Condition::_bind_methods()
     ADD_PROPERTY(PropertyInfo(Variant::INT, "condition_type", PROPERTY_HINT_ENUM,
                               "EQUAL_TO_OR_GREATER_THAN:0,GREATER_THAN:1,EQUAL_TO_OR_LESSER_THAN:2,LESSER_THAN:3"),
                  "set_condition_type", "get_condition_type");
+    ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "condition_attribute"), "set_condition_attribute", "get_condition_attribute");
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "condition_value"), "set_condition_value", "get_condition_value");
 
     BIND_ENUM_CONSTANT(EQUAL_TO_OR_GREATER_THAN);
     BIND_ENUM_CONSTANT(GREATER_THAN);
@@ -80,12 +84,22 @@ void BG_AttributeTreeSkillData::_bind_methods()
     ClassDB::bind_method(D_METHOD("get_unlock_conditions"), &BG_AttributeTreeSkillData::get_unlock_conditions);
     ClassDB::bind_method(D_METHOD("get_lock_conditions"), &BG_AttributeTreeSkillData::get_lock_conditions);
     ClassDB::bind_method(D_METHOD("get_is_passive"), &BG_AttributeTreeSkillData::get_is_passive);
+    ClassDB::bind_method(D_METHOD("set_effect_id", "value"), &BG_AttributeTreeSkillData::set_effect_id);
+    ClassDB::bind_method(D_METHOD("set_unlock_conditions", "value"), &BG_AttributeTreeSkillData::set_unlock_conditions);
+    ClassDB::bind_method(D_METHOD("set_lock_conditions", "value"), &BG_AttributeTreeSkillData::set_lock_conditions);
+    ClassDB::bind_method(D_METHOD("set_is_passive", "value"), &BG_AttributeTreeSkillData::set_is_passive);
     ClassDB::bind_method(D_METHOD("are_unlock_conditions_met", "attributes"), &BG_AttributeTreeSkillData::are_unlock_conditions_met);
     ClassDB::bind_method(D_METHOD("is_locked_out", "attributes"), &BG_AttributeTreeSkillData::is_locked_out);
     ClassDB::bind_method(D_METHOD("get_state", "attributes"), &BG_AttributeTreeSkillData::get_state);
     ClassDB::bind_method(D_METHOD("get_points_until_locked_out", "attributes"), &BG_AttributeTreeSkillData::get_points_until_locked_out);
     ClassDB::bind_method(D_METHOD("get_unlock_cost"), &BG_AttributeTreeSkillData::get_unlock_cost);
     ClassDB::bind_method(D_METHOD("get_column_attribute", "column_order"), &BG_AttributeTreeSkillData::get_column_attribute);
+
+    // Settable so tests and tools can build skills without database data.
+    ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "effect_id"), "set_effect_id", "get_effect_id");
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "is_passive"), "set_is_passive", "get_is_passive");
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "unlock_conditions", PROPERTY_HINT_ARRAY_TYPE, "BG_Skill_LockUnLock_Condition"), "set_unlock_conditions", "get_unlock_conditions");
+    ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "lock_conditions", PROPERTY_HINT_ARRAY_TYPE, "BG_Skill_LockUnLock_Condition"), "set_lock_conditions", "get_lock_conditions");
 
     BIND_ENUM_CONSTANT(LOCKED);
     BIND_ENUM_CONSTANT(UNLOCKED);
