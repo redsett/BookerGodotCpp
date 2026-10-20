@@ -30,29 +30,23 @@ public:
     const StringName &get_focus_layer_name() const { return _focus_layer_name; }
     void set_focus_layer_name(const StringName &p_focus_layer_name) { _focus_layer_name = p_focus_layer_name; }
 
-    Control *_parent_control;
-    Control *get_parent_control() const {
-        if (bg_is_instance_valid(_parent_control))
-            return _parent_control;
-        return nullptr;
-    }
-    void set_parent_control(Control *p_parent_control) { _parent_control = p_parent_control; }
+    // The controls are stored as instance ids, not pointers. These nodes can be freed while the layer still exists
+    // (scene changes, queue_free), and a stale pointer can't be checked safely. ObjectDB returns nullptr for a freed id.
+    static uint64_t _get_id(const Object *obj) { return obj ? uint64_t(obj->get_instance_id()) : 0; }
+    template <typename T>
+    static T *_get_from_id(uint64_t id) { return id == 0 ? nullptr : Object::cast_to<T>(ObjectDB::get_instance(id)); }
 
-    Control *_focused_control;
-    Control *get_focused_control() const {
-        if (bg_is_instance_valid(_focused_control))
-            return _focused_control;
-        return nullptr;
-    }
-    void set_focused_control(Control *p_focused_control) { _focused_control = p_focused_control; }
+    uint64_t _parent_control_id = 0;
+    Control *get_parent_control() const { return _get_from_id<Control>(_parent_control_id); }
+    void set_parent_control(Control *p_parent_control) { _parent_control_id = _get_id(p_parent_control); }
 
-    Button *_back_button;
-    Button *get_back_button() const {
-        if (bg_is_instance_valid(_back_button))
-            return _back_button;
-        return nullptr;
-    }
-    void set_back_button(Button *p_back_button) { _back_button = p_back_button; }
+    uint64_t _focused_control_id = 0;
+    Control *get_focused_control() const { return _get_from_id<Control>(_focused_control_id); }
+    void set_focused_control(Control *p_focused_control) { _focused_control_id = _get_id(p_focused_control); }
+
+    uint64_t _back_button_id = 0;
+    Button *get_back_button() const { return _get_from_id<Button>(_back_button_id); }
+    void set_back_button(Button *p_back_button) { _back_button_id = _get_id(p_back_button); }
 
     bool _should_loop_vertically = false;
     bool get_should_loop_vertically() const { return _should_loop_vertically; }

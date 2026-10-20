@@ -138,12 +138,14 @@ void BG_Focus_Layers::set_focus_layer(const StringName &p_layer_name)
 void BG_Focus_Layers::remove_focus_layer(const StringName &p_layer_name, bool p_full_remove)
 {
     //ERR_FAIL_COND(!_focus_layer_controls.has(p_layer_name));
-	if (_focus_layer_stack.has(p_layer_name)) {
+    const bool was_in_stack = _focus_layer_stack.has(p_layer_name);
+	if (was_in_stack) {
         _focus_layer_stack.erase(p_layer_name);
-    } else {
+    } else if (!p_full_remove) {
         return;
     }
 
+	// A layer can exist without being on the stack (added with select_layer = false), so a full remove still deletes it.
 	if (p_full_remove) {
         for (int i = 0; i < _focus_layers.size(); ++i)
         {
@@ -156,7 +158,7 @@ void BG_Focus_Layers::remove_focus_layer(const StringName &p_layer_name, bool p_
             }
         }
     }
-	if (!_focus_layer_stack.is_empty()) {
+	if (was_in_stack && !_focus_layer_stack.is_empty()) {
 		_focus_active_control();
     }
 }
