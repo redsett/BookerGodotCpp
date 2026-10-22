@@ -4773,5 +4773,6 @@ String BG_Booker_DB::get_localize_string(const StringName &sheet_name, const Str
 		}
 	}
 
-	return result;
+	// A "\n" typed in the localization data becomes a real line break.
+	return result.replace("\\n", "\n");
 }
