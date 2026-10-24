@@ -2000,6 +2000,7 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_item_drop_pool_by_id"), &BG_Booker_DB::get_item_drop_pool_by_id);
 	ClassDB::bind_method(D_METHOD("get_effects"), &BG_Booker_DB::get_effects);
 	ClassDB::bind_method(D_METHOD("get_band_info"), &BG_Booker_DB::get_band_info);
+	ClassDB::bind_method(D_METHOD("get_skills_data"), &BG_Booker_DB::get_skills_data);
 	ClassDB::bind_method(D_METHOD("create_preset_band_by_id", "id", "existing_bands"), &BG_Booker_DB::create_preset_band_by_id);
 	ClassDB::bind_method(D_METHOD("get_preset_band_params_by_id", "id"), &BG_Booker_DB::get_preset_band_params_by_id);
 	ClassDB::bind_method(D_METHOD("get_item_slot_types"), &BG_Booker_DB::get_item_slot_types);
@@ -2879,6 +2880,7 @@ void BG_Booker_DB::refresh_data()
 	const String modding_dber_data_path = modding_path + booker_dber_data_file_name;
 
 	try_parse_bder_data("res://" + booker_dber_data_file_name);
+	try_parse_skills_data("res://" + skills_file_name); // After the castes exist, since it fills their attribute trees.
 
 	// If the mod data exists, then let it override any data that it has.
 	// if (FileAccess::file_exists(modding_dber_data_path))
@@ -2888,6 +2890,66 @@ void BG_Booker_DB::refresh_data()
 	// }
 
 	emit_signal(refreshed_data_signal_name);
+}
+
+// skills.json (from the Skills Editor) is where tree skills live, so it replaces every caste's attribute tree from the
+// DBer data. Each skill goes in the tree of its "caste". Child castes also get their parent's skills, on top
+// (StaticGlobals.get_caste_attribute_tree_skills). Unlock and lockout values are ">=" conditions.
+void BG_Booker_DB::try_parse_skills_data(const String &file_path)
+{
+	skills_data = Dictionary();
+	if (!FileAccess::file_exists(file_path))
+		return; // No skills.json yet: castes keep their trees from the DBer data.
+	skills_data = BG_JsonUtils::ParseJsonFile(file_path);
+	const Array skills = skills_data.get("skills", Array());
+
+	for (int c = 0; c < band_info->unit_castes.size(); ++c)
+	{
+		BG_UnitCaste *caste = cast_to<BG_UnitCaste>(band_info->unit_castes[c]);
+		if (caste != nullptr)
+			caste->attribute_skill_tree_datas.clear();
+	}
+
+	auto add_conditions = [](const Dictionary &values, TypedArray<BG_Skill_LockUnLock_Condition> &conditions) {
+		const Array attribute_ids = values.keys();
+		for (int k = 0; k < attribute_ids.size(); ++k)
+		{
+			BG_Skill_LockUnLock_Condition *condition = memnew(BG_Skill_LockUnLock_Condition);
+			condition->condition_attribute = StringName(attribute_ids[k]);
+			condition->condition_type = BG_Skill_LockUnLock_Condition::EQUAL_TO_OR_GREATER_THAN;
+			condition->condition_value = int(values[attribute_ids[k]]);
+			conditions.append(condition);
+		}
+	};
+
+	for (int i = 0; i < skills.size(); ++i)
+	{
+		const Dictionary skill = skills[i];
+		const StringName skill_id = StringName(skill.get("id", ""));
+		const StringName caste_id = StringName(skill.get("caste", ""));
+		BG_UnitCaste *caste = nullptr;
+		for (int c = 0; c < band_info->unit_castes.size(); ++c)
+		{
+			BG_UnitCaste *candidate = cast_to<BG_UnitCaste>(band_info->unit_castes[c]);
+			if (candidate != nullptr && candidate->id == caste_id)
+			{
+				caste = candidate;
+				break;
+			}
+		}
+		if (caste == nullptr)
+		{
+			UtilityFunctions::push_warning("skills.json: skill \"", skill_id, "\" has caste \"", caste_id, "\", which doesn't exist. It won't be in any tree.");
+			continue;
+		}
+
+		BG_AttributeTreeSkillData *tree_skill = memnew(BG_AttributeTreeSkillData);
+		tree_skill->effect_id = skill_id;
+		tree_skill->is_passive = String(skill.get("kind", "active")) != "active";
+		add_conditions(skill.get("unlock", Dictionary()), tree_skill->unlock_conditions);
+		add_conditions(skill.get("lockout", Dictionary()), tree_skill->lock_conditions);
+		caste->attribute_skill_tree_datas.append(tree_skill);
+	}
 }
 
 /* static */ void BG_Booker_DB::timer_test(const Callable &callable)
