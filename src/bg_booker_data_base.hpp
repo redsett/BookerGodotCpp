@@ -2306,8 +2306,6 @@ protected:
 	static void _bind_methods();
 
 	const String booker_dber_data_file_name = "booker_dber_data.json";
-	// Written by the Skills Editor (addons/booker_skills_editor).
-	const String skills_file_name = "skills.json";
 
 public:
 	BG_Booker_DB();
@@ -2419,8 +2417,9 @@ public:
 	BG_BandInfo *band_info = nullptr;
 	BG_BandInfo *get_band_info() const { return band_info; }
 
-	// skills.json as parsed: {"version", "classes", "skills": [...]}. Empty if there's no skills.json.
-	// GDScript builds the runtime skills from it (BG_SkillLibrary). It also fills every caste's attribute tree.
+	// The skills from DBer's Skills tab ("skills_data" in booker_dber_data.json): {"version", "classes", "skills": [...]}.
+	// Empty if the DBer data has none. GDScript builds the runtime skills from it (BG_SkillLibrary). It also fills
+	// every caste's attribute tree.
 	Dictionary skills_data;
 	Dictionary get_skills_data() const { return skills_data; }
 	Ref<BG_Band> create_preset_band_by_id(const StringName &id, const TypedArray<BG_Band> &existing_bands) const;
@@ -2474,7 +2473,7 @@ private:
 
 	void try_parse_data(const String &file_path);
 	void try_parse_bder_data(const String &file_path);
-	void try_parse_skills_data(const String &file_path);
+	void try_parse_skills_data(const Dictionary &p_skills_data);
 
 	BG_BaseStat *get_stat_from_unique_id(int unique_id) const;
 };

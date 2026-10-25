@@ -2879,8 +2879,7 @@ void BG_Booker_DB::refresh_data()
 	//
 	const String modding_dber_data_path = modding_path + booker_dber_data_file_name;
 
-	try_parse_bder_data("res://" + booker_dber_data_file_name);
-	try_parse_skills_data("res://" + skills_file_name); // After the castes exist, since it fills their attribute trees.
+	try_parse_bder_data("res://" + booker_dber_data_file_name); // Also parses the skills (try_parse_skills_data).
 
 	// If the mod data exists, then let it override any data that it has.
 	// if (FileAccess::file_exists(modding_dber_data_path))
@@ -2892,15 +2891,15 @@ void BG_Booker_DB::refresh_data()
 	emit_signal(refreshed_data_signal_name);
 }
 
-// skills.json (from the Skills Editor) is where tree skills live, so it replaces every caste's attribute tree from the
-// DBer data. Each skill goes in the tree of its "caste". Child castes also get their parent's skills, on top
-// (StaticGlobals.get_caste_attribute_tree_skills). Unlock and lockout values are ">=" conditions.
-void BG_Booker_DB::try_parse_skills_data(const String &file_path)
+// The skills from DBer's Skills tab ("skills_data" in the DBer data) are where tree skills live, so they replace every
+// caste's attribute tree from the Caste_Types sheet. Each skill goes in the tree of its "caste". Child castes also get
+// their parent's skills, on top (StaticGlobals.get_caste_attribute_tree_skills). Unlock and lockout values are ">="
+// conditions. Called at the end of try_parse_bder_data, after the castes exist.
+void BG_Booker_DB::try_parse_skills_data(const Dictionary &p_skills_data)
 {
-	skills_data = Dictionary();
-	if (!FileAccess::file_exists(file_path))
-		return; // No skills.json yet: castes keep their trees from the DBer data.
-	skills_data = BG_JsonUtils::ParseJsonFile(file_path);
+	skills_data = p_skills_data;
+	if (skills_data.is_empty())
+		return; // No skills in the DBer data: castes keep their trees from the Caste_Types sheet.
 	const Array skills = skills_data.get("skills", Array());
 
 	for (int c = 0; c < band_info->unit_castes.size(); ++c)
@@ -2939,7 +2938,7 @@ void BG_Booker_DB::try_parse_skills_data(const String &file_path)
 		}
 		if (caste == nullptr)
 		{
-			UtilityFunctions::push_warning("skills.json: skill \"", skill_id, "\" has caste \"", caste_id, "\", which doesn't exist. It won't be in any tree.");
+			UtilityFunctions::push_warning("DBer skills: skill \"", skill_id, "\" has caste \"", caste_id, "\", which doesn't exist. It won't be in any tree.");
 			continue;
 		}
 
@@ -4559,6 +4558,9 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			two_der_data_entries.append(new_twoder_class);
 		}
 	}
+
+	// Skills last: they fill the attribute trees of the castes parsed above.
+	try_parse_skills_data(data.get("skills_data", Dictionary()));
 }
 
 BG_Booker_DB::BG_Booker_DB()
