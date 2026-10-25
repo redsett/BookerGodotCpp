@@ -2461,8 +2461,12 @@ public:
 
 	bool revert_localization_to_english = true;
 	void set_revert_localization_to_english(bool revert) { revert_localization_to_english = revert; }
-	// Sheet Name, Key, Data
+	// The text from DBer's Localization tab ("localization_data" in the DBer data): {sheet: {key: [line, ...]}}, where a
+	// line is {"code_start", "code_end", language: text}.
+	Dictionary localization_source;
+	// Entries made from localization_source, by "sheet|language", then key.
 	HashMap<StringName, HashMap<StringName, TypedArray<BG_LocalizeEntryData>>> localize_data;
+	void clear_localize_data();
 	TypedArray<BG_LocalizeEntryData> get_localize_data(const StringName &sheet_name, const StringName &key, const StringName &language);
 	String get_localize_string(const StringName &sheet_name, const StringName &key, const StringName &language, bool ignore_code_data = false);
 
@@ -2474,6 +2478,7 @@ private:
 	void try_parse_data(const String &file_path);
 	void try_parse_bder_data(const String &file_path);
 	void try_parse_skills_data(const Dictionary &p_skills_data);
+	void try_parse_localization_data(const Dictionary &p_localization_data);
 
 	BG_BaseStat *get_stat_from_unique_id(int unique_id) const;
 };

@@ -4561,6 +4561,8 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 
 	// Skills last: they fill the attribute trees of the castes parsed above.
 	try_parse_skills_data(data.get("skills_data", Dictionary()));
+
+	try_parse_localization_data(data.get("localization_data", Dictionary()));
 }
 
 BG_Booker_DB::BG_Booker_DB()
@@ -4574,16 +4576,7 @@ BG_Booker_DB::~BG_Booker_DB()
 	ERR_FAIL_COND(singleton != this);
 	singleton = nullptr;
 
-	for (const auto &pair : localize_data) {
-		for (const auto &pair_two : pair.value) {
-			for (int i = 0; i < pair_two.value.size(); ++i) {
-				BG_LocalizeEntryData *d = cast_to<BG_LocalizeEntryData>(pair_two.value[i]);
-				if (BG_Booker_DB::bg_is_instance_valid(d))
-					memdelete(d);
-			}
-		}
-	}
-	localize_data.clear();
+	clear_localize_data();
 
 	free_all_params();
 }
@@ -4726,98 +4719,64 @@ void BG_Booker_DB::free_all_params()
 	two_der_data_entries.clear();
 }
 
+// A key's lines in one language, from the DBer data (localization_source). Cached per sheet and language.
+// A missing or empty translation falls back to English when revert_localization_to_english is on.
 TypedArray<BG_LocalizeEntryData> BG_Booker_DB::get_localize_data(const StringName &sheet_name, const StringName &key, const StringName &language)
 {
-	// Check if we already cached it.
-	if (localize_data.has(sheet_name)) {
-		if (localize_data[sheet_name].has(key)) {
-			return localize_data[sheet_name][key];
-		}
-	}
-	else {
-		localize_data[sheet_name] = HashMap<StringName, TypedArray<BG_LocalizeEntryData>>();
+	const StringName cache_name = String(sheet_name) + "|" + String(language);
+	if (localize_data.has(cache_name) && localize_data[cache_name].has(key)) {
+		return localize_data[cache_name][key];
 	}
 
-	// Open and read the file.
 	const String key_as_string = String(key);
 	ERR_FAIL_COND_V_EDMSG(key_as_string == "", {}, "ERROR : Localization key is \"\", sheet: " + sheet_name);
+	const Dictionary sheet = localization_source.get(String(sheet_name), Dictionary());
+	ERR_FAIL_COND_V_EDMSG(sheet.is_empty(), {}, "ERROR : No localization sheet: " + sheet_name + " (DBer's Localization tab).");
+	const Array lines = sheet.get(key_as_string, Array());
+	ERR_FAIL_COND_V_EDMSG(lines.is_empty(), {}, "ERROR : Could not find localization data for, sheet: " + sheet_name + ", key: " + key + ", langauge: " + language);
 
-	const String actual_sheet_name = "BookerText - " + String(sheet_name) + ".tsv";
-	const String file_path = "res://Localization/" + actual_sheet_name;
-	const Ref<FileAccess> file = FileAccess::open(file_path, FileAccess::READ);
-	ERR_FAIL_COND_V_EDMSG(file.is_null(), {}, "ERROR : Could not open localization file : " + file_path);
-
-	
-	// Lambda for creating a new entry.
-    auto create_new_entry = [](const PackedStringArray &sd, const uint8_t lang_index) -> BG_LocalizeEntryData * {
-		BG_LocalizeEntryData *new_localization_class = memnew(BG_LocalizeEntryData);
-		new_localization_class->code_start = sd[1];
-		new_localization_class->code_end = sd[2];
-		new_localization_class->text = sd[lang_index];
-		return new_localization_class;
-    };
-	
-	// Go through line by line.
 	const String language_as_string = String(language);
-	uint8_t language_index = 0;
-	uint8_t number_of_columns = 0;
 	TypedArray<BG_LocalizeEntryData> result = TypedArray<BG_LocalizeEntryData>();
-	bool found_key = false;
-	bool is_first_line = true;
-	while (!file->eof_reached()) {
-		const String line = file->get_line();
-		if (found_key && !line.contains("\t")) {
-			if (found_key && line == "--") break;
-			BG_LocalizeEntryData *d = cast_to<BG_LocalizeEntryData>(result[result.size() - 1]);
-			if (line == "\"")
-				d->text += line.replace("\"", "\n\n");
-			else
-				d->text += "\n" + line.replace("\"", "");
-			continue;
+	for (int i = 0; i < lines.size(); ++i) {
+		const Dictionary line = lines[i];
+		BG_LocalizeEntryData *entry = memnew(BG_LocalizeEntryData);
+		entry->code_start = line.get("code_start", "");
+		entry->code_end = line.get("code_end", "");
+		String text = line.get(language_as_string, "");
+		if (text.is_empty() && revert_localization_to_english && language_as_string != "en") {
+			text = line.get("en", "");
 		}
-		const PackedStringArray line_data = line.replace("\"", "").split("\t");
-
-		if (is_first_line) {
-			ERR_FAIL_COND_V_EDMSG(line_data.size() < 1, {}, "ERROR : Localization data has no lines?, sheet: " + sheet_name);
-			is_first_line = false;
-
-			number_of_columns = line_data.size();
-
-			for (uint8_t i = 3; i < number_of_columns; ++i) {
-				if (line_data[i] == language_as_string) {
-					language_index = i;
-					break;
-				}
-			}
-
-			if (revert_localization_to_english && language_index == 0) {
-				file->close();
-				ERR_FAIL_COND_V_EDMSG(true, get_localize_data(sheet_name, key, "en"), "ERROR : Could not find localization data for given language, sheet: " + sheet_name + ", key: " + key + ", langauge: " + language + ". Returning english version instead.");
-			}
-			else {
-				if (language_index == 0) {
-					file->close();
-					ERR_FAIL_COND_V_EDMSG(true, {}, "ERROR : Localization language not found in sheet: " + sheet_name + ", langauge: " + language);
-				}
-			}
-			continue;
+		else if (!line.has(language_as_string)) {
+			ERR_PRINT_ED("ERROR : Localization language not found in sheet: " + sheet_name + ", langauge: " + language);
 		}
-		
-		if (found_key && !line_data[0].is_empty()) break;
-
-		if (!found_key && key_as_string != line_data[0]) continue; // Check if it's the correct key.
-		result.append(create_new_entry(line_data, language_index));
-		found_key = true;
-	}
-	file->close();
-
-	if (revert_localization_to_english && result.is_empty() && language_as_string != "en") {
-		ERR_FAIL_COND_V_EDMSG(true, get_localize_data(sheet_name, key, "en"), "ERROR : Could not find localization data for given language, sheet: " + sheet_name + ", key: " + key + ", langauge: " + language + ". Returning english version instead.");
+		entry->text = text;
+		result.append(entry);
 	}
 
-	ERR_FAIL_COND_V_EDMSG(result.is_empty(), {}, "ERROR : Could not find localization data for, sheet: " + sheet_name + ", key: " + key + ", langauge: " + language);
-	localize_data[sheet_name][key] = result;
+	localize_data[cache_name][key] = result;
 	return result;
+}
+
+void BG_Booker_DB::clear_localize_data()
+{
+	for (const auto &pair : localize_data) {
+		for (const auto &pair_two : pair.value) {
+			for (int i = 0; i < pair_two.value.size(); ++i) {
+				BG_LocalizeEntryData *d = cast_to<BG_LocalizeEntryData>(pair_two.value[i]);
+				if (BG_Booker_DB::bg_is_instance_valid(d))
+					memdelete(d);
+			}
+		}
+	}
+	localize_data.clear();
+}
+
+// The text from DBer's Localization tab. Called at the end of try_parse_bder_data.
+void BG_Booker_DB::try_parse_localization_data(const Dictionary &p_localization_data)
+{
+	clear_localize_data();
+	localization_source = p_localization_data;
+	ERR_FAIL_COND_EDMSG(localization_source.is_empty(), "ERROR : The DBer data has no localization_data (DBer's Localization tab).");
 }
 
 String BG_Booker_DB::get_localize_string(const StringName &sheet_name, const StringName &key, const StringName &language, bool ignore_code_data)
