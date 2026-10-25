@@ -91,46 +91,49 @@ static fraction_struct get_fract(double input)
     // std::cout << numerator << " / " << denominator << std::endl;
 }
 
-static auto get_find_data_by_param_name = [](const String &param_name, const Array &array_to_parse) -> Dictionary {
-	for (int i = 0; i < array_to_parse.size(); ++i) {
-		const Dictionary entry = array_to_parse[i];
-		const String para_name = entry["param_name"];
-		if (param_name == para_name) {
-			return entry;
-		}
-	}
-	return {};
-};
+// Reading the DBer data (booker_dber_data.json, written by DBer's StaticFuncs.export_data). It's flat:
+// - Rows are Dictionaries, {column name: value}. A content entry's misc params are fields of the entry itself.
+// - Values are plain: numbers, strings and bools; enums as their index (see "global_enums" for their names); paths
+//   project-relative ("Textures/icon.png"); Vector2 as [x, y]; arrays as lists of rows.
+// - Stat references are keyed by the stat's name: {"health": 0.0, "physical_damage": 1.0}.
 
-static auto get_sheet_by_name = [](const String &name, const Dictionary &d) -> Array {
-	const Array lines = Array(d["sheets"]);
-	for (int i = 0; i < lines.size(); ++i) {
-		const Dictionary sheet = lines[i];
-		const String sheet_name = String(sheet["param_name"]);
-		if (name != sheet_name) continue;
-		return sheet["array_values"];
+// A field of a DBer row. A missing field is reported (DBer renamed or removed the column?) and reads as Nil.
+static Variant dber_get(const Dictionary &row, const String &name) {
+	const Variant value = row.get(name, Variant());
+	if (value.get_type() == Variant::NIL && !row.has(name)) {
+		ERR_PRINT("ERROR : The DBer data has no \"" + name + "\" field where it's read. Was the column renamed or removed in DBer?");
 	}
-	return {};
-};
+	return value;
+}
+
+// A field that only some rows have (e.g. misc params only some content types have). Nil when it's missing.
+static Variant dber_find(const Dictionary &row, const String &name) {
+	return row.get(name, Variant());
+}
+
+// A sheet's rows, {sheet name: [row, ...]} in "sheets".
+static Array get_sheet_by_name(const String &name, const Dictionary &d) {
+	const Dictionary sheets = d.get("sheets", Dictionary());
+	ERR_FAIL_COND_V_MSG(!sheets.has(name), Array(), "ERROR : The DBer data has no sheet \"" + name + "\".");
+	return sheets[name];
+}
+
 
 static auto ensure_clean_path = [](const String &path) -> StringName {
 	return StringName(path.trim_prefix("/"));
 };
 
-static HashMap<String, TypedArray<StringName>> get_global_enums(const Dictionary &data) { // Global Enums
+static HashMap<String, TypedArray<StringName>> get_global_enums(const Dictionary &data) { // Global Enums: {enum name: [value names]}
 	HashMap<String, TypedArray<StringName>> global_enums;
-	const Array lines = Array(data["global_enums"]);
-	for (int i = 0; i < lines.size(); ++i) {
-		const Dictionary entry = lines[i];
+	const Dictionary enums_data = data.get("global_enums", Dictionary());
+	const Array enum_names = enums_data.keys();
+	for (int i = 0; i < enum_names.size(); ++i) {
+		const Array values = enums_data[enum_names[i]];
 		TypedArray<StringName> enums;
-		
-		const Array value_line = Array(entry["values"]);
-		for (int y = 0; y < value_line.size(); ++y) {
-			const StringName v = StringName(value_line[y]);
-			enums.append(v);
+		for (int y = 0; y < values.size(); ++y) {
+			enums.append(StringName(values[y]));
 		}
-
-		global_enums[entry["enum_name"]] = enums;
+		global_enums[enum_names[i]] = enums;
 	}
 	return global_enums;
 }
@@ -2036,64 +2039,60 @@ BG_CharacterDetails *BG_Booker_DB::get_character_details_by_id(const StringName 
 
 Ref<BG_StoryboardDetails> BG_Booker_DB::import_and_get_storyboard_details_by_id(const StringName &id)
 {
-	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
+	const Dictionary &data = dber_data;
 
 	Ref<BG_StoryboardDetails> result = memnew(BG_StoryboardDetails);
 
 	// Storyboards
 	const Array lines = get_sheet_by_name("Storyboards", data);
 	for (int i = 0; i < lines.size(); ++i) {
-		const Array entry = lines[i];
+		const Dictionary entry = lines[i];
 
-		const StringName sb_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+		const StringName sb_id = StringName(dber_get(entry, "id"));
 		if (sb_id != id) continue;
 
 		result->id = sb_id;
-		result->localization_sheet = StringName(get_find_data_by_param_name("localization_sheet", entry)["value"]);
+		result->localization_sheet = StringName(dber_get(entry, "localization_sheet"));
 
 		// Data
-		const Dictionary data_values = get_find_data_by_param_name("data", entry);
-		const Array data_array = data_values["array_values"];
+		const Array data_array = dber_get(entry, "data");
 		for (int x = 0; x < data_array.size(); ++x) {
-			const Array data_entry = data_array[x];
+			const Dictionary data_entry = data_array[x];
 
 			Ref<BG_StoryboardDataDetails> sb_dets = memnew(BG_StoryboardDataDetails);
-			sb_dets->character_key = StringName(get_find_data_by_param_name("character_key", data_entry)["value"]);
-			sb_dets->character_emotion = static_cast<BG_PortraitDetails::PortraitType>(int(get_find_data_by_param_name("character_emotion", data_entry)["value"]));
-			sb_dets->text_key = StringName(UtilityFunctions::str(int(get_find_data_by_param_name("text_key", data_entry)["value"])));
+			sb_dets->character_key = StringName(dber_get(data_entry, "character_key"));
+			sb_dets->character_emotion = static_cast<BG_PortraitDetails::PortraitType>(int(dber_get(data_entry, "character_emotion")));
+			sb_dets->text_key = StringName(UtilityFunctions::str(int(dber_get(data_entry, "text_key"))));
 			
-			sb_dets->code = StringName(get_find_data_by_param_name("code", data_entry)["value"]);
-			sb_dets->texture_path = ensure_clean_path(get_find_data_by_param_name("texture_path", data_entry)["path"]);
+			sb_dets->code = StringName(dber_get(data_entry, "code"));
+			sb_dets->texture_path = ensure_clean_path(dber_get(data_entry, "texture_path"));
 
 			// Audio IDs
-			const Dictionary audio_ids_values = get_find_data_by_param_name("audio_ids", data_entry);
-			const Array audio_ids_array = audio_ids_values["array_values"];
+			const Array audio_ids_array = dber_get(data_entry, "audio_ids");
 			for (int x = 0; x < audio_ids_array.size(); ++x) {
-				const Array audio_ids_entry = audio_ids_array[x];
+				const Dictionary audio_ids_entry = audio_ids_array[x];
 
-				sb_dets->audio_ids.append( StringName(get_find_data_by_param_name("audio_id", audio_ids_entry)["value"]) );
+				sb_dets->audio_ids.append( StringName(dber_get(audio_ids_entry, "audio_id")) );
 			}		
 
 			result->data.append(sb_dets);
 		}
 
 		// Character Text Locations
-		const Dictionary character_text_locations_values = get_find_data_by_param_name("character_text_locations", entry);
-		const Array character_text_locations_array = character_text_locations_values["array_values"];
+		const Array character_text_locations_array = dber_get(entry, "character_text_locations");
 		for (int x = 0; x < character_text_locations_array.size(); ++x) {
-			const Array character_text_locations_entry = character_text_locations_array[x];
+			const Dictionary character_text_locations_entry = character_text_locations_array[x];
 
 			Ref<BG_StoryboardCharacterTextLocationDetails> sb_dets = memnew(BG_StoryboardCharacterTextLocationDetails);
-			sb_dets->character_key = StringName(get_find_data_by_param_name("character_key", character_text_locations_entry)["value"]);
+			sb_dets->character_key = StringName(dber_get(character_text_locations_entry, "character_key"));
 
 			// Text Locations
-			const Dictionary txt_locs_values = get_find_data_by_param_name("txt_locations", character_text_locations_entry);
-			const Array txt_locs_array = txt_locs_values["array_values"];
+			const Array txt_locs_array = dber_get(character_text_locations_entry, "txt_locations");
 			for (int x = 0; x < txt_locs_array.size(); ++x) {
-				const Array txt_locs_entry = txt_locs_array[x];
+				const Dictionary txt_locs_entry = txt_locs_array[x];
 
-				const Dictionary txt_location = get_find_data_by_param_name("txt_location", txt_locs_entry);
-				sb_dets->txt_locations.append(Vector2(float(txt_location["value_x"]), float(txt_location["value_y"])));
+				const Variant txt_location = dber_get(txt_locs_entry, "txt_location");
+				sb_dets->txt_locations.append(Vector2(float(Array(txt_location)[0]), float(Array(txt_location)[1])));
 			}
 
 			result->character_text_locations.append(sb_dets);
@@ -2108,29 +2107,28 @@ Ref<BG_StoryboardDetails> BG_Booker_DB::import_and_get_storyboard_details_by_id(
 
 Ref<BG_TutorialCardsDetails> BG_Booker_DB::import_and_get_tutorial_cards_details_by_id(const StringName &id)
 {
-	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
+	const Dictionary &data = dber_data;
 
 	Ref<BG_TutorialCardsDetails> result = memnew(BG_TutorialCardsDetails);
 
 	// Tutorial Cards
 	const Array lines = get_sheet_by_name("Tutorial_Cards", data);
 	for (int i = 0; i < lines.size(); ++i) {
-		const Array entry = lines[i];
+		const Dictionary entry = lines[i];
 
-		const StringName sb_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+		const StringName sb_id = StringName(dber_get(entry, "id"));
 		if (sb_id != id) continue;
 
 		result->id = sb_id;
 
 		// Cards
-		const Dictionary cards_values = get_find_data_by_param_name("cards", entry);
-		const Array cards_array = cards_values["array_values"];
+		const Array cards_array = dber_get(entry, "cards");
 		for (int x = 0; x < cards_array.size(); ++x) {
-			const Array card_entry = cards_array[x];
+			const Dictionary card_entry = cards_array[x];
 
 			Ref<BG_TutorialCardDetails> t_dets = memnew(BG_TutorialCardDetails);
-			t_dets->description_key = StringName(get_find_data_by_param_name("description_key", card_entry)["value"]);
-			t_dets->image_path = ensure_clean_path(get_find_data_by_param_name("image_path", card_entry)["path"]);
+			t_dets->description_key = StringName(dber_get(card_entry, "description_key"));
+			t_dets->image_path = ensure_clean_path(dber_get(card_entry, "image_path"));
 
 			result->cards.append(t_dets);
 		}
@@ -2339,7 +2337,7 @@ float BG_Booker_DB::get_item_max_durability(Ref<BG_Item> item, bool full_value) 
 }
 
 Ref<BG_Item> BG_Booker_DB::create_preset_item_by_id(const StringName &id) const {
-	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
+	const Dictionary &data = dber_data;
 	return create_preset_item_by_id_interal(id, data);
 }
 
@@ -2347,17 +2345,17 @@ Ref<BG_Item> BG_Booker_DB::create_preset_item_by_id_interal(const StringName &id
 	// Preset Items
 	const Array lines = get_sheet_by_name("Presets_Items", data);
 	for (int i = 0; i < lines.size(); ++i) {
-		const Array entry = lines[i];
+		const Dictionary entry = lines[i];
 
-		const StringName i_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+		const StringName i_id = StringName(dber_get(entry, "id"));
 		if (i_id != id) continue;
 
 		Ref<BG_Item> result = memnew(BG_Item);
-		result->id = StringName(get_find_data_by_param_name("item_id", entry)["value"]);
-		result->random_variation = int(get_find_data_by_param_name("variation", entry)["value"]);
+		result->id = StringName(dber_get(entry, "item_id"));
+		result->random_variation = int(dber_get(entry, "variation"));
 
 		const HashMap<String, TypedArray<StringName>> global_enums = get_global_enums(data);
-		const int rarity_index = int(get_find_data_by_param_name("rarity", entry)["value"]);
+		const int rarity_index = int(dber_get(entry, "rarity"));
 		result->rarity_id = global_enums["rarity_types"][rarity_index];
 
 		result->current_durability = get_item_max_durability(result, true);
@@ -2367,16 +2365,15 @@ Ref<BG_Item> BG_Booker_DB::create_preset_item_by_id_interal(const StringName &id
 		result->grafts.clear();
 		for (int x = 0; x < 4; ++x)
 			result->grafts.append(nullptr);
-		const Dictionary grafts_values = get_find_data_by_param_name("grafts", entry);
-		const Array grafts_array = grafts_values["array_values"];
+		const Array grafts_array = dber_get(entry, "grafts");
 		for (int x = 0; x < grafts_array.size(); ++x) {
-			const Array grafts_entry = grafts_array[x];
+			const Dictionary grafts_entry = grafts_array[x];
 
 			Ref<BG_Item> new_graft = memnew(BG_Item);
-			new_graft->id = StringName(get_find_data_by_param_name("beast_part_id", grafts_entry)["value"]);
-			new_graft->random_variation = int(get_find_data_by_param_name("variation", grafts_entry)["value"]);
+			new_graft->id = StringName(dber_get(grafts_entry, "beast_part_id"));
+			new_graft->random_variation = int(dber_get(grafts_entry, "variation"));
 
-			const int graft_rarity_index = int(get_find_data_by_param_name("rarity", grafts_entry)["value"]);
+			const int graft_rarity_index = int(dber_get(grafts_entry, "rarity"));
 			new_graft->rarity_id = global_enums["rarity_types"][graft_rarity_index];
 
 			result->current_durability += get_item_max_durability(new_graft, false);
@@ -2390,28 +2387,27 @@ Ref<BG_Item> BG_Booker_DB::create_preset_item_by_id_interal(const StringName &id
 }
 
 Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id, const TypedArray<BG_Band> &existing_bands) const {
-	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
+	const Dictionary &data = dber_data;
 
 	// Preset Bands
 	const Array lines = get_sheet_by_name("Presets_Bands", data);
 	for (int i = 0; i < lines.size(); ++i) {
-		const Array entry = lines[i];
+		const Dictionary entry = lines[i];
 
-		const StringName i_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+		const StringName i_id = StringName(dber_get(entry, "id"));
 		if (i_id != id) continue;
 
 		const HashMap<String, TypedArray<StringName>> global_enums = get_global_enums(data);
 
 		Ref<BG_Band> result = memnew(BG_Band);
-		result->id = StringName(get_find_data_by_param_name("band_name", entry)["value"]);
+		result->id = StringName(dber_get(entry, "band_name"));
 		result->preset_band_id = id;
 		result->set_unique_id(BG_Band::get_unique_band_id(existing_bands));
 
 		// Band Members
-		const Dictionary band_members_values = get_find_data_by_param_name("band_members", entry);
-		const Array band_members_array = band_members_values["array_values"];
+		const Array band_members_array = dber_get(entry, "band_members");
 		for (int x = 0; x < band_members_array.size(); ++x) {
-			const Array band_members_entry = band_members_array[x];
+			const Dictionary band_members_entry = band_members_array[x];
 
 			Ref<BG_BandMember> new_bm = memnew(BG_BandMember);
 			result->band_members.append(new_bm);
@@ -2419,28 +2415,27 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id, const 
 				result->set_band_leader(new_bm);
 			}
 
-			const int caste_index = int(get_find_data_by_param_name("caste", band_members_entry)["value"]);
+			const int caste_index = int(dber_get(band_members_entry, "caste"));
 			new_bm->caste_id = global_enums["caste_types"][caste_index];
-			new_bm->level = int(get_find_data_by_param_name("level", band_members_entry)["value"]);
-			new_bm->experience = int(get_find_data_by_param_name("experience_points", band_members_entry)["value"]);
-			new_bm->random_variation = int(get_find_data_by_param_name("variation", band_members_entry)["value"]);
-			new_bm->band_member_type = static_cast<BG_BandMember::BandMemberTypes>(int(get_find_data_by_param_name("band_member_type", band_members_entry)["value"]));
+			new_bm->level = int(dber_get(band_members_entry, "level"));
+			new_bm->experience = int(dber_get(band_members_entry, "experience_points"));
+			new_bm->random_variation = int(dber_get(band_members_entry, "variation"));
+			new_bm->band_member_type = static_cast<BG_BandMember::BandMemberTypes>(int(dber_get(band_members_entry, "band_member_type")));
 			BG_UnitCaste *unit_caste = get_band_info()->get_caste_by_id(new_bm->get_caste_id(), false);
 			ERR_FAIL_COND_V_EDMSG(unit_caste == nullptr, nullptr, "ERROR : BG_Booker_DB::create_preset_band_by_id no unit caste found for:" + id);
-			result->band_formation[new_bm] = int(get_find_data_by_param_name("formation_index", band_members_entry)["value"]);
+			result->band_formation[new_bm] = int(dber_get(band_members_entry, "formation_index"));
 			new_bm->band = result;
 
 			float scale_x_z = unit_caste->get_random_unit_caste_scale(true);
 			new_bm->set_scale(Vector3(scale_x_z, unit_caste->get_random_unit_caste_scale(false), scale_x_z));
 
 			// Band Member Name
-			const Dictionary name_values = get_find_data_by_param_name("name", band_members_entry);
-			const Array name_array = name_values["array_values"];
+			const Array name_array = dber_get(band_members_entry, "name");
 			for (int y = 0; y < name_array.size(); ++y) {
-				const Array name_entry = name_array[y];
+				const Dictionary name_entry = name_array[y];
 
-				new_bm->set_first_name_id(StringName(get_find_data_by_param_name("first_name", name_entry)["value"]));
-				new_bm->set_last_name_id(StringName(get_find_data_by_param_name("last_name", name_entry)["value"]));
+				new_bm->set_first_name_id(StringName(dber_get(name_entry, "first_name")));
+				new_bm->set_last_name_id(StringName(dber_get(name_entry, "last_name")));
 				break;
 			}
 
@@ -2448,13 +2443,12 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id, const 
 			new_bm->equipment.clear();
 			for (int x = 0; x < 3; ++x)
 				new_bm->equipment.append(nullptr);
-			const Dictionary item_presets_values = get_find_data_by_param_name("item_presets", band_members_entry);
-			const Array item_presets_array = item_presets_values["array_values"];
+			const Array item_presets_array = dber_get(band_members_entry, "item_presets");
 			for (int y = 0; y < item_presets_array.size(); ++y) {
-				const Array item_presets_entry = item_presets_array[y];
+				const Dictionary item_presets_entry = item_presets_array[y];
 
-				const int slot_type = int(get_find_data_by_param_name("slot_type", item_presets_entry)["value"]);
-				const StringName item_preset_id = StringName(get_find_data_by_param_name("item_preset", item_presets_entry)["value"]);
+				const int slot_type = int(dber_get(item_presets_entry, "slot_type"));
+				const StringName item_preset_id = StringName(dber_get(item_presets_entry, "item_preset"));
 				const Ref<BG_Item> new_item = create_preset_item_by_id_interal(item_preset_id, data);
 
 				if (slot_type == 0)
@@ -2474,28 +2468,27 @@ Ref<BG_Band> BG_Booker_DB::create_preset_band_by_id(const StringName &id, const 
 	return nullptr;
 }
 
-static void get_shared_behavior_params(Dictionary &output, const Array &behavior_entry) {
+static void get_shared_behavior_params(Dictionary &output, const Dictionary &behavior_entry) {
 	const StringName ai_controller_script_name = StringName("ai_controller_script");
-	const StringName ai_controller_script = ensure_clean_path(get_find_data_by_param_name("ai_controller_script", behavior_entry)["path"]);
+	const StringName ai_controller_script = ensure_clean_path(dber_get(behavior_entry, "ai_controller_script"));
 	if (!ai_controller_script.is_empty() || !output.has(ai_controller_script_name)) {
 		output[ai_controller_script_name] = ai_controller_script;
 	}
 
 	const StringName aggro_distance_name = StringName("aggro_distance_start_end");
-	const Dictionary aggro_distance_dict = get_find_data_by_param_name("aggro_distance_start_end", behavior_entry);
-	const Vector2i aggro_distance = Vector2i(int(aggro_distance_dict["value_x"]), int(aggro_distance_dict["value_y"]));
+	const Variant aggro_distance_dict = dber_get(behavior_entry, "aggro_distance_start_end");
+	const Vector2i aggro_distance = Vector2i(int(Array(aggro_distance_dict)[0]), int(Array(aggro_distance_dict)[1]));
 	if (aggro_distance.x > 0 || !output.has(aggro_distance_name)) {
 		output[aggro_distance_name] = aggro_distance;
 	}
 
 	{ // Targetable Types
 		TypedArray<int> targetable_types;
-		const Dictionary targetable_types_values = get_find_data_by_param_name("targetable_types", behavior_entry);
-		const Array targetable_types_array = targetable_types_values["array_values"];
+		const Array targetable_types_array = dber_get(behavior_entry, "targetable_types");
 		for (int y = 0; y < targetable_types_array.size(); ++y) {
-			const Array targetable_types_entry = targetable_types_array[y];
+			const Dictionary targetable_types_entry = targetable_types_array[y];
 			
-			const int hex_type_index = int(get_find_data_by_param_name("hex_type", targetable_types_entry)["value"]);
+			const int hex_type_index = int(dber_get(targetable_types_entry, "hex_type"));
 			targetable_types.append(hex_type_index);
 		}
 
@@ -2507,12 +2500,11 @@ static void get_shared_behavior_params(Dictionary &output, const Array &behavior
 
 	{ // Dyn Targetable Types
 		TypedArray<StringName> dyn_targetable_types_types;
-		const Dictionary dyn_targetable_types_values = get_find_data_by_param_name("dyn_targetable_types", behavior_entry);
-		const Array dyn_targetable_types_array = dyn_targetable_types_values["array_values"];
+		const Array dyn_targetable_types_array = dber_get(behavior_entry, "dyn_targetable_types");
 		for (int y = 0; y < dyn_targetable_types_array.size(); ++y) {
-			const Array dyn_targetable_types_entry = dyn_targetable_types_array[y];
+			const Dictionary dyn_targetable_types_entry = dyn_targetable_types_array[y];
 			
-			dyn_targetable_types_types.append(StringName(get_find_data_by_param_name("dyn_type_id", dyn_targetable_types_entry)["value"]));
+			dyn_targetable_types_types.append(StringName(dber_get(dyn_targetable_types_entry, "dyn_type_id")));
 		}
 
 		const StringName dyn_targetable_types_name = StringName("dyn_targetable_types");
@@ -2523,22 +2515,21 @@ static void get_shared_behavior_params(Dictionary &output, const Array &behavior
 }
 
 Dictionary BG_Booker_DB::get_preset_band_params_by_id(const StringName &id) const {
-	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
+	const Dictionary &data = dber_data;
 	Dictionary result;
 
 	// Preset Bands
 	const Array lines = get_sheet_by_name("Presets_Bands", data);
 	for (int i = 0; i < lines.size(); ++i) {
-		const Array entry = lines[i];
+		const Dictionary entry = lines[i];
 
-		const StringName i_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+		const StringName i_id = StringName(dber_get(entry, "id"));
 		if (i_id != id) continue;
 
 		// Behavior
-		const Dictionary behavior_values = get_find_data_by_param_name("behavior", entry);
-		const Array behavior_array = behavior_values["array_values"];
+		const Array behavior_array = dber_get(entry, "behavior");
 		for (int x = 0; x < behavior_array.size(); ++x) {
-			const Array behavior_entry = behavior_array[x];
+			const Dictionary behavior_entry = behavior_array[x];
 
 			get_shared_behavior_params(result, behavior_entry);
 		}
@@ -2569,7 +2560,7 @@ Ref<BG_Monster> BG_Booker_DB::get_monster_by_id(const StringName &id) const {
 }
 
 Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id(const StringName &id) const {
-	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
+	const Dictionary &data = dber_data;
 	const HashMap<String, TypedArray<StringName>> global_enums = get_global_enums(data);
 	Ref<BG_Job> result = memnew(BG_Job);
 	create_preset_monster_group_by_id_interal(result, id, Vector2i(0, 0), data, global_enums);
@@ -2582,30 +2573,29 @@ Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id_interal(Ref<BG_Job> 
 	// Preset Monster Groups
 	const Array lines = get_sheet_by_name("Presets_Monster_Groups", data);
 	for (int i = 0; i < lines.size(); ++i) {
-		const Array entry = lines[i];
+		const Dictionary entry = lines[i];
 
-		const StringName i_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+		const StringName i_id = StringName(dber_get(entry, "id"));
 		if (i_id != id) continue;
 
 		// Level Range
-		const Dictionary level_range_dict = get_find_data_by_param_name("level_range", entry);
-		const Vector2i level_range_this = Vector2i(int(level_range_dict["value_x"]), int(level_range_dict["value_y"]));
+		const Variant level_range_dict = dber_get(entry, "level_range");
+		const Vector2i level_range_this = Vector2i(int(Array(level_range_dict)[0]), int(Array(level_range_dict)[1]));
 		if (level_range.x == 0 && level_range_this.x != 0) {
 			level_range = level_range_this;
 		}
 
 		// Seed
 		if (result_out->random_seed == 0) {
-			const Dictionary seed_values = get_find_data_by_param_name("seed", entry);
-			const Array seed_array = seed_values["array_values"];
+			const Array seed_array = dber_get(entry, "seed");
 			for (int x = 0; x < seed_array.size(); ++x) {
-				const Array seed_entry = seed_array[x];
+				const Dictionary seed_entry = seed_array[x];
 
-				const int seed = int(get_find_data_by_param_name("seed", seed_entry)["value"]);
+				const int seed = int(dber_get(seed_entry, "seed"));
 				if (seed != 0) {
 					result_out->random_seed = seed;
 				}
-				const bool randomize_seed = bool(get_find_data_by_param_name("randomize_seed", seed_entry)["value"]);
+				const bool randomize_seed = bool(dber_get(seed_entry, "randomize_seed"));
 				if (randomize_seed) {
 					result_out->random_seed = UtilityFunctions::randi_range(1000, 9999);
 				}
@@ -2613,7 +2603,7 @@ Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id_interal(Ref<BG_Job> 
 		}
 
 		// Parent Monster Group
-		const StringName parent_monster_group_id = StringName(get_find_data_by_param_name("parent", entry)["value"]);
+		const StringName parent_monster_group_id = StringName(dber_get(entry, "parent"));
 		if (!parent_monster_group_id.is_empty()) {
 			result_out = create_preset_monster_group_by_id_interal(result_out, parent_monster_group_id, level_range, data, global_enums);
 		}
@@ -2623,34 +2613,33 @@ Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id_interal(Ref<BG_Job> 
 		rnd_gen->set_seed(result_out->random_seed);
 		
 		// Monsters		
-		const Dictionary monsters_values = get_find_data_by_param_name("monsters", entry);
-		const Array monsters_array = monsters_values["array_values"];
+		const Array monsters_array = dber_get(entry, "monsters");
 
 		if (monsters_array.size() > 0)
 			result_out->monsters.clear();
 		
 		for (int x = 0; x < monsters_array.size(); ++x) {
-			const Array monsters_entry = monsters_array[x];
+			const Dictionary monsters_entry = monsters_array[x];
 
 			// Level Range
-			const Dictionary spawn_count_range_dict = get_find_data_by_param_name("spawn_count_range", monsters_entry);
-			const Vector2i spawn_count_range = Vector2i(int(spawn_count_range_dict["value_x"]), int(spawn_count_range_dict["value_y"]));
+			const Variant spawn_count_range_dict = dber_get(monsters_entry, "spawn_count_range");
+			const Vector2i spawn_count_range = Vector2i(int(Array(spawn_count_range_dict)[0]), int(Array(spawn_count_range_dict)[1]));
 			const int spawn_count = rnd_gen->randi_range(spawn_count_range.x, spawn_count_range.y);
 			for (int y = 0; y < spawn_count; ++y) {
 
 				BG_Monster *m = memnew(BG_Monster);
 				result_out->monsters.append(m);
-				m->id = StringName(get_find_data_by_param_name("monster", monsters_entry)["value"]);
+				m->id = StringName(dber_get(monsters_entry, "monster"));
 				m->set_job(result_out);
 
-				const int seed_override = int(get_find_data_by_param_name("seed_override", monsters_entry)["value"]);
+				const int seed_override = int(dber_get(monsters_entry, "seed_override"));
 				if (seed_override != 0) {
 					m->random_variation = seed_override;
 				} else {
 					rnd_gen->randi_range(1000, 9999);
 				}
 
-				const int level_override = int(get_find_data_by_param_name("level_override", monsters_entry)["value"]);
+				const int level_override = int(dber_get(monsters_entry, "level_override"));
 				if (level_override != 0) {
 					m->level = level_override;
 				} else {
@@ -2666,7 +2655,7 @@ Ref<BG_Job> BG_Booker_DB::create_preset_monster_group_by_id_interal(Ref<BG_Job> 
 }
 
 Dictionary BG_Booker_DB::get_preset_monster_group_params_by_id(const StringName &id) const {
-	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
+	const Dictionary &data = dber_data;
 	Dictionary result;
 	get_preset_monster_group_params_by_id_interal(id, result, data);
 	return result;
@@ -2676,22 +2665,21 @@ void BG_Booker_DB::get_preset_monster_group_params_by_id_interal(const StringNam
 	// Preset Monster Groups
 	const Array lines = get_sheet_by_name("Presets_Monster_Groups", data);
 	for (int i = 0; i < lines.size(); ++i) {
-		const Array entry = lines[i];
+		const Dictionary entry = lines[i];
 
-		const StringName i_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+		const StringName i_id = StringName(dber_get(entry, "id"));
 		if (i_id != id) continue;
 
 		// Parent Monster Group
-		const StringName parent_monster_group_id = StringName(get_find_data_by_param_name("parent", entry)["value"]);
+		const StringName parent_monster_group_id = StringName(dber_get(entry, "parent"));
 		if (!parent_monster_group_id.is_empty()) {
 			get_preset_monster_group_params_by_id_interal(parent_monster_group_id, output, data);
 		}
 
 		// Behavior
-		const Dictionary behavior_values = get_find_data_by_param_name("behavior", entry);
-		const Array behavior_array = behavior_values["array_values"];
+		const Array behavior_array = dber_get(entry, "behavior");
 		for (int x = 0; x < behavior_array.size(); ++x) {
-			const Array behavior_entry = behavior_array[x];
+			const Dictionary behavior_entry = behavior_array[x];
 
 			get_shared_behavior_params(output, behavior_entry);
 		}
@@ -2703,7 +2691,7 @@ void BG_Booker_DB::get_preset_monster_group_params_by_id_interal(const StringNam
 TypedArray<BG_RewardItem> BG_Booker_DB::get_drop_rewards_from_monster_group_preset(Ref<BG_Job> job) const {
 	if (!job.is_valid()) return {};
 	if (job->get_job_id().is_empty()) return {};
-	const Dictionary data = BG_JsonUtils::ParseJsonFile("res://" + booker_dber_data_file_name);
+	const Dictionary &data = dber_data;
 	const HashMap<String, TypedArray<StringName>> global_enums = get_global_enums(data);
 	return get_drop_rewards_from_monster_group_preset_interal(job, job->get_job_id(), data, global_enums);
 }
@@ -2714,13 +2702,13 @@ TypedArray<BG_RewardItem> BG_Booker_DB::get_drop_rewards_from_monster_group_pres
 	// Preset Monster Groups
 	const Array lines = get_sheet_by_name("Presets_Monster_Groups", data);
 	for (int i = 0; i < lines.size(); ++i) {
-		const Array entry = lines[i];
+		const Dictionary entry = lines[i];
 
-		const StringName i_id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+		const StringName i_id = StringName(dber_get(entry, "id"));
 		if (i_id != id) continue;
 
 		// Parent Monster Group
-		const StringName parent_monster_group_id = StringName(get_find_data_by_param_name("parent", entry)["value"]);
+		const StringName parent_monster_group_id = StringName(dber_get(entry, "parent"));
 		if (!parent_monster_group_id.is_empty()) {
 			result.append_array(get_drop_rewards_from_monster_group_preset_interal(job, parent_monster_group_id, data, global_enums));
 		}
@@ -2741,25 +2729,24 @@ TypedArray<BG_RewardItem> BG_Booker_DB::get_drop_rewards_from_monster_group_pres
 		}
 
 		// Drops
-		const Dictionary drops_values = get_find_data_by_param_name("drops", entry);
-		const Array drops_array = drops_values["array_values"];
+		const Variant drops_values = dber_get(entry, "drops");
+		const Array drops_array = drops_values;
 		for (int x = 0; x < drops_array.size(); ++x) {
-			const Array drops_entry = drops_array[x];
+			const Dictionary drops_entry = drops_array[x];
 
-			const float drop_weight = float(get_find_data_by_param_name("drop_weight", drops_entry)["value"]);
+			const float drop_weight = float(dber_get(drops_entry, "drop_weight"));
 
-			const StringName item_id = StringName(get_find_data_by_param_name("item_id", drops_entry)["value"]);
+			const StringName item_id = StringName(dber_get(drops_entry, "item_id"));
 			if (!item_id.is_empty()) {
 				BG_RewardItem *new_job_reward = memnew(BG_RewardItem);
 				new_job_reward->drop_weight = drop_weight;
 
 				// Forced Rarity Availabilities
-				const Dictionary forced_rarity_availabilities_values = get_find_data_by_param_name("forced_rarity_availabilities", drops_entry);
-				const Array forced_rarity_availabilities_array = drops_values["array_values"];
+				const Array forced_rarity_availabilities_array = dber_get(drops_entry, "forced_rarity_availabilities");
 				for (int y = 0; y < forced_rarity_availabilities_array.size(); ++y) {
-					const Array forced_rarity_availabilities_entry = forced_rarity_availabilities_array[y];
+					const Dictionary forced_rarity_availabilities_entry = forced_rarity_availabilities_array[y];
 
-					const int rarity_index = int(get_find_data_by_param_name("rarity", forced_rarity_availabilities_entry)["value"]);
+					const int rarity_index = int(dber_get(forced_rarity_availabilities_entry, "rarity"));
 					new_job_reward->rarity_availabilities.append(global_enums["rarity_types"][rarity_index]);
 				}
 
@@ -2767,7 +2754,7 @@ TypedArray<BG_RewardItem> BG_Booker_DB::get_drop_rewards_from_monster_group_pres
 			}
 
 			// Item Drop Pool Items
-			const StringName item_drop_pool_id = StringName(get_find_data_by_param_name("item_drop_pool_id", drops_entry)["value"]);
+			const StringName item_drop_pool_id = StringName(dber_get(drops_entry, "item_drop_pool_id"));
 			if (item_drop_pool_id.is_empty()) continue;
 			for (int pool_index = 0; pool_index < item_drop_pools.size(); ++pool_index)
 			{
@@ -2784,12 +2771,11 @@ TypedArray<BG_RewardItem> BG_Booker_DB::get_drop_rewards_from_monster_group_pres
 					new_job_reward->drop_weight = drop_weight;
 
 					// Forced Rarity Availabilities
-					const Dictionary forced_rarity_availabilities_values = get_find_data_by_param_name("forced_rarity_availabilities", drops_entry);
-					const Array forced_rarity_availabilities_array = drops_values["array_values"];
+					const Array forced_rarity_availabilities_array = dber_get(drops_entry, "forced_rarity_availabilities");
 					for (int y = 0; y < forced_rarity_availabilities_array.size(); ++y) {
-						const Array forced_rarity_availabilities_entry = forced_rarity_availabilities_array[y];
+						const Dictionary forced_rarity_availabilities_entry = forced_rarity_availabilities_array[y];
 
-						const int rarity_index = int(get_find_data_by_param_name("rarity", forced_rarity_availabilities_entry)["value"]);
+						const int rarity_index = int(dber_get(forced_rarity_availabilities_entry, "rarity"));
 						new_job_reward->rarity_availabilities.append(global_enums["rarity_types"][rarity_index]);
 					}
 					if (new_job_reward->rarity_availabilities.is_empty())
@@ -3106,17 +3092,17 @@ void BG_Booker_DB::try_parse_data(const String &file_path)
 
 void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 {
-	const Dictionary data = BG_JsonUtils::ParseJsonFile(file_path);
-	// UtilityFunctions::prints(data["all_base_stats"]);
+	// Kept for the loaders that read sheets later (storyboards, presets, ...), so the file is only parsed once.
+	dber_data = BG_JsonUtils::ParseJsonFile(file_path);
+	const Dictionary &data = dber_data;
 
 	HashMap<String, TypedArray<StringName>> global_enums = get_global_enums(data);
 
-	{ // Global Curves
-		const Array lines = Array(data["global_curves"]);
-		for (int i = 0; i < lines.size(); ++i) {
-			const Dictionary entry = lines[i];
-			const Dictionary curve_data = entry["curve_data"];
-			globals->global_curves[StringName(curve_data["param_name"])] = ensure_clean_path(curve_data["path"]);
+	{ // Global Curves: {curve name: path}
+		const Dictionary curves = data.get("global_curves", Dictionary());
+		const Array curve_names = curves.keys();
+		for (int i = 0; i < curve_names.size(); ++i) {
+			globals->global_curves[StringName(curve_names[i])] = ensure_clean_path(curves[curve_names[i]]);
 		}
 	}
 
@@ -3125,64 +3111,52 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		for (int i = 0; i < lines.size(); ++i) {
 			const Dictionary entry = lines[i];
 			BG_BaseStat *new_class = memnew(BG_BaseStat);
-			new_class->unique_id = int(entry["unique_id"]);
-			new_class->is_base_value = bool(entry["is_base_value"]);
-			new_class->parent_stat_unique_id = int(entry["parent_stat_id"]);
-			new_class->value = float(entry["value"]);
-			new_class->stat_id_name = StringName(entry["stat_id_name"]);
+			new_class->unique_id = int(dber_get(entry, "unique_id"));
+			new_class->is_base_value = bool(dber_get(entry, "is_base_value"));
+			new_class->value = float(dber_get(entry, "value"));
+			new_class->stat_id_name = StringName(dber_get(entry, "stat_id_name"));
 			base_stats.append(new_class);
 		}
 
-		{ // Set a reference to each of their parent stats.
-			for (int i = 0; i < base_stats.size(); ++i) {
+		{ // Set a reference to each of their parent stats ("parent_stat": its name, or "").
+			for (int i = 0; i < lines.size(); ++i) {
+				const StringName parent_stat = StringName(dber_get(lines[i], "parent_stat"));
 				BG_BaseStat *stat = cast_to<BG_BaseStat>(base_stats[i]);
-				if (stat == nullptr || stat->parent_stat_unique_id < 0) continue;
+				if (stat == nullptr || parent_stat.is_empty()) continue;
 
-				stat->parent_stat_reference = get_stat_from_unique_id(stat->parent_stat_unique_id);
+				stat->parent_stat_reference = get_stat_from_stat_id_name(parent_stat);
+				if (stat->parent_stat_reference != nullptr)
+					stat->parent_stat_unique_id = stat->parent_stat_reference->unique_id;
 			}
 		}
 	}
 
 	auto get_animation_detail = [](const HashMap<String, TypedArray<StringName>> &global_enums, const Array &animations, int index) -> BG_AnimationDetails *{
-		const Array aa = animations[index];
+		const Dictionary aa = animations[index];
 		
 		BG_AnimationDetails *new_class = memnew(BG_AnimationDetails);
-		const Dictionary caste_dict = aa[0];
-		new_class->caste_or_monster_id = global_enums["caste_types"][int(caste_dict["value"])];
-
-		const Dictionary anim_type_dict = aa[1];
-		new_class->anim_type = static_cast<BG_AnimationDetails::AnimationType>(int(anim_type_dict["value"]));
-
-		const Dictionary anim_name_dict = aa[2];
-		new_class->anim_name = StringName(anim_name_dict["value"]);
-
-		const Dictionary anim_blend_time_dict = aa[3];
-		new_class->anim_blend_time = float(anim_blend_time_dict["value"]);
+		new_class->caste_or_monster_id = global_enums["caste_types"][int(dber_get(aa, "caste"))];
+		new_class->anim_type = static_cast<BG_AnimationDetails::AnimationType>(int(dber_get(aa, "anim_type")));
+		new_class->anim_name = StringName(dber_get(aa, "anim_name"));
+		new_class->anim_blend_time = float(dber_get(aa, "anim_blend_time"));
 		
 		{ // Traverse Types
-			const Dictionary anim_traverse_types_dict = aa[4];
-			const Array anim_traverse_types_array = anim_traverse_types_dict["array_values"];
+			const Array anim_traverse_types_array = dber_get(aa, "animation_traverse_types");
 			if (!anim_traverse_types_array.is_empty()) {
-				const Array anim_traverse_types = anim_traverse_types_array[0];
-				const Dictionary d1 = anim_traverse_types[0];
-				new_class->traverse_to = static_cast<BG_AnimationDetails::AnimationTraverseType>(int(d1["value"]));
-				const Dictionary d2 = anim_traverse_types[1];
-				new_class->traverse_back = static_cast<BG_AnimationDetails::AnimationTraverseType>(int(d2["value"]));
+				const Dictionary anim_traverse_types = anim_traverse_types_array[0];
+				new_class->traverse_to = static_cast<BG_AnimationDetails::AnimationTraverseType>(int(dber_get(anim_traverse_types, "traverse_to")));
+				new_class->traverse_back = static_cast<BG_AnimationDetails::AnimationTraverseType>(int(dber_get(anim_traverse_types, "traverse_back")));
 			}
 		}
 
 		{ // Tags
-			const Dictionary anim_tags_dict = aa[5];
-			const Array anim_tags_array = anim_tags_dict["array_values"];
+			const Array anim_tags_array = dber_get(aa, "tags");
 			for (int i = 0; i < anim_tags_array.size(); ++i) {
-				const Array anim_tag_entry = anim_tags_array[i];
-
-				const Dictionary tag_dict = anim_tag_entry[0];
-				const Dictionary frame_dict = anim_tag_entry[1];
+				const Dictionary anim_tag_entry = anim_tags_array[i];
 
 				BG_AnimationTagDetails *new_tag_class = memnew(BG_AnimationTagDetails);
-				new_tag_class->tag = StringName(tag_dict["value"]);
-				new_tag_class->frame = int(frame_dict["value"]);
+				new_tag_class->tag = StringName(dber_get(anim_tag_entry, "tag"));
+				new_tag_class->frame = int(dber_get(anim_tag_entry, "frame"));
 
 				new_class->tags.append(new_tag_class);
 			}
@@ -3194,21 +3168,21 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Stat Types
 		const Array lines = get_sheet_by_name("Stat_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 			
 			BG_UnitStatDetails *new_stat_types = memnew(BG_UnitStatDetails);
-			new_stat_types->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_stat_types->nice_name = StringName(get_find_data_by_param_name("name", entry)["value"]);
-			new_stat_types->icon_id = StringName(get_find_data_by_param_name("icon_id", entry)["value"]);
-			new_stat_types->is_damage_type = bool(get_find_data_by_param_name("is_damage_type", entry)["value"]);
-			new_stat_types->is_attribute_type = bool(get_find_data_by_param_name("is_attribute_type", entry)["value"]);
-			StringName weak_to_element = StringName(get_find_data_by_param_name("weak_to_element", entry)["value"]);
+			new_stat_types->id = StringName(dber_get(entry, "id"));
+			new_stat_types->nice_name = StringName(dber_get(entry, "name"));
+			new_stat_types->icon_id = StringName(dber_get(entry, "icon_id"));
+			new_stat_types->is_damage_type = bool(dber_get(entry, "is_damage_type"));
+			new_stat_types->is_attribute_type = bool(dber_get(entry, "is_attribute_type"));
+			StringName weak_to_element = StringName(dber_get(entry, "weak_to_element"));
 			if (!weak_to_element.is_empty())
 				new_stat_types->weak_to_element = weak_to_element;
 			
-			new_stat_types->widget_color = convert_hex_to_color(get_find_data_by_param_name("widget_color", entry)["value"]);
-			new_stat_types->text_color = convert_hex_to_color(get_find_data_by_param_name("text_color", entry)["value"]);
-			new_stat_types->in_world_color = convert_hex_to_color(get_find_data_by_param_name("in_world_color", entry)["value"]);
+			new_stat_types->widget_color = convert_hex_to_color(dber_get(entry, "widget_color"));
+			new_stat_types->text_color = convert_hex_to_color(dber_get(entry, "text_color"));
+			new_stat_types->in_world_color = convert_hex_to_color(dber_get(entry, "in_world_color"));
 			
 			stat_types.append(new_stat_types);
 		}
@@ -3220,8 +3194,8 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			const Dictionary entry = lines[i];
 			const StringName content_id = StringName(entry["id"]);
 
-			const Array misc_params = entry["misc_params"];
-			const int content_type = int(get_find_data_by_param_name("content_type", misc_params)["value"]);
+			const Dictionary &misc_params = entry; // A content entry's misc params are fields of the entry.
+			const int content_type = int(dber_get(misc_params, "content_type"));
 			
 			//
 			// Equipment
@@ -3233,37 +3207,36 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				item_details->id = content_id;
 				item_details->name = StringName(entry["nice_name"]);
 				
-				const int slot_type = int(get_find_data_by_param_name("slot_type", misc_params)["value"]);
+				const int slot_type = int(dber_get(misc_params, "slot_type"));
 				item_details->slot_type_id = global_enums["equipment_slot_types"][slot_type];
 				if (slot_type == 3) item_details->slot_type = BG_ItemDetails::ItemType::BEAST_PART;
 				else if (slot_type > 3) item_details->slot_type = BG_ItemDetails::ItemType::CONSUMABLE;
-				// const int attack_target_type = int(get_find_data_by_param_name("attack_target_type", misc_params)["value"]);
+				// const int attack_target_type = int(dber_get(misc_params, "attack_target_type"));
 				// item_details->attack_target_type = global_enums["attack_target_types"][attack_target_type];
 
 				item_details->effectiveness = float(entry["effectiveness"]);
 				item_details->use_stat_requirements = bool(entry["use_stat_requirements"]);
-				item_details->icon_path = ensure_clean_path(get_find_data_by_param_name("icon", misc_params)["path"]);
-				const Dictionary mesh_path_dict = get_find_data_by_param_name("mesh_scene_path", misc_params);
-				if (mesh_path_dict.has("path")) item_details->mesh_path = ensure_clean_path(mesh_path_dict["path"]);
-				const Dictionary animation_attach_socket_dict = get_find_data_by_param_name("anim_attach_socket", misc_params);
-				if (animation_attach_socket_dict.has("value")) item_details->animation_attach_socket = int(animation_attach_socket_dict["value"]) + 1;
-				const Dictionary level_range = get_find_data_by_param_name("level_range", misc_params);
-				if (level_range.has("value_x")) item_details->level_range = Vector2(int(level_range["value_x"]), int(level_range["value_y"]));
-				item_details->sell_value_tier = int(get_find_data_by_param_name("sell_value_tier", misc_params)["value"]);
-				item_details->fame_value_tier = int(get_find_data_by_param_name("fame_value_tier", misc_params)["value"]);
-				item_details->base_action_points = int(get_find_data_by_param_name("action_points", misc_params)["value"]);
-				item_details->bonus_action_points = int(get_find_data_by_param_name("bonus_action_points", misc_params)["value"]);
-				item_details->base_action_points_cost = int(get_find_data_by_param_name("action_points_cost", misc_params)["value"]);
+				item_details->icon_path = ensure_clean_path(dber_get(misc_params, "icon"));
+				const Variant mesh_path_dict = dber_find(misc_params, "mesh_scene_path");
+				if (mesh_path_dict.get_type() != Variant::NIL) item_details->mesh_path = ensure_clean_path(mesh_path_dict);
+				const Variant animation_attach_socket_dict = dber_find(misc_params, "anim_attach_socket");
+				if (animation_attach_socket_dict.get_type() != Variant::NIL) item_details->animation_attach_socket = int(animation_attach_socket_dict) + 1;
+				const Variant level_range = dber_find(misc_params, "level_range");
+				if (level_range.get_type() != Variant::NIL) item_details->level_range = Vector2(int(Array(level_range)[0]), int(Array(level_range)[1]));
+				item_details->sell_value_tier = int(dber_get(misc_params, "sell_value_tier"));
+				item_details->fame_value_tier = int(dber_get(misc_params, "fame_value_tier"));
+				item_details->base_action_points = int(dber_get(misc_params, "action_points"));
+				item_details->bonus_action_points = int(dber_get(misc_params, "bonus_action_points"));
+				item_details->base_action_points_cost = int(dber_get(misc_params, "action_points_cost"));
 
 				{ // Available Castes
 					item_details->caste_ids.clear();
-					const Dictionary available_castes_dict = get_find_data_by_param_name("available_castes", misc_params);
-					if (available_castes_dict.has("array_values")) {
-						const Array available_castes = Array(available_castes_dict["array_values"]);
+					const Variant available_castes_dict = dber_find(misc_params, "available_castes");
+					if (available_castes_dict.get_type() != Variant::NIL) {
+						const Array available_castes = Array(available_castes_dict);
 						for (int x = 0; x < available_castes.size(); ++x) {
-							const Array aa = available_castes[x];
-							const Dictionary e = aa[0];
-							const StringName caste_id = global_enums["caste_types"][int(e["value"])];
+							const Dictionary aa = available_castes[x];
+							const StringName caste_id = global_enums["caste_types"][int(dber_get(aa, "caste"))];
 							item_details->caste_ids.append(caste_id);
 						}
 					}
@@ -3271,7 +3244,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 
 				{ // Item Animations
 					item_details->item_animations.clear();
-					const Array item_animations = Array(get_find_data_by_param_name("animations", misc_params)["array_values"]);
+					const Array item_animations = Array(dber_get(misc_params, "animations"));
 					for (int x = 0; x < item_animations.size(); ++x) {
 						item_details->item_animations.append(get_animation_detail(global_enums, item_animations, x));
 					}
@@ -3281,19 +3254,17 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 					const bool randomize_damage_type = bool(entry["randomize_damage_type"]);
 					const bool randomize_resistance_type = bool(entry["randomize_resistance_type"]);
 
-					const Array item_effectiveness_stats_lines = Array(entry["item_effectiveness_stats"]);
-					for (int x = 0; x < item_effectiveness_stats_lines.size(); ++x) {
-						const Dictionary item_effectiveness_stat_entry = item_effectiveness_stats_lines[x];
-						
-						const float value = float(item_effectiveness_stat_entry["value"]);
+					const Dictionary item_effectiveness_stats = dber_get(entry, "item_effectiveness_stats"); // {stat name: value}
+					const Array item_effectiveness_stats_names = item_effectiveness_stats.keys();
+					for (int x = 0; x < item_effectiveness_stats_names.size(); ++x) {
+						const float value = float(item_effectiveness_stats[item_effectiveness_stats_names[x]]);
 						if (value == 0.0) continue; // No need to store empty values.
 
 						BG_ContentStat *new_class = memnew(BG_ContentStat);
 						new_class->value = value;
 
 						// Store a reference to its relative stat.
-						const int unique_id = int(item_effectiveness_stat_entry["stat_unique_id"]);
-						new_class->stat_reference = get_stat_from_unique_id(unique_id);
+						new_class->stat_reference = get_stat_from_stat_id_name(StringName(item_effectiveness_stats_names[x]));
 
 						new_class->randomize_damage_type = randomize_damage_type;
 						new_class->randomize_resistance_type = randomize_resistance_type;
@@ -3304,19 +3275,17 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 
 				{ // Item Stat Requirements
 					if (item_details->use_stat_requirements && entry.has("item_stat_requirements")) {
-						const Array item_stat_requirement_lines = Array(entry["item_stat_requirements"]);
-						for (int x = 0; x < item_stat_requirement_lines.size(); ++x) {
-							const Dictionary item_stat_requirement_entry = item_stat_requirement_lines[x];
-
-							const float value = float(item_stat_requirement_entry["value"]);
+						const Dictionary item_stat_requirement = dber_get(entry, "item_stat_requirements"); // {stat name: value}
+						const Array item_stat_requirement_names = item_stat_requirement.keys();
+						for (int x = 0; x < item_stat_requirement_names.size(); ++x) {
+							const float value = float(item_stat_requirement[item_stat_requirement_names[x]]);
 							if (value == 0.0) continue; // No need to store empty values.
 
 							BG_ContentStat *new_class = memnew(BG_ContentStat);
 							new_class->value = value;
 
 							// Store a reference to its relative stat.
-							const int unique_id = int(item_stat_requirement_entry["stat_unique_id"]);
-							new_class->stat_reference = get_stat_from_unique_id(unique_id);
+							new_class->stat_reference = get_stat_from_stat_id_name(StringName(item_stat_requirement_names[x]));
 
 							item_details->item_stat_requirements.append(new_class);
 						}
@@ -3324,31 +3293,31 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				}
 
 				{ // Effects
-					const Array effects_lines = Array(get_find_data_by_param_name("effects", misc_params)["array_values"]);
+					const Array effects_lines = Array(dber_get(misc_params, "effects"));
 					for (int x = 0; x < effects_lines.size(); ++x) {
-						const Array effects_entry = effects_lines[x];
+						const Dictionary effects_entry = effects_lines[x];
 
 						TypedArray<StringName> effect_ids;
-						const Array effect_array = Array(get_find_data_by_param_name("effects", effects_entry)["array_values"]);
+						const Array effect_array = Array(dber_get(effects_entry, "effects"));
 						for (int y = 0; y < effect_array.size(); ++y) {
-							const Array effect_entry = effect_array[y];
-							effect_ids.append(StringName(get_find_data_by_param_name("effect", effect_entry)["value"]));
+							const Dictionary effect_entry = effect_array[y];
+							effect_ids.append(StringName(dber_get(effect_entry, "effect")));
 						}
 						
-						const StringName rarity_id = StringName(get_find_data_by_param_name("rarity", effects_entry)["value"]);
+						const StringName rarity_id = StringName(dber_get(effects_entry, "rarity"));
 						item_details->effects[rarity_id] = effect_ids;
 					}
 				}
 
 				{ // Audio Events
 					item_details->audio_events.clear();
-					const Dictionary audio_events_dict = get_find_data_by_param_name("audio_events", misc_params);
-					if (audio_events_dict.has("array_values")) {
-						const Array audio_events = Array(audio_events_dict["array_values"]);
+					const Variant audio_events_dict = dber_find(misc_params, "audio_events");
+					if (audio_events_dict.get_type() != Variant::NIL) {
+						const Array audio_events = Array(audio_events_dict);
 						for (int x = 0; x < audio_events.size(); ++x) {
-							const Array audio_events_entry = audio_events[x];
-							const StringName audio_id_key = StringName(get_find_data_by_param_name("id", audio_events_entry)["value"]);
-							item_details->audio_events[audio_id_key] = StringName(get_find_data_by_param_name("audio_id", audio_events_entry)["value"]);
+							const Dictionary audio_events_entry = audio_events[x];
+							const StringName audio_id_key = StringName(dber_get(audio_events_entry, "id"));
+							item_details->audio_events[audio_id_key] = StringName(dber_get(audio_events_entry, "audio_id"));
 						}
 					}
 				}
@@ -3364,45 +3333,43 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				monster_details->id = content_id;
 				monster_details->name = StringName(entry["nice_name"]);
 				monster_details->effectiveness = float(entry["effectiveness"]);
-				monster_details->icon_path = ensure_clean_path(get_find_data_by_param_name("icon", misc_params)["path"]);
-				monster_details->model_path = ensure_clean_path(get_find_data_by_param_name("mesh_scene_path", misc_params)["path"]);
-				const Dictionary level_range = get_find_data_by_param_name("level_range", misc_params);
-				monster_details->level_range = Vector2(int(level_range["value_x"]), int(level_range["value_y"]));
-				monster_details->can_be_turned_to_stone = bool(get_find_data_by_param_name("can_be_turned_to_stone", misc_params)["value"]);
-				monster_details->travel_distance = int(get_find_data_by_param_name("travel_distance", misc_params)["value"]);
-				monster_details->preferred_row = int(get_find_data_by_param_name("preferred_row", misc_params)["value"]);
-				monster_details->base_action_points = int(get_find_data_by_param_name("action_points", misc_params)["value"]);
-				monster_details->bonus_action_points = int(get_find_data_by_param_name("bonus_action_points", misc_params)["value"]);
-				monster_details->base_action_points_cost = int(get_find_data_by_param_name("action_points_cost", misc_params)["value"]);
-				monster_details->action_points_fatigue_rate_multiplier = float(get_find_data_by_param_name("action_points_fatigue_rate_multiplier", misc_params)["value"]);
+				monster_details->icon_path = ensure_clean_path(dber_get(misc_params, "icon"));
+				monster_details->model_path = ensure_clean_path(dber_get(misc_params, "mesh_scene_path"));
+				const Variant level_range = dber_get(misc_params, "level_range");
+				monster_details->level_range = Vector2(int(Array(level_range)[0]), int(Array(level_range)[1]));
+				monster_details->can_be_turned_to_stone = bool(dber_get(misc_params, "can_be_turned_to_stone"));
+				monster_details->travel_distance = int(dber_get(misc_params, "travel_distance"));
+				monster_details->preferred_row = int(dber_get(misc_params, "preferred_row"));
+				monster_details->base_action_points = int(dber_get(misc_params, "action_points"));
+				monster_details->bonus_action_points = int(dber_get(misc_params, "bonus_action_points"));
+				monster_details->base_action_points_cost = int(dber_get(misc_params, "action_points_cost"));
+				monster_details->action_points_fatigue_rate_multiplier = float(dber_get(misc_params, "action_points_fatigue_rate_multiplier"));
 
 				{ // Stats
-					const Array stats_lines = Array(get_find_data_by_param_name("stats", misc_params)["array_values"]);
+					const Array stats_lines = Array(dber_get(misc_params, "stats"));
 					for (int x = 0; x < stats_lines.size(); ++x) {
-						const Array stats_entry = stats_lines[x];
+						const Dictionary stats_entry = stats_lines[x];
 
 						BG_UnitStat *new_class = memnew(BG_UnitStat);
-						new_class->id = StringName(get_find_data_by_param_name("stat_id", stats_entry)["value"]);
-						new_class->defensive_value = int(get_find_data_by_param_name("value", stats_entry)["value"]);
+						new_class->id = StringName(dber_get(stats_entry, "stat_id"));
+						new_class->defensive_value = int(dber_get(stats_entry, "value"));
 
 						monster_details->stats.append(new_class);
 					}
 				}
 
 				{ // Effectiveness Stats
-					const Array effectiveness_stats_lines = Array(entry["effectiveness_stats"]);
-					for (int x = 0; x < effectiveness_stats_lines.size(); ++x) {
-						const Dictionary effectiveness_stat_entry = effectiveness_stats_lines[x];
-						
-						const float value = float(effectiveness_stat_entry["value"]);
+					const Dictionary effectiveness_stats = dber_get(entry, "effectiveness_stats"); // {stat name: value}
+					const Array effectiveness_stats_names = effectiveness_stats.keys();
+					for (int x = 0; x < effectiveness_stats_names.size(); ++x) {
+						const float value = float(effectiveness_stats[effectiveness_stats_names[x]]);
 						if (value == 0.0) continue; // No need to store empty values.
 
 						BG_ContentStat *new_class = memnew(BG_ContentStat);
 						new_class->value = value;
 
 						// Store a reference to its relative stat.
-						const int unique_id = int(effectiveness_stat_entry["stat_unique_id"]);
-						new_class->stat_reference = get_stat_from_unique_id(unique_id);
+						new_class->stat_reference = get_stat_from_stat_id_name(StringName(effectiveness_stats_names[x]));
 
 						monster_details->effectiveness_stats.append(new_class);
 					}
@@ -3410,36 +3377,36 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 
 				{ // Animations
 					monster_details->animations.clear();
-					const Array animations = Array(get_find_data_by_param_name("animations", misc_params)["array_values"]);
+					const Array animations = Array(dber_get(misc_params, "animations"));
 					for (int x = 0; x < animations.size(); ++x) {
 						monster_details->animations.append(get_animation_detail(global_enums, animations, x));
 					}
 				}
 
 				{ // Effects
-					const Array effects_lines = Array(get_find_data_by_param_name("effects", misc_params)["array_values"]);
+					const Array effects_lines = Array(dber_get(misc_params, "effects"));
 					for (int x = 0; x < effects_lines.size(); ++x) {
-						const Array effects_entry = effects_lines[x];
+						const Dictionary effects_entry = effects_lines[x];
 
 						TypedArray<StringName> effect_ids;
-						const Array effect_array = Array(get_find_data_by_param_name("effects", effects_entry)["array_values"]);
+						const Array effect_array = Array(dber_get(effects_entry, "effects"));
 						for (int y = 0; y < effect_array.size(); ++y) {
-							const Array effect_entry = effect_array[y];
-							effect_ids.append(StringName(get_find_data_by_param_name("effect", effect_entry)["value"]));
+							const Dictionary effect_entry = effect_array[y];
+							effect_ids.append(StringName(dber_get(effect_entry, "effect")));
 						}
 						
 						monster_details->effect_ids = effect_ids;
 					}
 				}
 
-				{ // Drops
-					const Array drops_lines = Array(get_find_data_by_param_name("drops", misc_params)["array_values"]);
+				{ // Drops (optional: monsters in DBer don't have this param yet)
+					const Array drops_lines = Array(dber_find(misc_params, "drops"));
 					for (int x = 0; x < drops_lines.size(); ++x) {
-						const Array drops_entry = drops_lines[x];
+						const Dictionary drops_entry = drops_lines[x];
 
 						BG_RewardItem *new_class = memnew(BG_RewardItem);
-						new_class->id = StringName(get_find_data_by_param_name("item_id", drops_entry)["value"]);
-						new_class->drop_weight = float(get_find_data_by_param_name("drop_weight", drops_entry)["value"]);
+						new_class->id = StringName(dber_get(drops_entry, "item_id"));
+						new_class->drop_weight = float(dber_get(drops_entry, "drop_weight"));
 						monster_details->drops.append(new_class);
 					}
 				}
@@ -3455,40 +3422,38 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				item_details->id = content_id;
 				item_details->name = StringName(entry["nice_name"]);
 				
-				const int slot_type = int(get_find_data_by_param_name("slot_type", misc_params)["value"]);
+				const int slot_type = int(dber_get(misc_params, "slot_type"));
 				item_details->slot_type_id = global_enums["equipment_slot_types"][slot_type];
 				item_details->slot_type = BG_ItemDetails::ItemType::BEAST_PART;
 
 				item_details->effectiveness = float(entry["effectiveness"]);
 				item_details->use_stat_requirements = bool(entry["use_stat_requirements"]);
-				item_details->icon_path = ensure_clean_path(get_find_data_by_param_name("icon", misc_params)["path"]);
-				const Dictionary animation_attach_socket_dict = get_find_data_by_param_name("anim_attach_socket", misc_params);
-				if (animation_attach_socket_dict.has("value")) item_details->animation_attach_socket = int(animation_attach_socket_dict["value"]) + 1;
-				// const Dictionary level_range = get_find_data_by_param_name("level_range", misc_params);
-				// if (level_range.has("value_x")) item_details->level_range = Vector2(int(level_range["value_x"]), int(level_range["value_y"]));
-				item_details->sell_value_tier = int(get_find_data_by_param_name("sell_value_tier", misc_params)["value"]);
-				item_details->fame_value_tier = int(get_find_data_by_param_name("fame_value_tier", misc_params)["value"]);
-				item_details->base_action_points = int(get_find_data_by_param_name("action_points", misc_params)["value"]);
-				item_details->bonus_action_points = int(get_find_data_by_param_name("bonus_action_points", misc_params)["value"]);
-				item_details->base_action_points_cost = int(get_find_data_by_param_name("action_points_cost", misc_params)["value"]);
+				item_details->icon_path = ensure_clean_path(dber_get(misc_params, "icon"));
+				const Variant animation_attach_socket_dict = dber_find(misc_params, "anim_attach_socket");
+				if (animation_attach_socket_dict.get_type() != Variant::NIL) item_details->animation_attach_socket = int(animation_attach_socket_dict) + 1;
+				// const Variant level_range = dber_find(misc_params, "level_range");
+				// if (level_range.get_type() != Variant::NIL) item_details->level_range = Vector2(int(Array(level_range)[0]), int(Array(level_range)[1]));
+				item_details->sell_value_tier = int(dber_get(misc_params, "sell_value_tier"));
+				item_details->fame_value_tier = int(dber_get(misc_params, "fame_value_tier"));
+				item_details->base_action_points = int(dber_get(misc_params, "action_points"));
+				item_details->bonus_action_points = int(dber_get(misc_params, "bonus_action_points"));
+				item_details->base_action_points_cost = int(dber_get(misc_params, "action_points_cost"));
 
 				{ // Item Effectiveness Stats
 					const bool randomize_damage_type = bool(entry["randomize_damage_type"]);
 					const bool randomize_resistance_type = bool(entry["randomize_resistance_type"]);
 
-					const Array item_effectiveness_stats_lines = Array(entry["item_effectiveness_stats"]);
-					for (int x = 0; x < item_effectiveness_stats_lines.size(); ++x) {
-						const Dictionary item_effectiveness_stat_entry = item_effectiveness_stats_lines[x];
-						
-						const float value = float(item_effectiveness_stat_entry["value"]);
+					const Dictionary item_effectiveness_stats = dber_get(entry, "item_effectiveness_stats"); // {stat name: value}
+					const Array item_effectiveness_stats_names = item_effectiveness_stats.keys();
+					for (int x = 0; x < item_effectiveness_stats_names.size(); ++x) {
+						const float value = float(item_effectiveness_stats[item_effectiveness_stats_names[x]]);
 						if (value == 0.0) continue; // No need to store empty values.
 
 						BG_ContentStat *new_class = memnew(BG_ContentStat);
 						new_class->value = value;
 
 						// Store a reference to its relative stat.
-						const int unique_id = int(item_effectiveness_stat_entry["stat_unique_id"]);
-						new_class->stat_reference = get_stat_from_unique_id(unique_id);
+						new_class->stat_reference = get_stat_from_stat_id_name(StringName(item_effectiveness_stats_names[x]));
 
 						new_class->randomize_damage_type = randomize_damage_type;
 						new_class->randomize_resistance_type = randomize_resistance_type;
@@ -3499,19 +3464,17 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 
 				{ // Item Stat Requirements
 					if (item_details->use_stat_requirements && entry.has("item_stat_requirements")) {
-						const Array item_stat_requirement_lines = Array(entry["item_stat_requirements"]);
-						for (int x = 0; x < item_stat_requirement_lines.size(); ++x) {
-							const Dictionary item_stat_requirement_entry = item_stat_requirement_lines[x];
-
-							const float value = float(item_stat_requirement_entry["value"]);
+						const Dictionary item_stat_requirement = dber_get(entry, "item_stat_requirements"); // {stat name: value}
+						const Array item_stat_requirement_names = item_stat_requirement.keys();
+						for (int x = 0; x < item_stat_requirement_names.size(); ++x) {
+							const float value = float(item_stat_requirement[item_stat_requirement_names[x]]);
 							if (value == 0.0) continue; // No need to store empty values.
 
 							BG_ContentStat *new_class = memnew(BG_ContentStat);
 							new_class->value = value;
 
 							// Store a reference to its relative stat.
-							const int unique_id = int(item_stat_requirement_entry["stat_unique_id"]);
-							new_class->stat_reference = get_stat_from_unique_id(unique_id);
+							new_class->stat_reference = get_stat_from_stat_id_name(StringName(item_stat_requirement_names[x]));
 
 							item_details->item_stat_requirements.append(new_class);
 						}
@@ -3519,28 +3482,28 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				}
 
 				{ // Effects
-					const Array effects_lines = Array(get_find_data_by_param_name("effects", misc_params)["array_values"]);
+					const Array effects_lines = Array(dber_get(misc_params, "effects"));
 					for (int x = 0; x < effects_lines.size(); ++x) {
-						const Array effects_entry = effects_lines[x];
+						const Dictionary effects_entry = effects_lines[x];
 
 						TypedArray<StringName> effect_ids;
-						const Array effect_array = Array(get_find_data_by_param_name("effects", effects_entry)["array_values"]);
+						const Array effect_array = Array(dber_get(effects_entry, "effects"));
 						for (int y = 0; y < effect_array.size(); ++y) {
-							const Array effect_entry = effect_array[y];
-							effect_ids.append(StringName(get_find_data_by_param_name("effect", effect_entry)["value"]));
+							const Dictionary effect_entry = effect_array[y];
+							effect_ids.append(StringName(dber_get(effect_entry, "effect")));
 						}
 						
-						const StringName rarity_id = StringName(get_find_data_by_param_name("rarity", effects_entry)["value"]);
+						const StringName rarity_id = StringName(dber_get(effects_entry, "rarity"));
 						item_details->effects[rarity_id] = effect_ids;
 					}
 				}
 
 				{ // Available Item Slot Types
-					const Array available_item_slot_types_lines = Array(get_find_data_by_param_name("available_item_slot_types", misc_params)["array_values"]);
+					const Array available_item_slot_types_lines = Array(dber_get(misc_params, "available_item_slot_types"));
 					for (int x = 0; x < available_item_slot_types_lines.size(); ++x) {
-						const Array available_item_slot_types_entry = available_item_slot_types_lines[x];
+						const Dictionary available_item_slot_types_entry = available_item_slot_types_lines[x];
 
-						const int slot_type = int(get_find_data_by_param_name("slot_type", available_item_slot_types_entry)["value"]);
+						const int slot_type = int(dber_get(available_item_slot_types_entry, "slot_type"));
 						item_details->beast_part_available_item_slot_types.append(global_enums["equipment_slot_types"][slot_type]);
 					}
 				}
@@ -3552,26 +3515,24 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Audio
 		const Array lines = get_sheet_by_name("Audio", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 			
 			BG_AudioData *new_class = memnew(BG_AudioData);
-			new_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_class->id = StringName(dber_get(entry, "id"));
 			
-			const Dictionary entry_audios = get_find_data_by_param_name("audios", entry);
-			const Array entry_audios_values = entry_audios["array_values"];
+			const Array entry_audios_values = dber_get(entry, "audios");
 			for (int x = 0; x < entry_audios_values.size(); ++x) {
-				const Array audio_details_entry = entry_audios_values[x];
+				const Dictionary audio_details_entry = entry_audios_values[x];
 
 				BG_AudioDataDetails *new_audio_details = memnew(BG_AudioDataDetails);
-				new_audio_details->file_path = ensure_clean_path(get_find_data_by_param_name("path", audio_details_entry)["path"]);
-				new_audio_details->volume_db_base_value = int(get_find_data_by_param_name("volume_db", audio_details_entry)["value"]);
-				new_audio_details->random_pitch_scale = float(get_find_data_by_param_name("random_pitch_scale", audio_details_entry)["value"]);
+				new_audio_details->file_path = ensure_clean_path(dber_get(audio_details_entry, "path"));
+				new_audio_details->volume_db_base_value = int(dber_get(audio_details_entry, "volume_db"));
+				new_audio_details->random_pitch_scale = float(dber_get(audio_details_entry, "random_pitch_scale"));
 
-				const Dictionary restrict_to_cities_dict = get_find_data_by_param_name("restrict_to_cities", audio_details_entry);
-				const Array restrict_to_cities = restrict_to_cities_dict["array_values"];
+				const Array restrict_to_cities = dber_get(audio_details_entry, "restrict_to_cities");
 				for (int y = 0; y < restrict_to_cities.size(); ++y) {
-					const Array restrict_to_cities_entry = restrict_to_cities[y];
-					new_audio_details->restrict_to_acts.append(int(get_find_data_by_param_name("city", restrict_to_cities_entry)["value"]));
+					const Dictionary restrict_to_cities_entry = restrict_to_cities[y];
+					new_audio_details->restrict_to_acts.append(int(dber_get(restrict_to_cities_entry, "city")));
 				}
 
 				new_class->audio_details.append(new_audio_details);
@@ -3584,45 +3545,44 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Bands
 		const Array lines = get_sheet_by_name("Bands", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 
-			band_info->num_band_members_for_hire = int(get_find_data_by_param_name("num_band_members_for_hire", entry)["value"]);
-			band_info->rest_recovery_speed = float(get_find_data_by_param_name("rest_recovery_speed", entry)["value"]);
-			band_info->knocked_out_turns = int(get_find_data_by_param_name("knocked_out_turns", entry)["value"]);
-			const Dictionary band_sizes_min_max = get_find_data_by_param_name("band_sizes_min_max", entry);
-			band_info->band_size_min_max = Vector2(float(band_sizes_min_max["value_x"]), float(band_sizes_min_max["value_y"]));
+			band_info->num_band_members_for_hire = int(dber_get(entry, "num_band_members_for_hire"));
+			band_info->rest_recovery_speed = float(dber_get(entry, "rest_recovery_speed"));
+			band_info->knocked_out_turns = int(dber_get(entry, "knocked_out_turns"));
+			const Variant band_sizes_min_max = dber_get(entry, "band_sizes_min_max");
+			band_info->band_size_min_max = Vector2(float(Array(band_sizes_min_max)[0]), float(Array(band_sizes_min_max)[1]));
 
-			const Dictionary first_names = get_find_data_by_param_name("first_names", entry);
-			const Array first_names_array = first_names["array_values"];
+			const Variant first_names = dber_get(entry, "first_names");
+			const Array first_names_array = first_names;
 			for (int x = 0; x < first_names_array.size(); ++x) {
-				const Array first_names_entry = first_names_array[x];
+				const Dictionary first_names_entry = first_names_array[x];
 
 				BG_BandNameInfo *new_band_name_info = memnew(BG_BandNameInfo);
-				new_band_name_info->name = StringName(get_find_data_by_param_name("name", first_names_entry)["value"]);
-				new_band_name_info->allowed_in_random = bool(get_find_data_by_param_name("allowed_in_random", first_names_entry)["value"]);
+				new_band_name_info->name = StringName(dber_get(first_names_entry, "name"));
+				new_band_name_info->allowed_in_random = bool(dber_get(first_names_entry, "allowed_in_random"));
 				band_info->first_names.append(new_band_name_info);
 			}
 			
-			const Dictionary last_names = get_find_data_by_param_name("last_names", entry);
-			const Array last_names_array = last_names["array_values"];
+			const Variant last_names = dber_get(entry, "last_names");
+			const Array last_names_array = last_names;
 			for (int x = 0; x < last_names_array.size(); ++x) {
-				const Array last_names_entry = last_names_array[x];
+				const Dictionary last_names_entry = last_names_array[x];
 
 				BG_BandNameInfo *new_band_name_info = memnew(BG_BandNameInfo);
-				new_band_name_info->name = StringName(get_find_data_by_param_name("name", last_names_entry)["value"]);
-				new_band_name_info->allowed_in_random = bool(get_find_data_by_param_name("allowed_in_random", last_names_entry)["value"]);
+				new_band_name_info->name = StringName(dber_get(last_names_entry, "name"));
+				new_band_name_info->allowed_in_random = bool(dber_get(last_names_entry, "allowed_in_random"));
 				band_info->last_names.append(new_band_name_info);
 			}
 			
-			const Dictionary bands = get_find_data_by_param_name("bands", entry);
-			const Array bands_array = bands["array_values"];
+			const Array bands_array = dber_get(entry, "bands");
 			for (int x = 0; x < bands_array.size(); ++x) {
-				const Array bands_entry = bands_array[x];
+				const Dictionary bands_entry = bands_array[x];
 
 				BG_BandNameInfo *new_band_name_info = memnew(BG_BandNameInfo);
-				new_band_name_info->name = StringName(get_find_data_by_param_name("name", bands_entry)["value"]);
+				new_band_name_info->name = StringName(dber_get(bands_entry, "name"));
 				band_info->band_names.append(new_band_name_info);
-				band_info->icon_paths.append(ensure_clean_path(get_find_data_by_param_name("icon_path", bands_entry)["path"]));
+				band_info->icon_paths.append(ensure_clean_path(dber_get(bands_entry, "icon_path")));
 			}
 		}
 	}
@@ -3630,106 +3590,99 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Battle Boards
 		const Array lines = get_sheet_by_name("Battle_Boards", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 			
 			BG_BattleBoardDetails *new_class = memnew(BG_BattleBoardDetails);
-			new_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_class->unique_save_name = StringName(get_find_data_by_param_name("unique_save_name", entry)["value"]);
-			new_class->board_path = ensure_clean_path(get_find_data_by_param_name("board_path", entry)["path"]);
-			new_class->battle_board_game_script_path = ensure_clean_path(get_find_data_by_param_name("battle_board_game_script_path", entry)["path"]);
-			new_class->default_hex_visual_path = ensure_clean_path(get_find_data_by_param_name("default_hex_visual_path", entry)["path"]);
-			new_class->parent_data_id = StringName(get_find_data_by_param_name("parent_data_id", entry)["value"]);
+			new_class->id = StringName(dber_get(entry, "id"));
+			new_class->unique_save_name = StringName(dber_get(entry, "unique_save_name"));
+			new_class->board_path = ensure_clean_path(dber_get(entry, "board_path"));
+			new_class->battle_board_game_script_path = ensure_clean_path(dber_get(entry, "battle_board_game_script_path"));
+			new_class->default_hex_visual_path = ensure_clean_path(dber_get(entry, "default_hex_visual_path"));
+			new_class->parent_data_id = StringName(dber_get(entry, "parent_data_id"));
 
 			// Hex Types
-			const Dictionary hex_types_values = get_find_data_by_param_name("hex_types", entry);
-			const Array hex_types_values_array = hex_types_values["array_values"];
+			const Array hex_types_values_array = dber_get(entry, "hex_types");
 			for (int x = 0; x < hex_types_values_array.size(); ++x) {
-				const Array hex_types_entry = hex_types_values_array[x];
+				const Dictionary hex_types_entry = hex_types_values_array[x];
 				
 				BG_BattleBoard_HexTypeDetails *new_hex_type_class = memnew(BG_BattleBoard_HexTypeDetails);
-				new_hex_type_class->id = StringName(get_find_data_by_param_name("id", hex_types_entry)["value"]);
-				new_hex_type_class->hex_type = int(get_find_data_by_param_name("type", hex_types_entry)["value"]);
-				new_hex_type_class->destroyed_vfx_scene_path = ensure_clean_path(get_find_data_by_param_name("destroyed_vfx_scene", hex_types_entry)["path"]);
-				new_hex_type_class->destroyed_sfx_id = StringName(get_find_data_by_param_name("destroyed_sfx", hex_types_entry)["value"]);
-				new_hex_type_class->hex_visual_scene_path_override = ensure_clean_path(get_find_data_by_param_name("hex_visual_file_path_override", hex_types_entry)["path"]);
+				new_hex_type_class->id = StringName(dber_get(hex_types_entry, "id"));
+				new_hex_type_class->hex_type = int(dber_get(hex_types_entry, "type"));
+				new_hex_type_class->destroyed_vfx_scene_path = ensure_clean_path(dber_get(hex_types_entry, "destroyed_vfx_scene"));
+				new_hex_type_class->destroyed_sfx_id = StringName(dber_get(hex_types_entry, "destroyed_sfx"));
+				new_hex_type_class->hex_visual_scene_path_override = ensure_clean_path(dber_get(hex_types_entry, "hex_visual_file_path_override"));
 
 				// Settings
-				const Dictionary settings_values = get_find_data_by_param_name("settings", hex_types_entry);
-				const Array settings_array = settings_values["array_values"];
+				const Array settings_array = dber_get(hex_types_entry, "settings");
 				for (int y = 0; y < settings_array.size(); ++y) {
-					const Array settings_entry = settings_array[y];
+					const Dictionary settings_entry = settings_array[y];
 
-					new_hex_type_class->is_dynamic_type = bool(get_find_data_by_param_name("is_dynamic_type", settings_entry)["value"]);
-					new_hex_type_class->is_game_type = bool(get_find_data_by_param_name("is_game_type", settings_entry)["value"]);
-					new_hex_type_class->is_actionable = bool(get_find_data_by_param_name("is_actionable", settings_entry)["value"]);
-					new_hex_type_class->actionable_requires_move = bool(get_find_data_by_param_name("actionable_requires_move", settings_entry)["value"]);
-					new_hex_type_class->pass_through_by_ally = bool(get_find_data_by_param_name("pass_through_by_ally", settings_entry)["value"]);
-					new_hex_type_class->pass_through_by_enemy = bool(get_find_data_by_param_name("pass_through_by_enemy", settings_entry)["value"]);
+					new_hex_type_class->is_dynamic_type = bool(dber_get(settings_entry, "is_dynamic_type"));
+					new_hex_type_class->is_game_type = bool(dber_get(settings_entry, "is_game_type"));
+					new_hex_type_class->is_actionable = bool(dber_get(settings_entry, "is_actionable"));
+					new_hex_type_class->actionable_requires_move = bool(dber_get(settings_entry, "actionable_requires_move"));
+					new_hex_type_class->pass_through_by_ally = bool(dber_get(settings_entry, "pass_through_by_ally"));
+					new_hex_type_class->pass_through_by_enemy = bool(dber_get(settings_entry, "pass_through_by_enemy"));
 					break; // Should only ever be one entry.
 				}
 
 				// Visuals
-				const Dictionary visuals_values = get_find_data_by_param_name("visuals", hex_types_entry);
-				const Array visuals_values_array = visuals_values["array_values"];
+				const Array visuals_values_array = dber_get(hex_types_entry, "visuals");
 				for (int y = 0; y < visuals_values_array.size(); ++y) {
-					const Array visuals_entry = visuals_values_array[y];
+					const Dictionary visuals_entry = visuals_values_array[y];
 
 					BG_BattleBoard_HexTypeVisualDetails *new_hex_type_visuals_class = memnew(BG_BattleBoard_HexTypeVisualDetails);
-					new_hex_type_visuals_class->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", visuals_entry)["path"]);
-					new_hex_type_visuals_class->two_der_id = StringName(get_find_data_by_param_name("two_der_id", visuals_entry)["value"]);
-					new_hex_type_visuals_class->scene_path = ensure_clean_path(get_find_data_by_param_name("scene_path", visuals_entry)["path"]);
-					new_hex_type_visuals_class->destroyed_icon_path = ensure_clean_path(get_find_data_by_param_name("destroyed_icon_path", visuals_entry)["path"]);
-					new_hex_type_visuals_class->destroyed_two_der_id = StringName(get_find_data_by_param_name("destroyed_two_der_id", visuals_entry)["value"]);
-					new_hex_type_visuals_class->destroyed_scene_path = ensure_clean_path(get_find_data_by_param_name("destroyed_scene_path", visuals_entry)["path"]);
-					new_hex_type_visuals_class->tint = convert_hex_to_color(get_find_data_by_param_name("tint", visuals_entry)["value"]);
+					new_hex_type_visuals_class->icon_path = ensure_clean_path(dber_get(visuals_entry, "icon_path"));
+					new_hex_type_visuals_class->two_der_id = StringName(dber_get(visuals_entry, "two_der_id"));
+					new_hex_type_visuals_class->scene_path = ensure_clean_path(dber_get(visuals_entry, "scene_path"));
+					new_hex_type_visuals_class->destroyed_icon_path = ensure_clean_path(dber_get(visuals_entry, "destroyed_icon_path"));
+					new_hex_type_visuals_class->destroyed_two_der_id = StringName(dber_get(visuals_entry, "destroyed_two_der_id"));
+					new_hex_type_visuals_class->destroyed_scene_path = ensure_clean_path(dber_get(visuals_entry, "destroyed_scene_path"));
+					new_hex_type_visuals_class->tint = convert_hex_to_color(dber_get(visuals_entry, "tint"));
 
 					new_hex_type_class->visuals.append(new_hex_type_visuals_class);
 				}
 
-				{ // Health Effectiveness
-					static const String health_effectiveness = "health_effectiveness";
-					const float value = float(get_find_data_by_param_name(health_effectiveness, hex_types_entry)["value"]);
+				{ // Health Effectiveness: {"stat": stat name, "level_value", "value"}
+					const Dictionary health_effectiveness = dber_get(hex_types_entry, "health_effectiveness");
+					const float value = float(health_effectiveness.get("value", 0.0));
 					if (value != 0.0) { // No need to store empty values.
 						BG_ContentStat *new_class = memnew(BG_ContentStat);
 						new_hex_type_class->health_effectiveness = new_class;
 						
 						new_class->value = value;
-						new_class->level_value = int(get_find_data_by_param_name(health_effectiveness, hex_types_entry)["level_value"]);
+						new_class->level_value = int(health_effectiveness.get("level_value", 0));
 
 						// Store a reference to its relative stat.
-						const int unique_id = int(get_find_data_by_param_name(health_effectiveness, hex_types_entry)["base_stat_unique_id"]);
-						new_class->stat_reference = get_stat_from_unique_id(unique_id);
+						new_class->stat_reference = get_stat_from_stat_id_name(StringName(health_effectiveness.get("stat", "")));
 					}
 				}
 
 				// Extra Types
-				const Dictionary extra_types_values = get_find_data_by_param_name("extra_types", hex_types_entry);
-				const Array extra_types_array = extra_types_values["array_values"];
+				const Array extra_types_array = dber_get(hex_types_entry, "extra_types");
 				for (int y = 0; y < extra_types_array.size(); ++y) {
-					const Array extra_types_entry = extra_types_array[y];
+					const Dictionary extra_types_entry = extra_types_array[y];
 
-					const StringName type_name = StringName(get_find_data_by_param_name("type_name", extra_types_entry)["value"]);
-					const int type_index = int(get_find_data_by_param_name("type", extra_types_entry)["value"]);
+					const StringName type_name = StringName(dber_get(extra_types_entry, "type_name"));
+					const int type_index = int(dber_get(extra_types_entry, "type"));
 					new_hex_type_class->extra_types[type_name] = type_index;
 				}
 
 				// Equipment
-				const Dictionary equipment_values = get_find_data_by_param_name("equipment", hex_types_entry);
-				const Array equipment_values_array = equipment_values["array_values"];
+				const Array equipment_values_array = dber_get(hex_types_entry, "equipment");
 				for (int y = 0; y < equipment_values_array.size(); ++y) {
-					const Array equipment_entry = equipment_values_array[y];
-					new_hex_type_class->equipment_ids.append(StringName(get_find_data_by_param_name("equipment", equipment_entry)["value"]));
+					const Dictionary equipment_entry = equipment_values_array[y];
+					new_hex_type_class->equipment_ids.append(StringName(dber_get(equipment_entry, "equipment")));
 				}
 
 				// Misc Attributes
-				const Dictionary misc_attributes_values = get_find_data_by_param_name("misc_attributes", hex_types_entry);
-				const Array misc_attributes_array = misc_attributes_values["array_values"];
+				const Array misc_attributes_array = dber_get(hex_types_entry, "misc_attributes");
 				for (int y = 0; y < misc_attributes_array.size(); ++y) {
-					const Array misc_attributes_entry = misc_attributes_array[y];
+					const Dictionary misc_attributes_entry = misc_attributes_array[y];
 
-					const String name = String(get_find_data_by_param_name("name", misc_attributes_entry)["value"]);
-					const String value1 = String(get_find_data_by_param_name("value_1", misc_attributes_entry)["value"]);
-					const String value2 = String(get_find_data_by_param_name("value_2", misc_attributes_entry)["value"]);
+					const String name = String(dber_get(misc_attributes_entry, "name"));
+					const String value1 = String(dber_get(misc_attributes_entry, "value_1"));
+					const String value2 = String(dber_get(misc_attributes_entry, "value_2"));
 
 					PackedStringArray values;
 					if (!value1.is_empty())
@@ -3744,13 +3697,12 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			}
 
 			// Audio
-			const Dictionary audio_values = get_find_data_by_param_name("audio", entry);
-			const Array audio_array = audio_values["array_values"];
+			const Array audio_array = dber_get(entry, "audio");
 			for (int x = 0; x < audio_array.size(); ++x) {
-				const Array audio_entry = audio_array[x];
+				const Dictionary audio_entry = audio_array[x];
 				
-				new_class->music_id = StringName(get_find_data_by_param_name("music_id", audio_entry)["value"]);
-				new_class->ambient_id = StringName(get_find_data_by_param_name("ambient_id", audio_entry)["value"]);
+				new_class->music_id = StringName(dber_get(audio_entry, "music_id"));
+				new_class->ambient_id = StringName(dber_get(audio_entry, "ambient_id"));
 				break;
 			}
 
@@ -3761,25 +3713,24 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Booker Skill Tree
 		const Array lines = get_sheet_by_name("Booker_Skill_Tree", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 			
 			BG_BookerSkillTreeSlotDetails *new_booker_skill_tree_slot_details_class = memnew(BG_BookerSkillTreeSlotDetails);
-			new_booker_skill_tree_slot_details_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_booker_skill_tree_slot_details_class->is_parent_button = bool(get_find_data_by_param_name("is_parent_btn", entry)["value"]);
-			new_booker_skill_tree_slot_details_class->skill_description_key = StringName(get_find_data_by_param_name("skill_description_key", entry)["value"]);
-			new_booker_skill_tree_slot_details_class->required_rep = int(get_find_data_by_param_name("required_rep", entry)["value"]);
-			StringName parent_skill = StringName(get_find_data_by_param_name("parent_skill", entry)["value"]);
+			new_booker_skill_tree_slot_details_class->id = StringName(dber_get(entry, "id"));
+			new_booker_skill_tree_slot_details_class->is_parent_button = bool(dber_get(entry, "is_parent_btn"));
+			new_booker_skill_tree_slot_details_class->skill_description_key = StringName(dber_get(entry, "skill_description_key"));
+			new_booker_skill_tree_slot_details_class->required_rep = int(dber_get(entry, "required_rep"));
+			StringName parent_skill = StringName(dber_get(entry, "parent_skill"));
 			if (!parent_skill.is_empty())
 				new_booker_skill_tree_slot_details_class->parent_skill_id = parent_skill;
 			
 			// Value Attributes
-			const Dictionary value_attribute_values = get_find_data_by_param_name("value_attributes", entry);
-			const Array value_attribute_values_array = value_attribute_values["array_values"];
+			const Array value_attribute_values_array = dber_get(entry, "value_attributes");
 			for (int x = 0; x < value_attribute_values_array.size(); ++x) {
-				const Array value_attribute_values_entry = value_attribute_values_array[x];
+				const Dictionary value_attribute_values_entry = value_attribute_values_array[x];
 
-				const float value1 = float(get_find_data_by_param_name("value_1", value_attribute_values_entry)["value"]);
-				const float value2 = float(get_find_data_by_param_name("value_2", value_attribute_values_entry)["value"]);
+				const float value1 = float(dber_get(value_attribute_values_entry, "value_1"));
+				const float value2 = float(dber_get(value_attribute_values_entry, "value_2"));
 				new_booker_skill_tree_slot_details_class->value_attributes.append(value1);
 				new_booker_skill_tree_slot_details_class->value_attributes.append(value2);
 			}
@@ -3791,87 +3742,81 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Caste Types
 		const Array lines = get_sheet_by_name("Caste_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 
 			BG_UnitCaste *new_unit_caste = memnew(BG_UnitCaste);
-			new_unit_caste->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_unit_caste->parent_caste = StringName(get_find_data_by_param_name("parent_caste", entry)["value"]);
-			new_unit_caste->is_unique_caste = bool(get_find_data_by_param_name("is_unique_caste", entry)["value"]);
-			new_unit_caste->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
+			new_unit_caste->id = StringName(dber_get(entry, "id"));
+			new_unit_caste->parent_caste = StringName(dber_get(entry, "parent_caste"));
+			new_unit_caste->is_unique_caste = bool(dber_get(entry, "is_unique_caste"));
+			new_unit_caste->icon_path = ensure_clean_path(dber_get(entry, "icon_path"));
 
 			// LOD Mesh Paths
 			new_unit_caste->lod_mesh_paths.clear();
-			const Dictionary lod_mesh_paths_values = get_find_data_by_param_name("lod_mesh_paths", entry);
-			const Array lod_mesh_paths_values_array = lod_mesh_paths_values["array_values"];
+			const Array lod_mesh_paths_values_array = dber_get(entry, "lod_mesh_paths");
 			for (int x = 0; x < lod_mesh_paths_values_array.size(); ++x) {
-				const Array lod_mesh_paths_values_entry = lod_mesh_paths_values_array[x];
-				new_unit_caste->lod_mesh_paths.append(ensure_clean_path(get_find_data_by_param_name("path", lod_mesh_paths_values_entry)["path"]));
+				const Dictionary lod_mesh_paths_values_entry = lod_mesh_paths_values_array[x];
+				new_unit_caste->lod_mesh_paths.append(ensure_clean_path(dber_get(lod_mesh_paths_values_entry, "path")));
 			}
 
 			// Scale Limits
-			const Dictionary scale_limits_values = get_find_data_by_param_name("scale_limits", entry);
-			const Array scale_limits_values_array = scale_limits_values["array_values"];
+			const Array scale_limits_values_array = dber_get(entry, "scale_limits");
 			for (int x = 0; x < scale_limits_values_array.size(); ++x) {
-				const Array scale_limits_values_entry = scale_limits_values_array[x];
+				const Dictionary scale_limits_values_entry = scale_limits_values_array[x];
 
 				new_unit_caste->scale_min = Vector2(
-					float(get_find_data_by_param_name("min_x", scale_limits_values_entry)["value"]),
-					float(get_find_data_by_param_name("min_y", scale_limits_values_entry)["value"])
+					float(dber_get(scale_limits_values_entry, "min_x")),
+					float(dber_get(scale_limits_values_entry, "min_y"))
 				);
 				new_unit_caste->scale_max = Vector2(
-					float(get_find_data_by_param_name("max_x", scale_limits_values_entry)["value"]),
-					float(get_find_data_by_param_name("max_y", scale_limits_values_entry)["value"])
+					float(dber_get(scale_limits_values_entry, "max_x")),
+					float(dber_get(scale_limits_values_entry, "max_y"))
 				);
 				new_unit_caste->scale_min_extreme = Vector2(
-					float(get_find_data_by_param_name("extreme_min_x", scale_limits_values_entry)["value"]),
-					float(get_find_data_by_param_name("extreme_min_y", scale_limits_values_entry)["value"])
+					float(dber_get(scale_limits_values_entry, "extreme_min_x")),
+					float(dber_get(scale_limits_values_entry, "extreme_min_y"))
 				);
 				new_unit_caste->scale_max_extreme = Vector2(
-					float(get_find_data_by_param_name("extreme_max_x", scale_limits_values_entry)["value"]),
-					float(get_find_data_by_param_name("extreme_max_y", scale_limits_values_entry)["value"])
+					float(dber_get(scale_limits_values_entry, "extreme_max_x")),
+					float(dber_get(scale_limits_values_entry, "extreme_max_y"))
 				);
 			}
 
 			// Misc Stats
-			const Dictionary misc_stats_values = get_find_data_by_param_name("misc_stats", entry);
-			const Array misc_stats_values_array = misc_stats_values["array_values"];
+			const Array misc_stats_values_array = dber_get(entry, "misc_stats");
 			for (int x = 0; x < misc_stats_values_array.size(); ++x) {
-				const Array misc_stats_values_entry = misc_stats_values_array[x];
-				new_unit_caste->travel_distance = int(get_find_data_by_param_name("travel_distance", misc_stats_values_entry)["value"]);
-				new_unit_caste->inventory_space = int(get_find_data_by_param_name("inventory_space", misc_stats_values_entry)["value"]);
+				const Dictionary misc_stats_values_entry = misc_stats_values_array[x];
+				new_unit_caste->travel_distance = int(dber_get(misc_stats_values_entry, "travel_distance"));
+				new_unit_caste->inventory_space = int(dber_get(misc_stats_values_entry, "inventory_space"));
 			}
 
 			// Base Stat Type Values
-			const Dictionary base_stat_type_values = get_find_data_by_param_name("base_stat_type_values", entry);
-			const Array base_stat_type_values_array = base_stat_type_values["array_values"];
+			const Array base_stat_type_values_array = dber_get(entry, "base_stat_type_values");
 			for (int x = 0; x < base_stat_type_values_array.size(); ++x) {
-				const Array base_stat_type_values_entry = base_stat_type_values_array[x];
+				const Dictionary base_stat_type_values_entry = base_stat_type_values_array[x];
 
 				BG_UnitStat *new_stat = memnew(BG_UnitStat);
-				new_stat->id = StringName(get_find_data_by_param_name("damage_type", base_stat_type_values_entry)["value"]);
-				new_stat->bonus_percentage = float(get_find_data_by_param_name("base_bonus_percentage", base_stat_type_values_entry)["value"]);
-				new_stat->defensive_value = int(get_find_data_by_param_name("starting_value", base_stat_type_values_entry)["value"]);
+				new_stat->id = StringName(dber_get(base_stat_type_values_entry, "damage_type"));
+				new_stat->bonus_percentage = float(dber_get(base_stat_type_values_entry, "base_bonus_percentage"));
+				new_stat->defensive_value = int(dber_get(base_stat_type_values_entry, "starting_value"));
 
 				new_unit_caste->stats.append(new_stat);
 			}
 
 			// Random Starting Items
-			const Dictionary random_starting_items_values = get_find_data_by_param_name("random_starting_items", entry);
-			const Array random_starting_items_values_array = random_starting_items_values["array_values"];
+			const Array random_starting_items_values_array = dber_get(entry, "random_starting_items");
 			for (int x = 0; x < random_starting_items_values_array.size(); ++x) {
-				const Array random_starting_items_values_entry = random_starting_items_values_array[x];
+				const Dictionary random_starting_items_values_entry = random_starting_items_values_array[x];
 				new_unit_caste->starting_item_ids.append(
-					StringName(get_find_data_by_param_name("item", random_starting_items_values_entry)["value"])
+					StringName(dber_get(random_starting_items_values_entry, "item"))
 				);
 			}
 
 			// Element Availability
-			const Dictionary element_availability_values = get_find_data_by_param_name("element_availability", entry);
-			const Array element_availability_values_array = element_availability_values["array_values"];
+			const Array element_availability_values_array = dber_get(entry, "element_availability");
 			for (int x = 0; x < element_availability_values_array.size(); ++x) {
-				const Array element_availability_values_entry = element_availability_values_array[x];
+				const Dictionary element_availability_values_entry = element_availability_values_array[x];
 				new_unit_caste->element_availability_ids.append(
-					StringName(get_find_data_by_param_name("element", element_availability_values_entry)["value"])
+					StringName(dber_get(element_availability_values_entry, "element"))
 				);
 			}
 
@@ -3884,42 +3829,40 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				}
 				return false;
 			};
-			const Dictionary attribute_skill_tree_values = get_find_data_by_param_name("attribute_skill_tree", entry);
-			const Array attribute_skill_tree_array = attribute_skill_tree_values["array_values"];
+			const Array attribute_skill_tree_array = dber_get(entry, "attribute_skill_tree");
 			for (int x = 0; x < attribute_skill_tree_array.size(); ++x)
 			{
-				const Array attribute_skill_tree_entry = attribute_skill_tree_array[x];
+				const Dictionary attribute_skill_tree_entry = attribute_skill_tree_array[x];
 
 				BG_AttributeTreeSkillData *attr_tree_skill_data = memnew(BG_AttributeTreeSkillData);
-				attr_tree_skill_data->effect_id = StringName(get_find_data_by_param_name("effect_id", attribute_skill_tree_entry)["value"]);
-				attr_tree_skill_data->is_passive = bool(get_find_data_by_param_name("is_passive", attribute_skill_tree_entry)["value"]);
+				attr_tree_skill_data->effect_id = StringName(dber_get(attribute_skill_tree_entry, "effect_id"));
+				attr_tree_skill_data->is_passive = bool(dber_get(attribute_skill_tree_entry, "is_passive"));
 
 				// Conditions
-				const Dictionary conditions_values = get_find_data_by_param_name("conditions", attribute_skill_tree_entry);
-				const Array conditions_array = conditions_values["array_values"];
+				const Array conditions_array = dber_get(attribute_skill_tree_entry, "conditions");
 				for (int y = 0; y < conditions_array.size(); ++y)
 				{
-					const Array conditions_entry = conditions_array[y];
+					const Dictionary conditions_entry = conditions_array[y];
 
 					BG_Skill_LockUnLock_Condition *lock_unlock_condition = memnew(BG_Skill_LockUnLock_Condition);
 
 					const String where = "caste \"" + String(new_unit_caste->id) + "\", skill \"" + String(attr_tree_skill_data->effect_id) + "\"";
 
-					lock_unlock_condition->condition_attribute = StringName(get_find_data_by_param_name("condition_attribute", conditions_entry)["value"]);
+					lock_unlock_condition->condition_attribute = StringName(dber_get(conditions_entry, "condition_attribute"));
 					if (!is_attribute_stat_id(lock_unlock_condition->condition_attribute))
 						UtilityFunctions::push_warning("Attribute tree: ", where, " has a condition on \"", lock_unlock_condition->condition_attribute, "\", which isn't an attribute stat id. It will never match.");
 
-					const int condition_type = int(get_find_data_by_param_name("condition_type", conditions_entry)["value"]);
+					const int condition_type = int(dber_get(conditions_entry, "condition_type"));
 					if (condition_type < BG_Skill_LockUnLock_Condition::EQUAL_TO_OR_GREATER_THAN || condition_type > BG_Skill_LockUnLock_Condition::LESSER_THAN)
 						UtilityFunctions::push_warning("Attribute tree: ", where, " has an unknown condition_type ", condition_type, ". Using EQUAL_TO_OR_GREATER_THAN.");
 					else
 						lock_unlock_condition->condition_type = static_cast<BG_Skill_LockUnLock_Condition::ConditionTypes>(condition_type);
-					lock_unlock_condition->condition_value = int(get_find_data_by_param_name("condition_value", conditions_entry)["value"]);
+					lock_unlock_condition->condition_value = int(dber_get(conditions_entry, "condition_value"));
 
-					const Dictionary is_unlock_param = get_find_data_by_param_name("is_unlock_condition", conditions_entry);
-					if (!is_unlock_param.has("value"))
+					const Variant is_unlock_param = dber_find(conditions_entry, "is_unlock_condition");
+					if (is_unlock_param.get_type() == Variant::NIL)
 						UtilityFunctions::push_warning("Attribute tree: ", where, " has a condition without is_unlock_condition. Treating it as an unlock condition.");
-					if (!is_unlock_param.has("value") || bool(is_unlock_param["value"]))
+					if (is_unlock_param.get_type() == Variant::NIL || bool(is_unlock_param))
 						attr_tree_skill_data->unlock_conditions.append(lock_unlock_condition);
 					else
 						attr_tree_skill_data->lock_conditions.append(lock_unlock_condition);
@@ -3935,20 +3878,19 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Characters
 		const Array lines = get_sheet_by_name("Characters", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 
 			BG_CharacterDetails *new_char_class = memnew(BG_CharacterDetails);
-			new_char_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_char_class->id = StringName(dber_get(entry, "id"));
 
 			// Portraits
-			const Dictionary portraits_values = get_find_data_by_param_name("portraits", entry);
-			const Array portraits_array = portraits_values["array_values"];
+			const Array portraits_array = dber_get(entry, "portraits");
 			for (int x = 0; x < portraits_array.size(); ++x) {
-				const Array portraits_entry = portraits_array[x];
+				const Dictionary portraits_entry = portraits_array[x];
 
 				BG_PortraitDetails *new_portrait_class = memnew(BG_PortraitDetails);
-				new_portrait_class->portrait_type = static_cast<BG_PortraitDetails::PortraitType>(int(get_find_data_by_param_name("type", portraits_entry)["value"]));
-				new_portrait_class->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", portraits_entry)["path"]);
+				new_portrait_class->portrait_type = static_cast<BG_PortraitDetails::PortraitType>(int(dber_get(portraits_entry, "type")));
+				new_portrait_class->icon_path = ensure_clean_path(dber_get(portraits_entry, "icon_path"));
 
 				new_char_class->portraits.append(new_portrait_class);
 			}
@@ -3960,25 +3902,24 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // City Info
 		const Array lines = get_sheet_by_name("City_Info", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 
 			BG_CityInfo *new_city_info = memnew(BG_CityInfo);
-			new_city_info->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_city_info->nice_name = StringName(get_find_data_by_param_name("name", entry)["value"]);
-			new_city_info->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
-			new_city_info->scene_path = ensure_clean_path(get_find_data_by_param_name("scene_path", entry)["path"]);
-			new_city_info->game_script_path = ensure_clean_path(get_find_data_by_param_name("game_script_path", entry)["path"]);
-			new_city_info->game_map_id = StringName(get_find_data_by_param_name("game_map_id", entry)["value"]);
+			new_city_info->id = StringName(dber_get(entry, "id"));
+			new_city_info->nice_name = StringName(dber_get(entry, "name"));
+			new_city_info->icon_path = ensure_clean_path(dber_get(entry, "icon_path"));
+			new_city_info->scene_path = ensure_clean_path(dber_get(entry, "scene_path"));
+			new_city_info->game_script_path = ensure_clean_path(dber_get(entry, "game_script_path"));
+			new_city_info->game_map_id = StringName(dber_get(entry, "game_map_id"));
 
 			// Misc Attributes
-			const Dictionary misc_attributes_values = get_find_data_by_param_name("misc_attributes", entry);
-			const Array misc_attributes_values_array = misc_attributes_values["array_values"];
+			const Array misc_attributes_values_array = dber_get(entry, "misc_attributes");
 			for (int x = 0; x < misc_attributes_values_array.size(); ++x) {
-				const Array misc_attributes_values_entry = misc_attributes_values_array[x];
+				const Dictionary misc_attributes_values_entry = misc_attributes_values_array[x];
 
-				const String name = String(get_find_data_by_param_name("name", misc_attributes_values_entry)["value"]);
-				const String value1 = String(get_find_data_by_param_name("value_1", misc_attributes_values_entry)["value"]);
-				const String value2 = String(get_find_data_by_param_name("value_2", misc_attributes_values_entry)["value"]);
+				const String name = String(dber_get(misc_attributes_values_entry, "name"));
+				const String value1 = String(dber_get(misc_attributes_values_entry, "value_1"));
+				const String value2 = String(dber_get(misc_attributes_values_entry, "value_2"));
 
 				Array values;
 				if (!value1.is_empty())
@@ -3996,36 +3937,34 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Effects
 		const Array lines = get_sheet_by_name("Effects", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 
 			BG_Effect *new_effect_class = memnew(BG_Effect);
-			new_effect_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_effect_class->nice_name = StringName(get_find_data_by_param_name("name", entry)["value"]);
-			new_effect_class->use_owning_item_icon = bool(get_find_data_by_param_name("use_owning_item_icon", entry)["value"]);
-			new_effect_class->status_icon_path = ensure_clean_path(get_find_data_by_param_name("status_icon", entry)["path"]);
+			new_effect_class->id = StringName(dber_get(entry, "id"));
+			new_effect_class->nice_name = StringName(dber_get(entry, "name"));
+			new_effect_class->use_owning_item_icon = bool(dber_get(entry, "use_owning_item_icon"));
+			new_effect_class->status_icon_path = ensure_clean_path(dber_get(entry, "status_icon"));
 
 			// Rarities
-			const Dictionary rarity_values = get_find_data_by_param_name("details_per_rarity", entry);
-			const Array rarity_array = rarity_values["array_values"];
+			const Array rarity_array = dber_get(entry, "details_per_rarity");
 			for (int x = 0; x < rarity_array.size(); ++x) {
-				const Array rarity_entry = rarity_array[x];
+				const Dictionary rarity_entry = rarity_array[x];
 
 				BG_EffectRarityDetails *new_rarity_class = memnew(BG_EffectRarityDetails);
 
-				new_rarity_class->rarity_id = StringName(get_find_data_by_param_name("rarity", rarity_entry)["value"]);
-				new_rarity_class->description = StringName(get_find_data_by_param_name("description", rarity_entry)["value"]);
-				new_rarity_class->action_points_cost = int(get_find_data_by_param_name("action_points_cost", rarity_entry)["value"]);
-				new_rarity_class->script_path = ensure_clean_path(get_find_data_by_param_name("script_path", rarity_entry)["path"]);
+				new_rarity_class->rarity_id = StringName(dber_get(rarity_entry, "rarity"));
+				new_rarity_class->description = StringName(dber_get(rarity_entry, "description"));
+				new_rarity_class->action_points_cost = int(dber_get(rarity_entry, "action_points_cost"));
+				new_rarity_class->script_path = ensure_clean_path(dber_get(rarity_entry, "script_path"));
 
 				// Value Attributes
-				const Dictionary value_attributes_values = get_find_data_by_param_name("value_attributes", rarity_entry);
-				const Array value_attributes_array = value_attributes_values["array_values"];
+				const Array value_attributes_array = dber_get(rarity_entry, "value_attributes");
 				for (int y = 0; y < value_attributes_array.size(); ++y) {
-					const Array value_attributes_entry = value_attributes_array[y];
+					const Dictionary value_attributes_entry = value_attributes_array[y];
 
-					String name = StringName(get_find_data_by_param_name("name", value_attributes_entry)["value"]);
-					String value1 = StringName(get_find_data_by_param_name("value_1", value_attributes_entry)["value"]);
-					String value2 = StringName(get_find_data_by_param_name("value_2", value_attributes_entry)["value"]);
+					String name = StringName(dber_get(value_attributes_entry, "name"));
+					String value1 = StringName(dber_get(value_attributes_entry, "value_1"));
+					String value2 = StringName(dber_get(value_attributes_entry, "value_2"));
 
 					Array values;
 					if (!value1.is_empty())
@@ -4046,11 +3985,11 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Game Maps
 		const Array lines = get_sheet_by_name("Game_Maps", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 
 			BG_GameMapDetails *new_game_map_class = memnew(BG_GameMapDetails);
-			new_game_map_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_game_map_class->scene_path = ensure_clean_path(get_find_data_by_param_name("scene_path", entry)["path"]);
+			new_game_map_class->id = StringName(dber_get(entry, "id"));
+			new_game_map_class->scene_path = ensure_clean_path(dber_get(entry, "scene_path"));
 
 			game_map_details.append(new_game_map_class);
 		}
@@ -4059,24 +3998,23 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Game Map Nodes
 		const Array lines = get_sheet_by_name("Game_Map_Nodes", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 
 			BG_GameMapNodeDetails *new_game_map_node_class = memnew(BG_GameMapNodeDetails);
-			new_game_map_node_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_game_map_node_class->type = int(get_find_data_by_param_name("type", entry)["value"]);
-			new_game_map_node_class->script_path = ensure_clean_path(get_find_data_by_param_name("script_path", entry)["path"]);
-			new_game_map_node_class->battle_board_id = StringName(get_find_data_by_param_name("battle_board_id", entry)["value"]);
-			new_game_map_node_class->storyboard_id_pre = StringName(get_find_data_by_param_name("storyboard_id_pre", entry)["value"]);
-			new_game_map_node_class->storyboard_id_post = StringName(get_find_data_by_param_name("storyboard_id_post", entry)["value"]);
+			new_game_map_node_class->id = StringName(dber_get(entry, "id"));
+			new_game_map_node_class->type = int(dber_get(entry, "type"));
+			new_game_map_node_class->script_path = ensure_clean_path(dber_get(entry, "script_path"));
+			new_game_map_node_class->battle_board_id = StringName(dber_get(entry, "battle_board_id"));
+			new_game_map_node_class->storyboard_id_pre = StringName(dber_get(entry, "storyboard_id_pre"));
+			new_game_map_node_class->storyboard_id_post = StringName(dber_get(entry, "storyboard_id_post"));
 
 			// Enable Nodes On Complete
-			const Dictionary enable_nodes_on_complete_values = get_find_data_by_param_name("enable_nodes_on_complete", entry);
-			const Array enable_nodes_on_complete_array = enable_nodes_on_complete_values["array_values"];
+			const Array enable_nodes_on_complete_array = dber_get(entry, "enable_nodes_on_complete");
 			for (int x = 0; x < enable_nodes_on_complete_array.size(); ++x) {
-				const Array enable_nodes_on_complete_entry = enable_nodes_on_complete_array[x];
+				const Dictionary enable_nodes_on_complete_entry = enable_nodes_on_complete_array[x];
 
 				new_game_map_node_class->enable_nodes_on_complete[
-					StringName(get_find_data_by_param_name("node", enable_nodes_on_complete_entry)["value"])] = bool(get_find_data_by_param_name("enable", enable_nodes_on_complete_entry)["value"]);
+					StringName(dber_get(enable_nodes_on_complete_entry, "node"))] = bool(dber_get(enable_nodes_on_complete_entry, "enable"));
 			}
 
 			game_map_node_details.append(new_game_map_node_class);
@@ -4086,11 +4024,11 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Icons
 		const Array lines = get_sheet_by_name("Icons", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 
 			BG_IconDetails *new_icons_class = memnew(BG_IconDetails);
-			new_icons_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_icons_class->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
+			new_icons_class->id = StringName(dber_get(entry, "id"));
+			new_icons_class->icon_path = ensure_clean_path(dber_get(entry, "icon_path"));
 
 			icon_details.append(new_icons_class);
 		}
@@ -4099,27 +4037,25 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Item Drop Pools
 		const Array lines = get_sheet_by_name("Item_Drop_Pools", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 
 			BG_ItemDropPool *new_item_drop_pool_class = memnew(BG_ItemDropPool);
-			new_item_drop_pool_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
+			new_item_drop_pool_class->id = StringName(dber_get(entry, "id"));
 
 			// Items
-			const Dictionary items_values = get_find_data_by_param_name("items", entry);
-			const Array items_array = items_values["array_values"];
+			const Array items_array = dber_get(entry, "items");
 			for (int x = 0; x < items_array.size(); ++x) {
-				const Array items_entry = items_array[x];
+				const Dictionary items_entry = items_array[x];
 
 				BG_RewardItem *new_reward_item = memnew(BG_RewardItem);
-				new_reward_item->id = StringName(get_find_data_by_param_name("item_id", items_entry)["value"]);
-				new_reward_item->drop_weight = float(get_find_data_by_param_name("drop_weight", items_entry)["value"]);
+				new_reward_item->id = StringName(dber_get(items_entry, "item_id"));
+				new_reward_item->drop_weight = float(dber_get(items_entry, "drop_weight"));
 
 				// Rarity Availability
-				const Dictionary rarity_availability_values = get_find_data_by_param_name("rarity_availability", items_entry);
-				const Array rarity_availability_array = rarity_availability_values["array_values"];
+				const Array rarity_availability_array = dber_get(items_entry, "rarity_availability");
 				for (int x = 0; x < rarity_availability_array.size(); ++x) {
-					const Array rarity_availability_entry = rarity_availability_array[x];
-					new_reward_item->rarity_availabilities.append(StringName(get_find_data_by_param_name("rarity_id", rarity_availability_entry)["value"]));
+					const Dictionary rarity_availability_entry = rarity_availability_array[x];
+					new_reward_item->rarity_availabilities.append(StringName(dber_get(rarity_availability_entry, "rarity_id")));
 				}
 
 				new_item_drop_pool_class->item_drops.append(new_reward_item);
@@ -4132,20 +4068,19 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Item Slot Types
 		const Array lines = get_sheet_by_name("Item_Slot_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 
 			BG_ItemSlotType *new_item_slot_type_class = memnew(BG_ItemSlotType);
-			new_item_slot_type_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_item_slot_type_class->name = StringName(get_find_data_by_param_name("name", entry)["value"]);
-			new_item_slot_type_class->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
+			new_item_slot_type_class->id = StringName(dber_get(entry, "id"));
+			new_item_slot_type_class->name = StringName(dber_get(entry, "name"));
+			new_item_slot_type_class->icon_path = ensure_clean_path(dber_get(entry, "icon_path"));
 
 			// Percentage of all items dropped per act.
-			const Dictionary percentage_of_all_items_dropped_per_act_values = get_find_data_by_param_name("percentage_of_all_items_dropped_per_act", entry);
-			const Array percentage_of_all_items_dropped_per_act_values_array = percentage_of_all_items_dropped_per_act_values["array_values"];
+			const Array percentage_of_all_items_dropped_per_act_values_array = dber_get(entry, "percentage_of_all_items_dropped_per_act");
 			for (int x = 0; x < percentage_of_all_items_dropped_per_act_values_array.size(); ++x) {
-				const Array percentage_of_all_items_dropped_per_act_values_entry = percentage_of_all_items_dropped_per_act_values_array[x];
+				const Dictionary percentage_of_all_items_dropped_per_act_values_entry = percentage_of_all_items_dropped_per_act_values_array[x];
 				new_item_slot_type_class->percentage_of_all_items_dropped_per_act.append(
-					float(get_find_data_by_param_name("percent", percentage_of_all_items_dropped_per_act_values_entry)["value"])
+					float(dber_get(percentage_of_all_items_dropped_per_act_values_entry, "percent"))
 				);
 			}
 
@@ -4154,14 +4089,14 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	}
 
 	{ // Mail Data
-		const Array lines = get_sheet_by_name("Item_Slot_Types", data);
+		const Array lines = get_sheet_by_name("Mail_Entries", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 
 			BG_MailData *new_mail_data = memnew(BG_MailData);
-			new_mail_data->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_mail_data->act = int(get_find_data_by_param_name("act", entry)["value"]);
-			new_mail_data->week = int(get_find_data_by_param_name("week", entry)["value"]);
+			new_mail_data->id = StringName(dber_get(entry, "id"));
+			new_mail_data->act = int(dber_get(entry, "act"));
+			new_mail_data->week = int(dber_get(entry, "week"));
 
 			mail_data.append(new_mail_data);
 		}
@@ -4170,163 +4105,151 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Misc Globals
 		const Array lines = get_sheet_by_name("Misc_Globals", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 
-			globals->starting_reputation = int(get_find_data_by_param_name("starting_reputation", entry)["value"]);
-			globals->inventory_sell_multiplier = float(get_find_data_by_param_name("inventory_sell_multiplier", entry)["value"]);
-			globals->item_passive_income_multiplier = float(get_find_data_by_param_name("item_passive_income_multiplier", entry)["value"]);
-			globals->chance_of_no_drop = float(get_find_data_by_param_name("chance_of_no_drop", entry)["value"]);
+			globals->starting_reputation = int(dber_get(entry, "starting_reputation"));
+			globals->inventory_sell_multiplier = float(dber_get(entry, "inventory_sell_multiplier"));
+			globals->item_passive_income_multiplier = float(dber_get(entry, "item_passive_income_multiplier"));
+			globals->chance_of_no_drop = float(dber_get(entry, "chance_of_no_drop"));
 
 			// Weeks per act & Job globals.
-			const Dictionary weeks_per_act = get_find_data_by_param_name("weeks_per_act", entry);
-			const Array weeks_per_act_array = weeks_per_act["array_values"];
-			const Dictionary job_globals = get_find_data_by_param_name("job_globals", entry);
-			const Array job_globals_array = job_globals["array_values"];
+			const Array weeks_per_act_array = dber_get(entry, "weeks_per_act");
+			const Array job_globals_array = dber_get(entry, "job_globals");
 			for (int x = 0; x < weeks_per_act_array.size(); ++x) {
-				const Array weeks_per_act_entry = weeks_per_act_array[x];
-				const Array job_globals_entry = job_globals_array[x];
+				const Dictionary weeks_per_act_entry = weeks_per_act_array[x];
+				const Dictionary job_globals_entry = job_globals_array[x];
 
 				BG_ActStats *new_act_stats = memnew(BG_ActStats);
-				new_act_stats->total_week_count = int(get_find_data_by_param_name("weeks_count", weeks_per_act_entry)["value"]);
+				new_act_stats->total_week_count = int(dber_get(weeks_per_act_entry, "weeks_count"));
 
 				if (globals->combat_rounds_per_combat == 0)
-					globals->combat_rounds_per_combat = int(get_find_data_by_param_name("combat_rounds_per_combat", job_globals_entry)["value"]);
+					globals->combat_rounds_per_combat = int(dber_get(job_globals_entry, "combat_rounds_per_combat"));
 
-				const Dictionary jobs_distribution_per_act = get_find_data_by_param_name("jobs_distribution_per_act", job_globals_entry);
-				const Array jobs_distribution_per_act_array = jobs_distribution_per_act["array_values"];
+				const Array jobs_distribution_per_act_array = dber_get(job_globals_entry, "jobs_distribution_per_act");
 				for (int y = 0; y < jobs_distribution_per_act_array.size(); ++y) {
-					const Array jobs_distribution_per_act_entry = jobs_distribution_per_act_array[y];
+					const Dictionary jobs_distribution_per_act_entry = jobs_distribution_per_act_array[y];
 
-					new_act_stats->total_job_count = int(get_find_data_by_param_name("job_count", jobs_distribution_per_act_entry)["value"]);
-					new_act_stats->job_handout_curve_path = StringName(get_find_data_by_param_name("curve", jobs_distribution_per_act_entry)["path"]);
+					new_act_stats->total_job_count = int(dber_get(jobs_distribution_per_act_entry, "job_count"));
+					new_act_stats->job_handout_curve_path = StringName(dber_get(jobs_distribution_per_act_entry, "curve"));
 				}
 				globals->act_stats.append(new_act_stats);
 			}
 
 			// QTE Values
-			const Dictionary qte_values = get_find_data_by_param_name("qte_values", entry);
-			const Array qte_values_array = qte_values["array_values"];
+			const Array qte_values_array = dber_get(entry, "qte_values");
 			for (int x = 0; x < qte_values_array.size(); ++x) {
-				const Array qte_values_entry = qte_values_array[x];
+				const Dictionary qte_values_entry = qte_values_array[x];
 
-				globals->hit_perfect_timing_multiplier = float(get_find_data_by_param_name("hit_perfect_timing_multiplier", qte_values_entry)["value"]);
-				globals->hit_good_timing_multiplier = float(get_find_data_by_param_name("hit_good_timing_multiplier", qte_values_entry)["value"]);
-				globals->parry_perfect_timing_multiplier = float(get_find_data_by_param_name("parry_perfect_timing_multiplier", qte_values_entry)["value"]);
-				globals->parry_good_timing_multiplier = float(get_find_data_by_param_name("parry_good_timing_multiplier", qte_values_entry)["value"]);
-				globals->crit_qte_perfect_window = float(get_find_data_by_param_name("crit_qte_perfect_window", qte_values_entry)["value"]);
-				globals->crit_qte_window_additive = float(get_find_data_by_param_name("crit_qte_window_additive", qte_values_entry)["value"]);
+				globals->hit_perfect_timing_multiplier = float(dber_get(qte_values_entry, "hit_perfect_timing_multiplier"));
+				globals->hit_good_timing_multiplier = float(dber_get(qte_values_entry, "hit_good_timing_multiplier"));
+				globals->parry_perfect_timing_multiplier = float(dber_get(qte_values_entry, "parry_perfect_timing_multiplier"));
+				globals->parry_good_timing_multiplier = float(dber_get(qte_values_entry, "parry_good_timing_multiplier"));
+				globals->crit_qte_perfect_window = float(dber_get(qte_values_entry, "crit_qte_perfect_window"));
+				globals->crit_qte_window_additive = float(dber_get(qte_values_entry, "crit_qte_window_additive"));
 			}
 
 			// Monster Element Distribution
-			const Dictionary monster_element_distribution = get_find_data_by_param_name("monster_element_distribution", entry);
-			const Array monster_element_distribution_array = monster_element_distribution["array_values"];
+			const Variant monster_element_distribution = dber_get(entry, "monster_element_distribution");
+			const Array monster_element_distribution_array = monster_element_distribution;
 			for (int x = 0; x < monster_element_distribution_array.size(); ++x) {
-				const Array monster_element_distribution_entry = monster_element_distribution_array[x];
+				const Dictionary monster_element_distribution_entry = monster_element_distribution_array[x];
 
-				globals->monster_element_distribution.append(float(get_find_data_by_param_name("percentage", monster_element_distribution_entry)["value"]));
+				globals->monster_element_distribution.append(float(dber_get(monster_element_distribution_entry, "percentage")));
 			}
 
 			// Max Resistance
-			const Dictionary max_resistance = get_find_data_by_param_name("max_resistance", entry);
-			const Array max_resistance_array = max_resistance["array_values"];
+			const Array max_resistance_array = dber_get(entry, "max_resistance");
 			for (int x = 0; x < max_resistance_array.size(); ++x) {
-				const Array max_resistance_entry = max_resistance_array[x];
+				const Dictionary max_resistance_entry = max_resistance_array[x];
 
-				globals->max_resistance_soft_cap = int(get_find_data_by_param_name("max_resistance_soft_cap", max_resistance_entry)["value"]);
-				globals->max_resistance_hard_cap = int(get_find_data_by_param_name("max_resistance_hard_cap", max_resistance_entry)["value"]);
+				globals->max_resistance_soft_cap = int(dber_get(max_resistance_entry, "max_resistance_soft_cap"));
+				globals->max_resistance_hard_cap = int(dber_get(max_resistance_entry, "max_resistance_hard_cap"));
 			}
 
 			// Damage Resistance Modifiers
-			const Dictionary damage_resistance_modifiers = get_find_data_by_param_name("damage_resistance_modifiers", entry);
-			const Array damage_resistance_modifiers_array = damage_resistance_modifiers["array_values"];
+			const Array damage_resistance_modifiers_array = dber_get(entry, "damage_resistance_modifiers");
 			for (int x = 0; x < damage_resistance_modifiers_array.size(); ++x) {
-				const Array damage_resistance_modifiers_entry = damage_resistance_modifiers_array[x];
+				const Dictionary damage_resistance_modifiers_entry = damage_resistance_modifiers_array[x];
 
-				globals->percent_amount_to_add_on_same_element_per_damage_value = float(get_find_data_by_param_name("percent_amount_to_add_on_same_element_per_damage_value", damage_resistance_modifiers_entry)["value"]);
-				globals->percent_amount_to_subtract_on_weak_element_per_damage_value = float(get_find_data_by_param_name("percent_amount_to_subtract_on_weak_element_per_damage_value", damage_resistance_modifiers_entry)["value"]);
+				globals->percent_amount_to_add_on_same_element_per_damage_value = float(dber_get(damage_resistance_modifiers_entry, "percent_amount_to_add_on_same_element_per_damage_value"));
+				globals->percent_amount_to_subtract_on_weak_element_per_damage_value = float(dber_get(damage_resistance_modifiers_entry, "percent_amount_to_subtract_on_weak_element_per_damage_value"));
 			}
 
 			// Item Teir Values
-			const Dictionary item_teir_values = get_find_data_by_param_name("item_teir_values", entry);
-			const Array item_teir_values_array = item_teir_values["array_values"];
+			const Array item_teir_values_array = dber_get(entry, "item_teir_values");
 			for (int x = 0; x < item_teir_values_array.size(); ++x) {
-				const Array item_teir_values_entry = item_teir_values_array[x];
+				const Dictionary item_teir_values_entry = item_teir_values_array[x];
 
-				globals->sell_tier_values.append(int(get_find_data_by_param_name("sell_tier_values", item_teir_values_entry)["value"]));
-				globals->fame_tier_values.append(int(get_find_data_by_param_name("fame_tier_values", item_teir_values_entry)["value"]));
-				globals->durability_teir_values.append(int(get_find_data_by_param_name("durability_teir_values", item_teir_values_entry)["value"]));
+				globals->sell_tier_values.append(int(dber_get(item_teir_values_entry, "sell_tier_values")));
+				globals->fame_tier_values.append(int(dber_get(item_teir_values_entry, "fame_tier_values")));
+				globals->durability_teir_values.append(int(dber_get(item_teir_values_entry, "durability_teir_values")));
 			}
 
 			// Item Teir Rarity Multipliers
-			const Dictionary item_teir_rarity_multipliers = get_find_data_by_param_name("item_teir_rarity_multipliers", entry);
-			const Array item_teir_rarity_multipliers_array = item_teir_rarity_multipliers["array_values"];
+			const Array item_teir_rarity_multipliers_array = dber_get(entry, "item_teir_rarity_multipliers");
 			for (int x = 0; x < item_teir_rarity_multipliers_array.size(); ++x) {
-				const Array item_teir_rarity_multipliers_entry = item_teir_rarity_multipliers_array[x];
+				const Dictionary item_teir_rarity_multipliers_entry = item_teir_rarity_multipliers_array[x];
 
-				globals->equipment_value_rarity_multiplier.append(float(get_find_data_by_param_name("equipment_value_rarity_multiplier", item_teir_rarity_multipliers_entry)["value"]));
-				globals->beast_part_value_rarity_multiplier.append(float(get_find_data_by_param_name("beast_part_value_rarity_multiplier", item_teir_rarity_multipliers_entry)["value"]));
-				globals->extra_beast_part_value_rarity_multiplier_while_grafted.append(float(get_find_data_by_param_name("extra_beast_part_value_rarity_multiplier_while_grafted", item_teir_rarity_multipliers_entry)["value"]));
-				globals->equipment_durability_rarity_multiplier.append(float(get_find_data_by_param_name("equipment_durability_rarity_multiplier", item_teir_rarity_multipliers_entry)["value"]));
-				globals->beast_part_durability_rarity_multiplier.append(float(get_find_data_by_param_name("beast_part_durability_rarity_multiplier", item_teir_rarity_multipliers_entry)["value"]));
-				globals->equipment_fame_rarity_multiplier.append(float(get_find_data_by_param_name("equipment_fame_rarity_multiplier", item_teir_rarity_multipliers_entry)["value"]));
-				globals->beast_part_fame_rarity_multiplier.append(float(get_find_data_by_param_name("beast_part_fame_rarity_multiplier", item_teir_rarity_multipliers_entry)["value"]));
+				globals->equipment_value_rarity_multiplier.append(float(dber_get(item_teir_rarity_multipliers_entry, "equipment_value_rarity_multiplier")));
+				globals->beast_part_value_rarity_multiplier.append(float(dber_get(item_teir_rarity_multipliers_entry, "beast_part_value_rarity_multiplier")));
+				globals->extra_beast_part_value_rarity_multiplier_while_grafted.append(float(dber_get(item_teir_rarity_multipliers_entry, "extra_beast_part_value_rarity_multiplier_while_grafted")));
+				globals->equipment_durability_rarity_multiplier.append(float(dber_get(item_teir_rarity_multipliers_entry, "equipment_durability_rarity_multiplier")));
+				globals->beast_part_durability_rarity_multiplier.append(float(dber_get(item_teir_rarity_multipliers_entry, "beast_part_durability_rarity_multiplier")));
+				globals->equipment_fame_rarity_multiplier.append(float(dber_get(item_teir_rarity_multipliers_entry, "equipment_fame_rarity_multiplier")));
+				globals->beast_part_fame_rarity_multiplier.append(float(dber_get(item_teir_rarity_multipliers_entry, "beast_part_fame_rarity_multiplier")));
 			}
 
 			// Day Night Cycle
-			const Dictionary day_night_cycle = get_find_data_by_param_name("day_night_cycle", entry);
-			const Array day_night_cycle_array = day_night_cycle["array_values"];
+			const Array day_night_cycle_array = dber_get(entry, "day_night_cycle");
 			for (int x = 0; x < day_night_cycle_array.size(); ++x) {
-				const Array day_night_cycle_entry = day_night_cycle_array[x];
+				const Dictionary day_night_cycle_entry = day_night_cycle_array[x];
 
-				globals->day_night_cycle_turns_per_day = int(get_find_data_by_param_name("turns_per_day", day_night_cycle_entry)["value"]);
+				globals->day_night_cycle_turns_per_day = int(dber_get(day_night_cycle_entry, "turns_per_day"));
 				// UtilityFunctions::print(globals->day_night_cycle_turns_per_day);
-				globals->percentage_of_day_is_day_time = float(get_find_data_by_param_name("percentage_of_day_is_day_time", day_night_cycle_entry)["value"]);
+				globals->percentage_of_day_is_day_time = float(dber_get(day_night_cycle_entry, "percentage_of_day_is_day_time"));
 
-				const Dictionary day_cycle_offset_per_act = get_find_data_by_param_name("day_cycle_offset_per_act", day_night_cycle_entry);
-				const Array day_cycle_offset_per_act_array = day_cycle_offset_per_act["array_values"];
+				const Variant day_cycle_offset_per_act = dber_get(day_night_cycle_entry, "day_cycle_offset_per_act");
+				const Array day_cycle_offset_per_act_array = day_cycle_offset_per_act;
 				for (int y = 0; y < day_cycle_offset_per_act_array.size(); ++y) {
-					const Array day_cycle_offset_per_act_entry = day_cycle_offset_per_act_array[y];
+					const Dictionary day_cycle_offset_per_act_entry = day_cycle_offset_per_act_array[y];
 
-					globals->day_cycle_offset_per_act.append(int(get_find_data_by_param_name("offset", day_cycle_offset_per_act_entry)["value"]));
+					globals->day_cycle_offset_per_act.append(int(dber_get(day_cycle_offset_per_act_entry, "offset")));
 				}
 			}
 
 			// Marketplace
 			market_place_data = memnew(BG_MarketplaceData);
 
-			const Dictionary marketplace = get_find_data_by_param_name("marketplace", entry);
-			const Array marketplace_array = marketplace["array_values"];
+			const Array marketplace_array = dber_get(entry, "marketplace");
 			for (int x = 0; x < marketplace_array.size(); ++x) {
-				const Array marketplace_entry = marketplace_array[x];
+				const Dictionary marketplace_entry = marketplace_array[x];
 
-				const Dictionary items_per_month = get_find_data_by_param_name("items_per_month", marketplace_entry);
-				const Array items_per_month_array = items_per_month["array_values"];
+				const Array items_per_month_array = dber_get(marketplace_entry, "items_per_month");
 				for (int y = 0; y < items_per_month_array.size(); ++y) {
-					const Array items_per_month_entry = items_per_month_array[y];
+					const Dictionary items_per_month_entry = items_per_month_array[y];
 
 					market_place_data->items_per_month_min_max = Vector2i(
-						int(get_find_data_by_param_name("min", items_per_month_entry)["value"]), 
-						int(get_find_data_by_param_name("max", items_per_month_entry)["value"])
+						int(dber_get(items_per_month_entry, "min")), 
+						int(dber_get(items_per_month_entry, "max"))
 					);
 				}
 
 				// Entries
-				const Dictionary entries = get_find_data_by_param_name("entries", marketplace_entry);
-				const Array entries_array = entries["array_values"];
+				const Variant entries = dber_get(marketplace_entry, "entries");
+				const Array entries_array = entries;
 				for (int x = 0; x < entries_array.size(); ++x) {
-					const Array entries_entry = entries_array[x];
+					const Dictionary entries_entry = entries_array[x];
 
 					BG_MarketplaceEntryData *new_marketplace_entry_data = memnew(BG_MarketplaceEntryData);
-					new_marketplace_entry_data->act = int(get_find_data_by_param_name("act", entries_entry)["value"]);
-					new_marketplace_entry_data->starting_month = int(get_find_data_by_param_name("starting_month", entries_entry)["value"]);
+					new_marketplace_entry_data->act = int(dber_get(entries_entry, "act"));
+					new_marketplace_entry_data->starting_month = int(dber_get(entries_entry, "starting_month"));
 
-					const Dictionary item_drop_pools = get_find_data_by_param_name("item_drop_pools", entries_entry);
-					const Array item_drop_pools_array = item_drop_pools["array_values"];
+					const Array item_drop_pools_array = dber_get(entries_entry, "item_drop_pools");
 					for (int y = 0; y < item_drop_pools_array.size(); ++y) {
-						const Array item_drop_pools_entry = item_drop_pools_array[y];
+						const Dictionary item_drop_pools_entry = item_drop_pools_array[y];
 
 						new_marketplace_entry_data->item_drop_pool_ids.append(
-							StringName(get_find_data_by_param_name("pool", item_drop_pools_entry)["value"])
+							StringName(dber_get(item_drop_pools_entry, "pool"))
 						);
 					}
 					market_place_data->entries.append(new_marketplace_entry_data);
@@ -4334,34 +4257,31 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			}
 
 			// Action Points
-			const Dictionary action_points_values = get_find_data_by_param_name("action_points", entry);
-			const Array action_points_array = action_points_values["array_values"];
+			const Array action_points_array = dber_get(entry, "action_points");
 			for (int x = 0; x < action_points_array.size(); ++x) {
-				const Array action_points_entry = action_points_array[x];
+				const Dictionary action_points_entry = action_points_array[x];
 
-				globals->band_action_points_fatigue_rate = float(get_find_data_by_param_name("band_action_points_fatigue_rate", action_points_entry)["value"]);
-				globals->monster_action_points_fatigue_rate = float(get_find_data_by_param_name("monster_action_points_fatigue_rate", action_points_entry)["value"]);
-				globals->action_points_rest_rate = float(get_find_data_by_param_name("action_points_rest_rate", action_points_entry)["value"]);
+				globals->band_action_points_fatigue_rate = float(dber_get(action_points_entry, "band_action_points_fatigue_rate"));
+				globals->monster_action_points_fatigue_rate = float(dber_get(action_points_entry, "monster_action_points_fatigue_rate"));
+				globals->action_points_rest_rate = float(dber_get(action_points_entry, "action_points_rest_rate"));
 			}
 
 			// Experience Points
-			const Dictionary experience_points_values = get_find_data_by_param_name("experience_points", entry);
-			const Array experience_points_array = experience_points_values["array_values"];
+			const Array experience_points_array = dber_get(entry, "experience_points");
 			for (int x = 0; x < experience_points_array.size(); ++x) {
-				const Array experience_points_entry = experience_points_array[x];
+				const Dictionary experience_points_entry = experience_points_array[x];
 
-				globals->exp_when_source_unit_damaged = int(get_find_data_by_param_name("exp_when_source_unit_damaged", experience_points_entry)["value"]);
-				globals->exp_when_enemy_killed = int(get_find_data_by_param_name("exp_when_enemy_killed", experience_points_entry)["value"]);
-				globals->exp_when_ap_consumed = int(get_find_data_by_param_name("exp_when_ap_consumed", experience_points_entry)["value"]);
+				globals->exp_when_source_unit_damaged = int(dber_get(experience_points_entry, "exp_when_source_unit_damaged"));
+				globals->exp_when_enemy_killed = int(dber_get(experience_points_entry, "exp_when_enemy_killed"));
+				globals->exp_when_ap_consumed = int(dber_get(experience_points_entry, "exp_when_ap_consumed"));
 			}
 
 			// Level Up
-			const Dictionary level_up_values = get_find_data_by_param_name("level_up", entry);
-			const Array level_up_array = level_up_values["array_values"];
+			const Array level_up_array = dber_get(entry, "level_up");
 			for (int x = 0; x < level_up_array.size(); ++x) {
-				const Array level_up_entry = level_up_array[x];
+				const Dictionary level_up_entry = level_up_array[x];
 
-				globals->attribute_points_per_level = int(get_find_data_by_param_name("attribute_points_per_level", level_up_entry)["value"]);
+				globals->attribute_points_per_level = int(dber_get(level_up_entry, "attribute_points_per_level"));
 			}
 		}
 	}
@@ -4369,22 +4289,21 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Puzzles
 		const Array lines = get_sheet_by_name("Puzzles", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 
 			BG_PuzzleDetails *new_data = memnew(BG_PuzzleDetails);
-			new_data->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_data->scene_path = ensure_clean_path(get_find_data_by_param_name("scene_path", entry)["path"]);
+			new_data->id = StringName(dber_get(entry, "id"));
+			new_data->scene_path = ensure_clean_path(dber_get(entry, "scene_path"));
 
 			// Misc Params
-			const Dictionary misc_params_values = get_find_data_by_param_name("misc_params", entry);
-			const Array misc_params_array = misc_params_values["array_values"];
+			const Array misc_params_array = dber_get(entry, "misc_params");
 			for (int x = 0; x < misc_params_array.size(); ++x) {
-				const Array misc_params_entry = misc_params_array[x];
+				const Dictionary misc_params_entry = misc_params_array[x];
 
 				BG_PuzzleDetails_MiscParams *new_params_data = memnew(BG_PuzzleDetails_MiscParams);
-				new_params_data->param_name = StringName(get_find_data_by_param_name("param_name", misc_params_entry)["value"]);
-				new_params_data->value1 = StringName(get_find_data_by_param_name("value1", misc_params_entry)["value"]);
-				new_params_data->value2 = StringName(get_find_data_by_param_name("value2", misc_params_entry)["value"]);
+				new_params_data->param_name = StringName(dber_get(misc_params_entry, "param_name"));
+				new_params_data->value1 = StringName(dber_get(misc_params_entry, "value1"));
+				new_params_data->value2 = StringName(dber_get(misc_params_entry, "value2"));
 
 				new_data->misc_params.append(new_params_data);
 			}
@@ -4396,35 +4315,34 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Objectives
 		const Array lines = get_sheet_by_name("Objectives", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 			
 			BG_ObjectiveDetails *new_objective_class = memnew(BG_ObjectiveDetails);
-			new_objective_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_objective_class->localization_key = StringName(get_find_data_by_param_name("localization_key", entry)["value"]);
+			new_objective_class->id = StringName(dber_get(entry, "id"));
+			new_objective_class->localization_key = StringName(dber_get(entry, "localization_key"));
 			if (new_objective_class->localization_key.is_empty()) {
 				new_objective_class->localization_key = new_objective_class->id;
 			}
-			new_objective_class->is_main_objective = bool(get_find_data_by_param_name("is_main_objective", entry)["value"]);
-			new_objective_class->is_scripted = bool(get_find_data_by_param_name("is_scripted", entry)["value"]);
-			new_objective_class->objective_repeatable_type = static_cast<BG_ObjectiveDetails::ObjectiveRepeatableType>(int(get_find_data_by_param_name("repeatable_type", entry)["value"]));
-			new_objective_class->is_auto_complete = bool(get_find_data_by_param_name("is_auto_complete", entry)["value"]);
-			new_objective_class->expires_in = int(get_find_data_by_param_name("expires_in", entry)["value"]);
-			new_objective_class->is_turn_in = bool(get_find_data_by_param_name("expireis_turn_ins_in", entry)["value"]);
-			new_objective_class->is_event = bool(get_find_data_by_param_name("is_event", entry)["value"]);
-			new_objective_class->script_path = ensure_clean_path(get_find_data_by_param_name("script_path", entry)["path"]);
+			new_objective_class->is_main_objective = bool(dber_get(entry, "is_main_objective"));
+			new_objective_class->is_scripted = bool(dber_get(entry, "is_scripted"));
+			new_objective_class->objective_repeatable_type = static_cast<BG_ObjectiveDetails::ObjectiveRepeatableType>(int(dber_get(entry, "repeatable_type")));
+			new_objective_class->is_auto_complete = bool(dber_get(entry, "is_auto_complete"));
+			new_objective_class->expires_in = int(dber_get(entry, "expires_in"));
+			new_objective_class->is_turn_in = bool(dber_get(entry, "is_turn_in"));
+			new_objective_class->is_event = bool(dber_get(entry, "is_event"));
+			new_objective_class->script_path = ensure_clean_path(dber_get(entry, "script_path"));
 
 			// Rewards
-			const Dictionary rewards_values = get_find_data_by_param_name("rewards", entry);
-			const Array rewards_array = rewards_values["array_values"];
+			const Array rewards_array = dber_get(entry, "rewards");
 			for (int x = 0; x < rewards_array.size(); ++x) {
-				const Array rewards_entry = rewards_array[x];
+				const Dictionary rewards_entry = rewards_array[x];
 
-				new_objective_class->reputation_drop = int(get_find_data_by_param_name("reputation", rewards_entry)["value"]);
-				new_objective_class->maelstrite_drop = int(get_find_data_by_param_name("maelstrite", rewards_entry)["value"]);
-				new_objective_class->beast_part_drop_count = int(get_find_data_by_param_name("beast_part_drop_count", rewards_entry)["value"]);
-				new_objective_class->equipment_drop_count = int(get_find_data_by_param_name("equipment_drop_count", rewards_entry)["value"]);
+				new_objective_class->reputation_drop = int(dber_get(rewards_entry, "reputation"));
+				new_objective_class->maelstrite_drop = int(dber_get(rewards_entry, "maelstrite"));
+				new_objective_class->beast_part_drop_count = int(dber_get(rewards_entry, "beast_part_drop_count"));
+				new_objective_class->equipment_drop_count = int(dber_get(rewards_entry, "equipment_drop_count"));
 
-				const StringName item_drop_pool_id = StringName(get_find_data_by_param_name("item_drop_pool", rewards_entry)["value"]);
+				const StringName item_drop_pool_id = StringName(dber_get(rewards_entry, "item_drop_pool"));
 				if (item_drop_pool_id.is_empty()) continue;
 
 				for (int pool_index = 0; pool_index < item_drop_pools.size(); pool_index++)
@@ -4442,14 +4360,13 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 						new_job_reward_item_class->id = reward_item->id;
 						new_job_reward_item_class->drop_weight = reward_item->drop_weight;
 
-						const Dictionary rarity_values = get_find_data_by_param_name("forced_rarity_availabilities", rewards_entry);
-						const Array forced_rarity_availabilities_lines = rarity_values["array_values"];
+						const Array forced_rarity_availabilities_lines = dber_get(rewards_entry, "forced_rarity_availabilities");
 						if (forced_rarity_availabilities_lines.size() > 0)
 						{
 							for (int f = 0; f < forced_rarity_availabilities_lines.size(); f++)
 							{
-								const int forced_rarity_availabilities_entry = forced_rarity_availabilities_lines[f];
-								new_job_reward_item_class->rarity_availabilities.append(global_enums["rarity_types"][forced_rarity_availabilities_entry]);
+								const Dictionary forced_rarity_availabilities_entry = forced_rarity_availabilities_lines[f];
+								new_job_reward_item_class->rarity_availabilities.append(global_enums["rarity_types"][int(dber_get(forced_rarity_availabilities_entry, "rarity_id"))]);
 							}
 						}
 						else
@@ -4462,29 +4379,27 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 			}
 
 			// Timeline
-			const Dictionary timeline_values = get_find_data_by_param_name("timeline", entry);
-			const Array timeline_array = timeline_values["array_values"];
+			const Array timeline_array = dber_get(entry, "timeline");
 			for (int x = 0; x < timeline_array.size(); ++x) {
-				const Array timeline_entry = timeline_array[x];
+				const Dictionary timeline_entry = timeline_array[x];
 
 					BG_ObjectiveTimeline *new_objective_timeline_class = memnew(BG_ObjectiveTimeline);
-					new_objective_timeline_class->act = int(get_find_data_by_param_name("act", timeline_entry)["value"]);
-					new_objective_timeline_class->min_week = int(get_find_data_by_param_name("min_week", timeline_entry)["value"]);
-					new_objective_timeline_class->max_week = int(get_find_data_by_param_name("max_week", timeline_entry)["value"]);
+					new_objective_timeline_class->act = int(dber_get(timeline_entry, "act"));
+					new_objective_timeline_class->min_week = int(dber_get(timeline_entry, "min_week"));
+					new_objective_timeline_class->max_week = int(dber_get(timeline_entry, "max_week"));
 
 					new_objective_class->timeline = new_objective_timeline_class;
 					break;
 			}
 
 			// Misc Attributes
-			const Dictionary misc_attributes_values = get_find_data_by_param_name("misc_attributes", entry);
-			const Array misc_attributes_array = misc_attributes_values["array_values"];
+			const Array misc_attributes_array = dber_get(entry, "misc_attributes");
 			for (int x = 0; x < misc_attributes_array.size(); ++x) {
-				const Array misc_attributes_entry = misc_attributes_array[x];
+				const Dictionary misc_attributes_entry = misc_attributes_array[x];
 
-				String name = get_find_data_by_param_name("name", misc_attributes_entry)["value"];
-				String value1 = get_find_data_by_param_name("value_1", misc_attributes_entry)["value"];
-				String value2 = get_find_data_by_param_name("value_2", misc_attributes_entry)["value"];
+				String name = dber_get(misc_attributes_entry, "name");
+				String value1 = dber_get(misc_attributes_entry, "value_1");
+				String value2 = dber_get(misc_attributes_entry, "value_2");
 
 				Array values;
 				if (!value1.is_empty())
@@ -4502,25 +4417,24 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Rarity Type
 		const Array lines = get_sheet_by_name("Rarity_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 
 			BG_RarityDetails *new_rarity_type = memnew(BG_RarityDetails);
-			new_rarity_type->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_rarity_type->equipment_prefix_name = StringName(get_find_data_by_param_name("equipment_prefix_name", entry)["value"]);
-			new_rarity_type->beast_part_prefix_name = StringName(get_find_data_by_param_name("beast_part_prefix_name", entry)["value"]);
-			new_rarity_type->color = convert_hex_to_color(get_find_data_by_param_name("color", entry)["value"]);
-			const float color_muitiplier = float(get_find_data_by_param_name("color_muitiplier", entry)["value"]);
+			new_rarity_type->id = StringName(dber_get(entry, "id"));
+			new_rarity_type->equipment_prefix_name = StringName(dber_get(entry, "equipment_prefix_name"));
+			new_rarity_type->beast_part_prefix_name = StringName(dber_get(entry, "beast_part_prefix_name"));
+			new_rarity_type->color = convert_hex_to_color(dber_get(entry, "color"));
+			const float color_muitiplier = float(dber_get(entry, "color_muitiplier"));
 			new_rarity_type->color.r *= color_muitiplier;
 			new_rarity_type->color.g *= color_muitiplier;
 			new_rarity_type->color.b *= color_muitiplier;
-			new_rarity_type->damage_multiplier = float(get_find_data_by_param_name("damage_multiplier", entry)["value"]);
+			new_rarity_type->damage_multiplier = float(dber_get(entry, "damage_multiplier"));
 
 			// Percentage of all items dropped per act
-			const Dictionary percentage_of_all_items_dropped_per_act_values = get_find_data_by_param_name("percentage_of_all_items_dropped_per_act", entry);
-			const Array percentage_of_all_items_dropped_per_act_values_array = percentage_of_all_items_dropped_per_act_values["array_values"];
+			const Array percentage_of_all_items_dropped_per_act_values_array = dber_get(entry, "percentage_of_all_items_dropped_per_act");
 			for (int x = 0; x < percentage_of_all_items_dropped_per_act_values_array.size(); ++x) {
-				const Array percentage_of_all_items_dropped_per_act_values_entry = percentage_of_all_items_dropped_per_act_values_array[x];
-				new_rarity_type->percentage_of_all_items_dropped_per_act.append(float(get_find_data_by_param_name("percent", percentage_of_all_items_dropped_per_act_values_entry)["value"]));
+				const Dictionary percentage_of_all_items_dropped_per_act_values_entry = percentage_of_all_items_dropped_per_act_values_array[x];
+				new_rarity_type->percentage_of_all_items_dropped_per_act.append(float(dber_get(percentage_of_all_items_dropped_per_act_values_entry, "percent")));
 			}
 
 			rarity_types.append(new_rarity_type);
@@ -4530,11 +4444,11 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // Resource Types
 		const Array lines = get_sheet_by_name("Resource_Types", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 
 			BG_ResourceTypeDetails *new_resource_type_class = memnew(BG_ResourceTypeDetails);
-			new_resource_type_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_resource_type_class->icon_path = ensure_clean_path(get_find_data_by_param_name("icon_path", entry)["path"]);
+			new_resource_type_class->id = StringName(dber_get(entry, "id"));
+			new_resource_type_class->icon_path = ensure_clean_path(dber_get(entry, "icon_path"));
 
 			resource_type_details[new_resource_type_class->id] = new_resource_type_class;
 		}
@@ -4543,17 +4457,17 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	{ // 2der
 		const Array lines = get_sheet_by_name("Two_Der", data);
 		for (int i = 0; i < lines.size(); ++i) {
-			const Array entry = lines[i];
+			const Dictionary entry = lines[i];
 			BG_TwoDer_DataEntry *new_twoder_class = memnew(BG_TwoDer_DataEntry);
 
-			new_twoder_class->id = StringName(get_find_data_by_param_name("id", entry)["value"]);
-			new_twoder_class->data_path = ensure_clean_path(get_find_data_by_param_name("data_path", entry)["path"]);
-			new_twoder_class->asset_name = StringName(get_find_data_by_param_name("asset_name", entry)["value"]);
-			new_twoder_class->prop_name = StringName(get_find_data_by_param_name("prop_name", entry)["value"]);
-			new_twoder_class->anim_name = StringName(get_find_data_by_param_name("anim_name", entry)["value"]);
-			new_twoder_class->camera_name = StringName(get_find_data_by_param_name("camera_name", entry)["value"]);
-			new_twoder_class->anim_speed_mult = float(get_find_data_by_param_name("anim_speed_mult", entry)["value"]);
-			new_twoder_class->scale_multiplier = float(get_find_data_by_param_name("scale_multiplier", entry)["value"]);
+			new_twoder_class->id = StringName(dber_get(entry, "id"));
+			new_twoder_class->data_path = ensure_clean_path(dber_get(entry, "data_path"));
+			new_twoder_class->asset_name = StringName(dber_get(entry, "asset_name"));
+			new_twoder_class->prop_name = StringName(dber_get(entry, "prop_name"));
+			new_twoder_class->anim_name = StringName(dber_get(entry, "anim_name"));
+			new_twoder_class->camera_name = StringName(dber_get(entry, "camera_name"));
+			new_twoder_class->anim_speed_mult = float(dber_get(entry, "anim_speed_mult"));
+			new_twoder_class->scale_multiplier = float(dber_get(entry, "scale_multiplier"));
 
 			two_der_data_entries.append(new_twoder_class);
 		}

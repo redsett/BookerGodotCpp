@@ -2306,6 +2306,8 @@ protected:
 	static void _bind_methods();
 
 	const String booker_dber_data_file_name = "booker_dber_data.json";
+	// The parsed DBer data, kept after loading for the loaders that read it later (storyboards, presets, ...).
+	Dictionary dber_data;
 
 public:
 	BG_Booker_DB();
