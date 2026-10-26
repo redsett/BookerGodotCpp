@@ -811,6 +811,27 @@ void BG_DamageContainer::_bind_methods()
 	{
 		return result;
 	}
+	// Only numbers, ranges and variations (i.e. "6", "6-8", "1-3|2-4", "[1-3|2-4]"). Anything else (like the old dice
+	// "[1d8-1d12]") would read as wrong numbers, so report it and use 0 instead.
+	for (int i = 0; i < string.length(); ++i)
+	{
+		const char32_t c = string[i];
+		if (!((c >= '0' && c <= '9') || c == '-' || c == '|' || c == '[' || c == ']' || c == ' '))
+		{
+			UtilityFunctions::push_error("BG_DamageContainer: can't read damage \"", string, "\". Use min-max, or min-max|min-max for variations.");
+			result.append(BG_DamageContainer::string_to_damage_container("0"));
+			return result;
+		}
+	}
+	if (string.contains("["))
+	{
+		const String bracets_removed = string.split("[")[1].split("]")[0].replace(" ", ""); // [6-8] to 6-8
+		if (!bracets_removed.contains("|"))
+		{
+			result.append(BG_DamageContainer::string_to_damage_container(bracets_removed));
+			return result;
+		}
+	}
 	if (!string.contains("[") && !string.contains("|"))
 	{
 		result.append(BG_DamageContainer::string_to_damage_container(string));
@@ -839,56 +860,21 @@ void BG_DamageContainer::_bind_methods()
 			right_side_min_max = Vector2i(right_side.to_int(), right_side.to_int());
 		}
 
-		// Get how many variations we want to store. Since we don't want to store a variation for every single number.
-		static const int ideal_variations = 5;
-		int min_variation_count = 1;
-		int max_variation_count = 1;
-
-		// Get how many variations for the minimum.
-		const int min_difference = right_side_min_max.x - left_side_min_max.x;
-		if (min_difference > 0) {
-			int variation_count = ideal_variations + 1;
-			while (variation_count >= 1) {
-				variation_count -= 1;
-				const float split_amount = float(min_difference) / variation_count;
-				if (split_amount >= 1.0) {
-					min_variation_count = variation_count;
-					break;
-				}
-			}
-		}
-		const int min_split_amount = int(Math::round(float(min_difference) / float(min_variation_count)));
-
-		// Get how many variations for the maximum.
-		const int max_difference = right_side_min_max.y - left_side_min_max.y;
-		if (max_difference > 0) {
-			int variation_count = ideal_variations + 1;
-			while (variation_count >= 1) {
-				variation_count -= 1;
-				const float split_amount = float(max_difference) / variation_count;
-				if (split_amount >= 1.0) {
-					max_variation_count = variation_count;
-					break;
-				}
-			}
-		}
-		const int max_split_amount = int(Math::round(float(max_difference) / float(max_variation_count)));
-
-		const int best_variation_count = Math::max(min_variation_count, max_variation_count);
-		for (int i = 0; i < best_variation_count; ++i)
+		// The variations go evenly from the left range to the right one, both included (i.e. "1-3|2-4" is 1-3 and 2-4).
+		// One per number of difference, up to max_variations, since we don't want one for every single number.
+		static const int max_variations = 5;
+		const int difference = MAX(ABS(right_side_min_max.x - left_side_min_max.x), ABS(right_side_min_max.y - left_side_min_max.y));
+		const int variation_count = CLAMP(difference + 1, 1, max_variations);
+		for (int i = 0; i < variation_count; ++i)
 		{
-			int min = 0;
-			int max = 0;
-			if (i > 0) {
-				min = int(Math::round(float(min_variation_count) / float(i)));
-				max = int(Math::round(float(max_variation_count) / float(i)));
-			}
+			const float weight = variation_count > 1 ? float(i) / float(variation_count - 1) : 0.0f;
+			const int min = int(Math::round(Math::lerp(float(left_side_min_max.x), float(right_side_min_max.x), weight)));
+			const int max = int(Math::round(Math::lerp(float(left_side_min_max.y), float(right_side_min_max.y), weight)));
 
 			Ref<BG_DamageContainer> new_dmg_con = memnew(BG_DamageContainer);
-			new_dmg_con->set_min(left_side_min_max.x + (min * min_split_amount));
-			new_dmg_con->set_max(left_side_min_max.y + (max * max_split_amount));
+			new_dmg_con->set_min(min);
+			new_dmg_con->set_max(Math::max(min, max));
 			result.append(new_dmg_con);
-			// UtilityFunctions::prints(min, max, "min :", new_dmg_con->min, "max :", new_dmg_con->max, float(max_variation_count) / float(i));
 		}
 	}
 	return result;
@@ -2925,6 +2911,10 @@ void BG_Booker_DB::try_parse_skills_data(const Dictionary &p_skills_data)
 	for (int i = 0; i < skills.size(); ++i)
 	{
 		const Dictionary skill = skills[i];
+		// Only class skills are in trees. Monster skills (monsters' loadouts) and base skills (e.g. the basic attack,
+		// everyone has it) aren't (BG_SkillData.owner).
+		if (String(skill.get("owner", "class")) != "class")
+			continue;
 		const StringName skill_id = StringName(skill.get("id", ""));
 		const StringName caste_id = StringName(skill.get("caste", ""));
 		BG_UnitCaste *caste = nullptr;
