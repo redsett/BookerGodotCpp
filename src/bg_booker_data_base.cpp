@@ -1153,13 +1153,13 @@ void BG_ItemDetails::_bind_methods()
 
 	ClassDB::bind_method(D_METHOD("get_item_effectiveness_stats"), &BG_ItemDetails::get_item_effectiveness_stats);
 	ClassDB::bind_method(D_METHOD("get_effectiveness"), &BG_ItemDetails::get_effectiveness);
-	ClassDB::bind_method(D_METHOD("get_use_stat_requirements"), &BG_ItemDetails::get_use_stat_requirements);
-	ClassDB::bind_method(D_METHOD("get_item_stat_requirements"), &BG_ItemDetails::get_item_stat_requirements);
 	ClassDB::bind_method(D_METHOD("get_base_action_points"), &BG_ItemDetails::get_base_action_points);
 	ClassDB::bind_method(D_METHOD("get_bonus_action_points"), &BG_ItemDetails::get_bonus_action_points);
 	ClassDB::bind_method(D_METHOD("get_base_action_points_cost"), &BG_ItemDetails::get_base_action_points_cost);
 	ClassDB::bind_method(D_METHOD("get_level_range"), &BG_ItemDetails::get_level_range);
 	ClassDB::bind_method(D_METHOD("get_item_animations"), &BG_ItemDetails::get_item_animations);
+	ClassDB::bind_method(D_METHOD("get_weapon_category"), &BG_ItemDetails::get_weapon_category);
+	ClassDB::bind_method(D_METHOD("get_armor_category"), &BG_ItemDetails::get_armor_category);
 
 	BIND_ENUM_CONSTANT(GEAR);
 	BIND_ENUM_CONSTANT(BEAST_PART);
@@ -1185,11 +1185,6 @@ BG_ItemDetails::~BG_ItemDetails()
 		memdelete(hue_shift_data);
 	for (int i = 0; i < item_effectiveness_stats.size(); ++i) {
 		BG_ContentStat *d = cast_to<BG_ContentStat>(item_effectiveness_stats[i]);
-		if (BG_Booker_DB::bg_is_instance_valid(d))
-			memdelete(d);
-	}
-	for (int i = 0; i < item_stat_requirements.size(); ++i) {
-		BG_ContentStat *d = cast_to<BG_ContentStat>(item_stat_requirements[i]);
 		if (BG_Booker_DB::bg_is_instance_valid(d))
 			memdelete(d);
 	}
@@ -1998,6 +1993,11 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_items"), &BG_Booker_DB::get_items);
 	ClassDB::bind_method(D_METHOD("get_item_max_durability", "item", "full_value"), &BG_Booker_DB::get_item_max_durability);
 	ClassDB::bind_method(D_METHOD("get_item_details_by_id"), &BG_Booker_DB::get_item_details_by_id);
+	ClassDB::bind_method(D_METHOD("get_animation_class_animations", "id"), &BG_Booker_DB::get_animation_class_animations);
+	ClassDB::bind_method(D_METHOD("get_weapon_categories"), &BG_Booker_DB::get_weapon_categories);
+	ClassDB::bind_method(D_METHOD("get_armor_categories"), &BG_Booker_DB::get_armor_categories);
+	ClassDB::bind_method(D_METHOD("get_sheet_rows", "sheet_name"), &BG_Booker_DB::get_sheet_rows);
+	ClassDB::bind_method(D_METHOD("get_global_enum_values", "enum_name"), &BG_Booker_DB::get_global_enum_values);
 	ClassDB::bind_method(D_METHOD("create_preset_item_by_id", "id"), &BG_Booker_DB::create_preset_item_by_id);
 	ClassDB::bind_method(D_METHOD("get_item_drop_pools"), &BG_Booker_DB::get_item_drop_pools);
 	ClassDB::bind_method(D_METHOD("get_item_drop_pool_by_id"), &BG_Booker_DB::get_item_drop_pool_by_id);
@@ -2307,6 +2307,21 @@ BG_ItemDetails *BG_Booker_DB::get_item_details_by_id(const StringName &id) const
 			return dets;
 	}
 	return nullptr;
+}
+
+Array BG_Booker_DB::get_global_enum_values(const String &enum_name) const {
+	const Dictionary enums = dber_data.get("global_enums", Dictionary());
+	return enums.get(enum_name, Array());
+}
+
+Array BG_Booker_DB::get_sheet_rows(const String &sheet_name) const {
+	const Dictionary sheets = dber_data.get("sheets", Dictionary());
+	return sheets.get(sheet_name, Array());
+}
+
+TypedArray<BG_AnimationDetails> BG_Booker_DB::get_animation_class_animations(const StringName &id) const {
+	if (!animation_classes.has(id)) return TypedArray<BG_AnimationDetails>();
+	return animation_classes[id];
 }
 
 float BG_Booker_DB::get_item_max_durability(Ref<BG_Item> item, bool full_value) const {
@@ -3188,6 +3203,34 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		}
 	}
 
+	{ // Animation classes, then the weapon and armor categories (rows by id)
+		animation_classes.clear();
+		const Array class_lines = get_sheet_by_name("Animation_Classes", data);
+		for (int i = 0; i < class_lines.size(); ++i) {
+			const Dictionary entry = class_lines[i];
+			TypedArray<BG_AnimationDetails> class_animations;
+			const Array animations = Array(dber_get(entry, "animations"));
+			for (int x = 0; x < animations.size(); ++x) {
+				class_animations.append(get_animation_detail(global_enums, animations, x));
+			}
+			animation_classes[StringName(dber_get(entry, "id"))] = class_animations;
+		}
+
+		weapon_categories.clear();
+		const Array weapon_lines = get_sheet_by_name("Weapon_Categories", data);
+		for (int i = 0; i < weapon_lines.size(); ++i) {
+			const Dictionary entry = weapon_lines[i];
+			weapon_categories[StringName(dber_get(entry, "id"))] = entry;
+		}
+
+		armor_categories.clear();
+		const Array armor_lines = get_sheet_by_name("Armor_Categories", data);
+		for (int i = 0; i < armor_lines.size(); ++i) {
+			const Dictionary entry = armor_lines[i];
+			armor_categories[StringName(dber_get(entry, "id"))] = entry;
+		}
+	}
+
 	{ // Content
 		const Array lines = Array(data["all_content"]);
 		for (int i = 0; i < lines.size(); ++i) {
@@ -3215,7 +3258,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				// item_details->attack_target_type = global_enums["attack_target_types"][attack_target_type];
 
 				item_details->effectiveness = float(entry["effectiveness"]);
-				item_details->use_stat_requirements = bool(entry["use_stat_requirements"]);
 				item_details->icon_path = ensure_clean_path(dber_get(misc_params, "icon"));
 				const Variant mesh_path_dict = dber_find(misc_params, "mesh_scene_path");
 				if (mesh_path_dict.get_type() != Variant::NIL) item_details->mesh_path = ensure_clean_path(mesh_path_dict);
@@ -3250,6 +3292,13 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 					}
 				}
 
+				{ // Weapon and armor categories (ids from their sheets, "" when not set)
+					const Variant weapon_category = dber_find(misc_params, "weapon_category");
+					if (weapon_category.get_type() != Variant::NIL) item_details->weapon_category = StringName(weapon_category);
+					const Variant armor_category = dber_find(misc_params, "armor_category");
+					if (armor_category.get_type() != Variant::NIL) item_details->armor_category = StringName(armor_category);
+				}
+
 				{ // Item Effectiveness Stats
 					const bool randomize_damage_type = bool(entry["randomize_damage_type"]);
 					const bool randomize_resistance_type = bool(entry["randomize_resistance_type"]);
@@ -3273,24 +3322,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 					}
 				}
 
-				{ // Item Stat Requirements
-					if (item_details->use_stat_requirements && entry.has("item_stat_requirements")) {
-						const Dictionary item_stat_requirement = dber_get(entry, "item_stat_requirements"); // {stat name: value}
-						const Array item_stat_requirement_names = item_stat_requirement.keys();
-						for (int x = 0; x < item_stat_requirement_names.size(); ++x) {
-							const float value = float(item_stat_requirement[item_stat_requirement_names[x]]);
-							if (value == 0.0) continue; // No need to store empty values.
-
-							BG_ContentStat *new_class = memnew(BG_ContentStat);
-							new_class->value = value;
-
-							// Store a reference to its relative stat.
-							new_class->stat_reference = get_stat_from_stat_id_name(StringName(item_stat_requirement_names[x]));
-
-							item_details->item_stat_requirements.append(new_class);
-						}
-					}
-				}
 
 				{ // Effects
 					const Array effects_lines = Array(dber_get(misc_params, "effects"));
@@ -3427,7 +3458,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 				item_details->slot_type = BG_ItemDetails::ItemType::BEAST_PART;
 
 				item_details->effectiveness = float(entry["effectiveness"]);
-				item_details->use_stat_requirements = bool(entry["use_stat_requirements"]);
 				item_details->icon_path = ensure_clean_path(dber_get(misc_params, "icon"));
 				const Variant animation_attach_socket_dict = dber_find(misc_params, "anim_attach_socket");
 				if (animation_attach_socket_dict.get_type() != Variant::NIL) item_details->animation_attach_socket = int(animation_attach_socket_dict) + 1;
@@ -3462,24 +3492,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 					}
 				}
 
-				{ // Item Stat Requirements
-					if (item_details->use_stat_requirements && entry.has("item_stat_requirements")) {
-						const Dictionary item_stat_requirement = dber_get(entry, "item_stat_requirements"); // {stat name: value}
-						const Array item_stat_requirement_names = item_stat_requirement.keys();
-						for (int x = 0; x < item_stat_requirement_names.size(); ++x) {
-							const float value = float(item_stat_requirement[item_stat_requirement_names[x]]);
-							if (value == 0.0) continue; // No need to store empty values.
-
-							BG_ContentStat *new_class = memnew(BG_ContentStat);
-							new_class->value = value;
-
-							// Store a reference to its relative stat.
-							new_class->stat_reference = get_stat_from_stat_id_name(StringName(item_stat_requirement_names[x]));
-
-							item_details->item_stat_requirements.append(new_class);
-						}
-					}
-				}
 
 				{ // Effects
 					const Array effects_lines = Array(dber_get(misc_params, "effects"));

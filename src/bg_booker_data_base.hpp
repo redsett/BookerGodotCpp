@@ -1342,12 +1342,6 @@ public:
 	TypedArray<BG_ContentStat> item_effectiveness_stats;
 	TypedArray<BG_ContentStat> get_item_effectiveness_stats() const { return item_effectiveness_stats; }
 
-	bool use_stat_requirements = false;
-	bool get_use_stat_requirements() const { return use_stat_requirements; }
-
-	TypedArray<BG_ContentStat> item_stat_requirements;
-	TypedArray<BG_ContentStat> get_item_stat_requirements() const { return item_stat_requirements; }
-
 	int base_action_points = 0;
 	int get_base_action_points() const { return base_action_points; }
 	
@@ -1360,8 +1354,17 @@ public:
 	Vector2 level_range = Vector2(1, 1);
 	Vector2 get_level_range() const { return level_range; }
 
+	// This item's own animations: they override its weapon category's animation class (see
+	// BG_Booker_DB::get_animation_class_animations), for the rows they have.
 	TypedArray<BG_AnimationDetails> item_animations;
 	TypedArray<BG_AnimationDetails> get_item_animations() const { return item_animations; }
+
+	// An id from the Weapon_Categories / Armor_Categories sheets, or "" (BG_Booker_DB::get_weapon_categories).
+	StringName weapon_category;
+	StringName get_weapon_category() const { return weapon_category; }
+
+	StringName armor_category;
+	StringName get_armor_category() const { return armor_category; }
 };
 
 VARIANT_ENUM_CAST(BG_ItemDetails::ItemType);
@@ -2405,6 +2408,27 @@ public:
 	TypedArray<BG_ItemDetails> items;
 	TypedArray<BG_ItemDetails> get_items() const { return items; }
 	BG_ItemDetails *get_item_details_by_id(const StringName &id) const;
+
+	// How each animation class moves ("Animation_Classes" sheet): {class id: TypedArray<BG_AnimationDetails>}. A weapon
+	// category names its class; an item's own animations override it.
+	Dictionary animation_classes;
+	TypedArray<BG_AnimationDetails> get_animation_class_animations(const StringName &id) const;
+
+	// The "Weapon_Categories" / "Armor_Categories" sheets' rows by id: {id: {column: value}}. Weapon rows have
+	// "animation_class". Kept as rows, so new columns need no C++.
+	Dictionary weapon_categories;
+	Dictionary get_weapon_categories() const { return weapon_categories; }
+	Dictionary armor_categories;
+	Dictionary get_armor_categories() const { return armor_categories; }
+
+	// Any DBer sheet's rows as exported ([{column: value}]), or [] if there's no such sheet. For sheets the game reads
+	// in GDScript (e.g. "Cues"), so a new sheet needs no C++.
+	Array get_sheet_rows(const String &sheet_name) const;
+
+	// A DBer global enum's value names, in order ([] if there's none), e.g. "animation_types": the animation roles.
+	// Animation rows store a role as its index in that list, so roles added in DBer work without C++ (past the end of
+	// BG_AnimationDetails::AnimationType, which only names the built-in ones).
+	Array get_global_enum_values(const String &enum_name) const;
 	float get_item_max_durability(Ref<BG_Item> item, bool full_value) const;
 	Ref<BG_Item> create_preset_item_by_id(const StringName &id) const;
 	Ref<BG_Item> create_preset_item_by_id_interal(const StringName &id, const Dictionary &data) const;
