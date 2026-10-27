@@ -3111,21 +3111,21 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 		}
 	}
 
-	{ // Base Stats
-		const Array lines = Array(data["all_base_stats"]);
+	{ // Base Stats: the "Base_Stats" sheet, one row per stat (id, name, value, is_base_value, parent).
+		const Array lines = get_sheet_by_name("Base_Stats", data);
 		for (int i = 0; i < lines.size(); ++i) {
 			const Dictionary entry = lines[i];
 			BG_BaseStat *new_class = memnew(BG_BaseStat);
-			new_class->unique_id = int(dber_get(entry, "unique_id"));
+			new_class->unique_id = i + 1; // Rows have no unique id: their place in the sheet.
 			new_class->is_base_value = bool(dber_get(entry, "is_base_value"));
 			new_class->value = float(dber_get(entry, "value"));
-			new_class->stat_id_name = StringName(dber_get(entry, "stat_id_name"));
+			new_class->stat_id_name = StringName(dber_get(entry, "id"));
 			base_stats.append(new_class);
 		}
 
-		{ // Set a reference to each of their parent stats ("parent_stat": its name, or "").
+		{ // Set a reference to each of their parent stats ("parent": its id, or "").
 			for (int i = 0; i < lines.size(); ++i) {
-				const StringName parent_stat = StringName(dber_get(lines[i], "parent_stat"));
+				const StringName parent_stat = StringName(dber_get(lines[i], "parent"));
 				BG_BaseStat *stat = cast_to<BG_BaseStat>(base_stats[i]);
 				if (stat == nullptr || parent_stat.is_empty()) continue;
 
