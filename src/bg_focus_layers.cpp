@@ -59,7 +59,9 @@ void BG_Focus_Layers::_bind_methods()
 	ClassDB::bind_method(D_METHOD("find_control_in_direction", "direction"), &BG_Focus_Layers::find_control_in_direction);
 	ClassDB::bind_method(D_METHOD("input_type_updated", "is_using_gamepad"), &BG_Focus_Layers::input_type_updated);
 	ClassDB::bind_method(D_METHOD("press_back_button"), &BG_Focus_Layers::press_back_button);
-	ClassDB::bind_method(D_METHOD("set_minimum_angle", "angle"), &BG_Focus_Layers::set_minimum_angle);
+	ClassDB::bind_method(D_METHOD("preview_direction", "direction"), &BG_Focus_Layers::preview_direction);
+	ClassDB::bind_method(D_METHOD("set_search_settings", "settings"), &BG_Focus_Layers::set_search_settings);
+	ClassDB::bind_method(D_METHOD("get_search_settings"), &BG_Focus_Layers::get_search_settings);
 }
 
 BG_Focus_Layers *BG_Focus_Layers::get_singleton()
@@ -299,142 +301,187 @@ Control *BG_Focus_Layers::get_current_parent_control() const
 }
 
 
-bool BG_Focus_Layers::_is_control_top(const Vector2 &direction, const Control *ctrl, const TypedArray<Control> &all_ctrls)
+/* static */ BG_Focus_Layers::ScreenRect BG_Focus_Layers::_get_screen_rect(const Control *c)
 {
-    const Vector2 &ctrl_pos = ctrl->get_screen_transform().get_origin();
-    const float c_top_y = ctrl_pos.y;
-    for (int i = 0; i < all_ctrls.size(); ++i)
-    {
-        const Control *child = cast_to<Control>(all_ctrls[i]);
-        const Vector2 &child_ctrl_pos = child->get_screen_transform().get_origin();
-        if (c_top_y > child_ctrl_pos.y && _check_if_valid_control(child))
-        {
-            const Vector2 c_center_location = ctrl_pos + (ctrl->get_global_rect().size * 0.5);
-            const Vector2 child_center_location = child_ctrl_pos + (child->get_global_rect().size * 0.5);
-            static const float PI = 3.14159f;
-            const float angle = Math::abs(direction.angle_to(child_center_location - c_center_location) / PI);
-            if (Math::abs(angle) < _minimum_angle)
-                return false;
-        }
-    }
-    return true;
-}
- 
-bool BG_Focus_Layers::_is_control_bottom(const Vector2 &direction, const Control *ctrl, const TypedArray<Control> &all_ctrls)
-{
-    const Vector2 &ctrl_pos = ctrl->get_screen_transform().get_origin();
-    const float c_bottom_y = ctrl_pos.y + ctrl->get_global_rect().size.y;
-    for (int i = 0; i < all_ctrls.size(); ++i)
-    {
-        const Control *child = cast_to<Control>(all_ctrls[i]);
-        const Vector2 &child_ctrl_pos = child->get_screen_transform().get_origin();
-        if (c_bottom_y < (child_ctrl_pos.y + child->get_global_rect().size.y) && _check_if_valid_control(child))
-        {
-            const Vector2 c_center_location = ctrl_pos + (ctrl->get_global_rect().size * 0.5);
-            const Vector2 child_center_location = child_ctrl_pos + (child->get_global_rect().size * 0.5);
-            static const float PI = 3.14159f;
-            const float angle = Math::abs(direction.angle_to(child_center_location - c_center_location) / PI);
-            if (Math::abs(angle) < _minimum_angle)
-                return false;
-        }
-    }
-    return true;
+    // The screen transform covers the window scale, rotated/scaled controls and SubViewports, so every rect is in the same space.
+    const Transform2D xform = c->get_screen_transform();
+    const Vector2 size = c->get_size();
+    Rect2 aabb(xform.xform(Vector2()), Vector2());
+    aabb = aabb.expand(xform.xform(Vector2(size.x, 0.0f)));
+    aabb = aabb.expand(xform.xform(Vector2(0.0f, size.y)));
+    aabb = aabb.expand(xform.xform(size));
+    return { aabb, xform.xform(size * 0.5f) };
 }
 
-bool BG_Focus_Layers::check_if_manual_focus_neighbor(Control *last_selected_control, BG_Focus_Layer_Properties *prop, godot::Side side)
+/* static */ int BG_Focus_Layers::_get_side(const Vector2 &dir)
 {
-    const NodePath focus_neighbor = last_selected_control->get_focus_neighbor(side);
-    if (!focus_neighbor.is_empty()) {
-        Control *ctrl_to_focus = cast_to<Control>(last_selected_control->get_node_or_null(focus_neighbor));
-        prop->set_focused_control(ctrl_to_focus);
-        if (prop->get_focused_control() != last_selected_control) {
-            last_selected_control->release_focus();
-            _focus_active_control();
-        }
-        return true;
+    if (Math::is_zero_approx(dir.x))
+        return dir.y < 0.0f ? godot::Side::SIDE_TOP : godot::Side::SIDE_BOTTOM;
+    if (Math::is_zero_approx(dir.y))
+        return dir.x < 0.0f ? godot::Side::SIDE_LEFT : godot::Side::SIDE_RIGHT;
+    return -1; // Diagonal.
+}
+
+/* static */ bool BG_Focus_Layers::_overlaps_sideways(const Rect2 &a, const Rect2 &b, const Vector2 &dir)
+{
+    if (Math::is_zero_approx(dir.x))
+        return a.position.x < b.get_end().x && b.position.x < a.get_end().x;
+    return a.position.y < b.get_end().y && b.position.y < a.get_end().y;
+}
+
+// Finds the control a press in `dir` (normalized, any angle) goes to from `from`, or nullptr.
+// 1. A manual focus neighbor wins for the four straight directions. One pointing at the control itself blocks that direction;
+//    a hidden or disabled one is skipped.
+// 2. Otherwise the best control in front: score = forward distance + sideways distance * side weight (sideways counts less
+//    when the rects overlap sideways, i.e. the same row or column). Anything within the max angle counts, however far.
+// 3. Nothing in front and the layer loops vertically: up/down wrap to the farthest control the other way.
+// `report` (optional) gets every step for the debug UI. BG_FocusLayers.gd mirrors this function.
+Control *BG_Focus_Layers::_find_in_direction(BG_Focus_Layer_Properties *prop, Control *from, const Vector2 &dir, Dictionary *report)
+{
+    const ScreenRect from_rect = _get_screen_rect(from);
+    Array candidates;
+    if (report != nullptr) {
+        (*report)["direction"] = dir;
+        (*report)["source"] = from;
+        (*report)["source_rect"] = from_rect.aabb;
+        (*report)["manual_neighbor"] = Variant();
+        (*report)["blocked"] = false;
+        (*report)["wrapped"] = false;
+        (*report)["candidates"] = candidates;
+        (*report)["result"] = Variant();
     }
-    return false;
+
+    const int side = _get_side(dir);
+    if (side >= 0) {
+        const NodePath neighbor_path = from->get_focus_neighbor(godot::Side(side));
+        if (!neighbor_path.is_empty()) {
+            Control *neighbor = cast_to<Control>(from->get_node_or_null(neighbor_path));
+            if (neighbor == from) {
+                if (report != nullptr)
+                    (*report)["blocked"] = true;
+                return nullptr;
+            }
+            if (BG_Focus_Layer_Properties::bg_is_instance_valid(neighbor) && _check_if_valid_control(neighbor)) {
+                if (report != nullptr) {
+                    (*report)["manual_neighbor"] = neighbor;
+                    (*report)["result"] = neighbor;
+                }
+                return neighbor;
+            }
+        }
+    }
+
+    const bool is_straight = side >= 0;
+    const float max_angle = Math::deg_to_rad(is_straight ? _max_angle_degrees : _diagonal_max_angle_degrees);
+    constexpr float PI_F = 3.14159265f;
+    const Vector2 side_dir = Vector2(-dir.y, dir.x);
+    const bool can_wrap = prop->get_should_loop_vertically() && Math::is_zero_approx(dir.x);
+
+    Control *best = nullptr;
+    float best_score = 0.0f;
+    Control *wrap_best = nullptr;
+    float wrap_best_score = 0.0f;
+    const TypedArray<Control> ctrls = BG_Focus_Layers::get_all_focusable_controls_under_control(prop->get_parent_control());
+    for (int i = 0; i < ctrls.size(); ++i)
+    {
+        Control *c = cast_to<Control>(ctrls[i]);
+        if (c == from || !_check_if_valid_control(c))
+            continue;
+
+        const ScreenRect rect = _get_screen_rect(c);
+        const Vector2 offset = rect.center - from_rect.center;
+        const float forward = offset.dot(dir);
+        float sideways = Math::abs(offset.dot(side_dir));
+        const float angle = Math::atan2(sideways, forward); // 0 = straight ahead, PI = straight behind.
+        if (is_straight && _overlaps_sideways(from_rect.aabb, rect.aabb, dir))
+            sideways *= _aligned_side_factor;
+        const float score = forward + sideways * _side_weight;
+        const bool accepted = forward > 0.0f && angle <= max_angle;
+
+        if (accepted && (best == nullptr || score < best_score)) {
+            best = c;
+            best_score = score;
+        }
+        // Wrapping: the farthest control behind, still favoring the same column.
+        if (can_wrap && forward < 0.0f && angle >= PI_F - max_angle && (wrap_best == nullptr || score < wrap_best_score)) {
+            wrap_best = c;
+            wrap_best_score = score;
+        }
+
+        if (report != nullptr) {
+            Dictionary entry;
+            entry["control"] = c;
+            entry["rect"] = rect.aabb;
+            entry["center"] = rect.center;
+            entry["forward"] = forward;
+            entry["side"] = sideways;
+            entry["angle"] = Math::rad_to_deg(angle);
+            entry["score"] = score;
+            entry["accepted"] = accepted;
+            candidates.append(entry);
+        }
+    }
+
+    if (best == nullptr && wrap_best != nullptr) {
+        best = wrap_best;
+        if (report != nullptr)
+            (*report)["wrapped"] = true;
+    }
+    if (report != nullptr)
+        (*report)["result"] = best;
+    return best;
 }
 
 void BG_Focus_Layers::find_control_in_direction(const Vector2 &direction)
 {
     BG_Focus_Layer_Properties *prop = get_active_focus_layer();
-    if (!BG_Focus_Layer_Properties::bg_is_instance_valid(prop))
+    if (!BG_Focus_Layer_Properties::bg_is_instance_valid(prop) || direction.is_zero_approx())
         return;
-    
-    const TypedArray<Control> ctrls = BG_Focus_Layers::get_all_focusable_controls_under_control(prop->get_parent_control());
-	Control *last_selected_control = _get_active_control();
-	if (BG_Focus_Layer_Properties::bg_is_instance_valid(last_selected_control))
+
+    Control *last_selected_control = _get_active_control();
+    if (!BG_Focus_Layer_Properties::bg_is_instance_valid(last_selected_control))
+        return;
+
+    Control *new_selected_control = _find_in_direction(prop, last_selected_control, direction.normalized(), nullptr);
+    if (BG_Focus_Layer_Properties::bg_is_instance_valid(new_selected_control) && new_selected_control != last_selected_control)
     {
-		bool should_get_farthest_control = false;
-		Vector2 last_control_dir_location = Vector2();
-		if (direction == Vector2(0, -1))
-        {
-            if (check_if_manual_focus_neighbor(last_selected_control, prop, godot::Side::SIDE_TOP))
-                return;
-
-			last_control_dir_location = last_selected_control->get_screen_transform().get_origin() + (last_selected_control->get_global_rect().size * Vector2(0.5, 0.0));
-			if (prop->get_should_loop_vertically())
-				should_get_farthest_control = _is_control_top(direction, last_selected_control, ctrls);
-        } else if (direction == Vector2(0, 1))
-        {
-            if (check_if_manual_focus_neighbor(last_selected_control, prop, godot::Side::SIDE_BOTTOM))
-                return;
-
-			if (prop->get_should_loop_vertically())
-				should_get_farthest_control = _is_control_bottom(direction, last_selected_control, ctrls);
-			last_control_dir_location = last_selected_control->get_screen_transform().get_origin() + (last_selected_control->get_global_rect().size * Vector2(0.5, 1.0));
-        } else if (direction == Vector2(1, 0))
-        {
-            if (check_if_manual_focus_neighbor(last_selected_control, prop, godot::Side::SIDE_RIGHT))
-                return;
-
-			last_control_dir_location = last_selected_control->get_screen_transform().get_origin() + (last_selected_control->get_global_rect().size * Vector2(1.0, 0.5));
-        } else
-        {
-            if (check_if_manual_focus_neighbor(last_selected_control, prop, godot::Side::SIDE_LEFT))
-                return;
-
-			last_control_dir_location = last_selected_control->get_screen_transform().get_origin() + (last_selected_control->get_global_rect().size * Vector2(0.0, 0.5));
-        }
-
-		Control *new_selected_control = nullptr;
-		float best_distance = should_get_farthest_control ? 0.0f : 9999.0f;
-        for (int i = 0; i < ctrls.size(); ++i)
-        {
-            Control *c = cast_to<Control>(ctrls[i]);
-            if (BG_Focus_Layer_Properties::bg_is_instance_valid(c) && c != last_selected_control && _check_if_valid_control(c))
-            {
-                const Vector2 c_center_location = c->get_screen_transform().get_origin() + (c->get_global_rect().size * 0.5);
-                static const float PI = 3.14159f;
-                const float angle = Math::abs(direction.angle_to(last_control_dir_location - c_center_location) / PI);
-                if ((should_get_farthest_control && angle < _minimum_angle) || (!should_get_farthest_control && angle > _minimum_angle))
-                {
-                    float distance = last_control_dir_location.distance_to(c_center_location);
-                    if (!should_get_farthest_control)
-                        distance *= Math::max(1.0f, (Math::abs(angle - 1.0f) + 0.75f) ); // Favor controls in a better angle.
-                    else
-                        distance *= Math::abs(angle - 1.0) - _minimum_angle; // Favor controls in a better angle.
-
-                    if ((should_get_farthest_control && distance > best_distance) || (!should_get_farthest_control && distance < best_distance))
-                    {
-                        best_distance = distance;
-                        new_selected_control = c;
-                    }
-                }
-            }
-        }
-
-		if (BG_Focus_Layer_Properties::bg_is_instance_valid(new_selected_control))
-            prop->set_focused_control(new_selected_control);
+        prop->set_focused_control(new_selected_control);
+        if (last_selected_control->has_focus())
+            last_selected_control->release_focus();
+        _focus_active_control();
     }
+}
 
-	if (last_selected_control != prop->get_focused_control())
-    {
-        if (BG_Focus_Layer_Properties::bg_is_instance_valid(last_selected_control) && last_selected_control->has_focus())
-		    last_selected_control->release_focus();
-		_focus_active_control();
-    }
+// What a press in `direction` would do, without moving focus (for the debug UI). Empty when nothing is focused.
+Dictionary BG_Focus_Layers::preview_direction(const Vector2 &direction)
+{
+    Dictionary report;
+    BG_Focus_Layer_Properties *prop = get_active_focus_layer();
+    if (!BG_Focus_Layer_Properties::bg_is_instance_valid(prop) || direction.is_zero_approx())
+        return report;
+    Control *from = prop->get_focused_control();
+    if (!BG_Focus_Layer_Properties::bg_is_instance_valid(from) || !_check_if_valid_control(from))
+        return report;
+    _find_in_direction(prop, from, direction.normalized(), &report);
+    return report;
+}
+
+void BG_Focus_Layers::set_search_settings(const Dictionary &p_settings)
+{
+    _max_angle_degrees = p_settings.get("max_angle_degrees", _max_angle_degrees);
+    _diagonal_max_angle_degrees = p_settings.get("diagonal_max_angle_degrees", _diagonal_max_angle_degrees);
+    _side_weight = p_settings.get("side_weight", _side_weight);
+    _aligned_side_factor = p_settings.get("aligned_side_factor", _aligned_side_factor);
+}
+
+Dictionary BG_Focus_Layers::get_search_settings() const
+{
+    Dictionary settings;
+    settings["max_angle_degrees"] = _max_angle_degrees;
+    settings["diagonal_max_angle_degrees"] = _diagonal_max_angle_degrees;
+    settings["side_weight"] = _side_weight;
+    settings["aligned_side_factor"] = _aligned_side_factor;
+    return settings;
 }
 
 void BG_Focus_Layers::input_type_updated(bool using_gamepad)

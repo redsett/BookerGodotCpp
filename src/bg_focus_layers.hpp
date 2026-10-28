@@ -64,19 +64,29 @@ class BG_Focus_Layers : public Object
 protected:
 	static void _bind_methods();
 
-    float _minimum_angle = 0.5f;
+    // Direction search tuning (see find_control_in_direction). Mirrored by BG_FocusLayers.gd's search_settings.
+    float _max_angle_degrees = 80.0f; // Straight presses: how far off the direction a control can be.
+    float _diagonal_max_angle_degrees = 35.0f; // Diagonal presses: narrower, so they don't steal straight moves.
+    float _side_weight = 2.5f; // Cost of a pixel sideways, relative to a pixel forward.
+    float _aligned_side_factor = 0.25f; // Sideways cost multiplier for controls in the same row/column (rects overlap sideways).
 
     bool _is_using_gamepad = true;
     TypedArray<String> _focus_layer_stack;
     TypedArray<BG_Focus_Layer_Properties> _focus_layers;
     
+    struct ScreenRect {
+        Rect2 aabb; // Screen-space bounds (handles the window scale, rotation and SubViewports).
+        Vector2 center;
+    };
+    static ScreenRect _get_screen_rect(const Control *c);
+    static int _get_side(const Vector2 &dir);
+    static bool _overlaps_sideways(const Rect2 &a, const Rect2 &b, const Vector2 &dir);
+    Control *_find_in_direction(BG_Focus_Layer_Properties *prop, Control *from, const Vector2 &dir, Dictionary *report);
+
     void _focus_active_control();
-    bool _is_control_top(const Vector2 &direction, const Control *ctrl, const TypedArray<Control> &all_ctrls);
-    bool _is_control_bottom(const Vector2 &direction, const Control *ctrl, const TypedArray<Control> &all_ctrls);
     Control *_get_active_control();
     Button *_get_active_back_button() const;
     static bool _check_if_valid_control(const Control *c);
-    bool check_if_manual_focus_neighbor(Control *last_selected_control, BG_Focus_Layer_Properties *prop, godot::Side side);
 
 public:
 	BG_Focus_Layers();
@@ -101,10 +111,12 @@ public:
     );
     Control *get_current_parent_control() const;
     void find_control_in_direction(const Vector2 &direction);
+    Dictionary preview_direction(const Vector2 &direction);
     void input_type_updated(bool using_gamepad);
     void press_back_button() const;
 
-    void set_minimum_angle(float angle) { _minimum_angle = angle; };
+    void set_search_settings(const Dictionary &p_settings);
+    Dictionary get_search_settings() const;
 
     static Control *find_valid_control(const TypedArray<Control> &p_controls);
     static TypedArray<Control> get_all_focusable_controls_under_control(const Control *p_control);
