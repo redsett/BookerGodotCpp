@@ -2503,6 +2503,32 @@ private:
 
 	void try_parse_data(const String &file_path);
 	void try_parse_bder_data(const String &file_path);
+	// try_parse_bder_data's sheet parsers, in bg_booker_db_parse*.cpp.
+	void parse_global_curves(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_base_stats(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_stat_types(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_animation_classes(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_content(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_audio(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_bands(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_battle_boards(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_booker_skill_tree(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_caste_types(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_characters(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_city_info(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_effects(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_game_maps(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_game_map_nodes(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_icons(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_item_drop_pools(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_item_slot_types(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_mail_data(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_misc_globals(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_puzzles(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_objectives(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_rarity_type(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_resource_types(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_two_der(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
 	void try_parse_skills_data(const Dictionary &p_skills_data);
 	void try_parse_localization_data(const Dictionary &p_localization_data);
 
