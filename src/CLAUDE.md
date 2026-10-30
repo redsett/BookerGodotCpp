@@ -5,7 +5,10 @@ Data parsing: `C:\Godot\Booker\BookerGodot\Docs\Systems\data-pipeline.md`.
 - The user builds the GDExtension. After changing C++, ask them to build, then continue.
 - `Booker_DB` parses `booker_dber_data.json`. Read fields with `dber_get(row, "column")` (reports a missing column)
   or `dber_find` (optional); the names must match DBer's columns. Files (read only the one you need):
-  - `bg_booker_data_base.hpp`: every data class and `Booker_DB` (large; grep for the class).
+  - `bg_booker_data_base.hpp`: `BG_Booker_Globals` and `Booker_DB`; include it for any data class. It pulls in
+    `bg_booker_types_fwd.hpp` (forward declarations) and the area headers `bg_booker_types_{content,world,units}.hpp`,
+    which may only use other areas' classes by pointer, `Ref<>` or `TypedArray<>`. A new class needs a forward
+    declaration in `_fwd.hpp`.
   - `bg_booker_data_base.cpp`: `Booker_DB` bindings, getters, refresh, localization lookups.
   - `bg_booker_db_parse.cpp`: `try_parse_bder_data` (calls a `parse_<sheet>` per sheet, in order) and the world
     sheets; `_parse_content.cpp`: stats, items, monsters, effects, rarities; `_parse_units.cpp`: bands, castes, skills.
