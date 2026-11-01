@@ -12,6 +12,7 @@ using namespace godot;
 ////
 void BG_AnimatedAtlasTextureRect::_bind_methods()
 {
+	ClassDB::bind_method(D_METHOD("restart"), &BG_AnimatedAtlasTextureRect::restart);
 	ClassDB::bind_method(D_METHOD("get_atlas_texture"), &BG_AnimatedAtlasTextureRect::get_atlas_texture);
 	ClassDB::bind_method(D_METHOD("set_atlas_texture"), &BG_AnimatedAtlasTextureRect::set_atlas_texture);
 	ClassDB::bind_method(D_METHOD("get_frame_size"), &BG_AnimatedAtlasTextureRect::get_frame_size);
@@ -59,11 +60,21 @@ void BG_AnimatedAtlasTextureRect::_ready()
 	}
 }
 
+void BG_AnimatedAtlasTextureRect::restart()
+{
+	time_on_frame = 0.0;
+	current_frame = 0;
+	if (!get_texture().is_valid()) return;
+	AtlasTexture *at = cast_to<AtlasTexture>(get_texture().ptr());
+	if (at == nullptr) return;
+	at->set_region(Rect2(0, 0, frame_size.x, frame_size.y));
+}
+
 void BG_AnimatedAtlasTextureRect::_process(double delta)
 {
 	if (!get_texture().is_valid() || !atlas_texture.is_valid()) return;
 	if (!is_visible_in_tree()) return;
-	if (anim_fps == 0.0) return;
+	if (anim_fps <= 0.0 || frame_count <= 0 || atlas_texture->get_size().x <= 0.0) return;
 
 	// clock_t start, end;
 	// double elapsed;
@@ -71,8 +82,9 @@ void BG_AnimatedAtlasTextureRect::_process(double delta)
 
 	time_on_frame += (delta * anim_fps);
 	if (time_on_frame < 1.0) return;
-	time_on_frame -= 1.0;
-	current_frame = (current_frame + 1) % frame_count;
+	const int frames_elapsed = int(Math::floor(time_on_frame));
+	time_on_frame -= frames_elapsed;
+	current_frame = (current_frame + frames_elapsed) % frame_count;
 	
 	frame_location.x = frame_size.x * current_frame;
 	const int v_count = int(Math::floor(frame_location.x / atlas_texture->get_size().x));

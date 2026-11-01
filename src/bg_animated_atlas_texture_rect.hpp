@@ -24,6 +24,7 @@ protected:
 public:
 	void _ready() override;
 	void _process(double delta) override;
+	void restart();
 	
 	Ref<Texture2D> atlas_texture;
 	Ref<Texture2D> get_atlas_texture() const { return atlas_texture; }
