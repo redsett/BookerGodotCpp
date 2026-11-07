@@ -51,6 +51,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	parse_objectives(data, global_enums);
 	parse_rarity_type(data, global_enums);
 	parse_resource_types(data, global_enums);
+	parse_terrain_types(data, global_enums);
 	parse_two_der(data, global_enums);
 
 	// Skills last: they fill the attribute trees of the castes parsed above.
@@ -724,6 +725,35 @@ void BG_Booker_DB::parse_resource_types(const Dictionary &data, HashMap<String, 
 		new_resource_type_class->icon_path = ensure_clean_path(dber_get(entry, "icon_path"));
 
 		resource_type_details[new_resource_type_class->id] = new_resource_type_class;
+	}
+}
+
+// Terrain Types: one row per terrain, its passive skills as rows of "skill_id".
+void BG_Booker_DB::parse_terrain_types(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums)
+{
+	const Array lines = get_sheet_by_name("Terrain_Types", data);
+	for (int i = 0; i < lines.size(); ++i) {
+		const Dictionary entry = lines[i];
+
+		BG_Terrain *new_terrain_class = memnew(BG_Terrain);
+		new_terrain_class->id = StringName(dber_get(entry, "id"));
+		new_terrain_class->icon_path = ensure_clean_path(dber_get(entry, "icon_path"));
+		new_terrain_class->move_cost = float(dber_get(entry, "move_cost"));
+		const String tint = dber_get(entry, "tint");
+		if (!tint.is_empty())
+			new_terrain_class->tint = convert_hex_to_color(tint);
+		new_terrain_class->combat_environment_path = ensure_clean_path(dber_get(entry, "combat_environment_path"));
+		new_terrain_class->is_default = bool(dber_get(entry, "is_default"));
+
+		const Array passive_skills = dber_get(entry, "passive_skills");
+		for (int y = 0; y < passive_skills.size(); ++y) {
+			const Dictionary passive_skill_entry = passive_skills[y];
+			const StringName skill_id = StringName(dber_get(passive_skill_entry, "skill_id"));
+			if (!skill_id.is_empty())
+				new_terrain_class->passive_skill_ids.append(skill_id);
+		}
+
+		terrains.append(new_terrain_class);
 	}
 }
 

@@ -56,6 +56,9 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_game_map_details"), &BG_Booker_DB::get_game_map_details);
 	ClassDB::bind_method(D_METHOD("get_game_map_details_by_id", "id"), &BG_Booker_DB::get_game_map_details_by_id);
 	ClassDB::bind_method(D_METHOD("get_resource_type_details_by_id", "resource_id"), &BG_Booker_DB::get_resource_type_details_by_id);
+	ClassDB::bind_method(D_METHOD("get_terrains"), &BG_Booker_DB::get_terrains);
+	ClassDB::bind_method(D_METHOD("get_terrain_by_id", "id"), &BG_Booker_DB::get_terrain_by_id);
+	ClassDB::bind_method(D_METHOD("get_default_terrain"), &BG_Booker_DB::get_default_terrain);
 	ClassDB::bind_method(D_METHOD("get_audio_data"), &BG_Booker_DB::get_audio_data);
 	ClassDB::bind_method(D_METHOD("get_audio_details", "id", "act"), &BG_Booker_DB::get_audio_details);
 	ClassDB::bind_method(D_METHOD("get_icon_details"), &BG_Booker_DB::get_icon_details);
@@ -337,6 +340,25 @@ BG_ResourceTypeDetails *BG_Booker_DB::get_resource_type_details_by_id(const Stri
 	return nullptr;
 }
 
+BG_Terrain *BG_Booker_DB::get_terrain_by_id(const StringName &id) const {
+	if (id.is_empty()) return get_default_terrain();
+	for (int i = 0; i < terrains.size(); ++i) {
+		BG_Terrain *t = cast_to<BG_Terrain>(terrains[i]);
+		if (t->get_id() == id)
+			return t;
+	}
+	return nullptr;
+}
+
+BG_Terrain *BG_Booker_DB::get_default_terrain() const {
+	for (int i = 0; i < terrains.size(); ++i) {
+		BG_Terrain *t = cast_to<BG_Terrain>(terrains[i]);
+		if (t->get_is_default())
+			return t;
+	}
+	return terrains.is_empty() ? nullptr : cast_to<BG_Terrain>(terrains[0]);
+}
+
 BG_ItemDropPool *BG_Booker_DB::get_item_drop_pool_by_id(const StringName &id) const
 {
 	for (int i = 0; i < item_drop_pools.size(); ++i) {
@@ -580,6 +602,12 @@ void BG_Booker_DB::free_all_params()
 			memdelete(pair.value);
 	}
 	resource_type_details.clear();
+	for (int i = 0; i < terrains.size(); ++i) {
+		BG_Terrain *d = cast_to<BG_Terrain>(terrains[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	terrains.clear();
 	for (int i = 0; i < audio_data.size(); ++i) {
 		BG_AudioData *d = cast_to<BG_AudioData>(audio_data[i]);
 		if (BG_Booker_DB::bg_is_instance_valid(d))

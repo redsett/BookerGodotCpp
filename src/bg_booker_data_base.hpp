@@ -244,6 +244,14 @@ public:
 	HashMap<StringName, BG_ResourceTypeDetails *> resource_type_details;
 	BG_ResourceTypeDetails *get_resource_type_details_by_id(const StringName &resource_id) const;
 
+	// Terrain types ("Terrain_Types" sheet), in DBer's order.
+	TypedArray<BG_Terrain> terrains;
+	TypedArray<BG_Terrain> get_terrains() const { return terrains; }
+	// The terrain with this id. An empty id (a cell with no terrain set) gives the default terrain; an unknown one, null.
+	BG_Terrain *get_terrain_by_id(const StringName &id) const;
+	// The row marked is_default, else the first row; null if the sheet is empty.
+	BG_Terrain *get_default_terrain() const;
+
 	TypedArray<BG_AudioData> audio_data;
 	TypedArray<BG_AudioData> get_audio_data() const { return audio_data; }
 	TypedArray<BG_AudioDataDetails> get_audio_details(const StringName &id, int act) const;
@@ -381,6 +389,7 @@ private:
 	void parse_objectives(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
 	void parse_rarity_type(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
 	void parse_resource_types(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
+	void parse_terrain_types(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
 	void parse_two_der(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
 	void try_parse_skills_data(const Dictionary &p_skills_data);
 	void try_parse_localization_data(const Dictionary &p_localization_data);

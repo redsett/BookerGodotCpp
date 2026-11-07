@@ -409,6 +409,20 @@ void BG_ResourceTypeDetails::_bind_methods()
 }
 
 ////
+//// BG_Terrain
+////
+void BG_Terrain::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_Terrain::get_id);
+	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_Terrain::get_icon_path);
+	ClassDB::bind_method(D_METHOD("get_move_cost"), &BG_Terrain::get_move_cost);
+	ClassDB::bind_method(D_METHOD("get_tint"), &BG_Terrain::get_tint);
+	ClassDB::bind_method(D_METHOD("get_combat_environment_path"), &BG_Terrain::get_combat_environment_path);
+	ClassDB::bind_method(D_METHOD("get_is_default"), &BG_Terrain::get_is_default);
+	ClassDB::bind_method(D_METHOD("get_passive_skill_ids"), &BG_Terrain::get_passive_skill_ids);
+}
+
+////
 //// BG_MailData
 ////
 void BG_MailData::_bind_methods()

@@ -55,6 +55,7 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		ClassDB::register_class<BG_ObjectiveTimeline>();
 		ClassDB::register_class<BG_ObjectiveDetails>();
 		ClassDB::register_class<BG_ResourceTypeDetails>();
+		ClassDB::register_class<BG_Terrain>();
 		ClassDB::register_class<BG_MailData>();
 		ClassDB::register_class<BG_MarketplaceData>();
 		ClassDB::register_class<BG_MarketplaceEntryData>();

@@ -616,6 +616,48 @@ public:
 
 
 ////
+//// BG_Terrain
+////
+// A terrain type (DBer "Terrain_Types" sheet): what a battle board cell's ground costs to move through, and the
+// passive skills every unit standing on it gets for a fight. Its name and description are in the Localization tab's
+// "terrain_types" sheet as "<id>" and "<id>_tooltip". See Docs/Design/terrain.md.
+class BG_Terrain : public Object
+{
+	GDCLASS(BG_Terrain, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	StringName icon_path;
+	StringName get_icon_path() const { return icon_path; }
+
+	// Movement spent to enter a cell of this terrain (plains = 1).
+	float move_cost = 1.0f;
+	float get_move_cost() const { return move_cost; }
+
+	// Tints the cell on the board.
+	Color tint = Color(1.0, 1.0, 1.0);
+	Color get_tint() const { return tint; }
+
+	// The 3D scene fights on this terrain use. Empty: the cell's own combat environment.
+	StringName combat_environment_path;
+	StringName get_combat_environment_path() const { return combat_environment_path; }
+
+	// The terrain of cells that have none set.
+	bool is_default = false;
+	bool get_is_default() const { return is_default; }
+
+	// Passive skills (Skills tab, "terrain" owner) put on every unit on a cell of this terrain for the whole fight.
+	TypedArray<StringName> passive_skill_ids;
+	TypedArray<StringName> get_passive_skill_ids() const { return passive_skill_ids; }
+};
+
+
+////
 //// BG_MailData
 ////
 class BG_MailData : public Object
