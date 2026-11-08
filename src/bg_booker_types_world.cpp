@@ -230,6 +230,7 @@ void BG_BattleBoard_HexTypeVisualDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_destroyed_two_der_id"), &BG_BattleBoard_HexTypeVisualDetails::get_destroyed_two_der_id);
 	ClassDB::bind_method(D_METHOD("get_destroyed_scene_path"), &BG_BattleBoard_HexTypeVisualDetails::get_destroyed_scene_path);
 	ClassDB::bind_method(D_METHOD("get_hex_tint"), &BG_BattleBoard_HexTypeVisualDetails::get_hex_tint);
+	ClassDB::bind_method(D_METHOD("get_combat_environment_id"), &BG_BattleBoard_HexTypeVisualDetails::get_combat_environment_id);
 }
 
 ////
@@ -420,6 +421,17 @@ void BG_Terrain::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_is_default"), &BG_Terrain::get_is_default);
 	ClassDB::bind_method(D_METHOD("get_is_relative"), &BG_Terrain::get_is_relative);
 	ClassDB::bind_method(D_METHOD("get_passive_skill_ids"), &BG_Terrain::get_passive_skill_ids);
+}
+
+////
+//// BG_CombatEnvironmentDetails
+////
+void BG_CombatEnvironmentDetails::_bind_methods()
+{
+	ClassDB::bind_method(D_METHOD("get_id"), &BG_CombatEnvironmentDetails::get_id);
+	ClassDB::bind_method(D_METHOD("get_scene_path"), &BG_CombatEnvironmentDetails::get_scene_path);
+	ClassDB::bind_method(D_METHOD("get_terrain_id"), &BG_CombatEnvironmentDetails::get_terrain_id);
+	ClassDB::bind_method(D_METHOD("get_debug_color"), &BG_CombatEnvironmentDetails::get_debug_color);
 }
 
 ////

@@ -111,7 +111,7 @@ void BG_HexVisualData::_bind_methods()
 
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "qr"), "set_qr", "get_qr");
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "hex_asset_datas"), "set_hex_asset_datas", "get_hex_asset_datas");
-    ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "terrain_id"), "set_terrain_id", "get_terrain_id");
+    // terrain_id has no property: it isn't saved with a layout. The board fills it from the cell's visuals.
 }
 
 Ref<BG_HexVisualAssetData> BG_HexVisualData::get_hex_visual_asset_data_by_type(BG_HexVisualAssetData::HexVisualAssetTypes t) const

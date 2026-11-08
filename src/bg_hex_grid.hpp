@@ -171,7 +171,9 @@ public:
     TypedArray<BG_HexVisualAssetData> get_hex_asset_datas() const { return hex_asset_datas; }
     void set_hex_asset_datas(const TypedArray<BG_HexVisualAssetData> &v) { hex_asset_datas = v; }
 
-    // The cell's terrain (a Terrain_Types id, see BG_Terrain). Empty: the default terrain.
+    // The cell's terrain (a Terrain_Types id, see BG_Terrain). Empty: the default terrain. Not saved: the board sets
+    // it from the combat environment of the cell's visuals (BG_CombatEnvironmentDetails.terrain_id) when a layout loads and
+    // when the cell's visuals change. Pathing reads it for move costs.
     StringName terrain_id;
     StringName get_terrain_id() const { return terrain_id; }
     void set_terrain_id(const StringName &v) { terrain_id = v; }

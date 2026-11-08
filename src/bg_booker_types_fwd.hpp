@@ -40,6 +40,7 @@ class BG_ObjectiveTimeline;
 class BG_ObjectiveDetails;
 class BG_ResourceTypeDetails;
 class BG_Terrain;
+class BG_CombatEnvironmentDetails;
 class BG_MailData;
 class BG_MarketplaceEntryData;
 class BG_MarketplaceData;

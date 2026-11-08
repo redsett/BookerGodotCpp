@@ -59,6 +59,8 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_terrains"), &BG_Booker_DB::get_terrains);
 	ClassDB::bind_method(D_METHOD("get_terrain_by_id", "id"), &BG_Booker_DB::get_terrain_by_id);
 	ClassDB::bind_method(D_METHOD("get_default_terrain"), &BG_Booker_DB::get_default_terrain);
+	ClassDB::bind_method(D_METHOD("get_combat_environments"), &BG_Booker_DB::get_combat_environments);
+	ClassDB::bind_method(D_METHOD("get_combat_environment_by_id", "id"), &BG_Booker_DB::get_combat_environment_by_id);
 	ClassDB::bind_method(D_METHOD("get_audio_data"), &BG_Booker_DB::get_audio_data);
 	ClassDB::bind_method(D_METHOD("get_audio_details", "id", "act"), &BG_Booker_DB::get_audio_details);
 	ClassDB::bind_method(D_METHOD("get_icon_details"), &BG_Booker_DB::get_icon_details);
@@ -359,6 +361,16 @@ BG_Terrain *BG_Booker_DB::get_default_terrain() const {
 	return terrains.is_empty() ? nullptr : cast_to<BG_Terrain>(terrains[0]);
 }
 
+BG_CombatEnvironmentDetails *BG_Booker_DB::get_combat_environment_by_id(const StringName &id) const {
+	if (id.is_empty()) return nullptr;
+	for (int i = 0; i < combat_environments.size(); ++i) {
+		BG_CombatEnvironmentDetails *e = cast_to<BG_CombatEnvironmentDetails>(combat_environments[i]);
+		if (e->get_id() == id)
+			return e;
+	}
+	return nullptr;
+}
+
 BG_ItemDropPool *BG_Booker_DB::get_item_drop_pool_by_id(const StringName &id) const
 {
 	for (int i = 0; i < item_drop_pools.size(); ++i) {
@@ -608,6 +620,12 @@ void BG_Booker_DB::free_all_params()
 			memdelete(d);
 	}
 	terrains.clear();
+	for (int i = 0; i < combat_environments.size(); ++i) {
+		BG_CombatEnvironmentDetails *d = cast_to<BG_CombatEnvironmentDetails>(combat_environments[i]);
+		if (BG_Booker_DB::bg_is_instance_valid(d))
+			memdelete(d);
+	}
+	combat_environments.clear();
 	for (int i = 0; i < audio_data.size(); ++i) {
 		BG_AudioData *d = cast_to<BG_AudioData>(audio_data[i]);
 		if (BG_Booker_DB::bg_is_instance_valid(d))

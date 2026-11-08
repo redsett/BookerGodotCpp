@@ -333,6 +333,11 @@ public:
 
 	Color tint = Color(1.0, 1.0, 1.0);
 	Color get_hex_tint() const { return tint; }
+
+	// A Combat_Environments id (BG_CombatEnvironmentDetails): the fight scene and terrain of cells showing this visual.
+	// Empty: this visual gives the cell none.
+	StringName combat_environment_id;
+	StringName get_combat_environment_id() const { return combat_environment_id; }
 };
 
 
@@ -643,7 +648,7 @@ public:
 	Color tint = Color(1.0, 1.0, 1.0);
 	Color get_tint() const { return tint; }
 
-	// The terrain of cells that have none set.
+	// The terrain of cells whose combat environment gives none (or that have no combat environment).
 	bool is_default = false;
 	bool get_is_default() const { return is_default; }
 
@@ -655,6 +660,36 @@ public:
 	// Passive skills (Skills tab, "terrain" owner) put on every unit on a cell of this terrain for the whole fight.
 	TypedArray<StringName> passive_skill_ids;
 	TypedArray<StringName> get_passive_skill_ids() const { return passive_skill_ids; }
+};
+
+
+////
+//// BG_CombatEnvironmentDetails
+////
+// A combat environment (DBer "Combat_Environments" sheet): the 3D scene a fight loads, and the terrain of the cells
+// that have it. Battle board visuals point at one (BG_BattleBoard_HexTypeVisualDetails.combat_environment_id), so a
+// cell's environment and terrain come from the visuals on it. See Docs/Design/terrain.md.
+class BG_CombatEnvironmentDetails : public Object
+{
+	GDCLASS(BG_CombatEnvironmentDetails, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	StringName id;
+	StringName get_id() const { return id; }
+
+	StringName scene_path;
+	StringName get_scene_path() const { return scene_path; }
+
+	// A Terrain_Types id. Empty: the default terrain.
+	StringName terrain_id;
+	StringName get_terrain_id() const { return terrain_id; }
+
+	// The cell tint in the battle board debug's combat environment overlay.
+	Color debug_color = Color(1.0, 1.0, 1.0);
+	Color get_debug_color() const { return debug_color; }
 };
 
 

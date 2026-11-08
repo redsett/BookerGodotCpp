@@ -52,6 +52,7 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	parse_rarity_type(data, global_enums);
 	parse_resource_types(data, global_enums);
 	parse_terrain_types(data, global_enums);
+	parse_combat_environments(data, global_enums);
 	parse_two_der(data, global_enums);
 
 	// Skills last: they fill the attribute trees of the castes parsed above.
@@ -156,6 +157,7 @@ void BG_Booker_DB::parse_battle_boards(const Dictionary &data, HashMap<String, T
 				new_hex_type_visuals_class->destroyed_two_der_id = StringName(dber_get(visuals_entry, "destroyed_two_der_id"));
 				new_hex_type_visuals_class->destroyed_scene_path = ensure_clean_path(dber_get(visuals_entry, "destroyed_scene_path"));
 				new_hex_type_visuals_class->tint = convert_hex_to_color(dber_get(visuals_entry, "tint"));
+				new_hex_type_visuals_class->combat_environment_id = StringName(dber_get(visuals_entry, "combat_environment_id"));
 
 				new_hex_type_class->visuals.append(new_hex_type_visuals_class);
 			}
@@ -756,6 +758,25 @@ void BG_Booker_DB::parse_terrain_types(const Dictionary &data, HashMap<String, T
 		}
 
 		terrains.append(new_terrain_class);
+	}
+}
+
+// Combat Environments: one row per environment (a fight scene and the terrain of the cells that have it).
+void BG_Booker_DB::parse_combat_environments(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums)
+{
+	const Array lines = get_sheet_by_name("Combat_Environments", data);
+	for (int i = 0; i < lines.size(); ++i) {
+		const Dictionary entry = lines[i];
+
+		BG_CombatEnvironmentDetails *new_class = memnew(BG_CombatEnvironmentDetails);
+		new_class->id = StringName(dber_get(entry, "id"));
+		new_class->scene_path = ensure_clean_path(dber_get(entry, "scene_path"));
+		new_class->terrain_id = StringName(dber_get(entry, "terrain_id"));
+		const String debug_color = dber_get(entry, "debug_color");
+		if (!debug_color.is_empty())
+			new_class->debug_color = convert_hex_to_color(debug_color);
+
+		combat_environments.append(new_class);
 	}
 }
 
