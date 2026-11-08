@@ -115,6 +115,11 @@ public:
 
 	float crit_qte_window_additive = 0.0;
 	float get_crit_qte_window_additive() const { return crit_qte_window_additive; }
+
+	// Seconds before an action animation's "hit" tag that its QTE starts. The same for every animation, so the
+	// QTE indicator always gives the same warning.
+	float crit_qte_lead_seconds = 0.0;
+	float get_crit_qte_lead_seconds() const { return crit_qte_lead_seconds; }
 	
 	// Day Night Cycle
 	int day_night_cycle_turns_per_day = 0;
