@@ -1,5 +1,6 @@
 #include "bg_hex_grid.hpp"
 
+#include <climits>
 #include <queue>
 #include <vector>
 #include <godot_cpp/templates/hash_set.hpp>
@@ -105,9 +106,12 @@ void BG_HexVisualData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_hex_visual_asset_data_by_type", "type"), &BG_HexVisualData::get_hex_visual_asset_data_by_type);
 	ClassDB::bind_method(D_METHOD("get_hex_visual_asset_data_by_id", "id"), &BG_HexVisualData::get_hex_visual_asset_data_by_id);
 	ClassDB::bind_method(D_METHOD("get_hex_visual_types"), &BG_HexVisualData::get_hex_visual_types);
+	ClassDB::bind_method(D_METHOD("get_terrain_id"), &BG_HexVisualData::get_terrain_id);
+	ClassDB::bind_method(D_METHOD("set_terrain_id", "terrain_id"), &BG_HexVisualData::set_terrain_id);
 
     ADD_PROPERTY(PropertyInfo(Variant::VECTOR2I, "qr"), "set_qr", "get_qr");
     ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "hex_asset_datas"), "set_hex_asset_datas", "get_hex_asset_datas");
+    ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "terrain_id"), "set_terrain_id", "get_terrain_id");
 }
 
 Ref<BG_HexVisualAssetData> BG_HexVisualData::get_hex_visual_asset_data_by_type(BG_HexVisualAssetData::HexVisualAssetTypes t) const
@@ -367,6 +371,12 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_nearest_attackable", "from_job_hex", "attackable_types", "dyn_types_filter", "bands"), &BG_HexGrid::get_nearest_attackable);
 	ClassDB::bind_method(D_METHOD("get_nearest_empty_cell", "instigator", "target", "cells_to_check"), &BG_HexGrid::get_nearest_empty_cell);
 	ClassDB::bind_method(D_METHOD("find_path", "instigator", "start", "goal", "include_start", "travel_distance"), &BG_HexGrid::find_path);
+	ClassDB::bind_method(D_METHOD("set_terrain_move_costs", "costs"), &BG_HexGrid::set_terrain_move_costs);
+	ClassDB::bind_method(D_METHOD("get_move_cost", "qr"), &BG_HexGrid::get_move_cost);
+	ClassDB::bind_method(D_METHOD("get_path_move_cost", "path"), &BG_HexGrid::get_path_move_cost);
+	ClassDB::bind_method(D_METHOD("get_reachable_cells_qr", "instigator", "from_hex", "move_points"), &BG_HexGrid::get_reachable_cells_qr);
+
+	BIND_CONSTANT(MOVE_POINTS_PER_CELL);
 
 	BIND_ENUM_CONSTANT(ODD_R);
 	BIND_ENUM_CONSTANT(EVEN_R);
@@ -571,14 +581,7 @@ Dictionary BG_HexGrid::get_hex_neighbors_qr(const Ref<BG_Hex> &instigator, const
     Dictionary result;
     if (do_pathing_checks)
     {
-        TypedArray<BG_Hex> cells = find_reachable_cells_in_distance(instigator, from_hex, cell_distance);
-
-        for (int i = 0; i < cells.size(); ++i) {
-            const Ref<BG_Hex> h = cells[i];
-            if (h.is_null() || !h->get_is_playable_space()) continue;
-            result[h->get_qr()] = h;
-        }
-        return result;
+        return get_reachable_cells_qr(instigator, from_hex, cell_distance * MOVE_POINTS_PER_CELL);
     }
 
     const HashMap<BG_HexGrid::HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(from_hex);
@@ -602,6 +605,54 @@ Dictionary BG_HexGrid::get_hex_neighbors_qr(const Ref<BG_Hex> &instigator, const
         result.erase(from_hex->get_qr());
     }
 
+    return result;
+}
+
+Dictionary BG_HexGrid::get_reachable_cells_qr(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &from_hex, int move_points) const
+{
+    Dictionary result;
+    if (from_hex.is_null() || move_points < 1) return result;
+    const TypedArray<BG_Hex> cells = find_reachable_cells_in_distance(instigator, from_hex, move_points);
+    for (int i = 0; i < cells.size(); ++i) {
+        const Ref<BG_Hex> h = cells[i];
+        if (h.is_null() || !h->get_is_playable_space()) continue;
+        result[h->get_qr()] = h;
+    }
+    return result;
+}
+
+void BG_HexGrid::set_terrain_move_costs(const Dictionary &costs)
+{
+    terrain_move_points.clear();
+    min_move_points = costs.has(StringName()) || costs.has(String()) ? INT_MAX : MOVE_POINTS_PER_CELL;
+    const Array keys = costs.keys();
+    for (int i = 0; i < keys.size(); ++i) {
+        const int points = MAX(1, (int)Math::round(double(costs[keys[i]]) * MOVE_POINTS_PER_CELL));
+        terrain_move_points[StringName(keys[i])] = points;
+        min_move_points = MIN(min_move_points, points);
+    }
+    if (min_move_points == INT_MAX) min_move_points = MOVE_POINTS_PER_CELL;
+}
+
+int BG_HexGrid::get_move_cost(const Vector2i &qr) const
+{
+    StringName terrain_id;
+    if (base_grid_visual_data.has(qr)) {
+        const Ref<BG_HexVisualData> h = base_grid_visual_data[qr];
+        if (h.is_valid()) terrain_id = h->get_terrain_id();
+    }
+    if (const int *points = terrain_move_points.getptr(terrain_id)) return *points;
+    if (const int *default_points = terrain_move_points.getptr(StringName())) return *default_points;
+    return MOVE_POINTS_PER_CELL;
+}
+
+int BG_HexGrid::get_path_move_cost(const TypedArray<BG_Hex> &path) const
+{
+    int result = 0;
+    for (int i = 1; i < path.size(); ++i) {
+        const Ref<BG_Hex> h = path[i];
+        if (h.is_valid()) result += get_move_cost(h->get_qr());
+    }
     return result;
 }
 
@@ -979,7 +1030,7 @@ namespace {
 struct FindPathNode {
     Ref<BG_Hex> hex;
     Vector2i parent_qr;
-    int g = 0;                  // Steps from start.
+    int g = 0;                  // Move points from start (get_move_cost of each cell entered).
     int pass_through_run = 0;   // How many cells in a row (ending here) the unit can walk through but not stop on.
     bool has_landing = false;   // Does the path from start to here (excluding start) have a cell the unit can stop on?
     bool closed = false;
@@ -987,8 +1038,8 @@ struct FindPathNode {
 
 struct FindPathOpenItem {
     int f;          // g + h
-    int h;          // Distance left to the goal.
-    int g;          // Steps taken. Used to detect stale entries.
+    int h;          // Estimated move points left: distance to the goal times the cheapest cell's cost.
+    int g;          // Move points spent. Used to detect stale entries.
     int order;      // Insertion order, keeps results deterministic on ties.
     Vector2i qr;
 };
@@ -1050,17 +1101,17 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> &instigator, const Re
         start_node.hex = start;
         start_node.parent_qr = start_qr;
         nodes.insert(start_qr, start_node);
-        const int h = hex_distance(start->get_full_qr(), goal_full_qr, offset_type);
+        const int h = hex_distance(start->get_full_qr(), goal_full_qr, offset_type) * min_move_points;
         open.push({ h, h, 0, push_order++, start_qr });
     }
 
     bool found_goal = false;
     Vector2i end_qr = start_qr;
 
-    // Fallback if the goal can't be reached: the closest cell to the goal we can stop on (ties -> fewer steps).
+    // Fallback if the goal can't be reached: the closest cell to the goal we can stop on (ties -> fewer move points).
     // Starts as the start cell, so if we can't get any closer we just stay put.
     Vector2i closest_qr = start_qr;
-    int closest_h = hex_distance(start->get_full_qr(), goal_full_qr, offset_type);
+    int closest_h = hex_distance(start->get_full_qr(), goal_full_qr, offset_type) * min_move_points;
     int closest_g = 0;
 
     while (!open.empty() && !found_goal) {
@@ -1114,8 +1165,8 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> &instigator, const Re
                 continue;
             }
 
-            const int new_g = current_g + 1;
-            if (existing != nullptr && new_g >= existing->g) continue; // Already have an equal or shorter route here.
+            const int new_g = current_g + get_move_cost(next_qr);
+            if (existing != nullptr && new_g >= existing->g) continue; // Already have an equal or cheaper route here.
 
             // Pass through only = we can walk through it, but not stop on it. Only possible if pass through was allowed.
             const bool is_pass_through_only = allow_pass_through &&
@@ -1129,7 +1180,7 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> &instigator, const Re
             next_node.has_landing = current_has_landing || can_land_on(next_hex);
             nodes.insert(next_qr, next_node);
 
-            const int h = hex_distance(next_hex->get_full_qr(), goal_full_qr, offset_type);
+            const int h = hex_distance(next_hex->get_full_qr(), goal_full_qr, offset_type) * min_move_points;
             open.push({ new_g + h, h, new_g, push_order++, next_qr });
         }
     }
@@ -1165,13 +1216,29 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> &instigator, const Re
     return result;
 }
 
-TypedArray<BG_Hex> BG_HexGrid::find_reachable_cells_in_distance(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &start, int distance) const
+namespace {
+struct ReachItem {
+    int cost;       // Move points spent to get here.
+    int order;      // Insertion order, keeps results deterministic on ties.
+    Vector2i qr;
+};
+
+// std::priority_queue is a max heap, so return true when 'a' should come out AFTER 'b'.
+struct ReachItemCompare {
+    bool operator()(const ReachItem &a, const ReachItem &b) const {
+        if (a.cost != b.cost) return a.cost > b.cost;
+        return a.order > b.order;
+    }
+};
+}
+
+TypedArray<BG_Hex> BG_HexGrid::find_reachable_cells_in_distance(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &start, int move_points) const
 {
     TypedArray<BG_Hex> result;
-    if (start.is_null() || distance < 0) return result;
+    if (start.is_null() || move_points < 0) return result;
     const GameDataMap game_data_map = _build_game_data_map(); // One lookup table for the whole search.
 
-    // Same order as get_hex_neighbors_fast, so results come back in the same order as before.
+    // Same order as get_hex_neighbors_fast, so ties resolve the same way.
     const Vector2i directions[6] = {
         hex_directions[HexDirections::TOP],
         hex_directions[HexDirections::RIGHT],
@@ -1181,44 +1248,45 @@ TypedArray<BG_Hex> BG_HexGrid::find_reachable_cells_in_distance(const Ref<BG_Hex
         hex_directions[HexDirections::TOP_LEFT],
     };
 
-    // Breadth first flood fill, stopping at 'distance' steps. BFS reaches every cell by its shortest route first,
-    // so a cell's depth is its step count and nothing deeper than 'distance' is ever explored.
-    // (This replaces "fill everything within hex distance, then walk each cell back to the start to count steps".
-    //  Same result, since a path of N steps can never leave the N hex radius.)
-    struct QueueItem {
-        Ref<BG_Hex> hex;
-        int depth;
-    };
-    std::vector<QueueItem> queue;
-    HashSet<Vector2i> visited;
+    // Cheapest-first search (Dijkstra) by move points, stopping at move_points. Each cell comes out once, by its
+    // cheapest route, and nothing costing more than move_points is ever explored.
+    HashMap<Vector2i, int> best_cost;
+    HashSet<Vector2i> done;
+    std::priority_queue<ReachItem, std::vector<ReachItem>, ReachItemCompare> open;
+    int push_order = 0;
 
-    queue.push_back({ start, 0 });
-    visited.insert(start->get_qr());
+    best_cost[start->get_qr()] = 0;
+    open.push({ 0, push_order++, start->get_qr() });
 
-    for (size_t index = 0; index < queue.size(); ++index) {
-        // Copy out, push_back below can reallocate the vector.
-        const Ref<BG_Hex> current_hex = queue[index].hex;
-        const int current_depth = queue[index].depth;
+    while (!open.empty()) {
+        const ReachItem item = open.top();
+        open.pop();
+        if (done.has(item.qr)) continue; // A cheaper route got here first.
+        done.insert(item.qr);
+        const Ref<BG_Hex> current_hex = get_hex_by_qr(item.qr);
+        if (current_hex.is_null()) continue;
 
         // Leave out cells we can't stop on (e.g. a friendly unit is there), but still walk through them.
-        if (_get_hex_cost(/* from_hex */ nullptr, /* qr */ current_hex->get_qr(), /* do_pass_through_check */ false, &game_data_map) != 0) {
+        if (_get_hex_cost(/* from_hex */ nullptr, /* qr */ item.qr, /* do_pass_through_check */ false, &game_data_map) != 0) {
             result.append(current_hex);
         }
-
-        if (current_depth >= distance) continue; // Don't expand past the max distance.
 
         for (int i = 0; i < 6; ++i) {
             const Ref<BG_Hex> next_hex = get_hex_in_direction(current_hex, directions[i]);
             if (!next_hex.is_valid()) continue;
 
             const Vector2i next_qr = next_hex->get_qr();
-            if (visited.has(next_qr)) continue;
+            if (done.has(next_qr)) continue;
 
             const int hex_cost = _get_hex_cost(/* from_hex */ instigator, /* qr */ next_qr, /* do_pass_through_check */ true, &game_data_map);
             if (hex_cost == 0) continue;
 
-            visited.insert(next_qr);
-            queue.push_back({ next_hex, current_depth + 1 });
+            const int new_cost = item.cost + get_move_cost(next_qr);
+            if (new_cost > move_points) continue; // Out of movement.
+            const int *known = best_cost.getptr(next_qr);
+            if (known != nullptr && *known <= new_cost) continue;
+            best_cost[next_qr] = new_cost;
+            open.push({ new_cost, push_order++, next_qr });
         }
     }
 

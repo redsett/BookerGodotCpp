@@ -643,13 +643,14 @@ public:
 	Color tint = Color(1.0, 1.0, 1.0);
 	Color get_tint() const { return tint; }
 
-	// The 3D scene fights on this terrain use. Empty: the cell's own combat environment.
-	StringName combat_environment_path;
-	StringName get_combat_environment_path() const { return combat_environment_path; }
-
 	// The terrain of cells that have none set.
 	bool is_default = false;
 	bool get_is_default() const { return is_default; }
+
+	// An advantage over the other side (high ground): a side on this terrain only gets its passive skills when the
+	// side it fights isn't on it too. Off: each side on it gets them (a swamp slows both).
+	bool is_relative = false;
+	bool get_is_relative() const { return is_relative; }
 
 	// Passive skills (Skills tab, "terrain" owner) put on every unit on a cell of this terrain for the whole fight.
 	TypedArray<StringName> passive_skill_ids;

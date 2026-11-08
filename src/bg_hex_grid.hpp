@@ -171,6 +171,11 @@ public:
     TypedArray<BG_HexVisualAssetData> get_hex_asset_datas() const { return hex_asset_datas; }
     void set_hex_asset_datas(const TypedArray<BG_HexVisualAssetData> &v) { hex_asset_datas = v; }
 
+    // The cell's terrain (a Terrain_Types id, see BG_Terrain). Empty: the default terrain.
+    StringName terrain_id;
+    StringName get_terrain_id() const { return terrain_id; }
+    void set_terrain_id(const StringName &v) { terrain_id = v; }
+
     Ref<BG_HexVisualAssetData> get_hex_visual_asset_data_by_type(BG_HexVisualAssetData::HexVisualAssetTypes t) const;
     Ref<BG_HexVisualAssetData> get_hex_visual_asset_data_by_id(const StringName &id) const;
 
@@ -474,7 +479,26 @@ public:
     Vector2i get_grid_size_min(bool playable_space_only) const;
     Vector2i get_grid_size_max(bool playable_space_only) const;
     
+    // Whether a unit can enter (1) or not (0) a cell. Terrain doesn't change it: that's get_move_cost.
     int get_hex_cost(const Ref<BG_Hex> &from_hex, const Vector2i &qr, bool do_pass_through_check) const;
+
+    // Entering a cell costs move points: MOVE_POINTS_PER_CELL on plains, else its terrain's move cost in cells times
+    // MOVE_POINTS_PER_CELL (a road's 0.5 = 1). Whole numbers, so half-step terrain costs add up exactly. Movement
+    // budgets (bands, jobs) are in move points too. See Docs/Design/terrain.md.
+    static constexpr int MOVE_POINTS_PER_CELL = 2;
+    // {terrain id: move points}. The "" key is for cells with no terrain set (the default terrain).
+    HashMap<StringName, int> terrain_move_points;
+    int min_move_points = MOVE_POINTS_PER_CELL; // The cheapest cell, for find_path's distance estimate.
+    // Sets the costs from {terrain id: move cost in cells} (BG_Terrains.get_move_cost_table). The board calls it when
+    // it builds its cells.
+    void set_terrain_move_costs(const Dictionary &costs);
+    // The move points for entering the cell at qr, from its terrain (base_grid_visual_data). Unknown terrain costs what
+    // the default terrain does.
+    int get_move_cost(const Vector2i &qr) const;
+    // The move points a path costs: every cell after the first (the one it starts on).
+    int get_path_move_cost(const TypedArray<BG_Hex> &path) const;
+    // The cells a unit can stop on within move_points of from_hex, by qr (like get_hex_neighbors_qr with pathing).
+    Dictionary get_reachable_cells_qr(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &from_hex, int move_points) const;
 
     // Game data by qr, built once per search so get_hex_cost doesn't scan game_data for every neighbor.
     using GameDataMap = HashMap<Vector2i, Ref<BG_HexGameSaveData>>;
@@ -501,6 +525,8 @@ public:
     Ref<BG_Hex> get_hex_in_direction(const Ref<BG_Hex> &from_hex, const Vector2i &d) const;
     inline HashMap<HexDirections, Ref<BG_Hex>> get_hex_neighbors_fast(const Ref<BG_Hex> &from_hex) const;
     Dictionary get_hex_neighbors_directions(const Ref<BG_Hex> &from_hex) const;
+    // Cells within cell_distance. With do_pathing_checks, the cells a unit can reach and stop on with cell_distance
+    // plains cells of movement (cell_distance * MOVE_POINTS_PER_CELL move points), so terrain counts.
     Dictionary get_hex_neighbors_qr(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &from_hex, int cell_distance, bool do_pathing_checks) const;
 
     Ref<BG_Hex> get_hex_by_coords(const Vector2i &coords) const;
@@ -516,8 +542,11 @@ public:
     Ref<BG_Hex> get_nearest_empty_cell_neighoring_target(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &target) const;
     Ref<BG_Hex> get_nearest_empty_cell(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &target, const TypedArray<BG_Hex> &cells_to_check) const;
 
+    // The cheapest path by move points (get_move_cost). travel_distance (in cells) only caps how many cells in a row
+    // the path may walk through without being able to stop on them. Callers cut it to their budget.
     TypedArray<BG_Hex> find_path(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &start, const Ref<BG_Hex> &goal, bool include_start, int travel_distance) const;
-    TypedArray<BG_Hex> find_reachable_cells_in_distance(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &start, int distance) const;
+    // The cells a unit can stop on within move_points of start (start included when it can stop there).
+    TypedArray<BG_Hex> find_reachable_cells_in_distance(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &start, int move_points) const;
 };
 
 VARIANT_ENUM_CAST(BG_HexGrid::OffsetType);

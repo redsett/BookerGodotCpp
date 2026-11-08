@@ -742,8 +742,8 @@ void BG_Booker_DB::parse_terrain_types(const Dictionary &data, HashMap<String, T
 		const String tint = dber_get(entry, "tint");
 		if (!tint.is_empty())
 			new_terrain_class->tint = convert_hex_to_color(tint);
-		new_terrain_class->combat_environment_path = ensure_clean_path(dber_get(entry, "combat_environment_path"));
 		new_terrain_class->is_default = bool(dber_get(entry, "is_default"));
+		new_terrain_class->is_relative = bool(dber_get(entry, "is_relative"));
 
 		const Array passive_skills = dber_get(entry, "passive_skills");
 		for (int y = 0; y < passive_skills.size(); ++y) {
