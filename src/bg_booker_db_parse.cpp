@@ -442,6 +442,7 @@ void BG_Booker_DB::parse_misc_globals(const Dictionary &data, HashMap<String, Ty
 			globals->crit_qte_perfect_window = float(dber_get(qte_values_entry, "crit_qte_perfect_window"));
 			globals->crit_qte_window_additive = float(dber_get(qte_values_entry, "crit_qte_window_additive"));
 			globals->crit_qte_lead_seconds = float(dber_get(qte_values_entry, "crit_qte_lead_seconds"));
+			globals->crit_qte_late_extra = float(dber_get(qte_values_entry, "crit_qte_late_extra"));
 		}
 
 		// Monster Element Distribution

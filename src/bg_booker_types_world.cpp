@@ -580,6 +580,7 @@ void BG_Booker_Globals::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_crit_qte_perfect_window"), &BG_Booker_Globals::get_crit_qte_perfect_window);
 	ClassDB::bind_method(D_METHOD("get_crit_qte_window_additive"), &BG_Booker_Globals::get_crit_qte_window_additive);
 	ClassDB::bind_method(D_METHOD("get_crit_qte_lead_seconds"), &BG_Booker_Globals::get_crit_qte_lead_seconds);
+	ClassDB::bind_method(D_METHOD("get_crit_qte_late_extra"), &BG_Booker_Globals::get_crit_qte_late_extra);
 
 	ClassDB::bind_method(D_METHOD("get_day_night_cycle_turns_per_day"), &BG_Booker_Globals::get_day_night_cycle_turns_per_day);
 	ClassDB::bind_method(D_METHOD("get_percentage_of_day_is_day_time"), &BG_Booker_Globals::get_percentage_of_day_is_day_time);

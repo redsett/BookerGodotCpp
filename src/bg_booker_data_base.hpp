@@ -120,6 +120,10 @@ public:
 	// QTE indicator always gives the same warning.
 	float crit_qte_lead_seconds = 0.0;
 	float get_crit_qte_lead_seconds() const { return crit_qte_lead_seconds; }
+
+	// Seconds added to the good window's late side only: players miss late more often than early.
+	float crit_qte_late_extra = 0.0;
+	float get_crit_qte_late_extra() const { return crit_qte_late_extra; }
 	
 	// Day Night Cycle
 	int day_night_cycle_turns_per_day = 0;
