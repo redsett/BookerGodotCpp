@@ -541,7 +541,7 @@ void BG_Booker_DB::parse_misc_globals(const Dictionary &data, HashMap<String, Ty
 
 				BG_MarketplaceEntryData *new_marketplace_entry_data = memnew(BG_MarketplaceEntryData);
 				new_marketplace_entry_data->act = int(dber_get(entries_entry, "act"));
-				new_marketplace_entry_data->starting_month = int(dber_get(entries_entry, "starting_month"));
+				new_marketplace_entry_data->starting_battle = int(dber_get(entries_entry, "starting_battle"));
 
 				const Array item_drop_pools_array = dber_get(entries_entry, "item_drop_pools");
 				for (int y = 0; y < item_drop_pools_array.size(); ++y) {

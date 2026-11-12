@@ -468,7 +468,7 @@ BG_MarketplaceData::~BG_MarketplaceData()
 void BG_MarketplaceEntryData::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_act"), &BG_MarketplaceEntryData::get_act);
-	ClassDB::bind_method(D_METHOD("get_starting_month"), &BG_MarketplaceEntryData::get_starting_month);
+	ClassDB::bind_method(D_METHOD("get_starting_battle"), &BG_MarketplaceEntryData::get_starting_battle);
 	ClassDB::bind_method(D_METHOD("get_item_drop_pool_ids"), &BG_MarketplaceEntryData::get_item_drop_pool_ids);
 }
 

@@ -729,8 +729,9 @@ public:
 	int act;
 	int get_act() const { return act; }
 
-	int starting_month;
-	int get_starting_month() const { return starting_month; }
+	// The entry's stock starts once this many battles are won in its act (BG_Campaign.get_current_marketplace_data).
+	int starting_battle = 0;
+	int get_starting_battle() const { return starting_battle; }
 
 	TypedArray<StringName> item_drop_pool_ids;
 	TypedArray<StringName> get_item_drop_pool_ids() const { return item_drop_pool_ids; }
