@@ -544,6 +544,22 @@ public:
 	TypedArray<BG_Item> nested_items;
 	TypedArray<BG_Item> get_nested_items() const { return nested_items; }
 	void set_nested_items(const TypedArray<BG_Item> &value) { nested_items = value; }
+
+	// Rolled affixes (the game's BG_AffixData): [{"id", "tier", "roll"}], prefixes first. On a beast part these are its
+	// graft set; banner_affixes is its banner set. A unique's hand-picked affixes are here too, in the unique's order,
+	// with tier -1 (their ranges come from the unique, unique_id).
+	Array affixes;
+	Array get_affixes() const { return affixes; }
+	void set_affixes(const Array &value) { affixes = value; }
+
+	Array banner_affixes;
+	Array get_banner_affixes() const { return banner_affixes; }
+	void set_banner_affixes(const Array &value) { banner_affixes = value; }
+
+	// The unique item it is (the game's BG_UniqueData id), or empty.
+	StringName unique_id;
+	StringName get_unique_id() const { return unique_id; }
+	void set_unique_id(const StringName &value) { unique_id = value; }
 };
 
 

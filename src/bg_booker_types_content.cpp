@@ -500,6 +500,12 @@ void BG_Item::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_forced_damage_element"), &BG_Item::set_forced_damage_element);
 	ClassDB::bind_method(D_METHOD("get_nested_items"), &BG_Item::get_nested_items);
 	ClassDB::bind_method(D_METHOD("set_nested_items"), &BG_Item::set_nested_items);
+	ClassDB::bind_method(D_METHOD("get_affixes"), &BG_Item::get_affixes);
+	ClassDB::bind_method(D_METHOD("set_affixes"), &BG_Item::set_affixes);
+	ClassDB::bind_method(D_METHOD("get_banner_affixes"), &BG_Item::get_banner_affixes);
+	ClassDB::bind_method(D_METHOD("set_banner_affixes"), &BG_Item::set_banner_affixes);
+	ClassDB::bind_method(D_METHOD("get_unique_id"), &BG_Item::get_unique_id);
+	ClassDB::bind_method(D_METHOD("set_unique_id"), &BG_Item::set_unique_id);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "random_variation"), "set_random_variation", "get_random_variation");
@@ -519,6 +525,9 @@ void BG_Item::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "grafts"), "set_grafts", "get_grafts");
 	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "forced_damage_element"), "set_forced_damage_element", "get_forced_damage_element");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "nested_items"), "set_nested_items", "get_nested_items");
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "affixes"), "set_affixes", "get_affixes");
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "banner_affixes"), "set_banner_affixes", "get_banner_affixes");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING_NAME, "unique_id"), "set_unique_id", "get_unique_id");
 }
 
 ////
