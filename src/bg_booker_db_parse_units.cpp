@@ -145,70 +145,19 @@ void BG_Booker_DB::parse_caste_types(const Dictionary &data, HashMap<String, Typ
 			);
 		}
 
-		// Attribute Skill Tree
-		auto is_attribute_stat_id = [this](const StringName &stat_id) -> bool {
-			for (int s = 0; s < stat_types.size(); ++s) {
-				const BG_UnitStatDetails *stat = cast_to<BG_UnitStatDetails>(stat_types[s]);
-				if (stat != nullptr && stat->is_attribute_type && stat->id == stat_id)
-					return true;
-			}
-			return false;
-		};
-		const Array attribute_skill_tree_array = dber_get(entry, "attribute_skill_tree");
-		for (int x = 0; x < attribute_skill_tree_array.size(); ++x)
-		{
-			const Dictionary attribute_skill_tree_entry = attribute_skill_tree_array[x];
-
-			BG_AttributeTreeSkillData *attr_tree_skill_data = memnew(BG_AttributeTreeSkillData);
-			attr_tree_skill_data->effect_id = StringName(dber_get(attribute_skill_tree_entry, "effect_id"));
-			attr_tree_skill_data->is_passive = bool(dber_get(attribute_skill_tree_entry, "is_passive"));
-
-			// Conditions
-			const Array conditions_array = dber_get(attribute_skill_tree_entry, "conditions");
-			for (int y = 0; y < conditions_array.size(); ++y)
-			{
-				const Dictionary conditions_entry = conditions_array[y];
-
-				BG_Skill_LockUnLock_Condition *lock_unlock_condition = memnew(BG_Skill_LockUnLock_Condition);
-
-				const String where = "caste \"" + String(new_unit_caste->id) + "\", skill \"" + String(attr_tree_skill_data->effect_id) + "\"";
-
-				lock_unlock_condition->condition_attribute = StringName(dber_get(conditions_entry, "condition_attribute"));
-				if (!is_attribute_stat_id(lock_unlock_condition->condition_attribute))
-					UtilityFunctions::push_warning("Attribute tree: ", where, " has a condition on \"", lock_unlock_condition->condition_attribute, "\", which isn't an attribute stat id. It will never match.");
-
-				const int condition_type = int(dber_get(conditions_entry, "condition_type"));
-				if (condition_type < BG_Skill_LockUnLock_Condition::EQUAL_TO_OR_GREATER_THAN || condition_type > BG_Skill_LockUnLock_Condition::LESSER_THAN)
-					UtilityFunctions::push_warning("Attribute tree: ", where, " has an unknown condition_type ", condition_type, ". Using EQUAL_TO_OR_GREATER_THAN.");
-				else
-					lock_unlock_condition->condition_type = static_cast<BG_Skill_LockUnLock_Condition::ConditionTypes>(condition_type);
-				lock_unlock_condition->condition_value = int(dber_get(conditions_entry, "condition_value"));
-
-				const Variant is_unlock_param = dber_find(conditions_entry, "is_unlock_condition");
-				if (is_unlock_param.get_type() == Variant::NIL)
-					UtilityFunctions::push_warning("Attribute tree: ", where, " has a condition without is_unlock_condition. Treating it as an unlock condition.");
-				if (is_unlock_param.get_type() == Variant::NIL || bool(is_unlock_param))
-					attr_tree_skill_data->unlock_conditions.append(lock_unlock_condition);
-				else
-					attr_tree_skill_data->lock_conditions.append(lock_unlock_condition);
-			}
-
-			new_unit_caste->attribute_skill_tree_datas.append(attr_tree_skill_data);
-		}
-
 		band_info->unit_castes.append(new_unit_caste);
 	}
 }
 
-// The skills from DBer's Skills tab ("skills_data" in the DBer data) are where tree skills live, so they replace every
-// caste's attribute tree from the Caste_Types sheet. Each skill goes in the tree of its "caste". Child castes also get
+// Builds every caste's attribute tree from DBer's Skills tab ("skills_data" in the DBer data), where tree skills
+// live. Each skill goes in the tree of its "caste". Child castes also get
 // their parent's skills, on top (BG_Attributes.get_caste_attribute_tree_skills). Unlock and lockout values are ">="
 // conditions. Called at the end of try_parse_bder_data, after the castes exist.
 void BG_Booker_DB::try_parse_skills_data(const Dictionary &p_skills_data)
 {
 	skills_data = p_skills_data;
 	if (skills_data.is_empty())
-		return; // No skills in the DBer data: castes keep their trees from the Caste_Types sheet.
+		return; // No skills in the DBer data: every caste's tree stays empty.
 	const Array skills = skills_data.get("skills", Array());
 
 	for (int c = 0; c < band_info->unit_castes.size(); ++c)
