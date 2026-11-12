@@ -205,6 +205,8 @@ void BG_Band::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_current_unique_job_id"), &BG_Band::set_current_unique_job_id);
 	ClassDB::bind_method(D_METHOD("get_band_formation"), &BG_Band::get_band_formation);
 	ClassDB::bind_method(D_METHOD("set_band_formation"), &BG_Band::set_band_formation);
+	ClassDB::bind_method(D_METHOD("get_banner_parts"), &BG_Band::get_banner_parts);
+	ClassDB::bind_method(D_METHOD("set_banner_parts"), &BG_Band::set_banner_parts);
 
 	ClassDB::bind_method(D_METHOD("has_job"), &BG_Band::has_job);
 	ClassDB::bind_method(D_METHOD("clear_job"), &BG_Band::clear_job);
@@ -224,6 +226,7 @@ void BG_Band::_bind_methods()
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "band_members"), "set_band_members", "get_band_members");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_unique_job_id"), "set_current_unique_job_id", "get_current_unique_job_id");
 	ADD_PROPERTY(PropertyInfo(Variant::DICTIONARY, "band_formation"), "set_band_formation", "get_band_formation");
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "banner_parts"), "set_banner_parts", "get_banner_parts");
 }
 
 StringName BG_Band::get_name()
@@ -293,7 +296,6 @@ void BG_UnitCaste::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_scale_max"), &BG_UnitCaste::get_scale_max);
 	ClassDB::bind_method(D_METHOD("get_scale_min_extreme"), &BG_UnitCaste::get_scale_min_extreme);
 	ClassDB::bind_method(D_METHOD("get_scale_max_extreme"), &BG_UnitCaste::get_scale_max_extreme);
-	ClassDB::bind_method(D_METHOD("get_travel_distance"), &BG_UnitCaste::get_travel_distance);
 	ClassDB::bind_method(D_METHOD("get_inventory_space"), &BG_UnitCaste::get_inventory_space);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_UnitCaste::get_stats);
 	ClassDB::bind_method(D_METHOD("get_starting_item_ids"), &BG_UnitCaste::get_starting_item_ids);

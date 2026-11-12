@@ -169,9 +169,6 @@ public:
 	Vector2 scale_max_extreme = Vector2();
 	Vector2 get_scale_max_extreme() const { return scale_max_extreme; }
 
-	int travel_distance = 0;
-	int get_travel_distance() const { return travel_distance; }
-
 	int inventory_space = 0;
 	int get_inventory_space() const { return inventory_space; }
 
@@ -440,7 +437,13 @@ public:
 
 	Dictionary band_formation; // BG_BandMember : int(cell index)
 	Dictionary get_band_formation() const { return band_formation; }
-	void set_band_formation(const Dictionary &value) { band_formation = value; }	
+	void set_band_formation(const Dictionary &value) { band_formation = value; }
+
+	// The beast parts mounted on the band's banner, one per slot (BG_Item or null); their banner affixes apply to every
+	// member (BG_Bands' banner helpers). Mounting is not permanent: unmounting puts a part back in the inventory.
+	Array banner_parts;
+	Array get_banner_parts() const { return banner_parts; }
+	void set_banner_parts(const Array &value) { banner_parts = value; }
 
 	bool has_job() const { return current_unique_job_id != -1; };
 

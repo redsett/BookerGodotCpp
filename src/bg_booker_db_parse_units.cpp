@@ -110,7 +110,6 @@ void BG_Booker_DB::parse_caste_types(const Dictionary &data, HashMap<String, Typ
 		const Array misc_stats_values_array = dber_get(entry, "misc_stats");
 		for (int x = 0; x < misc_stats_values_array.size(); ++x) {
 			const Dictionary misc_stats_values_entry = misc_stats_values_array[x];
-			new_unit_caste->travel_distance = int(dber_get(misc_stats_values_entry, "travel_distance"));
 			new_unit_caste->inventory_space = int(dber_get(misc_stats_values_entry, "inventory_space"));
 		}
 
