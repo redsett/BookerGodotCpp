@@ -48,8 +48,6 @@ class BG_MarketplaceSaveData;
 class BG_AudioDataDetails;
 class BG_AudioData;
 class BG_HueShiftData;
-class BG_EffectRarityDetails;
-class BG_Effect;
 class BG_DamageContainer;
 class BG_RarityDetails;
 class BG_LoreRarity;

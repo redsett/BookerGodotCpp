@@ -417,8 +417,7 @@ void BG_Monster::_bind_methods()
 	
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_Monster::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_model_path"), &BG_Monster::get_model_path);
-	ClassDB::bind_method(D_METHOD("get_effect_ids"), &BG_Monster::get_effect_ids);
-	ClassDB::bind_method(D_METHOD("get_out_of_combat_effect_ids"), &BG_Monster::get_out_of_combat_effect_ids);
+	ClassDB::bind_method(D_METHOD("get_attack_target_type"), &BG_Monster::get_attack_target_type);
 	ClassDB::bind_method(D_METHOD("get_hue_shift_data"), &BG_Monster::get_hue_shift_data);
 	ClassDB::bind_method(D_METHOD("get_can_be_turned_to_stone"), &BG_Monster::get_can_be_turned_to_stone);
 	ClassDB::bind_method(D_METHOD("get_is_turned_to_stone"), &BG_Monster::get_is_turned_to_stone);

@@ -66,8 +66,6 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		ClassDB::register_class<BG_HueShiftData>();
 		ClassDB::register_class<BG_BaseStat>();
 		ClassDB::register_class<BG_ContentStat>();
-		ClassDB::register_class<BG_EffectRarityDetails>();
-		ClassDB::register_class<BG_Effect>();
 		ClassDB::register_class<BG_DamageContainer>();
 		ClassDB::register_class<BG_RarityDetails>();
 		ClassDB::register_class<BG_LoreRarity>();

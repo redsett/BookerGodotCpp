@@ -1,4 +1,4 @@
-// Booker_DB sheet parsers: stats, stat types, animations, content (items, monsters, ...), effects,
+// Booker_DB sheet parsers: stats, stat types, animations, content (items, monsters, ...),
 // rarities, item slots, drop pools.
 #include "bg_booker_data_base.hpp"
 #include "bg_dber_read.hpp"
@@ -98,6 +98,24 @@ void BG_Booker_DB::parse_animation_classes(const Dictionary &data, HashMap<Strin
 	}
 }
 
+// A content entry's "attack_target_type" (an index into DBer's attack_target_types enum: single, column, row,
+// single_back, all) as the game's attack pattern. "row" is the front row (the back row when it's empty). Missing or
+// unknown values are a single front target.
+static BG_ItemDetails::AttackTargetType read_attack_target_type(const Dictionary &misc_params, HashMap<String, TypedArray<StringName>> &global_enums)
+{
+	const Variant value = dber_find(misc_params, "attack_target_type");
+	if (value.get_type() == Variant::NIL) return BG_ItemDetails::SINGLE_FRONT;
+	const TypedArray<StringName> names = global_enums["attack_target_types"];
+	const int index = int(value);
+	if (index < 0 || index >= names.size()) return BG_ItemDetails::SINGLE_FRONT;
+	const StringName name = names[index];
+	if (name == StringName("column")) return BG_ItemDetails::ALL_RANDOM_COLUMN;
+	if (name == StringName("row")) return BG_ItemDetails::ALL_FRONT_ROW;
+	if (name == StringName("single_back")) return BG_ItemDetails::SINGLE_BACK;
+	if (name == StringName("all")) return BG_ItemDetails::ALL;
+	return BG_ItemDetails::SINGLE_FRONT;
+}
+
 // Content
 void BG_Booker_DB::parse_content(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums)
 {
@@ -123,8 +141,7 @@ void BG_Booker_DB::parse_content(const Dictionary &data, HashMap<String, TypedAr
 			item_details->slot_type_id = global_enums["equipment_slot_types"][slot_type];
 			if (slot_type == 3) item_details->slot_type = BG_ItemDetails::ItemType::BEAST_PART;
 			else if (slot_type > 3) item_details->slot_type = BG_ItemDetails::ItemType::CONSUMABLE;
-			// const int attack_target_type = int(dber_get(misc_params, "attack_target_type"));
-			// item_details->attack_target_type = global_enums["attack_target_types"][attack_target_type];
+			item_details->attack_target_type = read_attack_target_type(misc_params, global_enums);
 
 			item_details->effectiveness = float(entry["effectiveness"]);
 			item_details->icon_path = ensure_clean_path(dber_get(misc_params, "icon"));
@@ -192,20 +209,15 @@ void BG_Booker_DB::parse_content(const Dictionary &data, HashMap<String, TypedAr
 			}
 
 
-			{ // Effects
-				const Array effects_lines = Array(dber_get(misc_params, "effects"));
-				for (int x = 0; x < effects_lines.size(); ++x) {
-					const Dictionary effects_entry = effects_lines[x];
-
-					TypedArray<StringName> effect_ids;
-					const Array effect_array = Array(dber_get(effects_entry, "effects"));
-					for (int y = 0; y < effect_array.size(); ++y) {
-						const Dictionary effect_entry = effect_array[y];
-						effect_ids.append(StringName(dber_get(effect_entry, "effect")));
+			{ // Skills: rows of {"skill_id"} (e.g. a consumable's consumable skills). Items without the field have none.
+				item_details->skill_ids.clear();
+				const Variant skills_value = dber_find(misc_params, "skills");
+				if (skills_value.get_type() == Variant::ARRAY) {
+					const Array skills_lines = Array(skills_value);
+					for (int x = 0; x < skills_lines.size(); ++x) {
+						const StringName skill_id = StringName(dber_get(Dictionary(skills_lines[x]), "skill_id"));
+						if (!String(skill_id).is_empty()) item_details->skill_ids.append(skill_id);
 					}
-					
-					const StringName rarity_id = StringName(dber_get(effects_entry, "rarity"));
-					item_details->effects[rarity_id] = effect_ids;
 				}
 			}
 
@@ -240,6 +252,7 @@ void BG_Booker_DB::parse_content(const Dictionary &data, HashMap<String, TypedAr
 			monster_details->can_be_turned_to_stone = bool(dber_get(misc_params, "can_be_turned_to_stone"));
 			monster_details->travel_distance = int(dber_get(misc_params, "travel_distance"));
 			monster_details->preferred_row = int(dber_get(misc_params, "preferred_row"));
+			monster_details->attack_target_type = int(read_attack_target_type(misc_params, global_enums));
 			monster_details->base_action_points = int(dber_get(misc_params, "action_points"));
 			monster_details->bonus_action_points = int(dber_get(misc_params, "bonus_action_points"));
 			monster_details->base_action_points_cost = int(dber_get(misc_params, "action_points_cost"));
@@ -280,22 +293,6 @@ void BG_Booker_DB::parse_content(const Dictionary &data, HashMap<String, TypedAr
 				const Array animations = Array(dber_get(misc_params, "animations"));
 				for (int x = 0; x < animations.size(); ++x) {
 					monster_details->animations.append(get_animation_detail(global_enums, animations, x));
-				}
-			}
-
-			{ // Effects
-				const Array effects_lines = Array(dber_get(misc_params, "effects"));
-				for (int x = 0; x < effects_lines.size(); ++x) {
-					const Dictionary effects_entry = effects_lines[x];
-
-					TypedArray<StringName> effect_ids;
-					const Array effect_array = Array(dber_get(effects_entry, "effects"));
-					for (int y = 0; y < effect_array.size(); ++y) {
-						const Dictionary effect_entry = effect_array[y];
-						effect_ids.append(StringName(dber_get(effect_entry, "effect")));
-					}
-					
-					monster_details->effect_ids = effect_ids;
 				}
 			}
 
@@ -362,23 +359,6 @@ void BG_Booker_DB::parse_content(const Dictionary &data, HashMap<String, TypedAr
 			}
 
 
-			{ // Effects
-				const Array effects_lines = Array(dber_get(misc_params, "effects"));
-				for (int x = 0; x < effects_lines.size(); ++x) {
-					const Dictionary effects_entry = effects_lines[x];
-
-					TypedArray<StringName> effect_ids;
-					const Array effect_array = Array(dber_get(effects_entry, "effects"));
-					for (int y = 0; y < effect_array.size(); ++y) {
-						const Dictionary effect_entry = effect_array[y];
-						effect_ids.append(StringName(dber_get(effect_entry, "effect")));
-					}
-					
-					const StringName rarity_id = StringName(dber_get(effects_entry, "rarity"));
-					item_details->effects[rarity_id] = effect_ids;
-				}
-			}
-
 			{ // Available Item Slot Types
 				const Array available_item_slot_types_lines = Array(dber_get(misc_params, "available_item_slot_types"));
 				for (int x = 0; x < available_item_slot_types_lines.size(); ++x) {
@@ -391,56 +371,6 @@ void BG_Booker_DB::parse_content(const Dictionary &data, HashMap<String, TypedAr
 		}
 	}
 
-}
-
-// Effects
-void BG_Booker_DB::parse_effects(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums)
-{
-	const Array lines = get_sheet_by_name("Effects", data);
-	for (int i = 0; i < lines.size(); ++i) {
-		const Dictionary entry = lines[i];
-
-		BG_Effect *new_effect_class = memnew(BG_Effect);
-		new_effect_class->id = StringName(dber_get(entry, "id"));
-		new_effect_class->nice_name = StringName(dber_get(entry, "name"));
-		new_effect_class->use_owning_item_icon = bool(dber_get(entry, "use_owning_item_icon"));
-		new_effect_class->status_icon_path = ensure_clean_path(dber_get(entry, "status_icon"));
-
-		// Rarities
-		const Array rarity_array = dber_get(entry, "details_per_rarity");
-		for (int x = 0; x < rarity_array.size(); ++x) {
-			const Dictionary rarity_entry = rarity_array[x];
-
-			BG_EffectRarityDetails *new_rarity_class = memnew(BG_EffectRarityDetails);
-
-			new_rarity_class->rarity_id = StringName(dber_get(rarity_entry, "rarity"));
-			new_rarity_class->description = StringName(dber_get(rarity_entry, "description"));
-			new_rarity_class->action_points_cost = int(dber_get(rarity_entry, "action_points_cost"));
-			new_rarity_class->script_path = ensure_clean_path(dber_get(rarity_entry, "script_path"));
-
-			// Value Attributes
-			const Array value_attributes_array = dber_get(rarity_entry, "value_attributes");
-			for (int y = 0; y < value_attributes_array.size(); ++y) {
-				const Dictionary value_attributes_entry = value_attributes_array[y];
-
-				String name = StringName(dber_get(value_attributes_entry, "name"));
-				String value1 = StringName(dber_get(value_attributes_entry, "value_1"));
-				String value2 = StringName(dber_get(value_attributes_entry, "value_2"));
-
-				Array values;
-				if (!value1.is_empty())
-					values.append(value1);
-				if (!value2.is_empty())
-					values.append(value2);
-
-				new_rarity_class->value_attributes[name] = values;
-			}
-
-			new_effect_class->details_per_rarity.append(new_rarity_class);
-		}
-
-		effects.append(new_effect_class);
-	}
 }
 
 // Item Drop Pools

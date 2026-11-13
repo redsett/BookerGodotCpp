@@ -39,7 +39,6 @@ void BG_Booker_DB::try_parse_bder_data(const String &file_path)
 	parse_caste_types(data, global_enums);
 	parse_characters(data, global_enums);
 	parse_city_info(data, global_enums);
-	parse_effects(data, global_enums);
 	parse_game_maps(data, global_enums);
 	parse_game_map_nodes(data, global_enums);
 	parse_icons(data, global_enums);

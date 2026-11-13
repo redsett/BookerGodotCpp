@@ -1,7 +1,7 @@
 #pragma once
 
 // Booker_DB and every data class it parses from booker_dber_data.json. The data classes are split by area:
-// bg_booker_types_content.hpp (stats, effects, rarities, animations, items, drops), bg_booker_types_world.hpp
+// bg_booker_types_content.hpp (stats, rarities, animations, items, drops), bg_booker_types_world.hpp
 // (storyboards, battle boards, maps, objectives, marketplace, audio, acts, cities) and bg_booker_types_units.hpp
 // (band members, bands, castes, jobs, monsters). Their methods are in the matching .cpp files.
 
@@ -313,9 +313,6 @@ public:
 	TypedArray<BG_ItemDropPool> get_item_drop_pools() const { return item_drop_pools; }
 	BG_ItemDropPool *get_item_drop_pool_by_id(const StringName &id) const;
 
-	TypedArray<BG_Effect> effects;
-	TypedArray<BG_Effect> get_effects() const { return effects; }
-
 	BG_BandInfo *band_info = nullptr;
 	BG_BandInfo *get_band_info() const { return band_info; }
 
@@ -392,7 +389,6 @@ private:
 	void parse_caste_types(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
 	void parse_characters(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
 	void parse_city_info(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
-	void parse_effects(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
 	void parse_game_maps(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
 	void parse_game_map_nodes(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);
 	void parse_icons(const Dictionary &data, HashMap<String, TypedArray<StringName>> &global_enums);

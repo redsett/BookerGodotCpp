@@ -621,11 +621,10 @@ public:
 	StringName model_path;
 	StringName get_model_path() const { return model_path; }
 
-	TypedArray<StringName> effect_ids;
-	TypedArray<StringName> get_effect_ids() const { return effect_ids; }
-
-	TypedArray<StringName> out_of_combat_effect_ids;
-	TypedArray<StringName> get_out_of_combat_effect_ids() const { return out_of_combat_effect_ids; }
+	// Who the monster's attacks hit: a BG_ItemDetails::AttackTargetType (DBer's attack_target_type), kept as an int
+	// because this header only forward-declares the content types.
+	int attack_target_type = 0;
+	int get_attack_target_type() const { return attack_target_type; }
 
 	TypedArray<BG_HueShiftData> hue_shift_data;
 	TypedArray<BG_HueShiftData> get_hue_shift_data() const { return hue_shift_data; };

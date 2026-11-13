@@ -1,6 +1,6 @@
 #pragma once
 
-// Data classes for content: stats, effects, damage, rarities, stat details, animations, items, drop pools.
+// Data classes for content: stats, damage, rarities, stat details, animations, items, drop pools.
 // Part of bg_booker_data_base.hpp: include that one, not this.
 
 #include "bg_booker_types_fwd.hpp"
@@ -115,64 +115,6 @@ public:
 
 	float multiplier;
 	float get_multiplier() const { return multiplier; }
-};
-
-
-////
-//// BG_EffectRarityDetails
-////
-class BG_EffectRarityDetails : public Object
-{
-	GDCLASS(BG_EffectRarityDetails, Object);
-
-protected:
-	static void _bind_methods();
-
-public:
-	StringName rarity_id;
-	StringName get_rarity_id() const { return rarity_id; }
-
-	StringName description;
-	StringName get_description() const { return description; }
-
-	StringName script_path;
-	StringName get_script_path() const { return script_path; }
-
-	int action_points_cost = 0;
-	int get_action_points_cost() const { return action_points_cost; }
-
-	Dictionary value_attributes;
-	Dictionary get_value_attributes() const { return value_attributes; }
-};
-
-
-////
-//// BG_Effect
-////
-class BG_Effect : public Object
-{
-	GDCLASS(BG_Effect, Object);
-
-protected:
-	static void _bind_methods();
-
-public:
-	~BG_Effect();
-
-	StringName id;
-	StringName get_id() const { return id; }
-
-	StringName nice_name;
-	StringName get_nice_name() const { return nice_name; }
-
-	TypedArray<BG_EffectRarityDetails> details_per_rarity;
-	TypedArray<BG_EffectRarityDetails> get_details_per_rarity() const { return details_per_rarity; }
-
-	bool use_owning_item_icon = false;
-	bool get_use_owning_item_icon() const { return use_owning_item_icon; }
-
-	StringName status_icon_path;
-	StringName get_status_icon_path() const { return status_icon_path; }
 };
 
 
@@ -632,8 +574,13 @@ public:
 	int animation_attach_socket = 0;
 	int get_animation_attach_socket() const { return animation_attach_socket; }
 
-	Dictionary effects; // StringName(rarity id): TypedArray<StringName>(effect ids)
-	Dictionary get_effects() const { return effects; }
+	// Who a weapon's attacks hit (DBer's attack_target_type). Skills' "weapon" target uses it too.
+	AttackTargetType attack_target_type = SINGLE_FRONT;
+	AttackTargetType get_attack_target_type() const { return attack_target_type; }
+
+	// Skill ids from DBer's "skills" field, in order: a consumable's consumable skills (what using it does).
+	TypedArray<StringName> skill_ids;
+	TypedArray<StringName> get_skill_ids() const { return skill_ids; }
 
 	HashMap<StringName, StringName> audio_events; // id: audio_id
 	TypedArray<BG_AudioDataDetails> get_audio_data_by_id(const StringName &id, int act) const;

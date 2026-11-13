@@ -78,7 +78,6 @@ void BG_Booker_DB::_bind_methods()
 	ClassDB::bind_method(D_METHOD("create_preset_item_by_id", "id"), &BG_Booker_DB::create_preset_item_by_id);
 	ClassDB::bind_method(D_METHOD("get_item_drop_pools"), &BG_Booker_DB::get_item_drop_pools);
 	ClassDB::bind_method(D_METHOD("get_item_drop_pool_by_id"), &BG_Booker_DB::get_item_drop_pool_by_id);
-	ClassDB::bind_method(D_METHOD("get_effects"), &BG_Booker_DB::get_effects);
 	ClassDB::bind_method(D_METHOD("get_band_info"), &BG_Booker_DB::get_band_info);
 	ClassDB::bind_method(D_METHOD("get_skills_data"), &BG_Booker_DB::get_skills_data);
 	ClassDB::bind_method(D_METHOD("create_preset_band_by_id", "id", "existing_bands"), &BG_Booker_DB::create_preset_band_by_id);
@@ -662,12 +661,6 @@ void BG_Booker_DB::free_all_params()
 			memdelete(d);
 	}
 	item_drop_pools.clear();
-	for (int i = 0; i < effects.size(); ++i) {
-		BG_Effect *d = cast_to<BG_Effect>(effects[i]);
-		if (BG_Booker_DB::bg_is_instance_valid(d))
-			memdelete(d);
-	}
-	effects.clear();
 	if (BG_Booker_DB::bg_is_instance_valid(band_info)) {
 		memdelete(band_info);
 	}

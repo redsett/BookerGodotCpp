@@ -1,4 +1,4 @@
-// Data classes for content: stats, effects, damage, rarities, stat details, animations, items, drop pools.
+// Data classes for content: stats, damage, rarities, stat details, animations, items, drop pools.
 #include "bg_booker_data_base.hpp"
 #include "bg_dber_read.hpp"
 #include "bg_focus_layers.hpp"
@@ -89,39 +89,6 @@ void BG_HueShiftData::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_mask_path"), &BG_HueShiftData::get_mask_path);
 	ClassDB::bind_method(D_METHOD("get_from_color"), &BG_HueShiftData::get_from_color);
 	ClassDB::bind_method(D_METHOD("get_multiplier"), &BG_HueShiftData::get_multiplier);
-}
-
-////
-//// BG_EffectRarityDetails
-////
-void BG_EffectRarityDetails::_bind_methods()
-{
-	ClassDB::bind_method(D_METHOD("get_rarity_id"), &BG_EffectRarityDetails::get_rarity_id);
-	ClassDB::bind_method(D_METHOD("get_description"), &BG_EffectRarityDetails::get_description);
-	ClassDB::bind_method(D_METHOD("get_script_path"), &BG_EffectRarityDetails::get_script_path);
-	ClassDB::bind_method(D_METHOD("get_action_points_cost"), &BG_EffectRarityDetails::get_action_points_cost);
-	ClassDB::bind_method(D_METHOD("get_value_attributes"), &BG_EffectRarityDetails::get_value_attributes);
-}
-
-////
-//// BG_Effect
-////
-void BG_Effect::_bind_methods()
-{
-	ClassDB::bind_method(D_METHOD("get_id"), &BG_Effect::get_id);
-	ClassDB::bind_method(D_METHOD("get_nice_name"), &BG_Effect::get_nice_name);
-	ClassDB::bind_method(D_METHOD("get_details_per_rarity"), &BG_Effect::get_details_per_rarity);
-	ClassDB::bind_method(D_METHOD("get_use_owning_item_icon"), &BG_Effect::get_use_owning_item_icon);
-	ClassDB::bind_method(D_METHOD("get_status_icon_path"), &BG_Effect::get_status_icon_path);
-}
-
-BG_Effect::~BG_Effect()
-{
-	for (int i = 0; i < details_per_rarity.size(); ++i) {
-		BG_EffectRarityDetails *d = cast_to<BG_EffectRarityDetails>(details_per_rarity[i]);
-		if (BG_Booker_DB::bg_is_instance_valid(d))
-			memdelete(d);
-	}
 }
 
 ////
@@ -550,7 +517,8 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_caste_ids"), &BG_ItemDetails::get_caste_ids);
 	ClassDB::bind_method(D_METHOD("get_stats"), &BG_ItemDetails::get_stats);
 	ClassDB::bind_method(D_METHOD("get_animation_attach_socket"), &BG_ItemDetails::get_animation_attach_socket);
-	ClassDB::bind_method(D_METHOD("get_effects"), &BG_ItemDetails::get_effects);
+	ClassDB::bind_method(D_METHOD("get_attack_target_type"), &BG_ItemDetails::get_attack_target_type);
+	ClassDB::bind_method(D_METHOD("get_skill_ids"), &BG_ItemDetails::get_skill_ids);
 	ClassDB::bind_method(D_METHOD("get_audio_data_by_id", "id", "act"), &BG_ItemDetails::get_audio_data_by_id);
 	ClassDB::bind_method(D_METHOD("get_audio_id_by_id", "id"), &BG_ItemDetails::get_audio_id_by_id);
 	ClassDB::bind_method(D_METHOD("get_sell_value_tier"), &BG_ItemDetails::get_sell_value_tier);
