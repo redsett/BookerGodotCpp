@@ -2,6 +2,8 @@
 1. `../Booker`
 2. `../BookerGodotCpp`
 
+The game folder can have any name (`Booker`, `BookerGodot`, ...): `booker_paths.py` finds the sibling folder holding `addons/*/booker_godot_cpp.gdextension`. If the game lives elsewhere, set the `BOOKER_GAME_DIR` environment variable to its folder.
+
 ### Before cloning this repository, get BookerGodot if you haven't already:
 `'https://github.com/redsett/BookerGodot.git'`
 

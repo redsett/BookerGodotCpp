@@ -1,6 +1,10 @@
 #!/usr/bin/env python
-from glob import glob
+import sys
 from pathlib import Path
+
+# booker_paths sits next to this file; SCons doesn't put that folder on the import path by itself.
+sys.path.insert(0, Dir("#").abspath)
+from booker_paths import find_extension_path
 
 # TODO: Do not copy environment after godot-cpp/test is updated <https://github.com/godotengine/godot-cpp/blob/master/test/SConstruct>.
 env = SConscript("godot-cpp/SConstruct")
@@ -9,8 +13,8 @@ env = SConscript("godot-cpp/SConstruct")
 env.Append(CPPPATH=["src/"])
 sources = Glob("src/*.cpp")
 
-# Find gdextension path even if the directory or extension is renamed (e.g. project/addons/example/example.gdextension).
-(extension_path,) = glob("../Booker/addons/*/booker_godot_cpp.gdextension")
+# Find the game's gdextension file in whichever sibling folder holds it (the game folder's name varies by machine).
+extension_path = find_extension_path()
 
 # Find the addon path (e.g. project/addons/example).
 addon_path = Path(extension_path).parent
