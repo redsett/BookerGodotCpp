@@ -18,4 +18,5 @@ Data parsing: `C:\Godot\Booker\BookerGodot\Docs\Systems\data-pipeline.md`.
   - A new sheet parser: add a `parse_<sheet>` member (declare it in the header) and call it from `try_parse_bder_data`.
 - `bg_attributes_logic.*`: talent tree conditions and states. `bg_hex_grid.cpp`: hex pathfinding.
   `bg_focus_layers.cpp`: gamepad focus (the game's `BG_FocusLayers.gd` mirrors it; change both).
+  `bg_skeleton_retarget.cpp`: poses one skeleton from another rig (the game's `skill-presentations.md`).
   `register_types.cpp`: class registration.

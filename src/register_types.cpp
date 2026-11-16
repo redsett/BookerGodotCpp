@@ -12,6 +12,7 @@
 #include "bg_hex_grid.hpp"
 // #include "bg_reactive.hpp"
 #include "bg_animated_atlas_texture_rect.hpp"
+#include "bg_skeleton_retarget.hpp"
 // #include "bg_animation_mirror.hpp"
 
 using namespace godot;
@@ -35,6 +36,7 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		// ClassDB::register_class<BG_ReactiveString>();
 		// ClassDB::register_class<BG_ReactiveArray>();
 		ClassDB::register_class<BG_AnimatedAtlasTextureRect>();
+		ClassDB::register_class<BG_SkeletonRetarget>();
 		ClassDB::register_class<BG_PortraitDetails>();
 		ClassDB::register_class<BG_CharacterDetails>();
 		ClassDB::register_class<BG_StoryboardCharacterTextLocationDetails>();
