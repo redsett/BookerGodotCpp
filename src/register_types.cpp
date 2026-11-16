@@ -13,7 +13,9 @@
 // #include "bg_reactive.hpp"
 #include "bg_animated_atlas_texture_rect.hpp"
 #include "bg_skeleton_retarget.hpp"
+#include "bg_merge_skinned_meshes.hpp"
 // #include "bg_animation_mirror.hpp"
+#include <godot_cpp/classes/editor_plugin_registration.hpp>
 
 using namespace godot;
 
@@ -22,10 +24,12 @@ static BG_Focus_Layers *_focus_layers;
 
 void gdextension_initialize(ModuleInitializationLevel p_level)
 {
-	// if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR)
-	// {
-	// 	ClassDB::register_class<BG_AnimatedAtlasTextureRect>();
-	// }
+	if (p_level == MODULE_INITIALIZATION_LEVEL_EDITOR)
+	{
+		ClassDB::register_internal_class<BG_MergeSkinnedMeshesImport>();
+		ClassDB::register_internal_class<BG_MergeSkinnedMeshesEditorPlugin>();
+		EditorPlugins::add_by_type<BG_MergeSkinnedMeshesEditorPlugin>();
+	}
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
 	{
 		ClassDB::register_class<BG_Skill_LockUnLock_Condition>();

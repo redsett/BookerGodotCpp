@@ -19,4 +19,5 @@ Data parsing: `C:\Godot\Booker\BookerGodot\Docs\Systems\data-pipeline.md`.
 - `bg_attributes_logic.*`: talent tree conditions and states. `bg_hex_grid.cpp`: hex pathfinding.
   `bg_focus_layers.cpp`: gamepad focus (the game's `BG_FocusLayers.gd` mirrors it; change both).
   `bg_skeleton_retarget.cpp`: poses one skeleton from another rig (the game's `skill-presentations.md`).
-  `register_types.cpp`: class registration.
+  `bg_merge_skinned_meshes.cpp`: editor import option that merges a model's skinned mesh parts (same doc).
+  `register_types.cpp`: class registration (editor-only classes and plugins at the editor level).
