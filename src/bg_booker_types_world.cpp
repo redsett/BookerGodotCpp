@@ -374,6 +374,7 @@ void BG_ObjectiveDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_is_auto_complete"), &BG_ObjectiveDetails::get_is_auto_complete);
 	ClassDB::bind_method(D_METHOD("get_is_turn_in"), &BG_ObjectiveDetails::get_is_turn_in);
 	ClassDB::bind_method(D_METHOD("get_is_event"), &BG_ObjectiveDetails::get_is_event);
+	ClassDB::bind_method(D_METHOD("get_objective_type"), &BG_ObjectiveDetails::get_objective_type);
 	ClassDB::bind_method(D_METHOD("get_timeline"), &BG_ObjectiveDetails::get_timeline);
 	ClassDB::bind_method(D_METHOD("get_expires_in"), &BG_ObjectiveDetails::get_expires_in);
 	ClassDB::bind_method(D_METHOD("get_script_path"), &BG_ObjectiveDetails::get_script_path);
@@ -387,6 +388,8 @@ void BG_ObjectiveDetails::_bind_methods()
 	BIND_ENUM_CONSTANT(UNIQUE);
 	BIND_ENUM_CONSTANT(REPEATABLE_UNIQUE);
 	BIND_ENUM_CONSTANT(REPEATABLE);
+	BIND_ENUM_CONSTANT(CAMPAIGN);
+	BIND_ENUM_CONSTANT(BATTLE);
 }
 
 BG_ObjectiveDetails::~BG_ObjectiveDetails()

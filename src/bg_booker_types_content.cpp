@@ -521,6 +521,7 @@ void BG_ItemDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_skill_ids"), &BG_ItemDetails::get_skill_ids);
 	ClassDB::bind_method(D_METHOD("get_audio_data_by_id", "id", "act"), &BG_ItemDetails::get_audio_data_by_id);
 	ClassDB::bind_method(D_METHOD("get_audio_id_by_id", "id"), &BG_ItemDetails::get_audio_id_by_id);
+	ClassDB::bind_method(D_METHOD("get_drops_during_battle"), &BG_ItemDetails::get_drops_during_battle);
 	ClassDB::bind_method(D_METHOD("get_sell_value_tier"), &BG_ItemDetails::get_sell_value_tier);
 	ClassDB::bind_method(D_METHOD("get_fame_value_tier"), &BG_ItemDetails::get_fame_value_tier);
 	ClassDB::bind_method(D_METHOD("get_durability_value_tier"), &BG_ItemDetails::get_durability_value_tier);

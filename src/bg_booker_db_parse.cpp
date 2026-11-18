@@ -632,6 +632,8 @@ void BG_Booker_DB::parse_objectives(const Dictionary &data, HashMap<String, Type
 		new_objective_class->expires_in = int(dber_get(entry, "expires_in"));
 		new_objective_class->is_turn_in = bool(dber_get(entry, "is_turn_in"));
 		new_objective_class->is_event = bool(dber_get(entry, "is_event"));
+		const Variant objective_type = dber_find(entry, "objective_type");
+		if (objective_type.get_type() != Variant::NIL) new_objective_class->objective_type = static_cast<BG_ObjectiveDetails::ObjectiveType>(int(objective_type));
 		new_objective_class->script_path = ensure_clean_path(dber_get(entry, "script_path"));
 
 		// Rewards

@@ -547,6 +547,13 @@ public:
 		REPEATABLE
 	};
 
+	// Where an objective belongs (DBer's objective_types enum). A battle objective's rewards go to the battle's
+	// spoils; a campaign objective's are given at once.
+	enum ObjectiveType : int32_t {
+		CAMPAIGN,
+		BATTLE
+	};
+
 	StringName id;
 	StringName get_id() const { return id; }
 
@@ -570,6 +577,9 @@ public:
 
 	bool is_event;
 	bool get_is_event() const { return is_event; }
+
+	ObjectiveType objective_type = ObjectiveType::CAMPAIGN;
+	ObjectiveType get_objective_type() const { return objective_type; }
 
 	BG_ObjectiveTimeline *timeline;
 	BG_ObjectiveTimeline *get_timeline() const { return timeline; }
@@ -599,6 +609,7 @@ public:
 	Dictionary get_misc_attributes() const { return misc_attributes; }
 };
 VARIANT_ENUM_CAST(BG_ObjectiveDetails::ObjectiveRepeatableType);
+VARIANT_ENUM_CAST(BG_ObjectiveDetails::ObjectiveType);
 
 
 ////

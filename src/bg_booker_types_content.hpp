@@ -586,6 +586,10 @@ public:
 	TypedArray<BG_AudioDataDetails> get_audio_data_by_id(const StringName &id, int act) const;
 	StringName get_audio_id_by_id(const StringName &id) const;
 
+	// A drop handed to the player during a battle (e.g. a health potion); other drops are sealed until the end.
+	bool drops_during_battle = false;
+	bool get_drops_during_battle() const { return drops_during_battle; }
+
 	int sell_value_tier = 0;
 	int get_sell_value_tier() const { return sell_value_tier; }
 

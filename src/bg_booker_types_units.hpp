@@ -606,7 +606,7 @@ public:
 	int get_level() const { return level; }
 	void set_level(int v) { level = v; }
 
-	int monster_type = 0;
+	int monster_type = 0; // DBer's rank: 0 normal, 1 elite, 2 boss (BG_Monsters.RANK_*).
 	int get_monster_type() const { return monster_type; }
 
 	TypedArray<BG_UnitStat> stats;

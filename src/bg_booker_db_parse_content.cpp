@@ -151,6 +151,8 @@ void BG_Booker_DB::parse_content(const Dictionary &data, HashMap<String, TypedAr
 			if (animation_attach_socket_dict.get_type() != Variant::NIL) item_details->animation_attach_socket = int(animation_attach_socket_dict) + 1;
 			const Variant level_range = dber_find(misc_params, "level_range");
 			if (level_range.get_type() != Variant::NIL) item_details->level_range = Vector2(int(Array(level_range)[0]), int(Array(level_range)[1]));
+			const Variant drops_during_battle = dber_find(misc_params, "drops_during_battle");
+			if (drops_during_battle.get_type() != Variant::NIL) item_details->drops_during_battle = bool(drops_during_battle);
 			item_details->sell_value_tier = int(dber_get(misc_params, "sell_value_tier"));
 			item_details->fame_value_tier = int(dber_get(misc_params, "fame_value_tier"));
 			item_details->base_action_points = int(dber_get(misc_params, "action_points"));
@@ -250,6 +252,9 @@ void BG_Booker_DB::parse_content(const Dictionary &data, HashMap<String, TypedAr
 			const Variant level_range = dber_get(misc_params, "level_range");
 			monster_details->level_range = Vector2(int(Array(level_range)[0]), int(Array(level_range)[1]));
 			monster_details->can_be_turned_to_stone = bool(dber_get(misc_params, "can_be_turned_to_stone"));
+			// The monster's rank, an index into DBer's monster_ranks enum (normal, elite, boss); normal when missing.
+			const Variant rank = dber_find(misc_params, "rank");
+			if (rank.get_type() != Variant::NIL) monster_details->monster_type = int(rank);
 			monster_details->travel_distance = int(dber_get(misc_params, "travel_distance"));
 			monster_details->preferred_row = int(dber_get(misc_params, "preferred_row"));
 			monster_details->attack_target_type = int(read_attack_target_type(misc_params, global_enums));
@@ -329,6 +334,8 @@ void BG_Booker_DB::parse_content(const Dictionary &data, HashMap<String, TypedAr
 			if (animation_attach_socket_dict.get_type() != Variant::NIL) item_details->animation_attach_socket = int(animation_attach_socket_dict) + 1;
 			// const Variant level_range = dber_find(misc_params, "level_range");
 			// if (level_range.get_type() != Variant::NIL) item_details->level_range = Vector2(int(Array(level_range)[0]), int(Array(level_range)[1]));
+			const Variant drops_during_battle = dber_find(misc_params, "drops_during_battle");
+			if (drops_during_battle.get_type() != Variant::NIL) item_details->drops_during_battle = bool(drops_during_battle);
 			item_details->sell_value_tier = int(dber_get(misc_params, "sell_value_tier"));
 			item_details->fame_value_tier = int(dber_get(misc_params, "fame_value_tier"));
 			item_details->base_action_points = int(dber_get(misc_params, "action_points"));
