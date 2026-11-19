@@ -16,8 +16,10 @@ using namespace godot;
 //
 // Each mapped bone gets the source bone's rotation away from its rest pose, applied in skeleton space:
 //   target_global = source_global_pose * inverse(source_global_rest) * target_global_rest
-// so local axis conventions (Unreal vs Maya, mirrored right sides) don't matter. Both skeletons' own spaces must be
-// Y up and face +Z, which is how Godot imports humanoids.
+// so local axis conventions (Unreal vs Maya, mirrored right sides) don't matter. The source skeleton's own space
+// must be Y up and face +Z, which is how Godot imports most humanoids. A target skeleton whose space differs (a
+// Z-up rig whose axis turn sits on the Armature node rather than its root bone) sets `target_axes`; source poses
+// are turned into the target's space before all of the above, so the rest of the solve is unchanged.
 // - `hip_bone` also follows the source's position, scaled by the two rigs' hip heights (or `position_scale`).
 // - `align_bones` turn afterwards so they point at their mapped child the way the source bone does. Limbs use this
 //   so a difference in rest pose (arms lower in one rig's A-pose) doesn't carry into every frame.
@@ -46,6 +48,7 @@ class BG_SkeletonRetarget : public SkeletonModifier3D
 	Vector<int> bone_order; // Target bones, parents before children.
 	Vector<Transform3D> globals; // Scratch: target skeleton-space poses this frame.
 	Vector<Transform3D> source_globals; // Scratch: source skeleton-space poses this frame.
+	Transform3D to_target; // Rotation only: source skeleton space -> target skeleton space (inverse of target_axes).
 	Transform3D hip_target_rest;
 	Transform3D hip_source_rest;
 	float auto_position_scale = 1.0f;
@@ -88,6 +91,12 @@ public:
 	PackedStringArray absolute_bones;
 	PackedStringArray get_absolute_bones() const { return absolute_bones; }
 	void set_absolute_bones(const PackedStringArray &value) { absolute_bones = value; dirty = true; }
+
+	// Rotation from the target skeleton's own space to Y up, facing +Z. Identity when the target already is; for a
+	// Z-up rig this is the rotation its Armature node carries. Only its rotation is used.
+	Basis target_axes;
+	Basis get_target_axes() const { return target_axes; }
+	void set_target_axes(const Basis &value) { target_axes = value; dirty = true; }
 
 	// Source distance -> target distance for positions. 0 works it out from the hip bones' rest heights.
 	float position_scale = 0.0f;

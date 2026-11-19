@@ -31,6 +31,10 @@ void BG_SkeletonRetarget::_bind_methods()
 	ClassDB::bind_method(D_METHOD("set_absolute_bones", "value"), &BG_SkeletonRetarget::set_absolute_bones);
 	ADD_PROPERTY(PropertyInfo(Variant::PACKED_STRING_ARRAY, "absolute_bones"), "set_absolute_bones", "get_absolute_bones");
 
+	ClassDB::bind_method(D_METHOD("get_target_axes"), &BG_SkeletonRetarget::get_target_axes);
+	ClassDB::bind_method(D_METHOD("set_target_axes", "value"), &BG_SkeletonRetarget::set_target_axes);
+	ADD_PROPERTY(PropertyInfo(Variant::BASIS, "target_axes"), "set_target_axes", "get_target_axes");
+
 	ClassDB::bind_method(D_METHOD("get_position_scale"), &BG_SkeletonRetarget::get_position_scale);
 	ClassDB::bind_method(D_METHOD("set_position_scale", "value"), &BG_SkeletonRetarget::set_position_scale);
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "position_scale", PROPERTY_HINT_RANGE, "0,10,0.001,or_greater"), "set_position_scale", "get_position_scale");
@@ -75,6 +79,7 @@ void BG_SkeletonRetarget::_build_cache(Skeleton3D *target, Skeleton3D *src)
 	entry_of_bone.fill(-1);
 	globals.resize(bone_count);
 	source_globals.resize(src->get_bone_count());
+	to_target = Transform3D(Basis(target_axes.get_rotation_quaternion().inverse()), Vector3());
 
 	// Parents before children, so each bone's parent pose is final when the bone is solved.
 	bone_order.clear();
@@ -102,7 +107,7 @@ void BG_SkeletonRetarget::_build_cache(Skeleton3D *target, Skeleton3D *src)
 			continue;
 		}
 		e.source_parent = src->get_bone_parent(e.source);
-		const Quaternion source_rest = src->get_bone_global_rest(e.source).basis.get_rotation_quaternion();
+		const Quaternion source_rest = (to_target * src->get_bone_global_rest(e.source)).basis.get_rotation_quaternion();
 		const Quaternion target_rest = target->get_bone_global_rest(e.target).basis.get_rotation_quaternion();
 		e.rest_delta = (source_rest.inverse() * target_rest).normalized();
 		e.is_hip = StringName(target_name) == hip_bone;
@@ -138,9 +143,12 @@ void BG_SkeletonRetarget::_build_cache(Skeleton3D *target, Skeleton3D *src)
 	if (hip_entry >= 0)
 	{
 		hip_target_rest = target->get_bone_global_rest(hip_target);
-		hip_source_rest = src->get_bone_global_rest(entries[hip_entry].source);
-		if (Math::abs(hip_source_rest.origin.y) > 0.0001f)
-			auto_position_scale = hip_target_rest.origin.y / hip_source_rest.origin.y;
+		hip_source_rest = to_target * src->get_bone_global_rest(entries[hip_entry].source);
+		// Hip heights along the target's up axis (both rests are in target skeleton space here).
+		const Vector3 up = to_target.basis.xform(Vector3(0, 1, 0));
+		const float source_height = hip_source_rest.origin.dot(up);
+		if (Math::abs(source_height) > 0.0001f)
+			auto_position_scale = hip_target_rest.origin.dot(up) / source_height;
 	}
 }
 
@@ -152,15 +160,16 @@ void BG_SkeletonRetarget::_process_modification_with_delta(double p_delta)
 	Skeleton3D *src = _get_source();
 	const float pos_scale = position_scale > 0.0f ? position_scale : auto_position_scale;
 
-	// Read the source once; the first global pose read brings its dirty bones up to date.
+	// Read the source once, turned into target skeleton space; the first global pose read brings its dirty bones up
+	// to date.
 	for (int i = 0; i < entries.size(); i++)
 	{
 		const Entry &e = entries[i];
-		source_globals.set(e.source, src->get_bone_global_pose(e.source));
+		source_globals.set(e.source, to_target * src->get_bone_global_pose(e.source));
 		if (e.is_absolute && e.source_parent >= 0)
-			source_globals.set(e.source_parent, src->get_bone_global_pose(e.source_parent));
+			source_globals.set(e.source_parent, to_target * src->get_bone_global_pose(e.source_parent));
 		if (e.is_aligned)
-			source_globals.set(e.align_source_child, src->get_bone_global_pose(e.align_source_child));
+			source_globals.set(e.align_source_child, to_target * src->get_bone_global_pose(e.align_source_child));
 	}
 
 	for (int i = 0; i < bone_order.size(); i++)
