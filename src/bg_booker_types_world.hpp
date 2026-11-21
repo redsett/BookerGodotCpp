@@ -331,6 +331,13 @@ public:
 	StringName destroyed_scene_path;
 	StringName get_destroyed_scene_path() const { return destroyed_scene_path; }
 
+	// A 3D scene (Node3D root, Y up, origin at the hex center on the ground) for 3D boards. The 2D board ignores it.
+	StringName model_scene_path;
+	StringName get_model_scene_path() const { return model_scene_path; }
+
+	StringName destroyed_model_scene_path;
+	StringName get_destroyed_model_scene_path() const { return destroyed_model_scene_path; }
+
 	Color tint = Color(1.0, 1.0, 1.0);
 	Color get_hex_tint() const { return tint; }
 
