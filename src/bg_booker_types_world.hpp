@@ -316,22 +316,10 @@ public:
 	StringName icon_path;
 	StringName get_icon_path() const { return icon_path; }
 
-	StringName two_der_id;
-	StringName get_two_der_id() const { return two_der_id; }
-
-	StringName scene_path;
-	StringName get_scene_path() const { return scene_path; }
-
 	StringName destroyed_icon_path;
 	StringName get_destroyed_icon_path() const { return destroyed_icon_path; }
 
-	StringName destroyed_two_der_id;
-	StringName get_destroyed_two_der_id() const { return destroyed_two_der_id; }
-
-	StringName destroyed_scene_path;
-	StringName get_destroyed_scene_path() const { return destroyed_scene_path; }
-
-	// A 3D scene (Node3D root, Y up, origin at the hex center on the ground) for 3D boards. The 2D board ignores it.
+	// A 3D scene (Node3D root, Y up, origin at the hex center on the ground) for 3D boards.
 	StringName model_scene_path;
 	StringName get_model_scene_path() const { return model_scene_path; }
 

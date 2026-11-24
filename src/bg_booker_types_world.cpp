@@ -224,11 +224,7 @@ BG_PuzzleDetails_MiscParams *BG_PuzzleDetails::get_misc_param_by_id(const String
 void BG_BattleBoard_HexTypeVisualDetails::_bind_methods()
 {
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_BattleBoard_HexTypeVisualDetails::get_icon_path);
-	ClassDB::bind_method(D_METHOD("get_two_der_id"), &BG_BattleBoard_HexTypeVisualDetails::get_two_der_id);
-	ClassDB::bind_method(D_METHOD("get_scene_path"), &BG_BattleBoard_HexTypeVisualDetails::get_scene_path);
 	ClassDB::bind_method(D_METHOD("get_destroyed_icon_path"), &BG_BattleBoard_HexTypeVisualDetails::get_destroyed_icon_path);
-	ClassDB::bind_method(D_METHOD("get_destroyed_two_der_id"), &BG_BattleBoard_HexTypeVisualDetails::get_destroyed_two_der_id);
-	ClassDB::bind_method(D_METHOD("get_destroyed_scene_path"), &BG_BattleBoard_HexTypeVisualDetails::get_destroyed_scene_path);
 	ClassDB::bind_method(D_METHOD("get_model_scene_path"), &BG_BattleBoard_HexTypeVisualDetails::get_model_scene_path);
 	ClassDB::bind_method(D_METHOD("get_destroyed_model_scene_path"), &BG_BattleBoard_HexTypeVisualDetails::get_destroyed_model_scene_path);
 	ClassDB::bind_method(D_METHOD("get_hex_tint"), &BG_BattleBoard_HexTypeVisualDetails::get_hex_tint);

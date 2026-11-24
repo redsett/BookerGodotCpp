@@ -150,11 +150,7 @@ void BG_Booker_DB::parse_battle_boards(const Dictionary &data, HashMap<String, T
 
 				BG_BattleBoard_HexTypeVisualDetails *new_hex_type_visuals_class = memnew(BG_BattleBoard_HexTypeVisualDetails);
 				new_hex_type_visuals_class->icon_path = ensure_clean_path(dber_get(visuals_entry, "icon_path"));
-				new_hex_type_visuals_class->two_der_id = StringName(dber_get(visuals_entry, "two_der_id"));
-				new_hex_type_visuals_class->scene_path = ensure_clean_path(dber_get(visuals_entry, "scene_path"));
 				new_hex_type_visuals_class->destroyed_icon_path = ensure_clean_path(dber_get(visuals_entry, "destroyed_icon_path"));
-				new_hex_type_visuals_class->destroyed_two_der_id = StringName(dber_get(visuals_entry, "destroyed_two_der_id"));
-				new_hex_type_visuals_class->destroyed_scene_path = ensure_clean_path(dber_get(visuals_entry, "destroyed_scene_path"));
 				new_hex_type_visuals_class->model_scene_path = ensure_clean_path(dber_get(visuals_entry, "model_scene_path"));
 				new_hex_type_visuals_class->destroyed_model_scene_path = ensure_clean_path(dber_get(visuals_entry, "destroyed_model_scene_path"));
 				new_hex_type_visuals_class->tint = convert_hex_to_color(dber_get(visuals_entry, "tint"));
