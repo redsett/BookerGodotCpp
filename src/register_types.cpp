@@ -15,6 +15,7 @@
 #include "bg_skeleton_retarget.hpp"
 #include "bg_merge_skinned_meshes.hpp"
 #include "bg_skinned_bounds.hpp"
+#include "bg_battle_board_3d_builder.hpp"
 // #include "bg_animation_mirror.hpp"
 #include <godot_cpp/classes/editor_plugin_registration.hpp>
 
@@ -43,6 +44,7 @@ void gdextension_initialize(ModuleInitializationLevel p_level)
 		ClassDB::register_class<BG_AnimatedAtlasTextureRect>();
 		ClassDB::register_class<BG_SkeletonRetarget>();
 		ClassDB::register_abstract_class<BG_SkinnedBounds>();
+		ClassDB::register_abstract_class<BG_BattleBoard3DBuilder>();
 		ClassDB::register_class<BG_PortraitDetails>();
 		ClassDB::register_class<BG_CharacterDetails>();
 		ClassDB::register_class<BG_StoryboardCharacterTextLocationDetails>();

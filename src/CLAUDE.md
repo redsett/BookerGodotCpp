@@ -21,4 +21,5 @@ Data parsing: `C:\Godot\Booker\BookerGodot\Docs\Systems\data-pipeline.md`.
   `bg_skeleton_retarget.cpp`: poses one skeleton from another rig (the game's `skill-presentations.md`).
   `bg_merge_skinned_meshes.cpp`: editor import option that merges a model's skinned mesh parts (same doc).
   `bg_skinned_bounds.cpp`: exact bounds of a skinned model in its current pose (the game's `unit-model-3d.md`).
+  `bg_battle_board_3d_builder.cpp`: native scatter pool/instance and rim/cliff skirt mesh builders for the 3D battle board.
   `register_types.cpp`: class registration (editor-only classes and plugins at the editor level).
