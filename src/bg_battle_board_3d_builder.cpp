@@ -606,6 +606,60 @@ Dictionary BG_BattleBoard3DBuilder::build_scatter_pool(
 			detail_indices.push_back(i);
 	}
 
+	// Multi-source BFS from in-bounds cells so out-of-bounds scatter points know their distance to the play-space edge.
+	constexpr int MAX_BOUNDS_RINGS = 5;
+	Vector<int> cell_ring;
+	Vector<Vector2> nearest_in_pos;
+	cell_ring.resize(all_count);
+	nearest_in_pos.resize(all_count);
+	Vector<int> bfs_queue;
+	for (int i = 0; i < all_count; i++)
+	{
+		if ((flags_ptr[i] & 2) == 0)
+		{
+			cell_ring.write[i] = 0;
+			nearest_in_pos.write[i] = qr_to_local_2d(all_qrs[i].x, all_qrs[i].y, parity);
+			bfs_queue.push_back(i);
+		}
+		else
+		{
+			cell_ring.write[i] = -1;
+			nearest_in_pos.write[i] = Vector2(0.0f, 0.0f);
+		}
+	}
+	int bfs_head = 0;
+	while (bfs_head < static_cast<int>(bfs_queue.size()))
+	{
+		const int cur = bfs_queue[bfs_head++];
+		const int next_ring = cell_ring[cur] + 1;
+		if (next_ring > MAX_BOUNDS_RINGS)
+			continue;
+		const Vector2i cqr = all_qrs[cur];
+		const bool c_shifted = (cqr.x & 1) == parity;
+		const int *cdq = c_shifted ? NEIGHBOR_DQ_SHIFTED : NEIGHBOR_DQ_UNSHIFTED;
+		const int *cdr = c_shifted ? NEIGHBOR_DR_SHIFTED : NEIGHBOR_DR_UNSHIFTED;
+		const Vector2 src_pos = nearest_in_pos[cur];
+		for (int side = 0; side < 6; side++)
+		{
+			const int *ni = cell_index.getptr(pack_qr(cqr.x + cdq[side], cqr.y + cdr[side]));
+			if (!ni)
+				continue;
+			const int n_idx = *ni;
+			if (cell_ring[n_idx] < 0)
+			{
+				cell_ring.write[n_idx] = next_ring;
+				nearest_in_pos.write[n_idx] = src_pos;
+				bfs_queue.push_back(n_idx);
+			}
+			else if (cell_ring[n_idx] == next_ring)
+			{
+				const Vector2 n_pos = qr_to_local_2d(all_qrs[n_idx].x, all_qrs[n_idx].y, parity);
+				if (n_pos.distance_squared_to(src_pos) < n_pos.distance_squared_to(nearest_in_pos[n_idx]))
+					nearest_in_pos.write[n_idx] = src_pos;
+			}
+		}
+	}
+
 	const int cell_count = static_cast<int>(detail_indices.size());
 	const int total_points = cell_count * pool_size;
 
@@ -624,7 +678,7 @@ Dictionary BG_BattleBoard3DBuilder::build_scatter_pool(
 	uint8_t *cell_relief_w = out_cell_relief.ptrw();
 
 	PackedInt32Array p_cell;
-	PackedFloat32Array p_x, p_z, p_center, p_border, p_y, p_pick, p_turn, p_size, p_dim;
+	PackedFloat32Array p_x, p_z, p_center, p_border, p_y, p_pick, p_turn, p_size, p_dim, p_bounds_dist;
 	PackedInt32Array p_flags;
 	PackedColorArray p_color;
 	PackedVector3Array p_normal;
@@ -641,6 +695,7 @@ Dictionary BG_BattleBoard3DBuilder::build_scatter_pool(
 	p_turn.resize(total_points);
 	p_size.resize(total_points);
 	p_dim.resize(total_points);
+	p_bounds_dist.resize(total_points);
 
 	int32_t *p_cell_w = p_cell.ptrw();
 	float *p_x_w = p_x.ptrw();
@@ -655,6 +710,7 @@ Dictionary BG_BattleBoard3DBuilder::build_scatter_pool(
 	float *p_turn_w = p_turn.ptrw();
 	float *p_size_w = p_size.ptrw();
 	float *p_dim_w = p_dim.ptrw();
+	float *p_bounds_dist_w = p_bounds_dist.ptrw();
 
 	Vector<int32_t> surface_indices;
 	const Color empty_color(0.0f, 0.0f, 0.0f, 0.0f);
@@ -893,6 +949,12 @@ Dictionary BG_BattleBoard3DBuilder::build_scatter_pool(
 			p_turn_w[idx] = rng.randf() * TAU_F;
 			p_size_w[idx] = rng.randf();
 			p_dim_w[idx] = dim;
+			if (!is_out)
+				p_bounds_dist_w[idx] = 0.0f;
+			else if (cell_ring[ai] < 0)
+				p_bounds_dist_w[idx] = NO_BORDER;
+			else
+				p_bounds_dist_w[idx] = std::max(0.0f, Vector2(px, pz).distance_to(nearest_in_pos[ai]) - HEX_WIDTH * 0.5f);
 			if (has_surface)
 				surface_indices.push_back(idx);
 			idx++;
@@ -916,6 +978,7 @@ Dictionary BG_BattleBoard3DBuilder::build_scatter_pool(
 	result["point_turn"] = p_turn;
 	result["point_size"] = p_size;
 	result["point_dim"] = p_dim;
+	result["point_bounds_dist"] = p_bounds_dist;
 	result["surface_point_indices"] = to_packed<int32_t, PackedInt32Array>(surface_indices);
 	return result;
 }
@@ -960,6 +1023,56 @@ Dictionary BG_BattleBoard3DBuilder::build_scatter_instances(
 	const float root_sink = dict_float(p_params, "root_sink", 0.0f);
 	const bool smooth_bounds = dict_bool(p_params, "smooth_bounds", true);
 	const float oob_dim = dict_float(p_params, "oob_dim", 0.45f);
+	const PackedByteArray e_oob_only_arr = p_params.get("e_oob_only", PackedByteArray());
+	const PackedFloat32Array e_bounds_margin_arr = p_params.get("e_bounds_margin", PackedFloat32Array());
+	const PackedFloat32Array e_min_spacing_arr = p_params.get("e_min_spacing", PackedFloat32Array());
+	const PackedFloat32Array p_bounds_dist_arr = p_params.get("point_bounds_dist", PackedFloat32Array());
+	const uint8_t *e_oob_only_ptr = (static_cast<int>(e_oob_only_arr.size()) == entry_count) ? e_oob_only_arr.ptr() : nullptr;
+	const float *e_margin_ptr = (static_cast<int>(e_bounds_margin_arr.size()) == entry_count) ? e_bounds_margin_arr.ptr() : nullptr;
+	const float *e_spacing_ptr = (static_cast<int>(e_min_spacing_arr.size()) == entry_count) ? e_min_spacing_arr.ptr() : nullptr;
+	const float *bounds_dist_ptr = (static_cast<int>(p_bounds_dist_arr.size()) == point_count) ? p_bounds_dist_arr.ptr() : nullptr;
+
+	float max_spacing = 0.0f;
+	if (e_spacing_ptr)
+	{
+		for (int e = 0; e < entry_count; e++)
+		{
+			if (e_spacing_ptr[e] > max_spacing)
+				max_spacing = e_spacing_ptr[e];
+		}
+	}
+	const float inv_space_cell = (max_spacing > 0.0f) ? (1.0f / std::max(max_spacing, 0.1f)) : 0.0f;
+	struct PlacedSpaced
+	{
+		float x;
+		float z;
+		float rad;
+	};
+	HashMap<uint64_t, Vector<PlacedSpaced>> space_grid;
+	auto is_spaced_clear = [&](float px, float pz, float rad) -> bool {
+		const int32_t gx = static_cast<int32_t>(std::floor(px * inv_space_cell));
+		const int32_t gz = static_cast<int32_t>(std::floor(pz * inv_space_cell));
+		for (int32_t dz = -1; dz <= 1; dz++)
+		{
+			for (int32_t dx = -1; dx <= 1; dx++)
+			{
+				const Vector<PlacedSpaced> *bucket = space_grid.getptr(pack_qr(gx + dx, gz + dz));
+				if (!bucket)
+					continue;
+				const int bn = static_cast<int>(bucket->size());
+				const PlacedSpaced *bp = bucket->ptr();
+				for (int bi = 0; bi < bn; bi++)
+				{
+					const float ddx = px - bp[bi].x;
+					const float ddz = pz - bp[bi].z;
+					const float min_d = rad + bp[bi].rad;
+					if (ddx * ddx + ddz * ddz < min_d * min_d)
+						return false;
+				}
+			}
+		}
+		return true;
+	};
 
 	const int32_t *cell_ptr = p_point_cell.ptr();
 	const float *x_ptr = p_point_x.ptr();
@@ -1019,13 +1132,25 @@ Dictionary BG_BattleBoard3DBuilder::build_scatter_instances(
 			continue;
 		const float pb = border_ptr[i];
 		const float near_border = (pb >= border_width) ? 0.0f : (1.0f - smoothstep_f(0.0f, border_width, pb));
+		const float bounds_dist = bounds_dist_ptr ? bounds_dist_ptr[i] : (out ? NO_BORDER : 0.0f);
 
 		float total = 0.0f;
 		for (int e = 0; e < entry_count; e++)
 		{
 			float w = 0.0f;
-			if ((e_layers_ptr[e] & flags) != 0 && (out || e_tall_ptr[e] == 0 || from_center >= tall_clearance))
-				w = rates_ptr[e] * mult * (e_bkeep_ptr[e] + (1.0f - e_bkeep_ptr[e]) * near_border);
+			if ((e_layers_ptr[e] & flags) != 0)
+			{
+				const bool oob_only = e_oob_only_ptr && e_oob_only_ptr[e] != 0;
+				const bool oob_ok = !oob_only || out;
+				const bool margin_ok = !oob_only || !e_margin_ptr || e_margin_ptr[e] <= 0.0f || bounds_dist >= e_margin_ptr[e];
+				const bool tall_ok = out || e_tall_ptr[e] == 0 || from_center >= tall_clearance;
+				if (oob_ok && margin_ok && tall_ok)
+				{
+					const float spacing = e_spacing_ptr ? e_spacing_ptr[e] : 0.0f;
+					if (spacing <= 0.0f || is_spaced_clear(x_ptr[i], z_ptr[i], spacing * 0.5f))
+						w = rates_ptr[e] * mult * (e_bkeep_ptr[e] + (1.0f - e_bkeep_ptr[e]) * near_border);
+				}
+			}
 			w_ptr[e] = w;
 			total += w;
 		}
@@ -1039,6 +1164,12 @@ Dictionary BG_BattleBoard3DBuilder::build_scatter_instances(
 		{
 			pick -= w_ptr[chosen];
 			chosen++;
+		}
+		if (e_spacing_ptr && e_spacing_ptr[chosen] > 0.0f)
+		{
+			const int32_t gx = static_cast<int32_t>(std::floor(x_ptr[i] * inv_space_cell));
+			const int32_t gz = static_cast<int32_t>(std::floor(z_ptr[i] * inv_space_cell));
+			space_grid[pack_qr(gx, gz)].push_back(PlacedSpaced{x_ptr[i], z_ptr[i], e_spacing_ptr[chosen] * 0.5f});
 		}
 
 		const int32_t cx = chunk_x_ptr[cell];
