@@ -8,6 +8,7 @@
 #include <godot_cpp/templates/vector.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
+#include <godot_cpp/templates/hash_set.hpp>
 
 using namespace godot;
 
@@ -497,7 +498,23 @@ public:
     // The move points for entering the cell at qr, from its terrain (base_grid_visual_data). Unknown terrain costs what
     // the default terrain does.
     int get_move_cost(const Vector2i &qr) const;
-    // The move points a path costs: every cell after the first (the one it starts on).
+    // Cell elevation levels (default 0) and ramp cells (effective height = level + 0.5). Set by the board from its
+    // layout save data so pathing and action adjacency account for height.
+    HashMap<Vector2i, int> cell_heights;
+    HashSet<Vector2i> cell_ramps;
+    void set_cell_elevations(const Dictionary &heights, const Dictionary &ramps);
+    // Effective height in half-levels: level * 2 for a flat cell, level * 2 + 1 for a ramp.
+    int get_cell_effective_height_half(const Vector2i &qr) const;
+    // Extra move points for stepping from from_qr to to_qr due to elevation change, or -1 if the step is impassable
+    // (climb > 1.5 levels or drop > 2.0 levels).
+    int get_elevation_step_cost(const Vector2i &from_qr, const Vector2i &to_qr) const;
+    // Total move points for stepping from from_qr to to_qr (terrain + elevation), or -1 if impassable.
+    int get_step_move_cost(const Vector2i &from_qr, const Vector2i &to_qr) const;
+    // Whether a unit can step between from_qr and to_qr (within climb/drop height limits).
+    bool can_step_between(const Vector2i &from_qr, const Vector2i &to_qr) const;
+    // Whether a unit on from_qr can attack or act on to_qr (within 1.0 effective height level).
+    bool can_act_between(const Vector2i &from_qr, const Vector2i &to_qr) const;
+    // The move points a path costs: every step after the first cell (terrain + elevation).
     int get_path_move_cost(const TypedArray<BG_Hex> &path) const;
     // The cells a unit can stop on within move_points of from_hex, by qr (like get_hex_neighbors_qr with pathing).
     Dictionary get_reachable_cells_qr(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &from_hex, int move_points) const;

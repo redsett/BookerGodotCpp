@@ -373,6 +373,12 @@ void BG_HexGrid::_bind_methods()
 	ClassDB::bind_method(D_METHOD("find_path", "instigator", "start", "goal", "include_start", "travel_distance"), &BG_HexGrid::find_path);
 	ClassDB::bind_method(D_METHOD("set_terrain_move_costs", "costs"), &BG_HexGrid::set_terrain_move_costs);
 	ClassDB::bind_method(D_METHOD("get_move_cost", "qr"), &BG_HexGrid::get_move_cost);
+	ClassDB::bind_method(D_METHOD("set_cell_elevations", "heights", "ramps"), &BG_HexGrid::set_cell_elevations);
+	ClassDB::bind_method(D_METHOD("get_cell_effective_height_half", "qr"), &BG_HexGrid::get_cell_effective_height_half);
+	ClassDB::bind_method(D_METHOD("get_elevation_step_cost", "from_qr", "to_qr"), &BG_HexGrid::get_elevation_step_cost);
+	ClassDB::bind_method(D_METHOD("get_step_move_cost", "from_qr", "to_qr"), &BG_HexGrid::get_step_move_cost);
+	ClassDB::bind_method(D_METHOD("can_step_between", "from_qr", "to_qr"), &BG_HexGrid::can_step_between);
+	ClassDB::bind_method(D_METHOD("can_act_between", "from_qr", "to_qr"), &BG_HexGrid::can_act_between);
 	ClassDB::bind_method(D_METHOD("get_path_move_cost", "path"), &BG_HexGrid::get_path_move_cost);
 	ClassDB::bind_method(D_METHOD("get_reachable_cells_qr", "instigator", "from_hex", "move_points"), &BG_HexGrid::get_reachable_cells_qr);
 
@@ -447,6 +453,8 @@ void BG_HexGrid::clear_grid()
 {
     grid.clear();
     grid_map.clear();
+    cell_heights.clear();
+    cell_ramps.clear();
 }
 
 Vector2i BG_HexGrid::get_direction_difference(const Ref<BG_Hex> &hex, const Vector2i &d) const
@@ -646,12 +654,81 @@ int BG_HexGrid::get_move_cost(const Vector2i &qr) const
     return MOVE_POINTS_PER_CELL;
 }
 
+void BG_HexGrid::set_cell_elevations(const Dictionary &heights, const Dictionary &ramps)
+{
+    cell_heights.clear();
+    cell_ramps.clear();
+    const Array height_keys = heights.keys();
+    for (int i = 0; i < height_keys.size(); ++i) {
+        const Vector2i qr = height_keys[i];
+        const int h = heights[qr];
+        if (h != 0) cell_heights[qr] = h;
+    }
+    const Array ramp_keys = ramps.keys();
+    for (int i = 0; i < ramp_keys.size(); ++i) {
+        const Vector2i qr = ramp_keys[i];
+        const int d = ramps[qr];
+        if (d >= 0 && d < 6) cell_ramps.insert(qr);
+    }
+}
+
+int BG_HexGrid::get_cell_effective_height_half(const Vector2i &qr) const
+{
+    const int *h = cell_heights.getptr(qr);
+    return (h != nullptr ? *h * 2 : 0) + (cell_ramps.has(qr) ? 1 : 0);
+}
+
+int BG_HexGrid::get_elevation_step_cost(const Vector2i &from_qr, const Vector2i &to_qr) const
+{
+    if (cell_heights.is_empty() && cell_ramps.is_empty()) return 0;
+    const int dh = get_cell_effective_height_half(to_qr) - get_cell_effective_height_half(from_qr);
+    if (dh > 3 || dh < -4) return -1;
+    // Stepping uphill off a ramp starts from the ramp's high side (the +0.5 climb was paid on entry).
+    const int effective_dh = (dh > 0 && cell_ramps.has(from_qr)) ? (dh - 1) : dh;
+    switch (effective_dh) {
+        case 3:  return 5; // +1.5 levels (e.g. flat 0 -> ramp 1)
+        case 2:  return 4; // +1.0 level (e.g. flat 0 -> flat 1)
+        case 1:  return 1; // +0.5 level (e.g. flat 0 -> ramp 0, or ramp 0 -> ramp 1)
+        case 0:
+        case -1:
+        case -2: return 0; // Flat, exiting a ramp onto its uphill level, or drop <= 1.0 level
+        case -3: return 1; // -1.5 levels
+        case -4: return 2; // -2.0 levels (max drop)
+        default: return -1;
+    }
+}
+
+int BG_HexGrid::get_step_move_cost(const Vector2i &from_qr, const Vector2i &to_qr) const
+{
+    const int elev_cost = get_elevation_step_cost(from_qr, to_qr);
+    if (elev_cost < 0) return -1;
+    return get_move_cost(to_qr) + elev_cost;
+}
+
+bool BG_HexGrid::can_step_between(const Vector2i &from_qr, const Vector2i &to_qr) const
+{
+    return get_elevation_step_cost(from_qr, to_qr) >= 0;
+}
+
+bool BG_HexGrid::can_act_between(const Vector2i &from_qr, const Vector2i &to_qr) const
+{
+    if (cell_heights.is_empty() && cell_ramps.is_empty()) return true;
+    return Math::abs(get_cell_effective_height_half(to_qr) - get_cell_effective_height_half(from_qr)) <= 2;
+}
+
 int BG_HexGrid::get_path_move_cost(const TypedArray<BG_Hex> &path) const
 {
     int result = 0;
     for (int i = 1; i < path.size(); ++i) {
-        const Ref<BG_Hex> h = path[i];
-        if (h.is_valid()) result += get_move_cost(h->get_qr());
+        const Ref<BG_Hex> prev = path[i - 1];
+        const Ref<BG_Hex> curr = path[i];
+        if (curr.is_null()) continue;
+        if (prev.is_valid()) {
+            const int step = get_step_move_cost(prev->get_qr(), curr->get_qr());
+            if (step > 0) result += step;
+        } else {
+            result += get_move_cost(curr->get_qr());
+        }
     }
     return result;
 }
@@ -980,12 +1057,16 @@ Ref<BG_HexGameSaveData> BG_HexGrid::get_nearest_attackable(const Ref<BG_Hex> &fr
 
 Ref<BG_Hex> BG_HexGrid::get_nearest_empty_cell_neighoring_target(const Ref<BG_Hex> &instigator, const Ref<BG_Hex> &target) const
 {
+    if (target.is_null()) return nullptr;
     const HashMap<HexDirections, Ref<BG_Hex>> neighbors = get_hex_neighbors_fast(target);
-    
+    const Vector2i target_qr = target->get_qr();
+
     TypedArray<BG_Hex> cells_to_check;
     for (const auto &pair : neighbors) {
         const Ref<BG_Hex> hex = pair.value;
-        cells_to_check.append(hex);
+        if (hex.is_valid() && can_act_between(hex->get_qr(), target_qr)) {
+            cells_to_check.append(hex);
+        }
     }
 
     return get_nearest_empty_cell(instigator, target, cells_to_check);
@@ -997,10 +1078,10 @@ Ref<BG_Hex> BG_HexGrid::get_nearest_empty_cell(const Ref<BG_Hex> &instigator, co
     if (target.is_null()) return nullptr;
     const GameDataMap game_data_map = _build_game_data_map(); // One lookup table for the whole search.
 
-    { // Bail out early if we're already next to the target cell and we can't move to it.
+    { // Bail out early if we're already next to the target cell within action height and we can't move to it.
         const int hex_cost = _get_hex_cost(/* from_hex */ instigator, /* qr */ target->get_qr(), /* do_pass_through_check */ false, &game_data_map);
         const int d = hex_distance(instigator->get_full_qr(), target->get_full_qr(), offset_type);
-        if (d == 1 && hex_cost == 0) return instigator;
+        if (d == 1 && hex_cost == 0 && can_act_between(instigator->get_qr(), target->get_qr())) return instigator;
     }
 
     Ref<BG_Hex> result;
@@ -1155,9 +1236,9 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> &instigator, const Re
 
             const int hex_cost = _get_hex_cost(/* from_hex */ instigator, /* qr */ next_qr, /* do_pass_through_check */ allow_pass_through, &game_data_map);
             if (hex_cost == 0) { // Can't move into cell?
-                // Is the cell the goal? If so, make the current cell the end of the path.
+                // Is the cell the goal? If so, make the current cell the end of the path when within action height.
                 // But ensure the whole path isn't just walk throughs without any landings.
-                if (next_hex == goal && (current_hex == start || current_has_landing)) {
+                if (next_hex == goal && (current_hex == start || current_has_landing) && can_act_between(item.qr, next_qr)) {
                     found_goal = true;
                     end_qr = item.qr;
                     break;
@@ -1165,7 +1246,10 @@ TypedArray<BG_Hex> BG_HexGrid::find_path(const Ref<BG_Hex> &instigator, const Re
                 continue;
             }
 
-            const int new_g = current_g + get_move_cost(next_qr);
+            const int step_cost = get_step_move_cost(item.qr, next_qr);
+            if (step_cost < 0) continue; // Impassable height difference.
+
+            const int new_g = current_g + step_cost;
             if (existing != nullptr && new_g >= existing->g) continue; // Already have an equal or cheaper route here.
 
             // Pass through only = we can walk through it, but not stop on it. Only possible if pass through was allowed.
@@ -1281,7 +1365,10 @@ TypedArray<BG_Hex> BG_HexGrid::find_reachable_cells_in_distance(const Ref<BG_Hex
             const int hex_cost = _get_hex_cost(/* from_hex */ instigator, /* qr */ next_qr, /* do_pass_through_check */ true, &game_data_map);
             if (hex_cost == 0) continue;
 
-            const int new_cost = item.cost + get_move_cost(next_qr);
+            const int step_cost = get_step_move_cost(item.qr, next_qr);
+            if (step_cost < 0) continue; // Impassable height difference.
+
+            const int new_cost = item.cost + step_cost;
             if (new_cost > move_points) continue; // Out of movement.
             const int *known = best_cost.getptr(next_qr);
             if (known != nullptr && *known <= new_cost) continue;
