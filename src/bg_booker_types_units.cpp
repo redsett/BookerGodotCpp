@@ -292,6 +292,11 @@ void BG_UnitCaste::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_icon_path"), &BG_UnitCaste::get_icon_path);
 	ClassDB::bind_method(D_METHOD("get_is_unique_caste"), &BG_UnitCaste::get_is_unique_caste);
 	ClassDB::bind_method(D_METHOD("get_lod_mesh_paths"), &BG_UnitCaste::get_lod_mesh_paths);
+	ClassDB::bind_method(D_METHOD("get_base_animation_library"), &BG_UnitCaste::get_base_animation_library);
+	ClassDB::bind_method(D_METHOD("get_animation_class_libraries"), &BG_UnitCaste::get_animation_class_libraries);
+	ClassDB::bind_method(D_METHOD("get_animation_class_library", "animation_class_id"), &BG_UnitCaste::get_animation_class_library);
+	ClassDB::bind_method(D_METHOD("get_gesture_pools"), &BG_UnitCaste::get_gesture_pools);
+	ClassDB::bind_method(D_METHOD("get_gesture_pool_path", "pool_id"), &BG_UnitCaste::get_gesture_pool_path);
 	ClassDB::bind_method(D_METHOD("get_scale_min"), &BG_UnitCaste::get_scale_min);
 	ClassDB::bind_method(D_METHOD("get_scale_max"), &BG_UnitCaste::get_scale_max);
 	ClassDB::bind_method(D_METHOD("get_scale_min_extreme"), &BG_UnitCaste::get_scale_min_extreme);

@@ -157,6 +157,21 @@ public:
 	TypedArray<StringName> lod_mesh_paths;
 	TypedArray<StringName> get_lod_mesh_paths() const { return lod_mesh_paths; }
 
+	StringName base_animation_library;
+	StringName get_base_animation_library() const { return base_animation_library; }
+
+	Dictionary animation_class_libraries; // { animation_class_id (StringName): path (StringName) }
+	Dictionary get_animation_class_libraries() const { return animation_class_libraries; }
+	StringName get_animation_class_library(const StringName &animation_class_id) const {
+		return animation_class_libraries.has(animation_class_id) ? StringName(animation_class_libraries[animation_class_id]) : StringName();
+	}
+
+	Dictionary gesture_pools; // { pool_id (StringName): path (StringName) }
+	Dictionary get_gesture_pools() const { return gesture_pools; }
+	StringName get_gesture_pool_path(const StringName &pool_id) const {
+		return gesture_pools.has(pool_id) ? StringName(gesture_pools[pool_id]) : StringName();
+	}
+
 	Vector2 scale_min = Vector2();
 	Vector2 get_scale_min() const { return scale_min; }
 

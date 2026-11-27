@@ -83,6 +83,42 @@ void BG_Booker_DB::parse_caste_types(const Dictionary &data, HashMap<String, Typ
 			new_unit_caste->lod_mesh_paths.append(ensure_clean_path(dber_get(lod_mesh_paths_values_entry, "path")));
 		}
 
+		// Base Animation Library
+		const Variant base_anim_lib_val = dber_find(entry, "base_animation_library");
+		if (base_anim_lib_val.get_type() != Variant::NIL) {
+			new_unit_caste->base_animation_library = ensure_clean_path(base_anim_lib_val);
+		}
+
+		// Animation Class Libraries
+		new_unit_caste->animation_class_libraries.clear();
+		const Variant anim_class_libs_val = dber_find(entry, "animation_class_libraries");
+		if (anim_class_libs_val.get_type() == Variant::ARRAY) {
+			const Array anim_class_libs_array = anim_class_libs_val;
+			for (int x = 0; x < anim_class_libs_array.size(); ++x) {
+				const Dictionary lib_entry = anim_class_libs_array[x];
+				const StringName anim_class_id = StringName(dber_get(lib_entry, "animation_class"));
+				const StringName lib_path = ensure_clean_path(dber_get(lib_entry, "path"));
+				if (!anim_class_id.is_empty() && !lib_path.is_empty()) {
+					new_unit_caste->animation_class_libraries[anim_class_id] = lib_path;
+				}
+			}
+		}
+
+		// Gesture Pools (Story Events)
+		new_unit_caste->gesture_pools.clear();
+		const Variant gesture_pools_val = dber_find(entry, "gesture_pools");
+		if (gesture_pools_val.get_type() == Variant::ARRAY) {
+			const Array gesture_pools_array = gesture_pools_val;
+			for (int x = 0; x < gesture_pools_array.size(); ++x) {
+				const Dictionary pool_entry = gesture_pools_array[x];
+				const StringName pool_id = StringName(dber_get(pool_entry, "pool_id"));
+				const StringName pool_path = ensure_clean_path(dber_get(pool_entry, "path"));
+				if (!pool_id.is_empty() && !pool_path.is_empty()) {
+					new_unit_caste->gesture_pools[pool_id] = pool_path;
+				}
+			}
+		}
+
 		// Scale Limits
 		const Array scale_limits_values_array = dber_get(entry, "scale_limits");
 		for (int x = 0; x < scale_limits_values_array.size(); ++x) {
