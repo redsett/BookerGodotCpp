@@ -658,11 +658,6 @@ public:
 	bool is_default = false;
 	bool get_is_default() const { return is_default; }
 
-	// An advantage over the other side (high ground): a side on this terrain only gets its passive skills when the
-	// side it fights isn't on it too. Off: each side on it gets them (a swamp slows both).
-	bool is_relative = false;
-	bool get_is_relative() const { return is_relative; }
-
 	// Passive skills (Skills tab, "terrain" owner) put on every unit on a cell of this terrain for the whole fight.
 	TypedArray<StringName> passive_skill_ids;
 	TypedArray<StringName> get_passive_skill_ids() const { return passive_skill_ids; }

@@ -420,7 +420,6 @@ void BG_Terrain::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_move_cost"), &BG_Terrain::get_move_cost);
 	ClassDB::bind_method(D_METHOD("get_tint"), &BG_Terrain::get_tint);
 	ClassDB::bind_method(D_METHOD("get_is_default"), &BG_Terrain::get_is_default);
-	ClassDB::bind_method(D_METHOD("get_is_relative"), &BG_Terrain::get_is_relative);
 	ClassDB::bind_method(D_METHOD("get_passive_skill_ids"), &BG_Terrain::get_passive_skill_ids);
 }
 
