@@ -342,27 +342,33 @@ void add_road_masonry(SkirtBuffers &buf, const Vector2i &qr, const Vector2 &cent
 
 inline Color cliff_rock_color(bool is_slate, float v1, float v2)
 {
-	float shade = 0.88f + v1 * 0.22f;
+	float shade = 0.86f + v1 * 0.24f;
+	float warm = (v2 - 0.5f) * 0.08f;
 	if (is_slate)
-		return Color(0.27f * shade, 0.29f * shade, 0.33f * shade, 1.0f);
-	float warm = (v2 - 0.5f) * 0.06f;
-	return Color((0.63f + warm) * shade, (0.58f + warm * 0.5f) * shade, (0.49f - warm * 0.5f) * shade, 1.0f);
+	{
+		// Warm weathered limestone / buff sandstone blocks matching the paintover's chiseled rock terraces.
+		return Color((0.52f + warm) * shade, (0.46f + warm * 0.6f) * shade, (0.38f - warm * 0.4f) * shade, 1.0f);
+	}
+	// Embedded fieldstones on earthy grass embankments: warm ochre-taupe stone.
+	return Color((0.50f + warm) * shade, (0.43f + warm * 0.5f) * shade, (0.33f - warm * 0.4f) * shade, 1.0f);
 }
 
 void add_rock_pillar(SkirtBuffers &buf, const Vector2 &at, const Vector2 &normal, const Vector2 &tangent,
 	float half_w, float protrude, float top_y, float bottom_y, float dim, const Color &color, int seed_val)
 {
+	// Chiseled flat-fronted stone block profile: wide flat face with crisp chamfered side shoulders so
+	// adjacent blocks meet in clean vertical masonry/strata crevices rather than pinched pill tubes.
 	static const Vector2 PROFILE[5] = {
-		Vector2(-1.0f, -0.35f),
-		Vector2(-0.65f, 0.68f),
+		Vector2(-1.0f, -0.10f),
+		Vector2(-0.82f, 0.88f),
 		Vector2(0.0f, 1.0f),
-		Vector2(0.65f, 0.68f),
-		Vector2(1.0f, -0.35f),
+		Vector2(0.82f, 0.88f),
+		Vector2(1.0f, -0.10f),
 	};
-	static const float TALL_FRACS[4] = {0.0f, 0.28f, 0.68f, 1.0f};
-	static const float LOW_FRACS[3] = {0.0f, 0.45f, 1.0f};
-	static const float TALL_BULGE[4] = {0.22f, 0.75f, 1.05f, 1.22f};
-	static const float LOW_BULGE[3] = {0.24f, 0.82f, 1.18f};
+	static const float TALL_FRACS[4] = {0.0f, 0.24f, 0.66f, 1.0f};
+	static const float LOW_FRACS[3] = {0.0f, 0.42f, 1.0f};
+	static const float TALL_BULGE[4] = {0.58f, 0.88f, 1.04f, 1.18f};
+	static const float LOW_BULGE[3] = {0.62f, 0.92f, 1.14f};
 
 	float drop = std::max(top_y - bottom_y, 0.06f);
 	bool tall = drop > LEVEL_HEIGHT * 1.4f;
@@ -379,15 +385,16 @@ void add_rock_pillar(SkirtBuffers &buf, const Vector2 &at, const Vector2 &normal
 		for (int p_i = 0; p_i < COLS; p_i++)
 		{
 			Vector2 prof = PROFILE[p_i];
-			float jx = (hash3(seed_val, r, p_i * 3 + 1) - 0.5f) * 0.2f;
-			float jz = (hash3(seed_val, r, p_i * 3 + 2) - 0.5f) * 0.24f;
-			float jy = (r > 0 && r < rings - 1) ? ((hash3(seed_val, r, p_i * 3 + 3) - 0.5f) * 0.035f) : 0.0f;
-			float along_t = (prof.x + jx * (1.0f - std::fabs(prof.x) * 0.5f)) * half_w * (0.82f + 0.22f * b_scale);
+			float jx = (hash3(seed_val, r, p_i * 3 + 1) - 0.5f) * 0.12f;
+			float jz = (hash3(seed_val, r, p_i * 3 + 2) - 0.5f) * 0.16f;
+			float jy = (r > 0 && r < rings - 1) ? ((hash3(seed_val, r, p_i * 3 + 3) - 0.5f) * 0.025f) : 0.0f;
+			float along_t = (prof.x + jx * (1.0f - std::fabs(prof.x) * 0.5f)) * half_w * (0.90f + 0.14f * b_scale);
 			float out_n = (prof.y * b_scale + jz * std::max(prof.y, 0.0f)) * protrude;
 			Vector2 pos2 = at + tangent * along_t + normal * out_n;
-			Vector2 n2 = (normal * std::max(prof.y, 0.1f) + tangent * prof.x * 0.6f).normalized();
-			Vector3 n3 = Vector3(n2.x, 0.35f, n2.y).normalized();
-			buf.add_cliff_vert(Vector3(pos2.x, y_base + jy, pos2.y), n3, color, static_cast<float>(p_i) * 0.18f, vf, dim, 1.0f);
+			Vector2 n2 = (normal * std::max(prof.y, 0.15f) + tangent * prof.x * 0.55f).normalized();
+			Vector3 n3 = Vector3(n2.x, 0.25f, n2.y).normalized();
+			float u_block = static_cast<float>(p_i) / static_cast<float>(COLS - 1);
+			buf.add_cliff_vert(Vector3(pos2.x, y_base + jy, pos2.y), n3, color, u_block, vf, dim, 1.0f);
 		}
 	}
 	for (int r = 0; r < rings - 1; r++)
@@ -401,9 +408,9 @@ void add_rock_pillar(SkirtBuffers &buf, const Vector2 &at, const Vector2 &normal
 			buf.add_cliff_quad(a, b, c, d, buf.cliff_normals[a] + buf.cliff_normals[c]);
 		}
 	}
-	Vector2 cap_back = at - normal * 0.05f;
+	Vector2 cap_back = at - normal * 0.04f;
 	int32_t cap_center = static_cast<int32_t>(buf.cliff_verts.size());
-	buf.add_cliff_vert(Vector3(cap_back.x, top_y - 0.005f, cap_back.y), Vector3(0, 1, 0), color, 0.0f, 0.0f, dim, 1.0f);
+	buf.add_cliff_vert(Vector3(cap_back.x, top_y - 0.004f, cap_back.y), Vector3(0, 1, 0), color, 0.5f, 0.0f, dim, 1.0f);
 	for (int p_i = 0; p_i < COLS - 1; p_i++)
 	{
 		int32_t a = first + p_i;
@@ -434,13 +441,37 @@ void add_cliff_rocks(SkirtBuffers &buf, const Vector2i &qr, const Vector2 &cente
 	Vector2 tangent(-normal.y, normal.x);
 	Vector2 edge_start = center + Vector2(std::cos(a0 * DEG2RAD_F), std::sin(a0 * DEG2RAD_F)) * HEX_RADIUS;
 	Vector2 edge_end = center + Vector2(std::cos(a1 * DEG2RAD_F), std::sin(a1 * DEG2RAD_F)) * HEX_RADIUS;
+	if (!is_slate)
+	{
+		// Non-rock grass/earth embankment: leave the sloped earth & overhanging turf lip visible, embedding
+		// only an occasional low-profile weathered stone into the lower bank.
+		float h_pick = hash3(qr.x, qr.y, side * 23 + 5);
+		if (h_pick < 0.35f)
+			return;
+		float t_mid = 0.28f + h_pick * 0.44f;
+		float local_top = lerpf_c(y0, y1, t_mid);
+		float local_bot = lerpf_c(b0, b1, t_mid);
+		float local_drop = local_top - (local_bot + INTERIOR_TUCK);
+		if (local_drop < 0.08f)
+			return;
+		float h1 = hash3(qr.x, qr.y, side * 17 + 2);
+		float h2 = hash3(qr.x, qr.y, side * 17 + 3);
+		Vector2 base_pos = edge_start.lerp(edge_end, t_mid) + normal * (local_drop * 0.14f);
+		float half_w = 0.14f + h1 * 0.05f;
+		float protrude = 0.055f + h2 * 0.03f;
+		float rock_top = local_top - local_drop * (0.28f + h1 * 0.18f);
+		Color col = cliff_rock_color(false, h1, h2);
+		add_rock_pillar(buf, base_pos, normal, tangent, half_w, protrude, rock_top, local_bot, dim, col,
+			qr.x * 31 + qr.y * 17 + side * 7 + 1);
+		return;
+	}
 	for (int c = 0; c < 2; c++)
 	{
 		float h0 = hash3(qr.x, qr.y, side * 17 + c * 5 + 1);
 		float h1 = hash3(qr.x, qr.y, side * 17 + c * 5 + 2);
 		float h2 = hash3(qr.x, qr.y, side * 17 + c * 5 + 3);
 		float h3 = hash3(qr.x, qr.y, side * 17 + c * 5 + 4);
-		float t_mid = (static_cast<float>(c) + 0.5f + (h0 - 0.5f) * 0.08f) * 0.5f;
+		float t_mid = (static_cast<float>(c) + 0.5f + (h0 - 0.5f) * 0.06f) * 0.5f;
 		float local_top = lerpf_c(y0, y1, t_mid);
 		float local_bot = lerpf_c(b0, b1, t_mid);
 		float local_drop = local_top - (local_bot + INTERIOR_TUCK);
@@ -448,10 +479,10 @@ void add_cliff_rocks(SkirtBuffers &buf, const Vector2i &qr, const Vector2 &cente
 			continue;
 		float drop_scale = std::clamp(local_drop / LEVEL_HEIGHT, 0.35f, 1.5f);
 		Vector2 base_pos = edge_start.lerp(edge_end, t_mid);
-		float half_w = (0.195f + h1 * 0.04f) * std::clamp(drop_scale, 0.7f, 1.15f);
-		float protrude = (0.085f + h2 * 0.045f) * std::clamp(drop_scale, 0.55f, 1.35f);
-		float rock_top = local_top - (0.016f + h3 * 0.016f);
-		Color col = cliff_rock_color(is_slate, h1, h3);
+		float half_w = (0.235f + h1 * 0.035f) * std::clamp(drop_scale, 0.8f, 1.15f);
+		float protrude = (0.078f + h2 * 0.038f) * std::clamp(drop_scale, 0.6f, 1.3f);
+		float rock_top = local_top - (0.022f + h3 * 0.016f);
+		Color col = cliff_rock_color(true, h1, h3);
 		add_rock_pillar(buf, base_pos, normal, tangent, half_w, protrude, rock_top, local_bot, dim, col,
 			qr.x * 31 + qr.y * 17 + side * 7 + c * 13);
 	}
@@ -460,15 +491,15 @@ void add_cliff_rocks(SkirtBuffers &buf, const Vector2i &qr, const Vector2 &cente
 		Vector2 corner_dir = has_next_raised ? Vector2(std::cos(a1 * DEG2RAD_F), std::sin(a1 * DEG2RAD_F)) : normal;
 		Vector2 corner_tan(-corner_dir.y, corner_dir.x);
 		float hc = hash3(qr.x, qr.y, side * 29 + 99);
-		Color col = cliff_rock_color(is_slate, hc, 1.0f - hc);
-		add_rock_pillar(buf, edge_end, corner_dir, corner_tan, 0.13f, 0.075f + hc * 0.035f, y1 - 0.018f, b1, dim, col,
+		Color col = cliff_rock_color(true, hc, 1.0f - hc);
+		add_rock_pillar(buf, edge_end, corner_dir, corner_tan, 0.145f, 0.068f + hc * 0.032f, y1 - 0.022f, b1, dim, col,
 			qr.x * 13 + qr.y * 41 + side * 19);
 	}
 	if (!has_prev_raised && (y0 - (b0 + INTERIOR_TUCK)) >= 0.04f)
 	{
 		float hc0 = hash3(qr.x, qr.y, side * 31 + 77);
-		Color col0 = cliff_rock_color(is_slate, hc0, 1.0f - hc0);
-		add_rock_pillar(buf, edge_start, normal, tangent, 0.12f, 0.065f + hc0 * 0.03f, y0 - 0.018f, b0, dim, col0,
+		Color col0 = cliff_rock_color(true, hc0, 1.0f - hc0);
+		add_rock_pillar(buf, edge_start, normal, tangent, 0.135f, 0.062f + hc0 * 0.028f, y0 - 0.022f, b0, dim, col0,
 			qr.x * 19 + qr.y * 23 + side * 11);
 	}
 }
@@ -1378,7 +1409,8 @@ Dictionary BG_BattleBoard3DBuilder::build_skirt_mesh(
 			const Color ground = grounds_ptr[ci];
 			const Color color = ground.a > 0.0f ? Color(ground.r, ground.g, ground.b, 1.0f) : Color(0.36f, 0.29f, 0.2f, 1.0f);
 			const float dim = (flags_ptr[ci] & 1) ? oob_dim : 1.0f;
-			const float is_rock = (flags_ptr[ci] & 2) ? 1.0f : 0.0f;
+			const bool is_rock_cell = (flags_ptr[ci] & 2) != 0;
+			const float backing_rock_flag = is_rock_cell ? 0.3f : 0.0f;
 			const bool is_paved = (flags_ptr[ci] & 4) != 0;
 			constexpr int INT_ROW_COUNT = 7;
 
@@ -1454,18 +1486,20 @@ Dictionary BG_BattleBoard3DBuilder::build_skirt_mesh(
 					if (i > 0)
 						along += pts[i].distance_to(pts[i - 1]);
 					Vector2 out_dir = nrms[i];
-					Vector3 n3(out_dir.x, 0.0f, out_dir.y);
+					float slope_up = (!is_rock_cell && !is_paved) ? 0.28f : 0.0f;
+					Vector3 n3 = Vector3(out_dir.x, slope_up, out_dir.y).normalized();
 					float top_i = tops[i];
 					float drop = std::max(top_i - bots[i], 0.02f);
 					Vector2 lip = pts[i] - out_dir * (LIP_IN + 0.008f);
-					buf.add_cliff_vert(Vector3(lip.x, top_i - 0.001f, lip.y), Vector3(0, 1, 0), color, along, 0.0f, dim, is_rock);
+					buf.add_cliff_vert(Vector3(lip.x, top_i - 0.001f, lip.y), Vector3(0, 1, 0), color, along, 0.0f, dim, backing_rock_flag);
 					for (int r = 0; r < 6; r++)
 					{
 						float depth = INTERIOR_ROWS[r] * drop;
 						float wear_env = smoothstep_f(0.05f, 0.2f, depth) * (1.0f - smoothstep_f(std::max(drop - 0.1f, 0.0f), drop, depth));
 						float wear = EROSION * 0.6f * wear_env * (skirt_noise(along * 3.1f + depth * 5.3f) * 0.5f + 0.5f);
-						Vector2 p = pts[i] + out_dir * (OUTSET + 0.002f + wear);
-						buf.add_cliff_vert(Vector3(p.x, top_i - depth, p.y), n3, color, along, depth, dim, is_rock);
+						float batter = (!is_rock_cell && !is_paved) ? (INTERIOR_ROWS[r] * std::min(drop * 0.24f, 0.11f)) : 0.0f;
+						Vector2 p = pts[i] + out_dir * (OUTSET + 0.002f + wear + batter);
+						buf.add_cliff_vert(Vector3(p.x, top_i - depth, p.y), n3, color, along, depth, dim, backing_rock_flag);
 					}
 				}
 				for (int i = 0; i < count - 1; i++)
@@ -1482,7 +1516,7 @@ Dictionary BG_BattleBoard3DBuilder::build_skirt_mesh(
 				if (is_paved)
 					add_road_masonry(buf, qr, center, side, y0, y1, b0, b1, dim);
 				else
-					add_cliff_rocks(buf, qr, center, side, y0, y1, b0, b1, dim, is_rock > 0.5f, raised_sides[prev_side], raised_sides[next_side]);
+					add_cliff_rocks(buf, qr, center, side, y0, y1, b0, b1, dim, is_rock_cell, raised_sides[prev_side], raised_sides[next_side]);
 			}
 		}
 	}
