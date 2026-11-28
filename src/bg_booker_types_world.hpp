@@ -439,6 +439,9 @@ public:
 	StringName ambient_id;
 	StringName get_ambient_id() const { return ambient_id; }
 
+	int fog_vision_range = 0;
+	int get_fog_vision_range() const { return fog_vision_range; }
+
 	TypedArray<BG_BattleBoard_HexTypeDetails> get_hex_types_by_type(int type, bool is_game_type = true) const;
 	BG_BattleBoard_HexTypeDetails *get_hex_type_by_id(const StringName &id) const;
 };

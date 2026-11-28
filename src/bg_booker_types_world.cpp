@@ -280,6 +280,7 @@ void BG_BattleBoardDetails::_bind_methods()
 	ClassDB::bind_method(D_METHOD("get_parent_data_id"), &BG_BattleBoardDetails::get_parent_data_id);
 	ClassDB::bind_method(D_METHOD("get_music_id"), &BG_BattleBoardDetails::get_music_id);
 	ClassDB::bind_method(D_METHOD("get_ambient_id"), &BG_BattleBoardDetails::get_ambient_id);
+	ClassDB::bind_method(D_METHOD("get_fog_vision_range"), &BG_BattleBoardDetails::get_fog_vision_range);
 
 	ClassDB::bind_method(D_METHOD("get_hex_types_by_type", "type"), &BG_BattleBoardDetails::get_hex_types_by_type);
 	ClassDB::bind_method(D_METHOD("get_hex_type_by_id", "id"), &BG_BattleBoardDetails::get_hex_type_by_id);
