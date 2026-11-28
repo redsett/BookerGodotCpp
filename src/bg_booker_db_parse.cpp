@@ -116,7 +116,6 @@ void BG_Booker_DB::parse_battle_boards(const Dictionary &data, HashMap<String, T
 		new_class->battle_board_game_script_path = ensure_clean_path(dber_get(entry, "battle_board_game_script_path"));
 		new_class->default_hex_visual_path = ensure_clean_path(dber_get(entry, "default_hex_visual_path"));
 		new_class->parent_data_id = StringName(dber_get(entry, "parent_data_id"));
-		new_class->fog_vision_range = int(dber_get(entry, "fog_vision_range"));
 
 		// Hex Types
 		const Array hex_types_values_array = dber_get(entry, "hex_types");
